@@ -1,0 +1,163 @@
+stages:
+
+  - build_ide
+  - scc
+  - oss
+  - misspellChecking
+  - genLicense
+  - sensitive_word_check
+ 
+build_ide:
+  variables:
+    CODE_COMPILE_ARCH: 'EAGLE_ANDES'
+    COV_PF_CATALOG: 'BLE'
+  stage: build_ide
+  tags:
+    - TELINKIDE_LINUX
+  before_script:
+  script:
+    - ls
+    - pwd
+    - date
+    - echo "--------------- Will build Demo -----------------"
+    - echo #$ECLIPSE_PROJECT/$ECLIPSE_BUILD_TARGET
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_B92  -import tlk_bluetooth_src/build/B92 -cleanBuild B92_tlk_bluetooth_src/Game_Pad
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_B92  -import tlk_bluetooth_src/build/B92 -cleanBuild B92_tlk_bluetooth_src/btble_headset
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_B92  -import tlk_bluetooth_src/build/B92 -cleanBuild B92_tlk_bluetooth_src/btble_audio_source
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_B92  -import tlk_bluetooth_src/build/B92 -cleanBuild B92_tlk_bluetooth_src/btble_a2dp_to_bis
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_B92  -import tlk_bluetooth_src/build/B92 -cleanBuild B92_tlk_bluetooth_src/Sports_Walkie_Talkie
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL751X  -import tlk_bluetooth_src/build/TL751X -cleanBuild TL751X_tlk_bluetooth_src/bt_interphone
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL751X  -import tlk_bluetooth_src/build/TL751X -cleanBuild TL751X_tlk_bluetooth_src/btble_headset
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL751X  -import tlk_bluetooth_src/build/TL751X -cleanBuild TL751X_tlk_bluetooth_src/btble_audio_source
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL751X  -import tlk_bluetooth_src/build/TL751X -cleanBuild TL751X_tlk_bluetooth_src/btbletpsll_headset
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL751X  -import tlk_bluetooth_src/build/TL751X -cleanBuild TL751X_tlk_bluetooth_src/bttpsll_tws
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL751X  -import tlk_bluetooth_src/build/TL751X -cleanBuild TL751X_tlk_bluetooth_src/hearing_aid
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL751X  -import tlk_bluetooth_src/build/TL751X -cleanBuild TL751X_tlk_bluetooth_src/recording_card
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL751X  -import tlk_bluetooth_src/build/TL751X -cleanBuild TL751X_tlk_bluetooth_src/controller
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL721X  -import tlk_bluetooth_src/build/TL721X -cleanBuild TL721X_tlk_bluetooth_src/recording_card
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL721X  -import tlk_bluetooth_src/build/TL721X -cleanBuild TL721X_tlk_bluetooth_src/tpsll_audio_dongle
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL322X  -import tlk_bluetooth_src/build/TL322X -cleanBuild TL322X_tlk_bluetooth_src/controller_nbt
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL322X  -import tlk_bluetooth_src/build/TL322X -cleanBuild TL322X_tlk_bluetooth_src/mesh_audio_dongle
+
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL752X  -import tlk_bluetooth_src/build/TL752X -cleanBuild TL752X_tlk_bluetooth_src/bt_audio_source 
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL752X  -import tlk_bluetooth_src/build/TL752X -cleanBuild TL752X_tlk_bluetooth_src/btble_audio_source 
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL752X  -import tlk_bluetooth_src/build/TL752X -cleanBuild TL752X_tlk_bluetooth_src/btble_a2dp_to_bis 
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL752X  -import tlk_bluetooth_src/build/TL752X -cleanBuild TL752X_tlk_bluetooth_src/btble_headset
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL752X  -import tlk_bluetooth_src/build/TL752X -cleanBuild TL752X_tlk_bluetooth_src/btbletpsll_headset
+    - $TELINK_IDE_BUILD -data ${CI_PIPELINE_ID}_WS_TL752X  -import tlk_bluetooth_src/build/TL752X -cleanBuild TL752X_tlk_bluetooth_src/controller
+    #- bash $ANDESRISCV_ECLIPSE_BUILD  -data ${CI_PIPELINE_ID}_WS  -import ./TL_PLATFORM_SDK_B91 -cleanBuild all
+    - date
+    # - simpleMemoryMap.sh riscv32-elf-readelf | tee mm.csv
+    # - MemoryMap_Pretty.py mm.csv | tee mm_pretty.csv
+
+ #when: manual
+
+  artifacts:
+    paths:
+    - "tlk_bluetooth_src/build/B92/btble_audio_dongle/*.bin"
+    - "tlk_bluetooth_src/build/B92/btble_audio_dongle/*.elf"
+    - "tlk_bluetooth_src/build/B92/btble_headset/*.bin"
+    - "tlk_bluetooth_src/build/B92/btble_headset/*.elf"
+    - "tlk_bluetooth_src/build/B92/btble_audio_source/*.bin"
+    - "tlk_bluetooth_src/build/B92/btble_audio_source/*.elf"
+    - "tlk_bluetooth_src/build/B92/btble_a2dp_to_bis/*.bin"
+    - "tlk_bluetooth_src/build/B92/btble_a2dp_to_bis/*.elf"
+    - "tlk_bluetooth_src/build/B92/ble_internal/*.bin"
+    - "tlk_bluetooth_src/build/B92/ble_internal/*.elf"
+    - "tlk_bluetooth_src/build/B92/bttpsll_headset/*.bin"
+    - "tlk_bluetooth_src/build/B92/bttpsll_headset/*.elf"
+    - "tlk_bluetooth_src/build/B92/controller/*.bin"
+    - "tlk_bluetooth_src/build/B92/controller/*.elf"
+    - "tlk_bluetooth_src/build/TL721X/tpsll_audio_dongle/*.bin"
+    - "tlk_bluetooth_src/build/TL721X/tpsll_audio_dongle/*.elf"
+    - "tlk_bluetooth_src/build/TL751X/btble_audio_source/*.bin"
+    - "tlk_bluetooth_src/build/TL751X/btble_audio_source/*.elf"
+    # - mm_pretty.csv
+
+
+
+scc:
+  stage: scc
+  tags:
+  - LINUX 
+  script:
+    - echo "Enter scc stage"
+    - scc | tee scc.txt
+    - bash /usr/bin/scc_calc.sh
+    - echo "The End SCC result:"
+    - cat scc.txt
+  artifacts:
+    paths:
+    - scc.txt
+  when: manual
+
+
+oss:
+  tags:
+    - OSS
+  stage: oss
+  dependencies: []
+  script:
+    - oss_checking .
+  artifacts:
+    paths:
+    - scan_result
+  when: manual
+
+misspellChecking:     
+  stage: misspellChecking
+  variables:
+    pattern: ""
+    word_filter_pattern: ""
+  tags:
+    - LINUX
+  script:
+    - echo "--------------- Begin ------------------------"
+    - misspell-check
+    - echo "---------------- End -----------------------"
+  artifacts:
+    when: on_failure
+    paths:
+    - misspell_result.txt
+    - misspell_result_after_filter.txt
+  when: manual 
+
+genLicense:
+  variables:
+    CODE_COMPILE_ARCH: 'EAGLE_ANDES'
+    COV_PF_CATALOG: 'BLE'
+  stage: genLicense
+  tags:
+  - LINUX 
+  before_script:
+  script:
+    - date
+    - generat_license_list
+    - date
+  artifacts:
+    paths:
+    - "license_list_gen.txt"
+    - "no_license_list_gen.txt"
+    - "mismatch_license_file_gen.txt"
+  when: manual
+
+
+sensitive_word_check:
+  variables:
+    filter_pattern: "esB"
+    sensitive_word_pattern: "(esb|nrf|nordic|Shock[ ]*Burst)"
+    result_file: "sensitive_word_check_result.txt"
+    after_filter_result_file: "sensitive_word_check_after_filter_result.txt"
+  stage: sensitive_word_check 
+  tags:
+    - LINUX
+  dependencies: []
+  script:
+    - sensitive_word_check.sh
+  artifacts:
+    name: "sensitive_word_check_result"
+    when: always
+    paths:
+    - $result_file
+    - $after_filter_result_file
+  when: manual 

@@ -1,0 +1,93 @@
+stages:
+
+  - scc
+  - oss
+  - misspellChecking
+  - genLicense
+  - sensitive_word_check
+ 
+scc:
+  stage: scc
+  tags:
+  - LINUX 
+  script:
+    - echo "Enter scc stage"
+    - scc | tee scc.txt
+    - bash /usr/bin/scc_calc.sh
+    - echo "The End SCC result:"
+    - cat scc.txt
+  artifacts:
+    paths:
+    - scc.txt
+  when: manual
+
+
+oss:
+  tags:
+    - OSS
+  stage: oss
+  dependencies: []
+  script:
+    - oss_checking .
+  artifacts:
+    paths:
+    - scan_result
+  when: manual
+
+misspellChecking:     
+  stage: misspellChecking
+  variables:
+    pattern: ""
+    word_filter_pattern: "inout,REARRANG ,INOUT"
+  tags:
+    - LINUX
+  script:
+    - echo "--------------- Begin ------------------------"
+    - misspell-check
+    - echo "---------------- End -----------------------"
+  artifacts:
+    when: on_failure
+    paths:
+    - misspell_result.txt
+    - misspell_result_after_filter.txt
+  when: manual 
+
+genLicense:
+  variables:
+    CODE_COMPILE_ARCH: 'EAGLE_ANDES'
+    COV_PF_CATALOG: 'BLE'
+  stage: genLicense
+  tags:
+  - LINUX 
+  before_script:
+  script:
+    - date
+    - generat_license_list
+    - date
+  artifacts:
+    paths:
+    - "license_list_gen.txt"
+    - "no_license_list_gen.txt"
+    - "mismatch_license_file_gen.txt"
+  when: manual
+
+
+sensitive_word_check:
+  variables:
+    filter_pattern: "esB"
+    sensitive_word_pattern: "(esb|nrf|nordic|Shock[ ]*Burst)"
+    result_file: "sensitive_word_check_result.txt"
+    after_filter_result_file: "sensitive_word_check_after_filter_result.txt"
+  stage: sensitive_word_check 
+  tags:
+    - LINUX
+  dependencies: []
+  script:
+    - sensitive_word_check.sh
+  artifacts:
+    name: "sensitive_word_check_result"
+    when: always
+    paths:
+    - $result_file
+    - $after_filter_result_file
+  when: manual 

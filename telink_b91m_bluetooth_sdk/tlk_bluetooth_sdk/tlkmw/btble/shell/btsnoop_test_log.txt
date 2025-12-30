@@ -1,0 +1,22 @@
+11:25:22.772  <0> [0000][FLASH][INI] flash initialization:85 60 15 00 85 60 00 02 15 00 00 00: 	
+11:25:22.773  <1> [0001][FLASH][INI] 2M Flash, MAC on 1ff000: 	
+11:25:22.774  <2> [0002]app_ble_controller_init begin: 	
+11:25:22.775  <3> [0003]app_ble_controller_init end: 	
+11:25:22.776  <4> [0004][FLASH][INI] flash initialization:85 60 15 00 85 60 00 02 15 00 00 00: 	
+11:25:22.777  <5> [0005][FLASH][INI] 2M Flash, MAC on 1ff000: 	
+11:25:22.777  <6> [0006][BT_SNOOP] HCI TX Packet:01 02 20 00: 	
+11:25:22.778  <7> [0007][BT_SNOOP] end of packet.: 	
+11:25:22.779  <8> [0008][BT_SNOOP] HCI RX Packet:04 0E 07 01 02 20 00 40 00 07: 	
+11:25:22.780  <9> [0009][BT_SNOOP] end of packet.: 	
+11:25:22.781  <10> [000a][BT_SNOOP] HCI TX Packet:01 31 0C 01 01: 	
+11:25:22.781  <11> [000b][BT_SNOOP] end of packet.: 	
+11:25:22.782  <12> [000c][BT_SNOOP] HCI RX Packet:04 0E 04 01 31 0C 00: 	
+11:25:22.783  <13> [000d][BT_SNOOP] end of packet.: 	
+11:25:22.784  <14> [000e][BT_SNOOP] HCI TX Packet:01 33 0C 07 FF 00 00 08 00 00 00: 	
+11:25:22.785  <15> [000f][BT_SNOOP] end of packet.: 	
+11:25:22.786  <16> [0010][BT_SNOOP] HCI RX Packet:04 0E 04 01 33 0C 00: 	
+11:25:22.786  <17> [0011][BT_SNOOP] end of packet.: 	
+11:25:22.788  <18> [0012][BT_SNOOP] HCI TX Packet:01 01 0C 08 90 08 00 00 00 80 00 20: 	
+11:25:22.788  <19> [0013][BT_SNOOP] end of packet.: 	
+11:25:22.789  <20> [0014][BT_SNOOP] HCI RX Packet:04 0E 04 01 01 0C 00: 	
+11:25:22.790  <21> [0015][BT_SNOOP] end of packet.: 	

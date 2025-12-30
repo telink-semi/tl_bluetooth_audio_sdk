@@ -1,0 +1,103 @@
+/********************************************************************************************************
+ * @file    flash_boot_ramcode.link
+ *
+ * @brief   This is the link file for TLSR/TL
+ *
+ * @author  Bluetooth Group
+ * @date    2024
+ *
+ * @par     Copyright (c) 2024, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
+ *******************************************************************************************************/
+ 
+ENTRY(_RESET_ENTRY)
+SECTIONS
+{
+    NDS_SAG_LMA_FLASH = 0x20100000 ;
+    PROVIDE (BIN_BEGIN = .);
+    . = 0x50020000;
+    .vectors :AT( NDS_SAG_LMA_FLASH){ KEEP(*(.vectors )) }
+   
+    .ram_code   : AT( ALIGN(LOADADDR (.vectors) + SIZEOF (.vectors),ALIGNOF(.ram_code))) 
+        { KEEP(*(.ram_code )) }
+    .text           : AT( ALIGN(LOADADDR (.ram_code) + SIZEOF (.ram_code), ALIGNOF(.text)))
+        { *(.text .stub .text.* .gnu.linkonce.t.* ) KEEP(*(.text.*personality* )) *(.gnu.warning )  }
+    .rodata         : AT( ALIGN(LOADADDR (.text) + SIZEOF (.text),ALIGNOF(.rodata)))
+        { *(.rodata .rodata.* .gnu.linkonce.r.* )}
+    .eh_frame_hdr   : AT( ALIGN(LOADADDR (.rodata) + SIZEOF (.rodata),ALIGNOF(.eh_frame_hdr)))
+        { KEEP(*(.eh_frame_hdr)) }
+    .eh_frame       : AT( ALIGN(LOADADDR (.eh_frame_hdr) + SIZEOF (.eh_frame_hdr),ALIGNOF(.eh_frame)))
+        { KEEP(*(.eh_frame)) }
+    .exec.itable    : AT( ALIGN(LOADADDR (.eh_frame) + SIZEOF (.eh_frame),ALIGNOF(.exec.itable)))
+        { KEEP(*(.exec.itable)) }
+    . = ALIGN(4);
+
+    PROVIDE (_ILM_VMA_START = ADDR(.vectors));
+    PROVIDE (_ILM_LMA_START = LOADADDR(.vectors));
+    PROVIDE (_ILM_VMA_END = .);
+    PROVIDE (_ILM_SIZE = (_ILM_VMA_END) -(_ILM_VMA_START));
+
+    . = MAX(., 0x50080000);
+    
+    .exchange_mem (NOLOAD): { KEEP(*(.exchange_mem )) }
+    
+    . = ALIGN(4);
+    .aes_data (NOLOAD) :   { KEEP(*(.aes_data )) }
+   
+    . = ALIGN(16);
+    .retention_data : AT(ALIGN(LOADADDR (.exec.itable) + SIZEOF (.exec.itable),  16)) { KEEP(*(.retention_data )) }
+    
+    .data   : AT(ALIGN(LOADADDR (.retention_data) + SIZEOF (.retention_data),  ALIGNOF(.data)))
+        { *(.data .data.* .gnu.linkonce.d.* ) KEEP(*(.gnu.linkonce.d.*personality* )) SORT(CONSTRUCTORS) 
+          *(.srodata.cst16 ) *(.srodata.cst8 ) *(.srodata.cst4 ) *(.srodata.cst2 ) *(.srodata .srodata.* ) *(.sdata .sdata.* .gnu.linkonce.s.* ) *(.sdata2 .sdata2.* .gnu.linkonce.s.* )
+        }
+    PROVIDE (_DATA_VMA_END = .);    
+    PROVIDE (_DATA_VMA_START = ADDR(.retention_data));
+    PROVIDE (_DATA_LMA_START = LOADADDR(.retention_data));
+    PROVIDE (_DATA_LMA_START_OFFSET = LOADADDR(.retention_data) - LOADADDR(.vectors));
+    PROVIDE (BIN_SIZE = LOADADDR(.data) + SIZEOF(.data) - BIN_BEGIN);
+    
+    . = ALIGN(4);
+    PROVIDE (_BSS_VMA_START = .);
+    PROVIDE (_DLM_SIZE = (_BSS_VMA_START) -(_DATA_VMA_START));
+    .sbss   (NOLOAD)    : { *(.dynsbss ) *(.sbss .sbss.* .gnu.linkonce.sb.* ) *(.scommon .scommon.* ) }
+    .bss    (NOLOAD)    : { *(.dynbss ) *(.bss .bss.* .gnu.linkonce.b.* ) *(COMMON ) . = ALIGN(8); }
+    /* When using the S file _FILL_STK function (which clears all the values in the stack space to 0x55), 
+     * if _BSS_VMA_END does not have four-byte alignment, there may be an out-of-bounds access beyond _STACK_TOP,
+     * resulting in a store access fault.
+     */
+    PROVIDE (_BSS_VMA_END = ((. + 3) / 4)*4);
+    
+     .sdk_version  	: AT(LOADADDR (.data) + SIZEOF (.data))
+		{ KEEP(*(.sdk_version )) }
+
+	PROVIDE (BIN_SIZE = LOADADDR(.sdk_version) + SIZEOF(.sdk_version) - BIN_BEGIN);
+	
+    . = ALIGN(4);
+    /* end is the starting address of the heap, the heap grows upward */
+    
+    /*_edata= .;*/
+    _end = .;
+    PROVIDE (_edata = .);   
+    PROVIDE (end = .);  
+    
+        
+    PROVIDE (_STACK_TOP = 0x500a0000);
+    PROVIDE (FLASH_SIZE = 0x0400000);
+
+}
+
+ASSERT((_ILM_VMA_END) <= 0x50080000, "IRAM OVERFLOW: _ILM_VMA_END exceeds 0x50080000");
+/*ASSERT((BIN_SIZE)<= FLASH_SIZE, "BIN FILE OVERFLOW");*/
