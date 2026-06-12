@@ -1,0 +1,82 @@
+/********************************************************************************************************
+ * @file    app_rc_ui_key.c
+ *
+ * @brief   This is the source file for TLSR/TL
+ *
+ * @author  Bluetooth Group
+ * @date    2024
+ *
+ * @par     Copyright (c) 2024, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+ *
+ *          Licensed under the Apache License, Version 2.0 (the "License");
+ *          you may not use this file except in compliance with the License.
+ *          You may obtain a copy of the License at
+ *
+ *              http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *          Unless required by applicable law or agreed to in writing, software
+ *          distributed under the License is distributed on an "AS IS" BASIS,
+ *          WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *          See the License for the specific language governing permissions and
+ *          limitations under the License.
+ *
+ *******************************************************************************************************/
+#include "tl_common.h"
+#include "drivers.h"
+#include "tlkmw/sys_dev/tlkmw_sysdev.h"
+
+#include "tlkmw/tinysql/tlkmdi_tinySql.h"
+#include "tlkapp/tlkapp.h"
+
+#if (TLK_DEV_KEY_ENABLE)
+static const uint16_t sApp_key_default_config[TLKDRV_KEY_MAX_NUMB][TLKDRV_KEY_EVTID_MAX] = {
+#ifdef KEY1_ID
+    [0] =
+        {
+            [TLKDRV_KEY_EVTID_LONG_LONG] = KEY_EVT_VENDOR_CONFIG_10,
+            [TLKDRV_KEY_EVTID_CLICK]     = KEY_EVT_VENDOR_CONFIG_1,
+            [TLKDRV_KEY_EVTID_DCLICK]    = KEY_EVT_VENDOR_CONFIG_2,
+            [TLKDRV_KEY_EVTID_TCLICK]    = KEY_EVT_VENDOR_CONFIG_3,
+            [TLKDRV_KEY_EVTID_4CLICK]    = KEY_EVT_VENDOR_CONFIG_4,
+        },
+#endif
+
+#ifdef KEY2_ID
+    [1] =
+        {
+            [TLKDRV_KEY_EVTID_LONG_LONG] = KEY_EVT_VENDOR_CONFIG_9,
+            [TLKDRV_KEY_EVTID_CLICK]     = KEY_EVT_VENDOR_CONFIG_8,
+            [TLKDRV_KEY_EVTID_DCLICK]    = KEY_EVT_VENDOR_CONFIG_5,
+            [TLKDRV_KEY_EVTID_TCLICK]    = KEY_EVT_VENDOR_CONFIG_6,
+            [TLKDRV_KEY_EVTID_4CLICK]    = KEY_EVT_VENDOR_CONFIG_7,
+        },
+#endif
+
+};
+
+static void app_key_defaultConfig_initial(void)
+{
+    keyConfigs_t *sApp_key_cur_config = NULL;
+    tlkmdi_tinySql_getKeyCofnig(&sApp_key_cur_config);
+    if (
+#ifdef KEY1_ID
+        sApp_key_cur_config != NULL && sApp_key_cur_config->EvtModes[KEY1_ID][TLKDRV_KEY_EVTID_CLICK] == 0 &&
+        sApp_key_cur_config->EvtModes[KEY1_ID][TLKDRV_KEY_EVTID_DCLICK] == 0 && sApp_key_cur_config->EvtModes[KEY1_ID][TLKDRV_KEY_EVTID_TCLICK] == 0
+#else
+        0
+#endif
+    ) {
+        STATIC_ASSERT_THIS_FILE(sizeof(keyConfigs_t) == sizeof(sApp_key_default_config));
+        tlkmdi_tinySql_updateKeyCofnig((keyConfigs_t *)sApp_key_default_config);
+    }
+    /****TEMP add for default configuration be modified, use new default configuration*/
+    if (sApp_key_cur_config != NULL && tmemcmp(sApp_key_default_config, sApp_key_cur_config, sizeof(keyConfigs_t))) {
+        tlkmdi_tinySql_updateKeyCofnig((keyConfigs_t *)sApp_key_default_config);
+    }
+}
+
+void tlkapp_sysKey_initCompletedHook(void)
+{
+    app_key_defaultConfig_initial();
+}
+#endif
