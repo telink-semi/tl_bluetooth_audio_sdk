@@ -1,4 +1,182 @@
 
+## V6.1.0.0(PR)
+
+## Version
+
+| SDK Version  : tl_bluetooth_audio_sdk V6.1.0.0 | Chip Version | Hardware EVK Version | Platform Version | Toolchain Version |
+|------------------------------------------|--------------|----------------------|------------------|-------------------|
+| TLSR952X(B92)                            | A3\A4        | C1T266A20_V1.3       | tl_platform_sdk V3.9.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
+| TL721X                                   | A2\A3        | C1T315A20_V1_2<br>C1TXA104_V1_1 | tl_platform_sdk V3.9.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
+| TL751X                                   | A1           | C1T368A20_V1_1<br>C1T368A20_V1_2 | tl_platform_sdk V3.9.0 | D25F: TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio)<br>N22: TL32 ELF MCULIB V5 GCC12.2 (IDE: TelinkIoTStudio) |
+| TL322X                                   | A1           | C1T382A20_V1.2       | tl_platform_sdk V3.9.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
+
+
+
+
+## BREAKING CHANGES
+- N/A
+
+## Features
+- Recording card reference design (TL721X platform, TL751X platform)
+  - Supports multi-mic BBF, NN noise reduction, and AGC for high-quality recording
+  - Supports real-time voice Opus encoding and upload to mobile phone via BLE
+  - Supports offline voice data storage via local file system
+  - BLE/WiFi shared antenna multiplexing for uploading offline-stored voice data in different scenarios
+  - Supports BLE connection maintenance / broadcasting in low-power suspend mode
+
+- BT Interphone reference design (TL751X platform)
+  - Supports BT/BLE dual-mode connection, including BT music streaming (A2DP) and phone call (HFP)
+  - Supports NN_NS noise suppression, AGC (Automatic Gain Control), and audio mixing algorithms
+  - Supports BT dual connection (simultaneous connection to two BT devices)
+  - Supports multi-scenario audio management, including:
+    - Mobile phone music and phone call
+    - Bluetooth headset front/rear seat intercom
+    - Mesh audio
+    - Sports camera audio recording
+    - Car stereo music and navigation
+  - Supports BLE data transmission and OTA (Over-The-Air) firmware upgrade
+- Flash protection functionality has been activated for all reference designs.
+
+## Bug Fixes
+- bttpsll_tws reference design (TL751X platform)  
+  - Optimized TPSLL audio latency: ultra-low latency mode at 17ms+, dual-mode online at 24ms+;
+  - Improved binaural master-slave switching across various scenarios and fixed stability issues;
+  - Enhanced range performance in TPSLL ultra-low latency mode;
+  - Resolved occasional stuttering issues during voice assistant or BT call scenarios;
+  - Improved stability and compatibility with certain devices;
+
+- bttpsll_headset reference design(TL751X platform)        
+  - Support TPSLL ultra-low latency mode (17ms+);
+  - Optimize TPSLL audio latency performance: dual-mode online 24ms+, BT music mixed with TPSLL music 64ms+, BT call mixed with TPSLL music 44ms+;
+  - Optimize range performance in ultra-low latency mode;
+  - Improve stability and compatibility with certain devices.
+                                                                       
+- tpsll_audio_dongle reference design (TL721X platform) 
+  - Optimized the Dongle audio path and latency performance in bttpsll_tws/headset project;
+  - Fixed several known issues and improved overall stability;
+
+- btble_headset  reference design (TLSR952X platform, TL751X platform)   
+  - Add CTKD (Cross-Transport Key Derivation) function (TLSR952X platform only)   
+  - Fixed some known issues and optimized connection and coexistence stability
+                                                                                     
+- btble_audio_source reference design(TLSR952X platform, TL751X platform)  
+  - Optimize stability and compatibility issues. 
+                                                                                   
+- btble_headset_example reference design(TLSR952X platform, TL751X platform, TL721X platform, TL322X platform)                                                                                         
+  - Optimize stability and compatibility issues.
+
+## Royalty fee for certain Audio Codec
+This SDK may include options for multiple audio codecs, it should be noted that use of certain Codecs may incur Royalty fees. It is the end product manufacturer's responsibility to sign license agreement with the license onwers and pay royalty fees. Telink as an IC provider cannot cover these charges.
+* Use of LC3+ codec: If you choose to use LC3+ codec, please contact Fraunhofer/Ericsson (Fraunhofer IIS: lc3-licensing@iis.fraunhofer.de and Ericsson: lc3.licensing@ericsson.com) for proper license agreement and royalty fee information. A flat fee is charged by these License owners for product incorporating LC3+ codec. The royalty fee is open and transparent and charged per device (e.g. Headset, TV ,Box, …).
+* Use of LC3 codec: LC3 usage is only free for product qualified as a Bluetooth product by Bluetooth SIG. If your product is not Bluetooth qualified and you choose to use LC3 codec, please contact Fraunhofer/Ericsson (Fraunhofer IIS: lc3-licensing@iis.fraunhofer.de and Ericsson: lc3.licensing@ericsson.com) for proper license agreement and royalty fee information. A flat fee is charged by these License owners for non-Bluetooth product incorporating LC3 codec. The royalty fee is open and transparent and charged per device (e.g. Headset, TV ,Box, …).
+
+
+
+## CodeSize
+
+| project               | TLSR952X_Flash_bin_size(KB) | TLSR952X_IRAM_Size(KB) | TLSR952X_DRAM_Size(KB) | TL751X_Flash_bin_size(KB) | TL751X_IRAM_Size(KB) | TL751X_DRAM_Size(KB) | TL721X_Flash_bin_size(KB) | TL721X_IRAM_Size(KB) | TL721X_DRAM_Size(KB) | TL322X_Flash_bin_size(KB) | TL322X_IRAM_Size(KB) | TL322X_DRAM_Size(KB) |
+| --------------------- | ----------------------------- | ------------------------ | ------------------------ | ---------------------------- | ----------------------- | ----------------------- | ---------------------------- | ----------------------- | ----------------------- | ---------------------------- | ----------------------- | ----------------------- |
+| btble_headset         | 961                           | 209                      | 188                      | 648                          | 162                     | 162                     | 275                          | 255                     | 51                      | \                            | \                       | \                       |
+| btble_audio_source    | 937                           | 219                      | 215                      | 590                          | 226                     | 185                     | 298                          | 274                     | 67                      | \                            | \                       | \                       |
+| btble_a2dp_to_bis     | \                             | \                        | \                        | 447                          | 95                      | 152                     | 318                          | 286                     | 70                      | \                            | \                       | \                       |
+| bttpsll_headset       | \                             | \                        | \                        | 581                          | 188                     | 232                     | 223                          | 209                     | 48                      | \                            | \                       | \                       |
+| bttpsll_tws           | \                             | \                        | \                        | 599                          | 205                     | 280                     | 240                          | 229                     | 51                      | \                            | \                       | \                       |
+| tpsll_dongle          | \                             | \                        | \                        | \                            | \                       | \                       | \                            | \                       | \                       | 283                          | 122                     | 235                     |
+| bluetooth_controller   | 536                           | 239                      | 85                       | \                            | \                       | \                       | \                            | \                       | \                       | \                            | \                       | \                       |
+| bt_interphone          | \                             | \                        | \                        | 749                          | 129                     | 229                     | 289                          | 269                     | 53                      | \                            | \                       | \                       |
+| recording_card         | \                             | \                        | \                        | 531                          | 238                     | 258                     | 229                          | 174                     | 67                      | 774                          | 237                     | 241                     |
+
+## 版本
+
+| SDK Version: tl_bluetooth_audio_sdk V6.0.0.0 | Chip Version | Hardware EVK Version | Platform Version | Toolchain Version |
+|------------------------------------------|--------------|----------------------|------------------|-------------------|
+| TLSR952X(B92)                            | A3\A4        | C1T266A20_V1.3       | tl_platform_sdk V3.9.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
+| TL721X                                   | A2\A3        | C1T315A20_V1_2<br>C1TXA104_V1_1 | tl_platform_sdk V3.9.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
+| TL751X                                   | A1           | C1T368A20_V1_1<br>C1T368A20_V1_2 | tl_platform_sdk V3.9.0 | D25F: TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio)<br>N22: TL32 ELF MCULIB V5 GCC12.2 (IDE: TelinkIoTStudio) |
+| TL322X                                   | A1           | C1T382A20_V1.2       | tl_platform_sdk V3.9.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
+
+
+
+
+## BREAKING CHANGES
+- N/A
+
+
+## Features
+- Recording card参考设计 (TL721X platform, TL751X platform)
+  - 支持多麦BBF、NN降噪、AGC高质量录音
+  - 支持通过BLE将实时语音opus编码后上传手机
+  - 支持本地文件系统离线保存语音数据
+  - 支持BLE/WIFI共享天线分场景复用上传离线保存的语音数据
+  - 支持suspend低功耗下BLE保连接/广播功能
+
+- BT_Interphone参考设计（TL751X 平台）
+  - 支持 BT/BLE 双模连接，包括 BT 音乐（A2DP）及通话（HFP）
+  - 支持 NN_NS 降噪、AGC（自动增益控制）、混音算法
+  - 支持 BT 双连接（同时连接两台 BT 设备）
+  - 支持多场景音频管控，包括：
+    - 手机音乐通话
+    - 蓝牙耳机前后座对讲
+    - Mesh 音频
+    - 运动相机音频录制
+    - 车机音乐及导航
+  - 支持通过 BLE 传输数据及 OTA 固件升级
+
+- 所有参考设计flash保护功能已生效
+
+## Bug Fixes
+
+- Bttpsll_tws参考设计（TL751X platform）
+  - 优化TPSLL音频延时表现，超低延时模式17ms+，双模在线模式24ms+
+  - 优化各场景下双耳主从切换，修复稳定性问题
+  - 优化超低延时模式下距离表现
+  - 修复在语音助手或BT通话场景概率卡顿问题
+  - 优化部分稳定性以及兼容性问题
+
+- Bttpsll_headset参考设计（TL751X platform）
+  - 支持TPSLL超低延时模式（17ms+）;
+  - 优化TPSLL音频延时表现，双模在线模式24ms+，BT音乐与TPSLL音乐混音模式64ms+，BT电话与TPSLL音乐混音模式44ms+
+  - 优化超低延时模式下距离表现；
+  - 优化部分稳定性以及兼容性问题；
+
+- tpsll_audio_dongle 参考设计 (TL721X platform)
+  - 优化Dongle Audio Path 以及 bttpsll_tws/headset模式下延时表现
+  - 修复了部分已知问题，优化稳定性
+
+
+- btble_headset 参考设计 (TLSR952X platform, TL751X platform)  
+  - 新增CTKD(跨传输密钥派生)功能(仅TLSR952X platform)   
+  - 修复了部分已知问题，优化连接和共存稳定性                                                                            
+
+- btble_audio_source 参考设计(TLSR952X platform, TL751X platform)
+  - 优化部分稳定性以及兼容性问题                                                                 
+
+- bluetooth_controller 参考设计 (TLSR952X Platform)  
+  - 优化部分稳定性以及兼容性问题                                                                         
+
+
+- le_example 参考设计 (TLSR952X platform, TL751X platform, TL721X platform, TL322X platform)
+  - 优化部分稳定性以及兼容性问题
+
+
+## Royalty fee for certain Audio Codec
+此SDK可能包括多种音频编解码器的选项，需要注意的是，使用某些编解码器可能会产生版权费用。最终产品制造商有责任与许可所有者签订许可协议并支付版权费用。作为IC提供商的Telink无法承担这些费用。
+* 使用LC3+编解码器：如果您选择使用LC3+编解码器，请联系Fraunhofer/Ericsson（Fraunhofer IIS：lc3-licensing@iis.fraunhofer.de 和 Ericsson：lc3.licensing@ericsson.com）以获得适当的许可协议和版权费用信息。这些许可所有者对采用LC3+编解码器的产品收取固定费用。版权费用是公开透明的，按设备收费（例如耳机、电视、盒子等）。
+* 使用LC3编解码器：只有被蓝牙SIG认证为蓝牙产品的产品才可以免费使用LC3编解码器。如果您的产品未经蓝牙认证且选择使用LC3编解码器，请联系Fraunhofer/Ericsson（Fraunhofer IIS：lc3-licensing@iis.fraunhofer.de 和 Ericsson：lc3.licensing@ericsson.com）以获得适当的许可协议和版权费用信息。这些许可所有者对非蓝牙产品采用LC3编解码器收取固定费用。版权费用是公开透明的，按设备收费（例如耳机、电视、盒子等）。
+
+
+
+
+## CodeSize
+
+
+
+
+
+
+
+
+
 
 ## V6.0.0.0(PR)
 
