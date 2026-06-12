@@ -22,9 +22,9 @@ OTA手机端的APP获取方式，联系FAE获取或者参考官方Handbook文档
 
 ## BLE OTA Example 代码结构
 
-用户需要使能SDK OTA功能，通过宏定义TLK_MW_USER_CTRL_ENABLE。
+用户需要使能SDK OTA功能，通过宏定义TLK_MW_OTA_ENABLE。
 ```c
-#define TLK_MW_USER_CTRL_ENABLE       1
+#define TLK_MW_OTA_ENABLE       1
 ```
 
 注册BLE Telink OTA v2 Service，并添加OTA characteristic(API:blc_svc_addOtaV2Group)。

@@ -35,7 +35,7 @@
  */
 void tlkmw_codec_init(void)
 {
-	tlkdrv_codec_power_on();
+    tlkdrv_codec_power_on();
 }
 
 #endif

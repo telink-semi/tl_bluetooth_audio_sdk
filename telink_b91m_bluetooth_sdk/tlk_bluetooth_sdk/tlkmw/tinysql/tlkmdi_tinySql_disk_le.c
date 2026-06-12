@@ -50,8 +50,8 @@ typedef struct
 /******************************************************************************
                            private code begin
 ******************************************************************************/
-static sql_le_disk_format_t sSqlLeDiskData = {0};
-static tlkapi_save_ctrl_t   sSqlDiskLeCtrl = {0};
+static sql_le_disk_format_t sTlkmdiSqlLeDiskData = {0};
+static tlkapi_save_ctrl_t   sTlkmdiSqlDiskLeCtrl = {0};
 
 /**
  * @brief       Operate mutex for LE disk.
@@ -69,8 +69,8 @@ static void tlkmdi_tinySql_leDisk_mutexOperate(uint8_t isLock)
  */
 static void tlkmdi_tinySql_leDiskReset(void)
 {
-    memset(&sSqlLeDiskData, 0, sizeof(sql_le_disk_format_t));
-    sSqlLeDiskData.index = 1;
+    memset(&sTlkmdiSqlLeDiskData, 0, sizeof(sql_le_disk_format_t));
+    sTlkmdiSqlLeDiskData.index = 1;
 }
 
 /**
@@ -80,12 +80,11 @@ static void tlkmdi_tinySql_leDiskReset(void)
 static void tlkmdi_tinySql_leDiskInit(void)
 {
     unsigned int saveAddress = tlkmdi_tinySql_getSaveAddr(TLKMDI_TINYSQL_DISK4_ADDR);
-    tlkapi_save3_init(&sSqlDiskLeCtrl, TLKMDI_TINYSQL_SAVE_SIGN,
+    tlkapi_save3_init(&sTlkmdiSqlDiskLeCtrl, TLKMDI_TINYSQL_SAVE_SIGN,
                       TLKMDI_TINYSQL_VER + 3, // always version + 1, different TLK_STK_BLE_VOLUME_STORE
-                      sizeof(sSqlLeDiskData), saveAddress + 4096 * 0,
-                      saveAddress + 4096 * 1); //2*4K
-    int ret = tlkapi_save3_load(&sSqlDiskLeCtrl, (uint8_t *)&sSqlLeDiskData, sizeof(sSqlLeDiskData));
-    if (ret < (int)sizeof(sSqlLeDiskData)) {
+                      sizeof(sTlkmdiSqlLeDiskData), saveAddress);
+    int ret = tlkapi_save3_load(&sTlkmdiSqlDiskLeCtrl, (uint8_t *)&sTlkmdiSqlLeDiskData, sizeof(sTlkmdiSqlLeDiskData));
+    if (ret < (int)sizeof(sTlkmdiSqlLeDiskData)) {
         tlkmdi_tinySql_leDiskReset();
     }
 }
@@ -96,7 +95,7 @@ static void tlkmdi_tinySql_leDiskInit(void)
  */
 static void tlkmdi_tinySql_leDiskSave(void)
 {
-    tlkapi_save3_smartSave(&sSqlDiskLeCtrl, (uint8_t *)&sSqlLeDiskData, sizeof(sSqlLeDiskData));
+    tlkapi_save3_smartSave(&sTlkmdiSqlDiskLeCtrl, (uint8_t *)&sTlkmdiSqlLeDiskData, sizeof(sTlkmdiSqlLeDiskData));
 }
 
 /**
@@ -105,7 +104,7 @@ static void tlkmdi_tinySql_leDiskSave(void)
  */
 static void tlkmdi_tinySql_leDiskRestore(void)
 {
-    tlkapi_save3_clean(&sSqlDiskLeCtrl);
+    tlkapi_save3_clean(&sTlkmdiSqlDiskLeCtrl);
     tlkmdi_tinySql_leDiskReset();
     tlkmdi_tinySql_requestSave(tinySql_leSaveIndex);
 }
@@ -129,14 +128,14 @@ const tinySqlDisk_t tinySql_le_disk = {
 int ble_host_sal_nvs_init(const char *partition_name, uint32_t version)
 {
     (void)partition_name;
-    if (sSqlLeDiskData.used_flag == 1) {
-        if (sSqlLeDiskData.version != version) {
+    if (sTlkmdiSqlLeDiskData.used_flag == 1) {
+        if (sTlkmdiSqlLeDiskData.version != version) {
             return BLE_HOST_SAL_NVS_RESULT_VERSION_NOT_MATCH;
         }
     } else {
         tlkmdi_tinySql_leDisk_mutexOperate(true);
-        sSqlLeDiskData.used_flag = 1;
-        sSqlLeDiskData.version   = version;
+        sTlkmdiSqlLeDiskData.used_flag = 1;
+        sTlkmdiSqlLeDiskData.version   = version;
         tlkmdi_tinySql_leDisk_mutexOperate(false);
         tlkmdi_tinySql_requestSave(tinySql_leSaveIndex);
     }
@@ -218,7 +217,7 @@ static struct ble_host_smp_store_key *tlkmdi_tinySql_get_key_by_index(const char
     } else {
         return NULL;
     }
-    return &sSqlLeDiskData.key[index];
+    return &sTlkmdiSqlLeDiskData.key[index];
 }
 
 /**
@@ -252,7 +251,7 @@ int ble_host_sal_nvs_write_uint32(ble_host_sal_nvs_handle_t handle, const char *
     (void)handle;
     if (memcmp(key, "index", 5) == 0) {
         tlkmdi_tinySql_leDisk_mutexOperate(true);
-        sSqlLeDiskData.index = value;
+        sTlkmdiSqlLeDiskData.index = value;
         tlkmdi_tinySql_leDisk_mutexOperate(false);
         tlkmdi_tinySql_requestSave(tinySql_leSaveIndex);
     }
@@ -271,7 +270,7 @@ int ble_host_sal_nvs_read_uint32(ble_host_sal_nvs_handle_t handle, const char *k
     (void)handle;
     if (memcmp(key, "index", 5) == 0) {
         if (value != NULL) {
-            *value = sSqlLeDiskData.index;
+            *value = sTlkmdiSqlLeDiskData.index;
         }
     } else {
         return BLE_HOST_SAL_NVS_RESULT_KEY_NOT_EXIST;
@@ -294,7 +293,7 @@ int ble_host_sal_nvs_write_blob(ble_host_sal_nvs_handle_t handle, const char *ke
 
     if (memcmp(key, "queue", 5) == 0) {
         tlkmdi_tinySql_leDisk_mutexOperate(true);
-        memcpy(sSqlLeDiskData.queue, value, length);
+        memcpy(sTlkmdiSqlLeDiskData.queue, value, length);
         tlkmdi_tinySql_leDisk_mutexOperate(false);
         tlkmdi_tinySql_requestSave(tinySql_leSaveIndex);
     } else {
@@ -321,7 +320,7 @@ int ble_host_sal_nvs_read_blob(ble_host_sal_nvs_handle_t handle, const char *key
 {
     (void)handle;
     if (memcmp(key, "queue", 5) == 0) {
-        memcpy(value, sSqlLeDiskData.queue, *length);
+        memcpy(value, sTlkmdiSqlLeDiskData.queue, *length);
     } else {
         struct ble_host_smp_store_key *p_store_key = tlkmdi_tinySql_get_key_by_index(key);
         if (p_store_key != NULL) {

@@ -48,9 +48,9 @@ static void tlkapp_lemgr_init(void)
  */
 static int tlkapp_lemgr_input(uint16_t msgID, uint8_t *pData, uint16_t dataLen)
 {
-    (void) msgID;
-    (void) pData;
-    (void) dataLen;
+    (void)msgID;
+    (void)pData;
+    (void)dataLen;
 #if (TLK_CFG_UART_TOOL_ENABLE)
     return tlkapp_lemgr_msgHandle(msgID, pData, dataLen);
 #else
@@ -62,7 +62,7 @@ static int tlkapp_lemgr_input(uint16_t msgID, uint8_t *pData, uint16_t dataLen)
  * @brief   Get the task configuration for LE manager.
  * @return  Pointer to the task configuration structure.
  */
-const tlksys_task_cfg_t * tlkapp_lemgr_getTaskCfg(void)
+const tlksys_task_cfg_t *tlkapp_lemgr_getTaskCfg(void)
 {
     static const tlksys_task_cfg_t sTlkAppLemgrTask = {
         .Init  = tlkapp_lemgr_init,
@@ -71,4 +71,4 @@ const tlksys_task_cfg_t * tlkapp_lemgr_getTaskCfg(void)
     return &sTlkAppLemgrTask;
 }
 
-#endif 
+#endif

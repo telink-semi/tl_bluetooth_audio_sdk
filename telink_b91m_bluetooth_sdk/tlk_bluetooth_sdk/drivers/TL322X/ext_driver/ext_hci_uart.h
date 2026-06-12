@@ -32,35 +32,36 @@
 /**
   * @brief  Define hci UART chn (uart_num_e)
   */
-#define     EXT_HCI_UART0       0
-#define     EXT_HCI_UART1       1
-#define     EXT_HCI_UART2       2
-#define     EXT_HCI_UART3       3
-#define     EXT_HCI_UART4       4
+#define EXT_HCI_UART0 0
+#define EXT_HCI_UART1 1
+#define EXT_HCI_UART2 2
+#define EXT_HCI_UART3 3
+#define EXT_HCI_UART4 4
 
 /**
   * @brief extend UART HCI  Complete Callback
   */
- typedef void (* CpltCallback)(unsigned int * param);
+typedef void (*CpltCallback)(unsigned int *param);
+
 /**
   * @brief extend UART HCI Init Structure definition
   */
 typedef struct
 {
-  unsigned int   baudrate;    //This member configures the baud rate for UART communication.
+    unsigned int baudrate; //This member configures the baud rate for UART communication.
 
-  unsigned int   tx_Pin;      //
+    unsigned int tx_Pin; //
 
-  unsigned int   rx_Pin;      //
+    unsigned int rx_Pin; //
 
-  unsigned int   HwFlowCtl;   //Specifies whether the hardware flow control mode is enabled or disabled
+    unsigned int HwFlowCtl; //Specifies whether the hardware flow control mode is enabled or disabled
 
-  unsigned int   cts_Pin;      //uart_parity_e
+    unsigned int cts_Pin; //uart_parity_e
 
-  unsigned int   rts_Pin;      //uart_parity_e
+    unsigned int rts_Pin; //uart_parity_e
 
-  CpltCallback  RxCpltCallback;         // UART Tx Complete Callback
-  CpltCallback  TxCpltCallback;         // UART Rx Complete Callback
+    CpltCallback RxCpltCallback; // UART Tx Complete Callback
+    CpltCallback TxCpltCallback; // UART Rx Complete Callback
 
 } ext_hci_InitTypeDef;
 
@@ -69,18 +70,17 @@ typedef struct
   */
 typedef enum
 {
-  EXT_UART_OK       = 0x00U,
-  EXT_UART_ERROR    = 0x01U,
-  EXT_UART_BUSY     = 0x02U,
-}ext_hci_StatusTypeDef_e ;
-
+    EXT_UART_OK    = 0x00U,
+    EXT_UART_ERROR = 0x01U,
+    EXT_UART_BUSY  = 0x02U,
+} ext_hci_StatusTypeDef_e;
 
 /**
  * @brief   hci uart initialization
  * @param   none
  * @return  none
  */
-ext_hci_StatusTypeDef_e ext_hci_uartInit(ext_hci_InitTypeDef * uart);
+ext_hci_StatusTypeDef_e ext_hci_uartInit(ext_hci_InitTypeDef *uart);
 
 /**
  * @brief  Check whether the transmission is complete

@@ -214,9 +214,9 @@ fi
 
 #cfg here
 if [ "$need_boot" -eq 1 ]; then 
-    otaFile="./firmware_0x00000.bin"
+    otaFile="./${CHIP_TYPE}_firmware_0x00000.bin"
 else
-    otaFile="./firmware_0x12000.bin"
+    otaFile="./${CHIP_TYPE}_firmware_0x12000.bin"
 fi
 
 

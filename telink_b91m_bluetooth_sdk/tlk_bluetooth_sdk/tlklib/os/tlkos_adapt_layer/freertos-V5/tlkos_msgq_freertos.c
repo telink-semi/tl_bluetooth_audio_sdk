@@ -37,8 +37,8 @@
 //User can use FreeRTOS native functions instead.
 typedef struct
 {
-    void    *semHandle;
-    uint32_t msgMaxSize;
+    uint16_t msgMaxSize;
+    uint16_t isMalloced;
     uint32_t qLength;
 } tlkOsMsgCore_t;
 
@@ -47,6 +47,61 @@ typedef struct
     uint8_t *data;
     uint32_t datalen;
 } tlkOsMsgItem_t;
+
+typedef struct
+{
+    tlkOsMsgCore_t core;
+    StaticQueue_t  staticQueue;
+    uint8_t       *queueStorage;
+} tlkOsMsgQCtrl_t;
+
+static inline QueueHandle_t tlkos_msgq_get_handle(tlkOsMsgQCtrl_t *ctrl)
+{
+    return (QueueHandle_t)&ctrl->staticQueue;
+}
+
+/**
+ * @brief     Gets the required static buffer length for creating a message queue.
+ * @param[in] qLength Maximum number of messages in the queue.
+ * @returns   Required buffer size in bytes.
+ */
+uint32_t tlkos_msgq_getStaticBufferLen(uint32_t qLength)
+{
+    uint32_t queueStorageSize = qLength * sizeof(tlkOsMsgItem_t);
+    return sizeof(tlkOsMsgQCtrl_t) + queueStorageSize;
+}
+
+/**
+ * @brief     Creates a message queue with a static buffer.
+ * @param[out] pMsgQHandle Pointer to store the created message queue handle.
+ * @param[in] msgMaxSize Maximum size of each message in the queue.
+ * @param[in] qLength Maximum number of messages in the queue.
+ * @param[in] pStaticBuffer Pointer to the static buffer provided by the user.
+ * @param[in] staticBufferSize Size of the static buffer in bytes.
+ * @returns   0 indicates success, other values indicate corresponding error codes.
+ */
+int tlkos_msgq_createStatic(TlkOsMsgQHandle_t *pMsgQHandle, uint32_t msgMaxSize, uint32_t qLength, uint8_t *pStaticBuffer, uint32_t staticBufferSize)
+{
+    if (pMsgQHandle == NULL || msgMaxSize == 0 || qLength == 0 || pStaticBuffer == NULL) {
+        return -TLK_EPARAM;
+    }
+    msgMaxSize        = min(msgMaxSize, UINT16_MAX);
+    uint32_t needSize = tlkos_msgq_getStaticBufferLen(qLength);
+    if (staticBufferSize < needSize) {
+        return -TLK_EPARAM;
+    }
+    tlkOsMsgQCtrl_t *ctrl = (tlkOsMsgQCtrl_t *)pStaticBuffer;
+    memset(ctrl, 0, needSize);
+    ctrl->queueStorage   = (uint8_t *)ctrl + sizeof(tlkOsMsgQCtrl_t);
+    QueueHandle_t handle = xQueueCreateStatic(qLength, sizeof(tlkOsMsgItem_t), ctrl->queueStorage, &ctrl->staticQueue);
+    if (handle == NULL) {
+        return -TLK_EFAIL;
+    }
+    ctrl->core.qLength    = qLength;
+    ctrl->core.msgMaxSize = msgMaxSize;
+    *pMsgQHandle          = &ctrl->core;
+    return TLK_ENONE;
+}
 
 /**
  * @brief     Creates a message queue.
@@ -60,18 +115,22 @@ int tlkos_msgq_create(TlkOsMsgQHandle_t *pMsgQHandle, uint32_t msgMaxSize, uint3
     if (pMsgQHandle == NULL || msgMaxSize == 0 || qLength == 0) {
         return -TLK_EPARAM;
     }
-    tlkOsMsgCore_t *core = tlkos_calloc(sizeof(tlkOsMsgCore_t));
-    if (core == NULL) {
+    msgMaxSize                = min(msgMaxSize, UINT16_MAX);
+    uint32_t         needSize = tlkos_msgq_getStaticBufferLen(qLength);
+    tlkOsMsgQCtrl_t *ctrl     = tlkos_calloc(needSize);
+    if (ctrl == NULL) {
         return -TLK_ENOSPACE;
     }
-    core->semHandle = xQueueCreate(qLength, sizeof(void *) + sizeof(msgMaxSize)); //point + data len
-    if (core->semHandle == NULL) {
-        tlkos_free(core);
+    ctrl->queueStorage   = (uint8_t *)ctrl + sizeof(tlkOsMsgQCtrl_t);
+    QueueHandle_t handle = xQueueCreateStatic(qLength, sizeof(tlkOsMsgItem_t), ctrl->queueStorage, &ctrl->staticQueue);
+    if (handle == NULL) {
+        tlkos_free(ctrl);
         return -TLK_EFAIL;
     }
-    core->qLength    = qLength;
-    core->msgMaxSize = msgMaxSize;
-    *pMsgQHandle     = core;
+    ctrl->core.isMalloced = 1;
+    ctrl->core.qLength    = qLength;
+    ctrl->core.msgMaxSize = msgMaxSize;
+    *pMsgQHandle          = &ctrl->core;
     return TLK_ENONE;
 }
 
@@ -85,9 +144,19 @@ int tlkos_msgq_destroy(TlkOsMsgQHandle_t msgQHandle)
     if (msgQHandle == NULL) {
         return -TLK_EPARAM;
     }
-    tlkOsMsgCore_t *core = (tlkOsMsgCore_t *)msgQHandle;
-    vQueueDelete(core->semHandle);
-    tlkos_free(core);
+    tlkOsMsgQCtrl_t *ctrl = (tlkOsMsgQCtrl_t *)msgQHandle;
+    tlkOsMsgItem_t   msgItem;
+    QueueHandle_t    handle = tlkos_msgq_get_handle(ctrl);
+    while (xQueueReceive(handle, &msgItem, 0) == pdTRUE) {
+        tlkos_free(msgItem.data);
+    }
+    vQueueDelete(handle);
+    if (ctrl->core.isMalloced) {
+        tlkos_free(ctrl);
+    } else {
+        uint32_t needSize = tlkos_msgq_getStaticBufferLen(ctrl->core.qLength);
+        memset(ctrl, 0, needSize);
+    }
     return TLK_ENONE;
 }
 
@@ -114,8 +183,9 @@ int tlkos_msgq_send(TlkOsMsgQHandle_t msgQHandle, uint8_t *pData, uint32_t dataL
         .data    = inbuffer,
         .datalen = dataLen,
     };
-    uint32_t   delayTick = tlkos_freertos_msToTick(blockTimeMs);
-    BaseType_t ret       = xQueueSend(core->semHandle, (uint8_t *)&msgItem, delayTick);
+    QueueHandle_t handle    = tlkos_msgq_get_handle((tlkOsMsgQCtrl_t *)core);
+    uint32_t      delayTick = tlkos_freertos_msToTick(blockTimeMs);
+    BaseType_t    ret       = xQueueSend(handle, (uint8_t *)&msgItem, delayTick);
     if (ret != pdTRUE) {
         tlkos_free(inbuffer);
         return -TLK_EFAIL;
@@ -138,9 +208,10 @@ int tlkos_msgq_wait(TlkOsMsgQHandle_t msgQHandle, uint8_t *pBuff, uint32_t *recL
     if (core == NULL || pBuff == NULL || buffLen < core->msgMaxSize) {
         return -TLK_EPARAM;
     }
+    QueueHandle_t  handle    = tlkos_msgq_get_handle((tlkOsMsgQCtrl_t *)core);
     uint32_t       delayTick = tlkos_freertos_msToTick(blockTimeMs);
     tlkOsMsgItem_t msgItem;
-    BaseType_t     ret = xQueueReceive(core->semHandle, (uint8_t *)&msgItem, delayTick);
+    BaseType_t     ret = xQueueReceive(handle, (uint8_t *)&msgItem, delayTick);
     if (ret != pdTRUE) {
         return -TLK_EFAIL;
     }

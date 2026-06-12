@@ -25,16 +25,12 @@
 #define DRIVERS_B92_EXT_DRIVER_DRIVER_EXT_H_
 
 
-#include "mcu_config.h"
 #include "ext_pm.h"
 #include "ext_misc.h"
 #include "ext_uart.h"
 #include "software_pa.h"
 #include "mcu_boot.h"
 #include "ext_hci_uart.h"
-#include "ext_flash.h"
-#include "ext_codec.h"
-#include "ext_audio.h"
 #include "compatibility_pack/cmpt.h"
 
 

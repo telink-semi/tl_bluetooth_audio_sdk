@@ -31,7 +31,7 @@
 
 #include "stack/multiCoreComm/service/service_shareMemory.h"
 
-#include "tlkmw/ble/le_audio/inc/lea_us_headset.h"
+#include "tlkmw/ble/le_audio/inc/lea_us.h"
 
 #define LE_HEADSET_DEVICE_NAME          "LEA-bttpsll(demo)"
 
@@ -48,9 +48,7 @@ static char device_name[LE_HEADSET_DEVICE_NAME_MAX_SIZE] = {0};
  */
 void tlkapp_host_le_init(void)
 {
-    uint8_t mac_random_static[6];
-
-    blc_initMacAddress(flash_sector_mac_address, mac_public, mac_random_static);
+    tlkhal_get_bluetooth_mac(mac_public);
 
     tlk_d25f_register_hci_receive_cb(TLK_SHARE_MEMORY_MESSAGE_TYPE_BLE, ble_host_hci_rx_complete_packet);
 
@@ -67,7 +65,7 @@ void tlkapp_host_le_init(void)
     tlk_printf("LE Device Name: %s", device_name);
 }
 
-static struct lea_us_headset_param s_le_headset_param = {
+static struct tlk_mw_lea_cap_headset_param s_le_headset_param = {
     .device_name = device_name,
     .interval    = 50,
     .volume      = 150,
@@ -81,7 +79,7 @@ static struct lea_us_headset_param s_le_headset_param = {
 void tlkapp_host_le_start(void)
 {
     lea_unicast_server_headset_initial(&s_le_headset_param);
-    lea_unicast_server_headset_stop(NULL);
+    lea_unicast_server_stop_task(NULL);
 }
 
 #endif // TLK_STK_BLE_ENABLE

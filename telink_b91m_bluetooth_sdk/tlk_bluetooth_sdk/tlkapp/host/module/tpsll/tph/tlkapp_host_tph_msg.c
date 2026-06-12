@@ -36,9 +36,9 @@ static int tlkapp_host_tph_recvSendKeyDeal(uint8_t *pData, uint16_t dataLen)
     (void)dataLen;
     typedef int (*tphKeyFunc)(void);
     static const tphKeyFunc sTphKeyFuncs[AUD_TPSIF_KEYID_NUM] = {
-        [AUD_TPSIF_KEYID_VOL_UP] = tlkmdi_bt_tph_keyFuncAudioVolumeUp,        [AUD_TPSIF_KEYID_VOL_DOWN] = tlkmdi_bt_tph_keyFuncAudioVolumeDown,
-        [AUD_TPSIF_KEYID_PLAY_PAUSE] = tlkmdi_bt_tph_keyFuncMusicPlayPause,   [AUD_TPSIF_KEYID_PLAY_FORWARD] = tlkmdi_bt_tph_keyFuncMusicForward,
-        [AUD_TPSIF_KEYID_PLAY_BACKWARD] = tlkmdi_bt_tph_keyFuncMusicBackward,
+        [AUD_TPSIF_KEYID_VOL_UP] = tlkmdi_bt_tpsll_keyFuncAudioVolumeUp,        [AUD_TPSIF_KEYID_VOL_DOWN] = tlkmdi_bt_tpsll_keyFuncAudioVolumeDown,
+        [AUD_TPSIF_KEYID_PLAY_PAUSE] = tlkmdi_bt_tpsll_keyFuncMusicPlayPause,   [AUD_TPSIF_KEYID_PLAY_FORWARD] = tlkmdi_bt_tpsll_keyFuncMusicForward,
+        [AUD_TPSIF_KEYID_PLAY_BACKWARD] = tlkmdi_bt_tpsll_keyFuncMusicBackward,
     };
     uint8_t key = pData[0];
     if (key >= AUD_TPSIF_KEYID_NUM) {
@@ -61,10 +61,13 @@ int tlkapp_host_tph_msgHandle(uint16_t msgID, uint8_t *pData, uint16_t dataLen)
     (void)dataLen;
     switch (msgID) {
     case TLKSYS_TPH_MSGID_3S_PAIR:
-        tlkmdi_bt_tph_pair_start(false);
+        tlkmdi_bt_tph_pair_start(TPH_HOST_DISCONNECT_REASON_HEADSET_START_3S_SETUP);
         break;
     case TLKSYS_TPH_MSGID_10S_PAIR:
-        tlkmdi_bt_tph_pair_start(true);
+        tlkmdi_bt_tph_pair_start(TPH_HOST_DISCONNECT_REASON_HEADSET_START_10S_SETUP);
+        break;
+    case TLKSYS_TPH_MSGID_ENTER_LOW_LATENCY_MODE:
+        tlkmdi_bt_tph_pair_start(TPH_HOST_DISCONNECT_REASON_HEADSET_ENTER_ULTRA_LOW_LATENCY);
         break;
     case TLKSYS_TPH_MSGID_SEND_KEY:
         return tlkapp_host_tph_recvSendKeyDeal(pData, dataLen);

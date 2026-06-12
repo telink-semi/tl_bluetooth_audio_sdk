@@ -26,7 +26,7 @@
 #if (TLK_MW_AUDIO_ENABLE)
 #include "tlkmw/tlkmw.h"
 #include "tlkapp/tlkapp.h"
-    
+
 static const tlkapp_audio_modinf_t *spTlkAppAudioModinfs[TLKAUD_TYPE_MAX];
 
 /**
@@ -42,7 +42,6 @@ static const tlkapp_audio_modinf_t *tlkapp_audio_getModinf(TLKAUD_TYPE_ENUM opty
     return spTlkAppAudioModinfs[optype];
 }
 
-
 /**
  * @brief       This function initializes the audio module nodes.
  * @param[in]   none.
@@ -50,7 +49,7 @@ static const tlkapp_audio_modinf_t *tlkapp_audio_getModinf(TLKAUD_TYPE_ENUM opty
  */
 int tlkapp_audio_modinfNodeInit(void)
 {
-    for(uint32_t i = 0;i < TLKAUD_TYPE_MAX;i++){
+    for (uint32_t i = 0; i < TLKAUD_TYPE_MAX; i++) {
         if (spTlkAppAudioModinfs[i] == NULL || spTlkAppAudioModinfs[i]->Init == NULL) {
             continue;
         }
@@ -176,6 +175,7 @@ bool tlkapp_audio_modinfIsBusy(TLKAUD_TYPE_ENUM optype)
         return pModinf->IsBusy();
     }
 }
+
 /**
  * @brief       This function operates on the audio module with specific data.
  * @param[in]   handle  - the connection handle of the current audio initiator.
@@ -189,7 +189,7 @@ bool tlkapp_audio_modinfOperate(uint16_t handle, TLKAUD_TYPE_ENUM optype, uint8_
     if (pData == NULL || dataLen < 1) {
         return false;
     }
-    uint8_t                       opcode = pData[0];
+    uint8_t                      opcode = pData[0];
     const tlkapp_audio_modinf_t *pModinf;
 
     pModinf = tlkapp_audio_getModinf(optype);
@@ -200,7 +200,7 @@ bool tlkapp_audio_modinfOperate(uint16_t handle, TLKAUD_TYPE_ENUM optype, uint8_
     }
 }
 
-    #if (TLK_CFG_TONE_ENABLE)
+#if (TLK_CFG_TONE_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppdAudioToneModinf = {
     .Init    = tlkmdi_tone_init,
     .Switch  = tlkmdi_tone_switch,
@@ -208,9 +208,9 @@ static const tlkapp_audio_modinf_t sTlkAppdAudioToneModinf = {
     .Start   = tlkmdi_tone_start,
     .operate = tlkmdi_tone_operate,
 };
-    #endif              
+#endif
 
-    #if (TLK_CFG_A2DP_TO_BIS_ENABLE)
+#if (TLK_CFG_A2DP_TO_BIS_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppdAudioA2dptoBisModinf = {
     .Init    = tlkmdi_a2dp_to_bis_init,
     .Switch  = tlkmdi_a2dp_to_bis_switch,
@@ -221,10 +221,10 @@ static const tlkapp_audio_modinf_t sTlkAppdAudioA2dptoBisModinf = {
     .ToPrev  = tlkmdi_a2dp_to_bis_previous,
     .operate = tlkmdi_a2dp_to_bis_operate,
 };
-    #endif                      
+#endif
 
 
-    #if (TLKBTP_CFG_A2DPSNK_ENABLE)
+#if (TLKBTP_CFG_A2DPSNK_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioCCBTMusicModinf = {
     .Init    = tlkmdi_bt_music_init,
     .Switch  = tlkmdi_bt_music_switch,
@@ -235,25 +235,25 @@ static const tlkapp_audio_modinf_t sTlkAppAudioCCBTMusicModinf = {
     .ToPrev  = tlkmdi_bt_music_previous,
     .operate = tlkmdi_bt_music_operate,
 };
-    #endif
+#endif
 
-    #if (TLK_CFG_HRA_ENABLE)
+#if (TLK_CFG_HRA_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppdAudioHraModinf = {
-    .Init    = tlkmdi_hra_init,
-    .Switch  = tlkmdi_hra_switch,
-    .IsBusy  = tlkmdi_hra_is_busy,
+    .Init   = tlkmdi_hra_init,
+    .Switch = tlkmdi_hra_switch,
+    .IsBusy = tlkmdi_hra_is_busy,
 };
-    #endif
+#endif
 
-    #if (TLKMW_SIDETONE_EN)
+#if (TLKMW_SIDETONE_EN)
 static const tlkapp_audio_modinf_t sTlkAppdAudioSidetoneModinf = {
-    .Init    = tlkmdi_sidetone_init,
-    .Switch  = tlkmdi_sidetone_switch,
-    .IsBusy  = tlkmdi_sidetone_is_busy,
+    .Init   = tlkmdi_sidetone_init,
+    .Switch = tlkmdi_sidetone_switch,
+    .IsBusy = tlkmdi_sidetone_is_busy,
 };
-    #endif
+#endif
 
-    #if (TLKMW_INTERPHONE_EN)
+#if (TLKMW_INTERPHONE_EN)
 static const tlkapp_audio_modinf_t sTlkAppAudioInterphoneModinf = {
     .Switch  = tlkmdi_interphone_switch,
     .IsBusy  = tlkmdi_interphone_is_busy,
@@ -264,16 +264,16 @@ static const tlkapp_audio_modinf_t sTlkAppAudioInterphoneModinf = {
     .ToPrev  = tlkmdi_interphone_previous,
     .operate = tlkmdi_interphone_operate,
 };
-    #endif
+#endif
 
-    #if (TLKMW_RECORDING_CARD_EN)
+#if (TLKMW_RECORDING_CARD_EN)
 static const tlkapp_audio_modinf_t sTlkAppAudioRecordingcardModinf = {
-    .Switch  = tlkmdi_recording_card_switch,
-    .IsBusy  = tlkmdi_recording_card_is_busy,
-    .Init    = tlkmdi_recording_card_init,
+    .Switch = tlkmdi_recording_card_switch,
+    .IsBusy = tlkmdi_recording_card_is_busy,
+    .Init   = tlkmdi_recording_card_init,
 };
-    #endif
-    #if (TLKALG_ANC_ENABLE)
+#endif
+#if (TLKALG_ANC_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioAncModinf = {
     .Switch  = tlkmdi_anc_switch,
     .IsBusy  = tlkmdi_anc_is_busy,
@@ -282,16 +282,16 @@ static const tlkapp_audio_modinf_t sTlkAppAudioAncModinf = {
     .ToPrev  = tlkmdi_anc_previous,
     .operate = tlkmdi_anc_operate,
 };
-    #endif
+#endif
 
-    #if (TLKBTP_CFG_HFP_ENABLE)
+#if (TLKBTP_CFG_HFP_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioCCBTVoiceModinf = {
     .Init    = tlkmdi_bt_voice_init,
     .Switch  = tlkmdi_bt_voice_switch,
     .IsBusy  = tlkmdi_bt_voice_is_busy,
     .operate = tlkmdi_bt_voice_operate,
 };
-    #endif
+#endif
 
 
 #if (TLKSTK_BT_TPS_ENABLE)
@@ -308,8 +308,8 @@ static const tlkapp_audio_modinf_t sTlkAppAudioTPSLLModinf = {
 };
 
 #endif
-
-    #if (TLKBTP_CFG_A2DPSRC_ENABLE)
+#ifdef BT_A2DP_OUT_INPUT_TYPE
+#if (TLKBTP_CFG_A2DPSRC_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioA2dpOutModinf = {
     .Init    = tlkmdi_a2dp_out_init,
     .Switch  = tlkmdi_a2dp_out_switch,
@@ -321,7 +321,8 @@ static const tlkapp_audio_modinf_t sTlkAppAudioA2dpOutModinf = {
     .ToPrev  = tlkmdi_a2dp_out_previous,
     .operate = tlkmdi_a2dp_out_operate,
 };
-    #endif
+#endif
+#endif
 
 #if (TLK_MW_LEA_UC_MUSIC_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioLeaUcMusicModInf = {
@@ -345,7 +346,7 @@ static const tlkapp_audio_modinf_t sTlkAppAudioLeaUcVoiceModInf = {
 };
 #endif
 
-    #if (TLK_MW_LEA_US_MUSIC_ENABLE)
+#if (TLK_MW_LEA_US_MUSIC_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioLeaUsMusicModInf = {
     .Init    = tlkmdi_lea_us_init,
     .Switch  = tlkmdi_lea_us_music_switch,
@@ -356,44 +357,44 @@ static const tlkapp_audio_modinf_t sTlkAppAudioLeaUsMusicModInf = {
     .ToPrev  = tlkmdi_lea_us_music_previous,
     .operate = tlkmdi_lea_us_music_operate,
 };
-    #endif
+#endif
 
-    #if (TLK_MW_LEA_US_VOICE_ENABLE)
+#if (TLK_MW_LEA_US_VOICE_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioLeaUsVoiceModInf = {
     .Init    = tlkmdi_lea_us_init,
     .Switch  = tlkmdi_lea_us_voice_switch,
     .IsBusy  = tlkmdi_lea_us_voice_is_busy,
     .operate = tlkmdi_lea_us_voice_operate,
 };
-    #endif
+#endif
 
-    #if (TLK_MW_LEA_BMS_ENABLE)
+#if (TLK_MW_LEA_BMS_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioLeaBmsModInf = {
-    .Init    = tlkmdi_lea_bms_init,
-    .Switch  = tlkmdi_lea_bms_switch,
-    .IsBusy  = tlkmdi_lea_bms_is_busy,
+    .Init   = tlkmdi_lea_bms_init,
+    .Switch = tlkmdi_lea_bms_switch,
+    .IsBusy = tlkmdi_lea_bms_is_busy,
 };
-    #endif
+#endif
 
-    #if (TLK_MW_LEA_BMR_ENABLE)
+#if (TLK_MW_LEA_BMR_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioLeaBmrModInf = {
-    .Init    = tlkmdi_lea_bmr_init,
-    .Switch  = tlkmdi_lea_bmr_switch,
-    .IsBusy  = tlkmdi_lea_bmr_is_busy,
+    .Init   = tlkmdi_lea_bmr_init,
+    .Switch = tlkmdi_lea_bmr_switch,
+    .IsBusy = tlkmdi_lea_bmr_is_busy,
 };
-    #endif
+#endif
 
-    #if (TLK_USB_UAC_ENABLE && TLKBTP_CFG_HFPAG_ENABLE)
+#if (TLK_USB_UAC_ENABLE && TLKBTP_CFG_HFPAG_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAUdioU2hVoiceModInf = {
-    .Init    = tlkmdi_audu2h_voice_init,
-    .Switch  = tlkmdi_audu2h_voice_switch,
-    .Timer   = tlkmdi_audu2h_voice_timer,
-    .IsBusy  = tlkmdi_audu2h_voice_isBusy,
-    .Start   = tlkmdi_audu2h_voice_start,
+    .Init   = tlkmdi_audu2h_voice_init,
+    .Switch = tlkmdi_audu2h_voice_switch,
+    .Timer  = tlkmdi_audu2h_voice_timer,
+    .IsBusy = tlkmdi_audu2h_voice_isBusy,
+    .Start  = tlkmdi_audu2h_voice_start,
 };
-    #endif
+#endif
 
-    #if (TLK_USB_UAC_PLAYBACK_ENABLE)
+#if (TLK_USB_UAC_PLAYBACK_ENABLE)
 static const tlkapp_audio_modinf_t sTlkAppAudioUACAudModinf = {
     .Init    = tlkmdi_auduac_music_init,
     .Switch  = tlkmdi_auduac_music_switch,
@@ -401,9 +402,9 @@ static const tlkapp_audio_modinf_t sTlkAppAudioUACAudModinf = {
     .operate = tlkmdi_auduac_music_operate,
 };
 
-    #endif
+#endif
 
-#if(TLK_MW_LL_DONGLE_MUSIC_ENABLE)
+#if (TLK_MW_LL_DONGLE_MUSIC_ENABLE)
 
 static const tlkapp_audio_modinf_t sTlkAppAudioLLDongMusicModinf = {
     .Init    = tlkmdi_ll_dongle_music_init,
@@ -417,28 +418,62 @@ static const tlkapp_audio_modinf_t sTlkAppAudioLLDongMusicModinf = {
 };
 #endif
 
+#if (TLK_USB_UAC_AUDIO_LOCAL_ENABLE)
+static const tlkapp_audio_modinf_t sTlkAppAudioUacLocalAudModinf = {
+    .Init    = tlkmdi_local_uac_audio_init,
+    .Switch  = tlkmdi_local_uac_audio_switch,
+    .IsBusy  = tlkmdi_local_uac_audio_isBusy,
+    .Start   = tlkmdi_local_uac_audio_start,
+    .Close   = tlkmdi_local_uac_audio_close,
+    .ToNext  = tlkmdi_local_uac_audio_next,
+    .ToPrev  = tlkmdi_local_uac_audio_prev,
+    .operate = tlkmdi_local_uac_audio_operate,
+};
+#endif
+
+
+#if (TLKMW_BT_1_TO_2_FORWARD_EN)
+static const tlkapp_audio_modinf_t sTlkAppAudioBtVoiceForwardModinf = {
+    .Init    = tlkmdi_bt_voice_forward_init,
+    .Switch  = tlkmdi_bt_voice_forward_switch,
+    .IsBusy  = tlkmdi_bt_voice_forward_isBusy,
+    .operate = tlkmdi_bt_voice_forward_operate,
+};
+static const tlkapp_audio_modinf_t sTlkAppAudioBtMusicForwardModinf = {
+    .Init    = tlkmdi_bt_music_forward_init,
+    .Switch  = tlkmdi_bt_music_forward_switch,
+    .IsBusy  = tlkmdi_bt_music_forward_isBusy,
+    .Start   = tlkmdi_bt_music_forward_start,
+    .Close   = tlkmdi_bt_music_forward_close,
+    .ToNext  = tlkmdi_bt_music_forward_next,
+    .ToPrev  = tlkmdi_bt_music_forward_previous,
+    .operate = tlkmdi_bt_music_forward_operate,
+};
+#endif
+
 static const tlkapp_audio_modinf_t *spTlkAppAudioModinfs[TLKAUD_TYPE_MAX] = {
-    #if (TLK_CFG_TONE_ENABLE)
+#if (TLK_CFG_TONE_ENABLE)
     [TLKAUD_TYPE_TONE] = &sTlkAppdAudioToneModinf,
-    #endif
+#endif
 
 
-    #if (TLKBTP_CFG_HFP_ENABLE)
+#if (TLKBTP_CFG_HFP_ENABLE)
     [TLKAUD_TYPE_CC_BT_VOICE] = &sTlkAppAudioCCBTVoiceModinf,
-    #endif
+#endif
 
-    #if (TLKBTP_CFG_A2DPSNK_ENABLE)
+#if (TLKBTP_CFG_A2DPSNK_ENABLE)
     [TLKAUD_TYPE_CC_BT_MUSIC] = &sTlkAppAudioCCBTMusicModinf,
-    #endif
+#endif
 
 
-    #if (TLKSTK_BT_TPS_ENABLE)
+#if (TLKSTK_BT_TPS_ENABLE)
     [TLKAUD_TYPE_TPH_AUDIO] = &sTlkAppAudioTPSLLModinf,
-    #endif
-
-    #if (TLKBTP_CFG_A2DPSRC_ENABLE)
+#endif
+#ifdef BT_A2DP_OUT_INPUT_TYPE
+#if (TLKBTP_CFG_A2DPSRC_ENABLE)
     [TLKAUD_TYPE_A2DP_OUT] = &sTlkAppAudioA2dpOutModinf,
-    #endif
+#endif
+#endif
 
 #if (TLK_MW_LEA_UC_MUSIC_ENABLE)
     [TLKAUD_TYPE_LEA_UC_MUSIC] = &sTlkAppAudioLeaUcMusicModInf,
@@ -447,57 +482,66 @@ static const tlkapp_audio_modinf_t *spTlkAppAudioModinfs[TLKAUD_TYPE_MAX] = {
 #if (TLK_MW_LEA_UC_VOICE_ENABLE)
     [TLKAUD_TYPE_LEA_UC_VOICE] = &sTlkAppAudioLeaUcVoiceModInf,
 #endif
-    #if (TLK_MW_LEA_US_MUSIC_ENABLE)
+#if (TLK_MW_LEA_US_MUSIC_ENABLE)
     [TLKAUD_TYPE_LEA_US_MUSIC] = &sTlkAppAudioLeaUsMusicModInf,
-    #endif
+#endif
 
-    #if (TLK_MW_LEA_US_VOICE_ENABLE)
+#if (TLK_MW_LEA_US_VOICE_ENABLE)
     [TLKAUD_TYPE_LEA_US_VOICE] = &sTlkAppAudioLeaUsVoiceModInf,
-    #endif
+#endif
 
-    #if (TLK_MW_LEA_BMS_ENABLE)
+#if (TLK_MW_LEA_BMS_ENABLE)
     [TLKAUD_TYPE_LEA_BMS] = &sTlkAppAudioLeaBmsModInf,
-    #endif
+#endif
 
-    #if (TLK_MW_LEA_BMR_ENABLE)
+#if (TLK_MW_LEA_BMR_ENABLE)
     [TLKAUD_TYPE_LEA_BMR] = &sTlkAppAudioLeaBmrModInf,
-    #endif
+#endif
 
-    #if (TLK_USB_UAC_ENABLE && TLKBTP_CFG_HFPAG_ENABLE)
+#if (TLK_USB_UAC_ENABLE && TLKBTP_CFG_HFPAG_ENABLE)
     [TLKAUD_TYPE_U2H_VOICE] = &sTlkAppAUdioU2hVoiceModInf,
-    #endif
+#endif
 
-    #if (TLK_CFG_A2DP_TO_BIS_ENABLE)
+#if (TLK_CFG_A2DP_TO_BIS_ENABLE)
     [TLKAUD_TYPE_A2DP_TO_BIS] = &sTlkAppdAudioA2dptoBisModinf,
-    #endif
+#endif
 
-    #if (TLK_CFG_HRA_ENABLE)
+#if (TLK_CFG_HRA_ENABLE)
     [TLKAUD_TYPE_HRA] = &sTlkAppdAudioHraModinf,
-    #endif
+#endif
 
-    #if (TLKMW_SIDETONE_EN)
+#if (TLKMW_SIDETONE_EN)
     [TLKAUD_TYPE_SIDETONE] = &sTlkAppdAudioSidetoneModinf,
-    #endif
+#endif
 
-    #if (TLKMW_INTERPHONE_EN)
+#if (TLKMW_INTERPHONE_EN)
     [TLKAUD_TYPE_INTRTPHONE] = &sTlkAppAudioInterphoneModinf,
-    #endif
+#endif
 
-    #if (TLKMW_RECORDING_CARD_EN)
+#if (TLKMW_RECORDING_CARD_EN)
     [TLKAUD_TYPE_RECORDING_CARD] = &sTlkAppAudioRecordingcardModinf,
-    #endif
+#endif
 
-    #if (TLKALG_ANC_ENABLE)
+#if (TLKALG_ANC_ENABLE)
     [TLKAUD_TYPE_ANC] = &sTlkAppAudioAncModinf,
-    #endif
+#endif
 
-    #if (TLK_USB_UAC_PLAYBACK_ENABLE)
+#if (TLK_USB_UAC_PLAYBACK_ENABLE)
     [TLKAUD_TYPE_UAC_AUD] = &sTlkAppAudioUACAudModinf,
-    #endif
+#endif
 
-    #if(TLK_MW_LL_DONGLE_MUSIC_ENABLE)
+#if (TLK_MW_LL_DONGLE_MUSIC_ENABLE)
     [TLKAUD_TYPE_TPD_AUDIO] = &sTlkAppAudioLLDongMusicModinf,
-    #endif
+#endif
+
+#if (TLK_USB_UAC_AUDIO_LOCAL_ENABLE)
+    [TLKAUD_TYPE_UAC_LOCAL_AUDIO] = &sTlkAppAudioUacLocalAudModinf,
+#endif
+
+#if (TLKMW_BT_1_TO_2_FORWARD_EN)
+    [TLKAUD_TYPE_BT_VOICE_FORWARD] = &sTlkAppAudioBtVoiceForwardModinf,
+    [TLKAUD_TYPE_BT_MUSIC_FORWARD] = &sTlkAppAudioBtMusicForwardModinf,
+#endif
 
 };
 

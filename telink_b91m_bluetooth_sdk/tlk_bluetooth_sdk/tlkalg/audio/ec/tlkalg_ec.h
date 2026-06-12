@@ -30,7 +30,7 @@
  * @param[in]   pAec    - Pointer to the echo cancellation control structure.
  * @param[in]   pScratch- Pointer to the scratch buffer for processing.
  */
-void   tlkalg_ec_init(uint8_t *pNs, uint8_t *pAec, uint8_t *pScratch);
+void tlkalg_ec_init(uint8_t *pNs, uint8_t *pAec, uint8_t *pScratch);
 
 /**
  * @brief   Processes a frame for echo cancellation and noise suppression.

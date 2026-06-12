@@ -1,5 +1,5 @@
 /********************************************************************************************************
- * @file    tlkhal_calibration_B92.c
+ * @file    tlkhal_calibration_TL322X.c
  *
  * @brief   This is the source file for TLSR/TL
  *
@@ -25,6 +25,7 @@
 #include "drivers.h"
 #if MCU_CORE_TYPE == CHIP_TYPE_TL322X
 extern drv_api_status_e efuse_calib_sar_adc_vref(void);
+
 /**
  * @brief       This function is used to calibrate the user's parameters.
  *              This function is to read the calibration value stored in efuse and flash,
@@ -41,7 +42,6 @@ void calibration_func_ext(void)
     extern drv_api_status_e efuse_calib_sd_adc_vref(void);
     efuse_calib_sd_adc_vref();
 }
-
 
 void calibration_func(void)
 {

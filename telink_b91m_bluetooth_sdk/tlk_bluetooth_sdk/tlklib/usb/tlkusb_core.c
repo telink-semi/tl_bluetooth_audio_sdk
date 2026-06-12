@@ -29,15 +29,18 @@
 #include "tlklib/usb/udb/tlkusb_udbDefine.h"
 #if (TLK_CFG_USB_ENABLE)
 
-    #include "drivers.h"
-    #include "tlklib/usb/udb/tlkusb_udb.h"
-    #include "tlklib/usb/uac/tlkusb_uac.h"
+#include "drivers.h"
+#include "tlklib/usb/udb/tlkusb_udb.h"
+#include "tlklib/usb/uac/tlkusb_uac.h"
 
 
 static void tlkusb_ctrlTranSetupProc(uint8_t index);
 static void tlkusb_ctrlTranDataProc(uint8_t index);
 static void tlkusb_ctrlTranStatusProc(uint8_t index);
 static void tlkusb_ctrlTranSetupReqProc(uint8_t index, bool isSetupReq);
+#if TLK_USB_REMOTEWAKEUP_EN
+static void tlkusb_ctrlPowerDownStatusProc(uint8_t index, uint8_t type);
+#endif
 static void tlkusb_stdD2HDevReqDeal(uint8_t index, tlkusb_setup_req_t *pSetup);
 static void tlkusb_stdD2HInfReqDeal(uint8_t index, tlkusb_setup_req_t *pSetup);
 static void tlkusb_stdH2DInfReqDeal(uint8_t index, tlkusb_setup_req_t *pSetup);
@@ -56,17 +59,20 @@ static void tlkusb_getReportDescDeal(uint8_t index, tlkusb_setup_req_t *pSetup);
 
 typedef struct
 {
-    uint16_t  usbID;    // usb id
-    uint8_t  stall;    // stall
+    uint16_t usbID; // usb id
+    uint8_t  stall; // stall
     uint8_t  rptr;
-    uint16_t  cmdLen;   // command length
-    uint16_t  rspLen;   // response length
+    uint16_t cmdLen;   // command length
+    uint16_t rspLen;   // response length
     uint8_t *pRspData; // response data
 } tlkusb_ctrl_t;
 
-uint8_t                      gTlkUsbCurModType[TLK_CFG_USB_NUMB];
-static tlkusb_ctrl_t        sTlkUsbCtrl[TLK_CFG_USB_NUMB];
-static tlkusb_setup_req_t   sTlkUsbCtrlReq;
+uint8_t                   gTlkUsbCurModType[TLK_CFG_USB_NUMB];
+static tlkusb_ctrl_t      sTlkUsbCtrl[TLK_CFG_USB_NUMB];
+static tlkusb_setup_req_t sTlkUsbCtrlReq;
+
+static uint8_t gTlkUsbSuspend[TLK_CFG_USB_NUMB] = {0};
+static uint8_t gTlkUsbSuspendEnable[TLK_CFG_USB_NUMB];
 
 /**
  * @brief       This function initializes the USB core module with the specified USB ID.
@@ -95,6 +101,18 @@ uint8_t tlkusb_get_curMode(uint8_t index)
     return gTlkUsbCurModType[index];
 }
 
+/**
+ * @brief       This function enable or disable usb suspend.
+ * @param[in]   index   - the USB instance index.
+ * @return
+ */
+void tlkusb_set_usb_suspend_enable(uint8_t index, uint8_t en)
+{
+    if (index >= TLK_CFG_USB_NUMB) {
+        return;
+    }
+    gTlkUsbSuspendEnable[index] = en;
+}
 
 /**
  * @brief       This function handles USB core events and processes control transfers.
@@ -103,27 +121,27 @@ uint8_t tlkusb_get_curMode(uint8_t index)
  */
 void tlkusb_core_handler(uint8_t index)
 {
-#if (MCU_CORE_TYPE == MCU_CORE_TL322X)||(MCU_CORE_TYPE == MCU_CORE_TL752X)
-	uint32_t irq = tlkusb_hal_get_ctrl_ep_irq(index);
-	if (irq & FLD_USB1_CTRL_EP_IRQ_SETUP) {
-		tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB1_CTRL_EP_IRQ_SETUP);
-		tlkusb_ctrlTranSetupProc(index);
-	}
-	if (irq & FLD_USB1_CTRL_EP_IRQ_DATA) {
-		tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB1_CTRL_EP_IRQ_DATA);
-		tlkusb_ctrlTranDataProc(index);
-	}
-	if (irq & FLD_USB1_CTRL_EP_IRQ_STA) {
-		tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB1_CTRL_EP_IRQ_STA);
-		tlkusb_ctrlTranStatusProc(index);
-	}
-    #if(MCU_CORE_TYPE == CHIP_TYPE_TL752X )
+#if (MCU_CORE_TYPE == MCU_CORE_TL322X) || (MCU_CORE_TYPE == MCU_CORE_TL752X)
+    uint32_t irq = tlkusb_hal_get_ctrl_ep_irq(index);
+    if (irq & FLD_USB1_CTRL_EP_IRQ_SETUP) {
+        tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB1_CTRL_EP_IRQ_SETUP);
+        tlkusb_ctrlTranSetupProc(index);
+    }
+    if (irq & FLD_USB1_CTRL_EP_IRQ_DATA) {
+        tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB1_CTRL_EP_IRQ_DATA);
+        tlkusb_ctrlTranDataProc(index);
+    }
+    if (irq & FLD_USB1_CTRL_EP_IRQ_STA) {
+        tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB1_CTRL_EP_IRQ_STA);
+        tlkusb_ctrlTranStatusProc(index);
+    }
+#if (MCU_CORE_TYPE == CHIP_TYPE_TL752X)
     if (usb1hw_get_irq_status(USB1_IRQ_RESET_STATUS)) {
         usb1hw_clr_irq_status(USB1_IRQ_RESET_STATUS); /* clear USB reset flag */
-//            myudb_usb_bulkout_ready();
+                                                      //            myudb_usb_bulkout_ready();
         reg_usb1_ep_ctrl(TLKUSB_UDB_EDP_DBG_OUT) = FLD_USB1_EP_DAT_ACK;
     }
-    #endif
+#endif
 #else
     uint32_t irq = tlkusb_hal_get_ctrl_ep_irq(index);
     if (irq & FLD_CTRL_EP_IRQ_SETUP) {
@@ -138,26 +156,33 @@ void tlkusb_core_handler(uint8_t index)
         tlkusb_hal_clr_ctrl_ep_irq(index, FLD_CTRL_EP_IRQ_STA);
         tlkusb_ctrlTranStatusProc(index);
     }
+#if TLK_USB_REMOTEWAKEUP_EN
+    if (irq & FLD_USB_IRQ_SUSPEND_STATUS) {
+        tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB_IRQ_SUSPEND_STATUS);
+        if (usbhw_get_host_conn_status() && usbhw_get_wkup_feature() && gTlkUsbSuspend[index]) {
+            tlkusb_ctrlPowerDownStatusProc(index, 1);
+        } else {
+            //    		plic_interrupt_enable(IRQ_USB_PWDN);
+        }
+    }
+#endif
 #endif
 
-#if (MCU_CORE_TYPE == MCU_CORE_TL322X)||(MCU_CORE_TYPE == MCU_CORE_TL752X)
+#if (MCU_CORE_TYPE == MCU_CORE_TL322X) || (MCU_CORE_TYPE == MCU_CORE_TL752X)
     if (irq & FLD_USB1_IRQ_RESET_STATUS) {
-            tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB1_IRQ_RESET_STATUS);
-            tlkusb_module_reset(gTlkUsbCurModType[index]);
-        }
+        tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB1_IRQ_RESET_STATUS);
+        tlkusb_module_reset(gTlkUsbCurModType[index]);
+    }
 #elif MCU_CORE_TYPE != MCU_CORE_B91
     if (irq & FLD_USB_IRQ_RESET_STATUS) {
         tlkusb_hal_clr_ctrl_ep_irq(index, FLD_USB_IRQ_RESET_STATUS);
         tlkusb_module_reset(gTlkUsbCurModType[index]);
+        gTlkUsbSuspend[index] = 0;
     }
 #endif
     sTlkUsbCtrl[index].stall = 0;
     tlkusb_module_handler(gTlkUsbCurModType[index]);
-    if(tlkusb_hal_is_eventMode() == 0){
-        tlkusb_hal_wakeup_usb_thread();
-    }
 }
-
 
 /**
  * @brief       This function sends response data to the USB control endpoint.
@@ -184,7 +209,6 @@ static void tlkusb_ctrlSendResponse(uint8_t index)
     }
 }
 
-
 /**
  * @brief       This function processes USB control transfer setup stage.
  * @param[in]   index   - the USB instance index.
@@ -201,34 +225,7 @@ static void tlkusb_ctrlTranSetupProc(uint8_t index)
     sTlkUsbCtrlReq.wIndex   = tlkusb_hal_read_ctrl_ep_u16(index);
     sTlkUsbCtrlReq.wLength  = tlkusb_hal_read_ctrl_ep_u16(index);
     tlkusb_ctrlTranSetupReqProc(index, true);
-#if (MCU_CORE_TYPE == MCU_CORE_TL322X)||(MCU_CORE_TYPE == MCU_CORE_TL752X)
-    if (sTlkUsbCtrl[index].stall) {
-        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_USB1_EP_DAT_STALL);
-    } else {
-        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_USB1_EP_DAT_ACK);
-    }
-#else
-    if (sTlkUsbCtrl[index].stall) {
-		tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_EP_DAT_STALL);
-	} else {
-		tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_EP_DAT_ACK);
-	}
-#endif
-}
-
-
-/**
- * @brief       This function processes USB control transfer data stage.
- * @param[in]   index   - the USB instance index.
- * @return      none.
- */
-static void tlkusb_ctrlTranDataProc(uint8_t index)
-{
-    (void)index;
-    sTlkUsbCtrl[index].stall = 0;
-    tlkusb_hal_reset_ctrl_ep_ptr(index);
-    tlkusb_ctrlTranSetupReqProc(index, false);
-#if (MCU_CORE_TYPE == MCU_CORE_TL322X)||(MCU_CORE_TYPE == MCU_CORE_TL752X)
+#if (MCU_CORE_TYPE == MCU_CORE_TL322X) || (MCU_CORE_TYPE == MCU_CORE_TL752X)
     if (sTlkUsbCtrl[index].stall) {
         tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_USB1_EP_DAT_STALL);
     } else {
@@ -243,6 +240,31 @@ static void tlkusb_ctrlTranDataProc(uint8_t index)
 #endif
 }
 
+/**
+ * @brief       This function processes USB control transfer data stage.
+ * @param[in]   index   - the USB instance index.
+ * @return      none.
+ */
+static void tlkusb_ctrlTranDataProc(uint8_t index)
+{
+    (void)index;
+    sTlkUsbCtrl[index].stall = 0;
+    tlkusb_hal_reset_ctrl_ep_ptr(index);
+    tlkusb_ctrlTranSetupReqProc(index, false);
+#if (MCU_CORE_TYPE == MCU_CORE_TL322X) || (MCU_CORE_TYPE == MCU_CORE_TL752X)
+    if (sTlkUsbCtrl[index].stall) {
+        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_USB1_EP_DAT_STALL);
+    } else {
+        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_USB1_EP_DAT_ACK);
+    }
+#else
+    if (sTlkUsbCtrl[index].stall) {
+        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_EP_DAT_STALL);
+    } else {
+        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_EP_DAT_ACK);
+    }
+#endif
+}
 
 /**
  * @brief       This function processes USB control transfer status stage.
@@ -252,7 +274,7 @@ static void tlkusb_ctrlTranDataProc(uint8_t index)
 static void tlkusb_ctrlTranStatusProc(uint8_t index)
 {
     (void)index;
-#if (MCU_CORE_TYPE == MCU_CORE_TL322X)||(MCU_CORE_TYPE == MCU_CORE_TL752X)
+#if (MCU_CORE_TYPE == MCU_CORE_TL322X) || (MCU_CORE_TYPE == MCU_CORE_TL752X)
     if (sTlkUsbCtrl[index].stall) {
         tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_USB1_EP_STA_STALL);
     } else {
@@ -265,10 +287,36 @@ static void tlkusb_ctrlTranStatusProc(uint8_t index)
         tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_EP_STA_ACK);
     }
 #endif
-
 }
+#if TLK_USB_REMOTEWAKEUP_EN
+/**
+ * @brief       This function processes USB power down status stage.
+ * @param[in]   index   - the USB instance index.
+ * @return      none.
+ */
+static void tlkusb_ctrlPowerDownStatusProc(uint8_t index, uint8_t type)
+{
+    (void)index;
+    (void)type;
 
-
+    if (gTlkUsbSuspendEnable[index]) {
+        tlksys_task_setEvt(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_USB_SUSPEND);
+    }
+#if (MCU_CORE_TYPE == MCU_CORE_TL322X) || (MCU_CORE_TYPE == MCU_CORE_TL752X)
+    if (sTlkUsbCtrl[index].stall) {
+        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_USB1_EP_STA_STALL);
+    } else {
+        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_USB1_EP_STA_ACK);
+    }
+#else
+    if (sTlkUsbCtrl[index].stall) {
+        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_EP_STA_STALL);
+    } else {
+        tlkusb_hal_write_ctrl_ep_ctrl(index, FLD_EP_STA_ACK);
+    }
+#endif
+}
+#endif
 /**
  * @brief       This function processes USB control transfer setup requests based on request type.
  * @param[in]   index       - the USB instance index.
@@ -278,6 +326,8 @@ static void tlkusb_ctrlTranStatusProc(uint8_t index)
 static void tlkusb_ctrlTranSetupReqProc(uint8_t index, bool isSetupReq)
 {
     uint8_t bmReqType = sTlkUsbCtrlReq.bReqType;
+    uint8_t bmRequest = sTlkUsbCtrlReq.bRequest;
+
     tlkusb_hal_reset_ctrl_ep_ptr(index);
     switch (bmReqType) {
     case (TLKUSB_REQTYPE_DIR_DEV2HOST | TLKUSB_REQTYPE_MAJ_STAND | TLKUSB_REQTYPE_REC_DEVICE):
@@ -298,9 +348,22 @@ static void tlkusb_ctrlTranSetupReqProc(uint8_t index, bool isSetupReq)
         }
         break;
     case (TLKUSB_REQTYPE_DIR_HOST2DEV | TLKUSB_REQTYPE_MAJ_STAND | TLKUSB_REQTYPE_REC_DEVICE):
-    	break;
+    {
+        if (bmRequest == 3) {
+            gTlkUsbSuspend[index] = 1;
+        } else if (bmRequest == 1) {
+            gTlkUsbSuspend[index] = 0;
+#if TLK_USB_REMOTEWAKEUP_EN
+            if (gTlkUsbSuspendEnable[index]) {
+                tlksys_task_setEvt(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_USB_EXIT_SUSPEND);
+            }
+#endif
+        }
+
+    } break;
     case (TLKUSB_REQTYPE_DIR_DEV2HOST | TLKUSB_REQTYPE_MAJ_CLASS | TLKUSB_REQTYPE_REC_INTERFACE):
-        if (isSetupReq) {
+        //        if (isSetupReq)
+        {
             tlkusb_classD2HInfDeal(index, &sTlkUsbCtrlReq);
         }
         break;
@@ -393,7 +456,7 @@ static void tlkusb_stdH2DInfReqDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
  */
 static void tlkusb_classD2HInfDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
 {
-    int    ret;
+    int     ret;
     uint8_t infNum;
 
     infNum = (pSetup->wIndex & 0xFF);
@@ -418,7 +481,7 @@ static void tlkusb_classD2HInfDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
  */
 static void tlkusb_classD2HEdpDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
 {
-    int    ret;
+    int     ret;
     uint8_t edpNum;
 
     edpNum = (pSetup->wIndex & 0x0F);
@@ -438,7 +501,7 @@ static void tlkusb_classD2HEdpDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
  */
 static void tlkusb_classH2DInfDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
 {
-    int    ret;
+    int     ret;
     uint8_t infNum;
 
     infNum = (pSetup->wIndex & 0xFF);
@@ -458,7 +521,7 @@ static void tlkusb_classH2DInfDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
  */
 static void tlkusb_classH2DEdpDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
 {
-    int    ret;
+    int     ret;
     uint8_t edpNum;
 
     edpNum = (pSetup->wIndex & 0x0F);
@@ -521,9 +584,9 @@ static void tlkusb_vendorD2HDevDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
  */
 static void tlkusb_getInfReqDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
 {
-    int    ret;
+    int     ret;
     uint8_t infNum = (pSetup->wIndex) & 0x07;
-    ret           = tlkusb_module_getInterface(gTlkUsbCurModType[index], pSetup, infNum);
+    ret            = tlkusb_module_getInterface(gTlkUsbCurModType[index], pSetup, infNum);
     if (ret == TLK_ENONE) {
         sTlkUsbCtrl[index].stall = 0;
     } else {
@@ -539,9 +602,9 @@ static void tlkusb_getInfReqDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
  */
 static void tlkusb_setInfReqDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
 {
-    int    ret;
+    int     ret;
     uint8_t infNum = (pSetup->wIndex) & 0x07;
-    ret           = tlkusb_module_setInterface(gTlkUsbCurModType[index], pSetup, infNum);
+    ret            = tlkusb_module_setInterface(gTlkUsbCurModType[index], pSetup, infNum);
     if (ret == TLK_ENONE) {
         sTlkUsbCtrl[index].stall = 0;
     } else {
@@ -557,7 +620,7 @@ static void tlkusb_setInfReqDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
  */
 static void tlkusb_getDeviceDescDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
 {
-    uint8_t mode = gTlkUsbCurModType[index];
+    uint8_t mode    = gTlkUsbCurModType[index];
     uint8_t value_l = (pSetup->wValue) & 0xff;
     uint8_t value_h = (pSetup->wValue >> 8) & 0xff;
     switch (value_h) {
@@ -582,6 +645,9 @@ static void tlkusb_getDeviceDescDeal(uint8_t index, tlkusb_setup_req_t *pSetup)
         } else if (TLKUSB_STRING_INDEX_SERIAL == value_l) {
             sTlkUsbCtrl[index].pRspData = tlkusb_getSerialDesc(mode);
             sTlkUsbCtrl[index].rspLen   = tlkusb_getSerialLens(mode);
+        } else if (TLKUSB_STRING_INDEX_SERIAL1 == value_l) {
+            sTlkUsbCtrl[index].pRspData = tlkusb_getSerial1Desc(mode);
+            sTlkUsbCtrl[index].rspLen   = tlkusb_getSerial1Lens(mode);
         } else {
             sTlkUsbCtrl[index].stall = 1;
         }

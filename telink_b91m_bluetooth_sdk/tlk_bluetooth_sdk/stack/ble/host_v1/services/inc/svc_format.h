@@ -29,8 +29,6 @@
 
 #define CHARACTERISTIC_PROPERTIES_LENGTH 1
 
-extern const uint16_t attr16UuidLen;
-extern const uint16_t attr128UuidLen;
 extern const uint16_t gattIncludeValueLen;
 
 extern const uint16_t characteristicPropertiesLen;
@@ -58,16 +56,6 @@ extern const uint16_t clientCharacteristicConfigurationLen;
 extern uint8_t  clientCharacteristicConfigurationWrite[2];
 extern uint16_t clientCharacteristicConfigurationWriteLen;
 
-
-#define ATTS_CHARACTERISTIC_DECLARATIONS(properties)     \
-    {ATT_PERMISSIONS_READ,                               \
-     ATT_16_UUID_LEN,                                    \
-     (uint8_t *)(size_t)declarationsCharacteristicUuid,  \
-     (uint16_t *)(size_t) & characteristicPropertiesLen, \
-     CHARACTERISTIC_PROPERTIES_LENGTH,                   \
-     (uint8_t *)(size_t) & properties,                   \
-     ATTS_SET_ATTR_VALUE_PROPERTIES}
-
 #define SERVICE_CHAR_DEFINE(properties, handle, uuid)        {properties, uint16_t_TO_BYTES(handle), uint16_t_TO_BYTES(uuid)}
 #define SERVICE_CHAR_READ(handle, uuid)                      SERVICE_CHAR_DEFINE(CHAR_PROP_READ, handle, uuid)
 #define SERVICE_CHAR_READ_WRITE(handle, uuid)                SERVICE_CHAR_DEFINE(CHAR_PROP_READ | CHAR_PROP_WRITE, handle, uuid)
@@ -88,116 +76,73 @@ extern uint16_t clientCharacteristicConfigurationWriteLen;
 #define SERVICE_CHAR_READ_WRITE_WRITEWITHOUT_NOTIFY(handle, uuid) \
     SERVICE_CHAR_DEFINE(CHAR_PROP_READ | CHAR_PROP_WRITE_WITHOUT_RSP | CHAR_PROP_WRITE | CHAR_PROP_NOTIFY, handle, uuid)
 
-//{ATT_PERMISSIONS_READ, ATT_16_UUID_LEN, (uint8_t*)declarationsPrimaryServiceUuid,(uint16_t*)&attr16UuidLen,ATT_16_UUID_LEN,(uint8_t*)serviceUuid,0}
-#define ATTS_PRIMARY_SERVICE(serviceUuid)               \
-    {ATT_PERMISSIONS_READ,                              \
-     ATT_16_UUID_LEN,                                   \
-     (uint8_t *)(size_t)declarationsPrimaryServiceUuid, \
-     (uint16_t *)(size_t) & attr16UuidLen,              \
-     ATT_16_UUID_LEN,                                   \
-     (uint8_t *)(size_t)serviceUuid,                    \
-     0}
-//{ATT_PERMISSIONS_READ, ATT_16_UUID_LEN, (uint8_t*)declarationsSecondaryServiceUuid,(uint16_t*)&attr16UuidLen,ATT_16_UUID_LEN,(uint8_t*)serviceUuid,0}
-#define ATTS_SECONDARY_SERVICE(serviceUuid)               \
-    {ATT_PERMISSIONS_READ,                                \
-     ATT_16_UUID_LEN,                                     \
-     (uint8_t *)(size_t)declarationsSecondaryServiceUuid, \
-     (uint16_t *)(size_t) & attr16UuidLen,                \
-     ATT_16_UUID_LEN,                                     \
-     (uint8_t *)(size_t)serviceUuid,                      \
-     0}
-
-//{ATT_PERMISSIONS_READ, ATT_16_UUID_LEN, (uint8_t*)declarationsPrimaryServiceUuid,(uint16_t*)&attr128UuidLen,ATT_128_UUID_LEN,(uint8_t*)serviceUuid,0}
-#define ATTS_PRIMARY_SERVICE_128(serviceUuid)           \
-    {ATT_PERMISSIONS_READ,                              \
-     ATT_16_UUID_LEN,                                   \
-     (uint8_t *)(size_t)declarationsPrimaryServiceUuid, \
-     (uint16_t *)(size_t) & attr128UuidLen,             \
-     ATT_128_UUID_LEN,                                  \
-     (uint8_t *)(size_t)serviceUuid,                    \
-     0}
-//{ATT_PERMISSIONS_READ, ATT_16_UUID_LEN, (uint8_t*)declarationsSecondaryServiceUuid,(uint16_t*)&attr128UuidLen,ATT_128_UUID_LEN,(uint8_t*)serviceUuid,0}
-#define ATTS_SECONDARY_SERVICE_128(serviceUuid)           \
-    {ATT_PERMISSIONS_READ,                                \
-     ATT_16_UUID_LEN,                                     \
-     (uint8_t *)(size_t)declarationsSecondaryServiceUuid, \
-     (uint16_t *)(size_t) & attr128UuidLen,               \
-     ATT_128_UUID_LEN,                                    \
-     (uint8_t *)(size_t)serviceUuid,                      \
-     0}
-
-
-//{ATT_PERMISSIONS_RDWR,ATT_16_UUID_LEN,  (uint8_t*) descriptorClientCharacteristicConfigurationUuid,   (uint16_t*) &pacsSinkPACCCCLen, sizeof(pacsSinkPACCCC), (uint8_t*)pacsSinkPACCCC,0}
-#define ATTS_CCC_DEFINE_COMMON(ccc, cccLen)                              \
-    {ATT_PERMISSIONS_RDWR,                                               \
-     ATT_16_UUID_LEN,                                                    \
-     (uint8_t *)(size_t)descriptorClientCharacteristicConfigurationUuid, \
-     (uint16_t *)(size_t) & cccLen,                                      \
-     sizeof(ccc),                                                        \
-     (uint8_t *)(size_t)ccc,                                             \
-     0}
-#define ATTS_CCC_DEFINE(ccc)   ATTS_CCC_DEFINE_COMMON(ccc, ccc##Len)
-#define ATTS_COMMON_CCC_DEFINE ATTS_CCC_DEFINE(clientCharacteristicConfiguration)
-#define ATTS_CCC_DEFINE_WRITE                                            \
-    {ATT_PERMISSIONS_RDWR,                                               \
-     ATT_16_UUID_LEN,                                                    \
-     (uint8_t *)(size_t)descriptorClientCharacteristicConfigurationUuid, \
-     (uint16_t *)(size_t) & clientCharacteristicConfigurationWriteLen,   \
-     sizeof(clientCharacteristicConfigurationWrite),                     \
-     (uint8_t *)(size_t)clientCharacteristicConfigurationWrite,          \
-     ATTS_SET_ALLOW_WRITE}
-
-#define ATTS_COMMON_CCC_DEFINE_CB                                \
-    {ATT_PERMISSIONS_RDWR,                                       \
-     ATT_16_UUID_LEN,                                            \
-     (uint8_t *)descriptorClientCharacteristicConfigurationUuid, \
-     (uint16_t *)NULL,                                           \
-     0,                                                          \
-     (uint8_t *)NULL,                                            \
-     ATTS_SET_WRITE_CALLBACK | ATTS_SET_READ_CALLBACK}
-#define ATTS_COMMON_CCC_DEFINE_WCB                                \
-    {ATT_PERMISSIONS_RDWR,                                        \
-     ATT_16_UUID_LEN,                                             \
-     (uint8_t *)descriptorClientCharacteristicConfigurationUuid,  \
-     (uint16_t *)(size_t) & clientCharacteristicConfigurationLen, \
-     sizeof(clientCharacteristicConfiguration),                   \
-     (uint8_t *)(size_t) & clientCharacteristicConfiguration,     \
-     ATTS_SET_WRITE_CALLBACK}
-
-
-#define ATTS_INCLUDE_DEFINE(value) \
-    {ATT_PERMISSIONS_READ, ATT_16_UUID_LEN, (uint8_t *)(size_t)declarationsIncludeUuid, (uint16_t *)(size_t) & gattIncludeValueLen, 6, (uint8_t *)(size_t)value, 0}
-
-#define ATTS_CHAR_UUID_ENCR_WRITE_NULL(properties, uuid)                                                                \
-    ATTS_CHARACTERISTIC_DECLARATIONS(properties),                                                                       \
-    {                                                                                                                   \
-        ATT_PERMISSIONS_ENCRYPT_WRITE, ATT_16_UUID_LEN, (uint8_t *)(size_t)uuid, NULL, 0, NULL, ATTS_SET_WRITE_CALLBACK \
+#define ATTS_ATTRIBUTE_INIT_PARAM(permission, att_uuid, set, max_attr_len, attr_value_len, attr_value) \
+    {                                                                                                  \
+        .perm         = permission,                                                                    \
+        .settings     = set,                                                                           \
+        .uuid         = &att_uuid,                                                                     \
+        .maxAttrLen   = max_attr_len,                                                                  \
+        .attrValueLen = (uint16_t *)(size_t)attr_value_len,                                            \
+        .attrValue    = (uint8_t *)(size_t)attr_value,                                                 \
     }
 
-#define ATTS_CHAR_UUID_WRITE_NULL(properties, uuid)                                                             \
-    ATTS_CHARACTERISTIC_DECLARATIONS(properties),                                                               \
-    {                                                                                                           \
-        ATT_PERMISSIONS_WRITE, ATT_16_UUID_LEN, (uint8_t *)(size_t)uuid, NULL, 0, NULL, ATTS_SET_WRITE_CALLBACK \
-    }
+#define ATTS_CHARACTERISTIC_DECLARATIONS(properties)                                                                                                     \
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_READ, declarationsCharacteristicAttUuid, ATTS_SET_ATTR_VALUE_PROPERTIES, CHARACTERISTIC_PROPERTIES_LENGTH, \
+                              &characteristicPropertiesLen, &properties)
+
+#define ATTS_DEFINE_SERVICE(serviceType, serviceUuid, serviceUuidLen) \
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_READ, serviceType, ATTS_SET_NONE, serviceUuidLen, &serviceUuid.uuidLength, &serviceUuid.uuid[0])
 
 
-#define ATTS_CHAR_UUID_NOTIF_ONLY(uuid)                               \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropNotify),                 \
-    {                                                                 \
-        0, ATT_16_UUID_LEN, (uint8_t *)(size_t)uuid, NULL, 0, NULL, 0 \
-    }
+#define ATTS_PRIMARY_SERVICE(serviceUuid)       ATTS_DEFINE_SERVICE(declarationsPrimaryServiceAttUuid, serviceUuid, ATT_16_UUID_LEN)
+#define ATTS_SECONDARY_SERVICE(serviceUuid)     ATTS_DEFINE_SERVICE(declarationsSecondaryServiceAttUuid, serviceUuid, ATT_16_UUID_LEN)
+#define ATTS_PRIMARY_SERVICE_128(serviceUuid)   ATTS_DEFINE_SERVICE(declarationsPrimaryServiceAttUuid, serviceUuid, ATT_128_UUID_LEN)
+#define ATTS_SECONDARY_SERVICE_128(serviceUuid) ATTS_DEFINE_SERVICE(declarationsSecondaryServiceAttUuid, serviceUuid, ATT_128_UUID_LEN)
 
-#define ATTS_CHAR_UUID_INDICATE_ONLY(uuid) ATTS_CHAR_UUID_NOTIF_ONLY(uuid)
-#define ATTS_CHAR_UUID_DEFINE(perm, uuid, valueLen, maxValueLen, value, settings) \
-    {perm, ATT_16_UUID_LEN, (uint8_t *)(size_t)uuid, (uint16_t *)(size_t) & valueLen, maxValueLen, (uint8_t *)(size_t)value, settings}
 
+#define ATTS_CCC_DEFINE_COMMON(ccc, cccLen)     ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_RDWR, descriptorClientCharacteristicConfigurationAttUuid, ATTS_SET_NONE, 2, &cccLen, ccc)
+
+#define ATTS_CCC_DEFINE(ccc)                    ATTS_CCC_DEFINE_COMMON(ccc, ccc##Len)
+#define ATTS_COMMON_CCC_DEFINE                  ATTS_CCC_DEFINE(clientCharacteristicConfiguration)
+#define ATTS_CCC_DEFINE_WRITE                                                                                                                                                \
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_RDWR, descriptorClientCharacteristicConfigurationAttUuid, ATTS_SET_ALLOW_WRITE, 2, &clientCharacteristicConfigurationWriteLen, \
+                              clientCharacteristicConfigurationWrite)
+
+#define ATTS_COMMON_CCC_DEFINE_CB \
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_RDWR, descriptorClientCharacteristicConfigurationAttUuid, ATTS_SET_WRITE_CALLBACK | ATTS_SET_READ_CALLBACK, 2, NULL, NULL)
+
+#define ATTS_COMMON_CCC_DEFINE_WCB                                                                                                                                         \
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_RDWR, descriptorClientCharacteristicConfigurationAttUuid, ATTS_SET_WRITE_CALLBACK, 2, &clientCharacteristicConfigurationLen, \
+                              &clientCharacteristicConfiguration)
+
+#define ATTS_INCLUDE_DEFINE(value) ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_READ, declarationsIncludeAttUuid, ATTS_SET_NONE, 6, &gattIncludeValueLen, value)
+
+#define ATTS_CHAR_UUID_ENCR_WRITE_NULL(properties, uuid) \
+    ATTS_CHARACTERISTIC_DECLARATIONS(properties), ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_ENCRYPT_WRITE, uuid, ATTS_SET_WRITE_CALLBACK, 0, NULL, NULL)
+
+#define ATTS_CHAR_UUID_WRITE_NULL(properties, uuid) \
+    ATTS_CHARACTERISTIC_DECLARATIONS(properties), ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_WRITE, uuid, ATTS_SET_WRITE_CALLBACK, 0, NULL, NULL)
+
+#define ATTS_CHAR_UUID_READ_NULL(properties, uuid) \
+    ATTS_CHARACTERISTIC_DECLARATIONS(properties), ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_READ, uuid, ATTS_SET_READ_CALLBACK, 0, NULL, NULL)
+
+#define ATTS_CHAR_UUID_ENCR_READ_NULL(properties, uuid) \
+    ATTS_CHARACTERISTIC_DECLARATIONS(properties), ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_ENCRYPT_READ, uuid, ATTS_SET_READ_CALLBACK, 0, NULL, NULL)
+
+
+#define ATTS_CHAR_UUID_ENCR_RDWR_NULL(properties, uuid) \
+    ATTS_CHARACTERISTIC_DECLARATIONS(properties), ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_ENCRYPT_RDWR, uuid, ATTS_SET_READ_CALLBACK | ATTS_SET_WRITE_CALLBACK, 0, NULL, NULL)
+
+#define ATTS_CHAR_UUID_NOTIF_ONLY(uuid)                                           ATTS_CHARACTERISTIC_DECLARATIONS(charPropNotify), ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_NONE, uuid, ATTS_SET_NONE, 0, NULL, NULL)
+
+#define ATTS_CHAR_UUID_INDICATE_ONLY(uuid)                                        ATTS_CHAR_UUID_NOTIF_ONLY(uuid)
+#define ATTS_CHAR_UUID_DEFINE(perm, uuid, valueLen, maxValueLen, value, settings) ATTS_ATTRIBUTE_INIT_PARAM(perm, uuid, settings, maxValueLen, &valueLen, value)
 
 #define ATTS_CHAR_UUID_DEFINE_VALUE_POINTER(properties, perm, uuid, maxValueLen, value, settings) \
     ATTS_CHARACTERISTIC_DECLARATIONS(properties), ATTS_CHAR_UUID_DEFINE(perm, uuid, value##Len, maxValueLen, value, settings)
 
 #define ATTS_CHAR_UUID_DEFINE_VALUE_ENTITY(properties, perm, uuid, value, settings) \
     ATTS_CHARACTERISTIC_DECLARATIONS(properties), ATTS_CHAR_UUID_DEFINE(perm, uuid, value##Len, sizeof(value), &value, settings)
-
 
 #define ATTS_CHAR_UUID_ENCR_READ_POINTER(properties, uuid, value, settings) ATTS_CHAR_UUID_DEFINE_VALUE_POINTER(properties, ATT_PERMISSIONS_ENCRYPT_READ, uuid, 0, value, settings)
 #define ATTS_CHAR_UUID_ENCR_WRITE_POINT(properties, uuid, value, settings) \

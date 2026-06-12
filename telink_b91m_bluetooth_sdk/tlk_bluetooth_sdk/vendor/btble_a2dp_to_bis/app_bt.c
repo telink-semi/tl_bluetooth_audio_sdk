@@ -65,23 +65,26 @@ static void app_btmgr_deinitFinishCheck(void)
 }
 
 /**
- * @brief       Handle ACL connection callback
- * @param[in]   handle - Connection handle
- * @param[in]   status - Connection status
- * @param[in]   pBtAddr - Bluetooth address
- * @param[in]   dtype - Device type
- * @param[in]   hfp_ChId - HFP channel ID
- * @return      none
+ * @brief       ACL connection callback function
+ * @param[in]   pData: event data
+ * @param[in]   dataLen: event data length
+ * @note        This function handles ACL connection events, including stopping pairing 
+ *              and managing scan modes based on connection status
  */
-static void app_btmgr_aclConnectCB(uint16_t handle, uint8_t status, uint8_t *pBtAddr, uint8_t dtype, uint8_t hfp_ChId)
+static int app_btmgr_aclConnectCB(uint8_t *pData, uint16_t dataLen)
 {
-    (void)dtype;
-    tlkapi_printf(APP_LOG_EN, "app_btmgr_aclConnectCB: 0x%x %d, 0x%08x, hfp_ChId[%d]", handle, status, *(uint32_t *)pBtAddr, hfp_ChId);
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_connect_evt_format)) {
+        return -TLK_EPARAM;
+    }
+
+    tlkmdi_bt_connect_evt_format *event = (tlkmdi_bt_connect_evt_format *)pData;
+
+    tlkapi_printf(APP_LOG_EN, "app_btmgr_aclConnectCB: 0x%x %d, 0x%08x, hfp_ChId[%d]", event->aclHandle, event->status, *(uint32_t *)event->pBtAddr, event->hfp_channel);
 #if (TLK_CFG_UART_TOOL_ENABLE)
-    tlkapp_btmgr_sendAclConnectEvt(handle, status, pBtAddr);
+    tlkapp_btmgr_sendAclConnectEvt(event->aclHandle, event->status, event->pBtAddr);
 #endif
 
-    if (status == BTH_HCI_ERROR_NONE) {
+    if (event->status == BTH_HCI_ERROR_NONE) {
 #if (TLK_MW_BTPAIRING_ENABLE)
         tlkmdi_btParing_stop();
 #endif
@@ -90,61 +93,66 @@ static void app_btmgr_aclConnectCB(uint16_t handle, uint8_t status, uint8_t *pBt
         } else {
             tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_BOTH_SCAN, 120);
         }
-        // if (hfp_ChId == 0 && dtype == BTH_REMOTE_DTYPE_HEADSET) {
-        // btp_sdpclt_connect(handle);
-        //}
     }
+
+    return TLK_ENONE;
 }
 
 /**
- * @brief       Handle ACL encryption callback
- * @param[in]   handle - Connection handle
- * @param[in]   status - Encryption status
- * @param[in]   pBtAddr - Bluetooth address
- * @param[in]   dtype - Device type
- * @param[in]   hfp_ChId - HFP channel ID
- * @return      none
+ * @brief       ACL encryption callback function
+ * @param[in]   pData - pointer to the event data
+ * @param[in]   dataLen - length of the event data
+ * @return      TLK_ENONE - success, otherwise failure
+ * @note        This function handles ACL encryption events, connecting SDP client if encryption succeeds
  */
-static void app_btmgr_aclEncryptCB(uint16_t handle, uint8_t status, uint8_t *pBtAddr, uint8_t dtype, uint8_t hfp_ChId)
+static int app_btmgr_aclEncryptCB(uint8_t *pData, uint16_t dataLen)
 {
-    (void)pBtAddr;
-    (void)dtype;
-    tlkapi_printf(APP_LOG_EN, "app_btmgr_aclEncryptCB:hfp_ChId =0x%x", hfp_ChId);
-    if (status == TLK_ENONE) {
-        if (hfp_ChId == 0) {
-            btp_sdpclt_connect(handle); // refer to PC_Comp in app_btmgr_ProfConnCB
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_encryption_evt_format)) {
+        return -TLK_ENONE;
+    }
+
+    tlkmdi_bt_encryption_evt_format *event = (tlkmdi_bt_encryption_evt_format *)pData;
+
+    if (event->status == TLK_ENONE) {
+        if (event->hfp_channel == 0) {
+            btp_sdpclt_connect(event->aclHandle); // refer to PC_Comp in app_btmgr_ProfConnCB
         } else {
-            app_btmgr_appendProfile(handle);
+            app_btmgr_appendProfile(event->aclHandle);
         }
     }
+    return TLK_ENONE;
 }
 
 /**
- * @brief       Handle ACL disconnection callback
- * @param[in]   handle - Connection handle
- * @param[in]   reason - Disconnection reason
- * @param[in]   pBtAddr - Bluetooth address
- * @return      none
+ * @brief       ACL disconnection callback function
+ * @param[in]   pData - pointer to the event data
+ * @param[in]   dataLen - length of the event data
+ * @return      TLK_ENONE is success, others is failure
  */
-static void app_btmgr_aclDisconnCB(uint16_t handle, uint8_t reason, uint8_t *pBtAddr)
+static int app_btmgr_aclDisconnCB(uint8_t *pData, uint16_t dataLen)
 {
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_disconnect_evt_format)) {
+        return -TLK_EPARAM;
+    }
+    tlkmdi_bt_disconnect_evt_format *event = (tlkmdi_bt_disconnect_evt_format *)pData;
+
 #if (TLK_CFG_UART_TOOL_ENABLE)
-    tlkapp_btmgr_sendAclDisconnEvt(handle, reason, pBtAddr);
+    tlkapp_btmgr_sendAclDisconnEvt(event->aclHandle, event->reason, event->pBtAddr);
 #endif
 
 #if (TLKBTP_CFG_IAP_ENABLE)
-    tlkmdi_btiap_setAclHandle(false, handle);
+    tlkmdi_btiap_setAclHandle(false, event->aclHandle);
 #endif
 
-    uint32_t taskID = handle + ((uint32_t)TLKAUD_TYPE_A2DP_TO_BIS << 16);
+    uint32_t taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_A2DP_TO_BIS << 16);
     tlkapp_audioScheduler_deleteTask(taskID);
-    taskID = handle + ((uint32_t)TLKAUD_TYPE_CC_BT_MUSIC << 16);
+    taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_CC_BT_MUSIC << 16);
     tlkapp_audioScheduler_deleteTask(taskID);
 #if TLK_MW_BTREC_ENABLE
     if (tlkmdi_btRecon_isInBusy()) {
         uint8_t *pPageAddr = tlkmdi_btRecon_getPageAddr();
-        if (pPageAddr != NULL && tmemcmp(pBtAddr, pPageAddr, 6) == 0) {
-            return; /* wait next retry, todo modify not wait 9s again syzhou*/
+        if (pPageAddr != NULL && tmemcmp(event->pBtAddr, pPageAddr, 6) == 0) {
+            return TLK_ENONE; /* wait next retry, todo modify not wait 9s again syzhou*/
         }
     }
 #endif
@@ -154,98 +162,100 @@ static void app_btmgr_aclDisconnCB(uint16_t handle, uint8_t reason, uint8_t *pBt
 #endif
     {
 #if TLK_MW_BTREC_ENABLE
-        if (reason == BTH_HCI_ERROR_CONN_TIMEOUT) { //Start Reconnect
+        if (event->reason == BTH_HCI_ERROR_CONN_TIMEOUT) { //Start Reconnect
             uint32_t devClass = 0;
-            int      sqlRet   = tlkmdi_tinySql_getPairingDeviceByAddr(pBtAddr, &devClass, NULL, NULL);
+            int      sqlRet   = tlkmdi_tinySql_getPairingDeviceByAddr(event->pBtAddr, &devClass, NULL, NULL);
             if (sqlRet == TLK_ENONE) {
                 if (tlkmdi_btacl_getUsedCount() == 0) {
-                    tlkmdi_btRecon_start(pBtAddr, devClass, TLKMDI_BTRECON_RETRY_NUM_LINK_LOSS);
-                    return;
+                    tlkmdi_btRecon_start(event->pBtAddr, devClass, TLKMDI_BTRECON_RETRY_NUM_LINK_LOSS);
+                    return TLK_ENONE;
                 }
             } else if (sqlRet == -TLK_ENODATA) {
-                tlkmdi_tinySql_deletePairingDevice(pBtAddr);
+                tlkmdi_tinySql_deletePairingDevice(event->pBtAddr);
             }
         }
 #endif
         tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_BOTH_SCAN, 120);
     }
+    return TLK_ENONE;
 }
 
 /**
- * @brief       Handle profile connection callback
- * @param[in]   handle - Connection handle
- * @param[in]   status - Connection status
- * @param[in]   ptype - Profile type
- * @param[in]   usrID - User ID
- * @param[in]   pBtAddr - Bluetooth address
- * @param[in]   isFirstProf - Flag indicating if this is the first profile
- * @return      none
+ * @brief       Profile connection callback function
+ * @param[in]   pData - pointer to the event data
+ * @param[in]   dataLen - length of the event data
+ * @return      TLK_ENONE is success, others is failure
  */
-static void app_btmgr_ProfConnCB(uint16_t handle, uint8_t status, uint8_t ptype, uint8_t usrID, uint8_t *pBtAddr, uint8_t isFirstProf)
+static int app_btmgr_ProfConnCB(uint8_t *pData, uint16_t dataLen)
 {
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_profile_connect_evt_format)) {
+        return -TLK_ENONE;
+    }
+    tlkmdi_bt_profile_connect_evt_format *event = (tlkmdi_bt_profile_connect_evt_format *)pData;
+
     bth_acl_handle_t *pHandle;
-    tlkapi_printf(APP_LOG_EN, "app_btmgr_ProfConnCB:{ptype-%d,usrID-%d,handle-%d,status-%d, isFirstProf-%d} ", ptype, usrID, handle, status, isFirstProf);
+
 #if (TLK_CFG_UART_TOOL_ENABLE)
-    if (ptype != BTP_PTYPE_SDP && ptype != BTP_PTYPE_RFC) {
-        tlkapp_btmgr_sendProfConnectEvt(handle, status, ptype, usrID, pBtAddr);
+    if (event->ptype != BTP_PTYPE_SDP && event->ptype != BTP_PTYPE_RFC) {
+        tlkapp_btmgr_sendProfConnectEvt(event->aclHandle, event->status, event->ptype, event->usrID, event->pBtAddr);
     }
 #endif
 
-    if (status != TLK_ENONE) {
-        return;
+    if (event->status != TLK_ENONE) {
+        return TLK_ENONE;
     }
 
 #if (TLKBTP_CFG_IAP_ENABLE)
-    if (ptype == BTP_PTYPE_IAP) {
-        tlkmdi_btiap_setAclHandle(true, handle);
+    if (event->ptype == BTP_PTYPE_IAP) {
+        tlkmdi_btiap_setAclHandle(true, event->aclHandle);
     }
 #endif
 
-    if (ptype == BTP_PTYPE_A2DP) {
+    if (event->ptype == BTP_PTYPE_A2DP) {
         tlkapp_audioScheduler_taskInfo_t info = {
             .audioType = TLKAPP_AUDIO_SCHEDULER_AUDIO_TYPE_MUSIC,
             .optype    = TLKAUD_TYPE_A2DP_TO_BIS,
             .priority  = tlkapp_audioScheduler_getDefaultPriority(TLKAUD_TYPE_A2DP_TO_BIS),
             .state     = TLKAPP_AUDIO_SCHEDULER_TASK_STATE_IDLE,
         };
-        uint32_t taskID = handle + ((uint32_t)TLKAUD_TYPE_A2DP_TO_BIS << 16);
+        uint32_t taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_A2DP_TO_BIS << 16);
         tlkapp_audioScheduler_updateTask(taskID, info, 0);
 
-        btp_avrcp_connect(handle, usrID);
-    } else if (ptype == BTP_PTYPE_HFP) {
+        btp_avrcp_connect(event->aclHandle, event->usrID);
+    } else if (event->ptype == BTP_PTYPE_HFP) {
         tlkapp_audioScheduler_taskInfo_t info = {
             .audioType = TLKAPP_AUDIO_SCHEDULER_AUDIO_TYPE_VOICE,
             .optype    = TLKAUD_TYPE_CC_BT_VOICE,
             .priority  = tlkapp_audioScheduler_getDefaultPriority(TLKAUD_TYPE_CC_BT_VOICE),
             .state     = TLKAPP_AUDIO_SCHEDULER_TASK_STATE_IDLE,
         };
-        uint32_t taskID = handle + ((uint32_t)TLKAUD_TYPE_CC_BT_VOICE << 16);
+        uint32_t taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_CC_BT_VOICE << 16);
         tlkapp_audioScheduler_updateTask(taskID, info, 0);
     }
 #if (TLKBTP_CFG_PBAP_ENABLE)
-    else if (ptype == BTP_PTYPE_PBAP) {
+    else if (event->ptype == BTP_PTYPE_PBAP) {
         tlkmdi_btacl_item_t *pItem = tlkmdi_btacl_getUsedItem(handle);
         if (pItem == NULL) {
-            return;
+            return TLK_ENOITEM;
         }
-        tlkmdi_pbap_phoneBookStartSync(handle, pBtAddr, false);
+        tlkmdi_pbap_phoneBookStartSync(event->aclHandle, event->pBtAddr, false);
 #if (TLKBTP_CFG_PBAP_ENABLE)
         tlkmdi_tinySql_setPairingDeviceRfcChid(pItem->btaddr, pItem->pbapChannel, TLKMDI_BT_RFC_CHID_PBAP);
 #endif // #if (TLKBTP_CFG_PBAP_ENABLE)
     }
 #endif // #if (TLKBTP_CFG_PBAP_ENABLE)
-    if (isFirstProf) {
+    if (event->is_first_prof) {
         //btp_sdpclt_connect(handle); // PC_Comp. Fix(temp) PC(Chrome) first pairing device will connect timeout.
-        pHandle = bth_handle_getUsedAcl(handle);
+        pHandle = bth_handle_getUsedAcl(event->aclHandle);
         if (pHandle != NULL) {
-            tlkmdi_tinySql_updatePairingDevice(pBtAddr, &pHandle->devClass, pHandle->linkKey, pHandle->devName);
+            tlkmdi_tinySql_updatePairingDevice(event->pBtAddr, &pHandle->devClass, pHandle->linkKey, pHandle->devName);
         }
         //save device class and linkkey
 
         //save rfc channel id
-        tlkmdi_btacl_item_t *pItem = tlkmdi_btacl_getUsedItem(handle);
+        tlkmdi_btacl_item_t *pItem = tlkmdi_btacl_getUsedItem(event->aclHandle);
         if (pItem == NULL) {
-            return;
+            return -TLK_ENOITEM;
         }
 
         if (!pItem->active) {
@@ -255,46 +265,47 @@ static void app_btmgr_ProfConnCB(uint16_t handle, uint8_t status, uint8_t ptype,
         }
         tlkmdi_tinySql_setPairingDeviceRfcChid(pItem->btaddr, pItem->sppChannel, TLKMDI_BT_RFC_CHID_SPP);
     }
+    return TLK_ENONE;
 }
 
 /**
- * @brief       Handle profile disconnection callback
- * @param[in]   handle - Connection handle
- * @param[in]   reason - Disconnection reason
- * @param[in]   ptype - Profile type
- * @param[in]   usrID - User ID
- * @param[in]   pBtAddr - Bluetooth address
- * @return      none
+ * @brief       Profile disconnection callback function
+ * @param[in]   pData - pointer to the event data
+ * @param[in]   dataLen - length of the event data
+ * @return      TLK_ENONE is success, others is failure
  */
-static void app_btmgr_ProfDiscCB(uint16_t handle, uint8_t reason, uint8_t ptype, uint8_t usrID, uint8_t *pBtAddr)
+static int app_btmgr_ProfDiscCB(uint8_t *pData, uint16_t dataLen)
 {
-#if (TLK_CFG_UART_TOOL_ENABLE)
-    if (ptype != BTP_PTYPE_SDP && ptype != BTP_PTYPE_RFC) {
-        tlkapp_btmgr_sendProfDisconnEvt(handle, reason, ptype, usrID, pBtAddr);
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_profile_disconnect_evt_format)) {
+        return -TLK_EPARAM;
     }
-#else
-    (void)pBtAddr;
-#endif
-    tlkapi_printf(APP_LOG_EN, "app_btmgr_ProfDiscCB:{ptype-%d,usrID-%d,handle-%d,reason-%d} ", ptype, usrID, handle, reason);
+    tlkmdi_bt_profile_disconnect_evt_format *event = (tlkmdi_bt_profile_disconnect_evt_format *)pData;
 
-    if (ptype == BTP_PTYPE_A2DP) {
-        uint32_t taskID = handle + ((uint32_t)TLKAUD_TYPE_A2DP_TO_BIS << 16);
+#if (TLK_CFG_UART_TOOL_ENABLE)
+    if (event->ptype != BTP_PTYPE_SDP && event->ptype != BTP_PTYPE_RFC) {
+        tlkapp_btmgr_sendProfDisconnEvt(event->aclHandle, event->reason, event->ptype, event->usrID, event->pBtAddr);
+    }
+#endif
+
+    if (event->ptype == BTP_PTYPE_A2DP) {
+        uint32_t taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_A2DP_TO_BIS << 16);
         tlkapp_audioScheduler_deleteTask(taskID);
-        taskID = handle + ((uint32_t)TLKAUD_TYPE_CC_BT_MUSIC << 16);
+        taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_CC_BT_MUSIC << 16);
         tlkapp_audioScheduler_deleteTask(taskID);
-    } else if (ptype == BTP_PTYPE_HFP) {
-        uint32_t taskID = handle + ((uint32_t)TLKAUD_TYPE_CC_BT_VOICE << 16);
+    } else if (event->ptype == BTP_PTYPE_HFP) {
+        uint32_t taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_CC_BT_VOICE << 16);
         tlkapp_audioScheduler_deleteTask(taskID);
     }
-    if (ptype == BTP_PTYPE_SDP && usrID == BTP_USRID_CLIENT) {
-        app_btmgr_appendProfile(handle);
+    if (event->ptype == BTP_PTYPE_SDP && event->usrID == BTP_USRID_CLIENT) {
+        app_btmgr_appendProfile(event->aclHandle);
     }
 
 #if (TLKBTP_CFG_IAP_ENABLE)
-    if (ptype == BTP_PTYPE_IAP) {
-        tlkmdi_btiap_setAclHandle(false, handle);
+    if (event->ptype == BTP_PTYPE_IAP) {
+        tlkmdi_btiap_setAclHandle(false, event->aclHandle);
     }
 #endif
+    return TLK_ENONE;
 }
 
 /**
@@ -356,39 +367,36 @@ static void app_btmgr_poweron_action(void)
     }
 }
 
+#if (!TLK_CFG_BT_ROLE_DEFAULT)
 /**
  * @brief       Handle ACL connection role callback
- * @param[in]   btaddr - Bluetooth address
- * @param[in]   devClass - Device class
- * @param[in]   timeout - Timeout value
- * @param[in]   param - Additional parameters
- * @return      0 if successful, error code otherwise
+ * @param[in]   pData - pointer to the event data
+ * @param[in]   dataLen - length of the event data
+ * @return      TLK_ENONE is success, others is failure
  */
-static int app_btmgr_aclConnectRoleCB(uint8_t btaddr[6], uint32_t devClass, uint32_t timeout, void *param)
+static int app_btmgr_aclConnectRoleCB(uint8_t *pData, uint16_t dataLen)
 {
-    if (devClass == 0 && timeout == 0 && param == NULL) { // passive
-        bth_acl_setInitRole(btaddr, BTH_ROLE_MASTER);
-    } else {
-        bth_acl_connect(btaddr, devClass, BTH_ROLE_MASTER, timeout); // active
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_set_local_role_format)) {
+        return -TLK_EPARAM;
     }
-    return TLK_ENONE;
+    tlkmdi_bt_set_local_role_format *event     = (tlkmdi_bt_set_local_role_format *)pData;
+    uint8_t                          isRequest = *((uint8_t *)event->param);
+    if (isRequest) {
+        return bth_acl_setInitRole(event->pBtAddr, BTH_ROLE_MASTER);
+    } else {
+        return bth_acl_connect(event->pBtAddr, event->devClass, BTH_ROLE_MASTER, event->timeout);
+    }
 }
+#endif
 
-/**
- * @brief     Overwrite the hook function when the BT host init complete.
- *            Reg some callbacks
- * @param[in] None.
- * @returns   None.
- */
-void tlkapp_host_bt_taskInitCompletedHook(void)
-{
-    tlkmdi_btacl_regConnectCB(app_btmgr_aclConnectCB);
-    tlkmdi_btacl_regEncryptCB(app_btmgr_aclEncryptCB);
-    tlkmdi_btacl_regDisconnCB(app_btmgr_aclDisconnCB);
-    tlkmdi_btacl_regProfileConnectCB(app_btmgr_ProfConnCB);
-    tlkmdi_btacl_regProfileDisconnCB(app_btmgr_ProfDiscCB);
-    tlkmdi_btacl_regConnectRoleCB(app_btmgr_aclConnectRoleCB);
-}
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_CONNECT_COMPLETE, app_btmgr_aclConnectCB);
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_DISCONNECT_COMPLETE, app_btmgr_aclDisconnCB);
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_ENCRYPTION_COMPLETE, app_btmgr_aclEncryptCB);
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_PROFILE_CONNECT, app_btmgr_ProfConnCB);
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_PROFILE_DISCONNECT, app_btmgr_ProfDiscCB);
+#if (!TLK_CFG_BT_ROLE_DEFAULT)
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_SET_LOCAL_ROLE, app_btmgr_aclConnectRoleCB);
+#endif
 
 /**
  * @brief       Initialize the application BT manager

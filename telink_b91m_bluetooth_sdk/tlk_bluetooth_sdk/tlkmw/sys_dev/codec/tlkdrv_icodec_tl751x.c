@@ -29,7 +29,9 @@
 #include "drivers.h"
 #include "tlkapi/tlkapi.h"
 #include "tlkmw/tlkmw.h"
-
+#if TLKALG_ANC_ENABLE
+#include "tlkalg/audio/anc/ava_anc_hw.h"
+#endif
 
 static bool tlkdrv_icodec_isOpen(uint8_t subDev);
 static int  tlkdrv_icodec_init(uint8_t subDev);
@@ -98,11 +100,21 @@ void tlkdrv_tl751x_codec_hd_init(void)
     clock_pll_audio_init(sTlkDrvIcodecCtrl.sys_mclk);
     audio_init(sTlkDrvIcodecCtrl.sys_mclk); /* must configured first. */
 
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN))
+    reg_audio_codec_ctrl |= (FLD_CODEC_CTRL_ADC0_MST_EN | FLD_CODEC_CTRL_ADC1_MST_EN | FLD_CODEC_CTRL_ADC2_MST_EN);
+#if ((TLKALG_BONE_CODUCTION_EN) && (BONE_TYPE_SEL == ANALOG_BONE_MIC))
+    audio_codec0_power_on(AUDIO_CODEC0_ADC_AND_DAC, AUDIO_CODEC0_1P8V); /* power on adc and dac. */
+#else
+    audio_codec0_power_on(AUDIO_CODEC0_DIGITAL_AND_DAC, AUDIO_CODEC0_1P8V); /* power on codec digital and dac. */
+#endif
+    audio_codec1_power_on(AUDIO_CODEC1_DIGITAL_ONLY); /* power on codec1 digital part. */
+#else
     if (CODEC_INPUT_MODE == CODEC_INPUT_DMIC) {
         audio_codec0_power_on(AUDIO_CODEC0_DIGITAL_AND_DAC, AUDIO_CODEC0_1P8V); /* power on codec digital and dac. */
     } else {
         audio_codec0_power_on(AUDIO_CODEC0_ADC_AND_DAC, AUDIO_CODEC0_1P8V); /* power on adc and dac. */
     }
+#endif
 }
 
 /**
@@ -351,7 +363,7 @@ static int tlkdrv_icodec_open(uint8_t subDev)
         return -TLK_ESTATUS;
     }
 
-    if (g_sys_power_on_codec_dis) {
+    if (TLKDRV_CODEC_COLD_START_ENABLE) {
         tlkdrv_tl751x_codec_hd_init();
     }
 
@@ -433,7 +445,10 @@ static int tlkdrv_icodec_close(uint8_t subDev)
     if ((subDev & TLKDRV_CODEC_SUBDEV_MIC) != 0) {
         sTlkDrvIcodecCtrl.codec_mic_cfg.IsOpen = false;
         sTlkDrvIcodecCtrl.codec_mic_cfg.IsEn   = false;
-        audio_rx_dma_dis(TLKDRV_CODEC_MIC_DMA);
+        audio_rx_dma_dis(gTlkdrvCodecMicDmaChn);
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN))
+        audio_rx_dma_dis(gTlkdrvCodecMic1DmaChn);
+#endif
 //        audio_codec0_set_input_snr_opt(AUDIO_AMIC_ADC_A1_A2,0);
 #if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
         audio_codec0_set_micbias(AUDIO_AMIC_ADC_A1_A2, 0);
@@ -441,11 +456,27 @@ static int tlkdrv_icodec_close(uint8_t subDev)
 #elif (CODEC_INPUT_MODE == CODEC_INPUT_DMIC)
         audio_codec0_dmic_clk_en(AUDIO_DMIC_ADC_A1_A2, 0);
         audio_codec0_reset_dmic_a_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK1_PIN);
+#if (PROJ_RECORDING_CARD)
+#if (TLKALG_BBF_ENABLE > TLKALG_BBF_2CH_EN)
+        audio_codec0_dmic_clk_en(AUDIO_DMIC_ADC_B1_B2, 0);
+        audio_codec0_reset_dmic_a_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC1_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC1_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC1_CLK1_PIN);
+#if (TLKALG_BBF_ENABLE > TLKALG_BBF_4CH_EN)
+        audio_codec1_dmic_clk_en(AUDIO_CODEC1_DMIC_A1_A2, 0);
+        audio_codec0_reset_dmic_a_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC2_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC2_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC2_CLK1_PIN);
+#endif
+#endif
+#endif
 
-        if (g_sys_power_on_codec_dis) {
+        if (TLKDRV_CODEC_COLD_START_ENABLE) {
             audio_codec0_adc_power_down(AUDIO_DMIC_ADC_A1_A2);
             reg_audio_codec0_cr_vic = reg_audio_codec0_cr_vic | 0x0f;
             BM_CLR(reg_audio_clk_en_0, FLD_CLK_CODEC0_EN); /* After clock disable, cannot access codec registers. */
+
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN))
+            audio_codec1_power_down();
+            reg_audio_codec1_cr_vic = FLD_CODEC1_DIGITAL_SB;
+            BM_CLR(reg_audio_clk_en_0, FLD_CLK_CODEC2_EN);
+#endif
 
             pm_audio_pll_power_down();
             g_audio_pll_is_used = 0;
@@ -460,7 +491,7 @@ static int tlkdrv_icodec_close(uint8_t subDev)
         audio_codec0_set_output_again(AUDIO_DAC_A1_A2, AUDIO_OUT_A_GAIN_m28_DB);
         audio_codec0_set_output_dgain(AUDIO_DAC_A1_A2, AUDIO_OUT_D_GAIN_m64_DB);
         audio_codec0_set_output_snr_opt(0);
-        audio_tx_dma_dis(TLKDRV_CODEC_SPK_DMA);
+        audio_tx_dma_dis(gTlkdrvCodecSpkDmaChn);
     }
 
     return TLK_ENONE;
@@ -887,6 +918,262 @@ uint8_t tlkdrv_icodec_dmic_d_gain(uint8_t dmic_d_gain)
     return 1;
 }
 #if (TLKDRV_VOICE_MIC == TLKDRV_CODEC_MICA)
+#if (PROJ_RECORDING_CARD && TLKALG_BBF_ENABLE)
+#if (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN)
+static int tlkdrv_icodec_mic_enable(bool enMic)
+{
+    uint8_t micSrc     = 0xFF;
+    uint8_t micSrc1    = 0xFF;
+    uint8_t micSrc2    = 0xFF;
+    uint8_t micDWdith  = 0xFF;
+    uint8_t micDWdith1 = 0xFF;
+    int     micSRate   = 0xffffffff;
+
+    tlkapi_send_string_data(APP_LOG_EN, "tlkdrv_icodec_mic_enable:", &enMic, 1);
+
+    if (enMic) {
+        if (sTlkDrvIcodecCtrl.codec_mic_cfg.BitDepth == 16) {
+            micDWdith  = AUDIO_CODEC0_BIT_16_DATA;
+            micDWdith1 = AUDIO_CODEC1_BIT_16_DATA;
+        } else if (sTlkDrvIcodecCtrl.codec_mic_cfg.BitDepth == 24) {
+            micDWdith  = AUDIO_CODEC0_BIT_24_DATA;
+            micDWdith1 = AUDIO_CODEC1_BIT_24_DATA;
+        }
+        //        tlkapi_send_string_data(APP_LOG_EN,"tlkdrv_icodec_MIC: <micDWdith> ",&micDWdith,1);
+
+        if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x03) {
+#if ((TLKALG_BONE_CODUCTION_EN) && (BONE_TYPE_SEL == ANALOG_BONE_MIC))
+            micSrc = AUDIO_DMIC_ADC_A1;
+#else
+            micSrc = AUDIO_DMIC_ADC_A1_A2;
+#endif
+            micSrc1 = AUDIO_DMIC_ADC_B1_B2;
+            micSrc2 = AUDIO_CODEC1_DMIC_A1_A2;
+        } else if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x02) {
+            micSrc  = AUDIO_DMIC_ADC_A2;
+            micSrc1 = AUDIO_DMIC_ADC_B2;
+            micSrc2 = AUDIO_CODEC1_DMIC_A2;
+        } else {
+            micSrc  = AUDIO_DMIC_ADC_A1;
+            micSrc1 = AUDIO_DMIC_ADC_B1;
+            micSrc2 = AUDIO_CODEC1_DMIC_A1;
+        }
+        audio_codec0_set_dmic_a_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK1_PIN);
+
+        audio_codec0_set_dmic_b_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC1_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC1_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC1_CLK1_PIN);
+
+        audio_codec1_set_dmic_a_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC2_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC2_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC2_CLK1_PIN);
+
+        micSRate = audio_sample_rate_to_index(sTlkDrvIcodecCtrl.codec_mic_cfg.SampleRate);
+        //      tlkapi_send_string_data(APP_LOG_EN,"tlkdrv_icodec_MIC: <micSRate> ",&micSRate,4);
+
+        if (gpTlkDrvCodecMicBuffer == NULL || gTlkDrvCodecMicBuffLen == 0 || micSrc == 0xFFU || micSRate == (int)0xffffffff || micDWdith == 0xFFU) {
+            tlkapi_error(TLKDRV_CODEC_DBG_FLAG, TLKDRV_CODEC_DBG_SIGN, "Param Err:gpTlkDrvCodecMicBuffer[%x],gTlkDrvCodecMicBuffLen[%x],micSrc[%x],micSRate[%x],micDWdith[%x]",
+                         gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen, micSrc, micSRate, micDWdith);
+            tlkapi_send_string_data(APP_LOG_EN, "tlkdrv_icodec_Mic: enable_4 ", 0, 0);
+            return -TLK_EPARAM;
+        }
+    }
+
+    if (enMic && gpTlkDrvCodecMicBuffer != NULL && gTlkDrvCodecMicBuffLen != 0) {
+        audio_codec0_input_config_t inputParam;
+        audio_codec0_input_config_t inputParam1;
+        audio_codec1_input_config_t inputParam2;
+
+#if ((TLKALG_BONE_CODUCTION_EN) && (BONE_TYPE_SEL == ANALOG_BONE_MIC))
+        audio_codec0_input_config_t inputParam0;
+        inputParam0.input_src   = AUDIO_AMIC_ADC_A2;
+        inputParam0.sample_rate = micSRate;
+        inputParam0.data_format = micDWdith;
+        audio_codec0_input_init1(&inputParam0);
+#endif
+        inputParam.input_src   = micSrc;
+        inputParam.sample_rate = micSRate;
+        inputParam.data_format = micDWdith;
+
+        inputParam1.input_src   = micSrc1;
+        inputParam1.sample_rate = micSRate;
+        inputParam1.data_format = micDWdith;
+
+        inputParam2.input_src   = micSrc2;
+        inputParam2.sample_rate = micSRate;
+        inputParam2.data_format = micDWdith1;
+#if TLKMDI_CODEC_LOW_POWER_MODE_EN
+        audio_codec0_set_dmic_a_clk(AUDIO_CODEC0_DMIC_CLK_768KHZ);
+        audio_codec0_set_dmic_b_clk(AUDIO_CODEC0_DMIC_CLK_768KHZ);
+        audio_codec1_set_dmic_a_clk(AUDIO_CODEC0_DMIC_CLK_768KHZ);
+#endif
+#if ((TLKALG_BONE_CODUCTION_EN) && (BONE_TYPE_SEL == ANALOG_BONE_MIC))
+        audio_codec0_input_init(&inputParam);
+#else
+        audio_codec0_input_init1(&inputParam);
+#endif
+
+        audio_codec0_input_init1(&inputParam1);
+        audio_codec1_input_init(&inputParam2);
+
+        audio_codec0_set_input_snr_opt(inputParam.input_src, 0);
+        audio_codec0_set_input_snr_opt(inputParam1.input_src, 0);
+        //audio_codec1_set_input_snr_opt(inputParam2.input_src,0);
+
+#if (TLKALG_BONE_CODUCTION_EN)
+#if (BONE_TYPE_SEL == ANALOG_BONE_MIC)
+        audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_30_DB);
+        audio_codec0_set_input_again(inputParam0.input_src, AUDIO_IN_A_GAIN_16_DB);
+        audio_codec0_set_input_dgain(inputParam0.input_src, ANALOG_BONE_MIC_DIGITAL_GAIN);
+        audio_codec0_set_input_dgain(inputParam1.input_src, AUDIO_IN_D_GAIN_30_DB);
+        audio_codec1_set_input_dgain(inputParam2.input_src, AUDIO_IN_D_GAIN_30_DB);
+#else
+        audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_30_DB);
+        audio_codec0_set_input_dgain(inputParam1.input_src, AUDIO_IN_D_GAIN_30_DB);
+        audio_codec1_set_input_dgain(AUDIO_CODEC1_DMIC_A1, DIGITAL_BONE_MIC_DIGITAL_GAIN);
+        audio_codec1_set_input_dgain(AUDIO_CODEC1_DMIC_A2, AUDIO_IN_D_GAIN_30_DB);
+#endif
+#else
+        audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_30_DB);
+        audio_codec0_set_input_dgain(inputParam1.input_src, AUDIO_IN_D_GAIN_30_DB);
+        audio_codec1_set_input_dgain(inputParam2.input_src, AUDIO_IN_D_GAIN_30_DB);
+#endif
+
+#if ((TLKALG_BONE_CODUCTION_EN) && (BONE_TYPE_SEL == ANALOG_BONE_MIC))
+        codec_status_init(CODEC_ADC_STATUS, inputParam0.input_src);
+#else
+        codec_status_init(CODEC_ADC_STATUS, inputParam.input_src);
+#endif
+        audio_codec0_set_input_mute(AUDIO_DMIC_ADC_B1_B2, 0);
+
+        /* matrix input config. */
+        unsigned char src_tmp = inputParam.input_src & 0x0f;
+        if (inputParam.data_format == AUDIO_CODEC0_BIT_16_DATA) {
+#if ((TLKALG_BONE_CODUCTION_EN) && (BONE_TYPE_SEL == ANALOG_BONE_MIC))
+            if (src_tmp == AUDIO_DMIC_ADC_A1) {
+#else
+            if (src_tmp == AUDIO_DMIC_ADC_A1_A2) {
+#endif
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCAB_A1_A2_B1_B2_16BIT);
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCB, FIFO_RX_CODEC0_ADCAB_A1_A2_B1_B2_16BIT);
+            }
+        } else {
+#if ((TLKALG_BONE_CODUCTION_EN) && (BONE_TYPE_SEL == ANALOG_BONE_MIC))
+            if (src_tmp == AUDIO_DMIC_ADC_A1) {
+#else
+            if (src_tmp == AUDIO_DMIC_ADC_A1_A2) {
+#endif
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCAB_A1_A2_B1_B2_32BIT);
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCB, FIFO_RX_CODEC0_ADCAB_A1_A2_B1_B2_32BIT);
+            }
+        }
+
+        audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC1_FIFO, FIFO_RX_ROUTE_CODEC1_ADCA, FIFO_RX_CODEC1_ADCA_A1_A2_16BIT);
+
+        /* rx dma init. */
+        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, gTlkdrvCodecMicDmaChn, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC1_FIFO, gTlkdrvCodecMic1DmaChn, (unsigned short *)g_codec_mic2_buff, sizeof(g_codec_mic2_buff));
+
+        reg_audio_clk_rst_en_h &= (~FLD_CLK_RST_MATRIX_EN);
+        reg_audio_clk_rst_en_h |= FLD_CLK_RST_MATRIX_EN;
+        audio_rx_dma_en(gTlkdrvCodecMicDmaChn);  /* the rx dma enable must precede the adc enable. */
+        audio_rx_dma_en(gTlkdrvCodecMic1DmaChn); /* the rx dma enable must precede the adc enable. */
+    }
+
+    return TLK_ENONE;
+}
+#elif (TLKALG_BBF_ENABLE == TLKALG_BBF_4CH_EN)
+static int tlkdrv_icodec_mic_enable(bool enMic)
+{
+    uint8_t micSrc    = 0xFF;
+    uint8_t micSrc1   = 0xFF;
+    uint8_t micDWdith = 0xFF;
+    int     micSRate  = 0xffffffff;
+
+    tlkapi_send_string_data(APP_LOG_EN, "tlkdrv_icodec_mic_enable:", &enMic, 1);
+
+    if (enMic) {
+        if (sTlkDrvIcodecCtrl.codec_mic_cfg.BitDepth == 16) {
+            micDWdith = AUDIO_CODEC0_BIT_16_DATA;
+        } else if (sTlkDrvIcodecCtrl.codec_mic_cfg.BitDepth == 24) {
+            micDWdith = AUDIO_CODEC0_BIT_24_DATA;
+        }
+        //        tlkapi_send_string_data(APP_LOG_EN,"tlkdrv_icodec_MIC: <micDWdith> ",&micDWdith,1);
+
+        if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x03) {
+            micSrc  = AUDIO_DMIC_ADC_A1_A2;
+            micSrc1 = AUDIO_DMIC_ADC_B1_B2;
+        } else if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x02) {
+            micSrc  = AUDIO_DMIC_ADC_A2;
+            micSrc1 = AUDIO_DMIC_ADC_B2;
+        } else {
+            micSrc  = AUDIO_DMIC_ADC_A1;
+            micSrc1 = AUDIO_DMIC_ADC_B1;
+        }
+        audio_codec0_set_dmic_a_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK1_PIN);
+
+        audio_codec0_set_dmic_b_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC1_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC1_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC1_CLK1_PIN);
+
+        micSRate = audio_sample_rate_to_index(sTlkDrvIcodecCtrl.codec_mic_cfg.SampleRate);
+        //      tlkapi_send_string_data(APP_LOG_EN,"tlkdrv_icodec_MIC: <micSRate> ",&micSRate,4);
+
+        if (gpTlkDrvCodecMicBuffer == NULL || gTlkDrvCodecMicBuffLen == 0 || micSrc == 0xFFU || micSRate == (int)0xffffffff || micDWdith == 0xFFU) {
+            tlkapi_error(TLKDRV_CODEC_DBG_FLAG, TLKDRV_CODEC_DBG_SIGN, "Param Err:gpTlkDrvCodecMicBuffer[%x],gTlkDrvCodecMicBuffLen[%x],micSrc[%x],micSRate[%x],micDWdith[%x]",
+                         gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen, micSrc, micSRate, micDWdith);
+            tlkapi_send_string_data(APP_LOG_EN, "tlkdrv_icodec_Mic: enable_4 ", 0, 0);
+            return -TLK_EPARAM;
+        }
+    }
+
+    if (enMic && gpTlkDrvCodecMicBuffer != NULL && gTlkDrvCodecMicBuffLen != 0) {
+        audio_codec0_input_config_t inputParam;
+        audio_codec0_input_config_t inputParam1;
+        inputParam.input_src    = micSrc;
+        inputParam.sample_rate  = micSRate;
+        inputParam.data_format  = micDWdith;
+        inputParam1.input_src   = micSrc1;
+        inputParam1.sample_rate = micSRate;
+        inputParam1.data_format = micDWdith;
+
+#if TLKMDI_CODEC_LOW_POWER_MODE_EN
+        audio_codec0_set_dmic_a_clk(AUDIO_CODEC0_DMIC_CLK_768KHZ);
+        audio_codec0_set_dmic_b_clk(AUDIO_CODEC0_DMIC_CLK_768KHZ);
+#endif
+        audio_codec0_input_init1(&inputParam);
+        audio_codec0_input_init1(&inputParam1);
+        audio_codec0_set_input_snr_opt(inputParam.input_src, 0);
+        audio_codec0_set_input_snr_opt(inputParam1.input_src, 0);
+
+        audio_codec0_dmic_clk_en(inputParam.input_src, 1);  /* enable dmic clock. */
+        audio_codec0_dmic_clk_en(inputParam1.input_src, 1); /* enable dmic clock. */
+
+        audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_30_DB);
+        audio_codec0_set_input_dgain(inputParam1.input_src, AUDIO_IN_D_GAIN_30_DB);
+
+        codec_status_init(CODEC_ADC_STATUS, inputParam.input_src);
+        audio_codec0_set_input_mute(AUDIO_DMIC_ADC_B1_B2, 0);
+        //        codec_status_init(CODEC_ADC_STATUS,inputParam1.input_src);
+
+        /* matrix input config. */
+        unsigned char src_tmp = inputParam.input_src & 0x0f;
+        if (inputParam.data_format == AUDIO_CODEC0_BIT_16_DATA) {
+            if (src_tmp == AUDIO_DMIC_ADC_A1_A2) {
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCAB_A1_A2_B1_B2_16BIT);
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCB, FIFO_RX_CODEC0_ADCAB_A1_A2_B1_B2_16BIT);
+            }
+        } else {
+            if (src_tmp == AUDIO_DMIC_ADC_A1_A2) {
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCAB_A1_A2_B1_B2_32BIT);
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCB, FIFO_RX_CODEC0_ADCAB_A1_A2_B1_B2_32BIT);
+            }
+        }
+
+        /* rx dma init. */
+        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, gTlkdrvCodecMicDmaChn, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+        reg_audio_clk_rst_en_h &= (~FLD_CLK_RST_MATRIX_EN);
+        reg_audio_clk_rst_en_h |= FLD_CLK_RST_MATRIX_EN;
+        audio_rx_dma_en(gTlkdrvCodecMicDmaChn); /* the rx dma enable must precede the adc enable. */
+    }
+
+    return TLK_ENONE;
+}
+#elif (TLKALG_BBF_ENABLE == TLKALG_BBF_2CH_EN)
 static int tlkdrv_icodec_mic_enable(bool enMic)
 {
     uint8_t micSrc    = 0xFF;
@@ -954,11 +1241,16 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
         inputParam.sample_rate = micSRate;
         inputParam.data_format = micDWdith;
 
+#if TLKMDI_CODEC_LOW_POWER_MODE_EN
+        audio_codec0_set_dmic_a_clk(AUDIO_CODEC0_DMIC_CLK_768KHZ);
+#endif
         audio_codec0_input_init1(&inputParam);
         audio_codec0_set_input_snr_opt(inputParam.input_src, 0);
 
+        //			audio_codec0_dmic_clk_en(inputParam.input_src, 1);                              /* enable dmic clock. */
+
 #if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
-        if (g_sys_work_mode) //test mode
+        if (tlkdrv_codec_is_in_test_mode()) //test mode
         {
             audio_codec0_set_input_again(inputParam.input_src, AUDIO_IN_A_GAIN_0_DB);
             audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_0_DB);
@@ -968,7 +1260,7 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
             audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_12_DB);
         }
 #elif (CODEC_INPUT_MODE == CODEC_INPUT_DMIC)
-        audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_24_DB);
+        audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_30_DB);
 #endif //#if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
 
         codec_status_init(CODEC_ADC_STATUS, inputParam.input_src);
@@ -994,14 +1286,135 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
         }
 
         /* rx dma init. */
-        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, TLKDRV_CODEC_MIC_DMA, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, gTlkdrvCodecMicDmaChn, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
         reg_audio_clk_rst_en_h &= (~FLD_CLK_RST_MATRIX_EN);
         reg_audio_clk_rst_en_h |= FLD_CLK_RST_MATRIX_EN;
-        audio_rx_dma_en(TLKDRV_CODEC_MIC_DMA); /* the rx dma enable must precede the adc enable. */
+        audio_rx_dma_en(gTlkdrvCodecMicDmaChn); /* the rx dma enable must precede the adc enable. */
     }
 
     return TLK_ENONE;
 }
+#endif
+#else
+static int tlkdrv_icodec_mic_enable(bool enMic)
+{
+    uint8_t micSrc    = 0xFF;
+    uint8_t micDWdith = 0xFF;
+    int     micSRate  = 0xffffffff;
+
+    tlkapi_send_string_data(APP_LOG_EN, "tlkdrv_icodec_mic_enable:", &enMic, 1);
+
+    if (enMic) {
+        if (sTlkDrvIcodecCtrl.codec_mic_cfg.BitDepth == 16) {
+            micDWdith = AUDIO_CODEC0_BIT_16_DATA;
+        } else if (sTlkDrvIcodecCtrl.codec_mic_cfg.BitDepth == 24) {
+            micDWdith = AUDIO_CODEC0_BIT_24_DATA;
+        }
+        //        tlkapi_send_string_data(APP_LOG_EN,"tlkdrv_icodec_MIC: <micDWdith> ",&micDWdith,1);
+
+#if (CODEC_INPUT_MODE == CODEC_INPUT_LINEIN)
+        if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x03) {
+            micSrc = AUDIO_LINEIN_ADC_A1_A2;
+        } else if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x02) {
+            micSrc = AUDIO_LINEIN_ADC_A2;
+        } else {
+            micSrc = AUDIO_LINEIN_ADC_A1;
+        }
+#elif (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
+        if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x03) {
+            micSrc = AUDIO_AMIC_ADC_A1_A2;
+        } else if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x02) {
+            micSrc = AUDIO_AMIC_ADC_A2;
+        } else {
+            micSrc = AUDIO_AMIC_ADC_A1;
+        }
+#elif (CODEC_INPUT_MODE == CODEC_INPUT_DMIC)
+        if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x03) {
+            micSrc = AUDIO_DMIC_ADC_A1_A2;
+        } else if (sTlkDrvIcodecCtrl.codec_mic_cfg.Channel == 0x02) {
+            micSrc = AUDIO_DMIC_ADC_A2;
+        } else {
+            micSrc = AUDIO_DMIC_ADC_A1;
+        }
+        audio_codec0_set_dmic_a_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK1_PIN);
+#endif
+
+        micSRate = audio_sample_rate_to_index(sTlkDrvIcodecCtrl.codec_mic_cfg.SampleRate);
+        //      tlkapi_send_string_data(APP_LOG_EN,"tlkdrv_icodec_MIC: <micSRate> ",&micSRate,4);
+
+        if (gpTlkDrvCodecMicBuffer == NULL || gTlkDrvCodecMicBuffLen == 0 || micSrc == 0xFFU || micSRate == (int)0xffffffff || micDWdith == 0xFFU) {
+            tlkapi_error(TLKDRV_CODEC_DBG_FLAG, TLKDRV_CODEC_DBG_SIGN, "Param Err:gpTlkDrvCodecMicBuffer[%x],gTlkDrvCodecMicBuffLen[%x],micSrc[%x],micSRate[%x],micDWdith[%x]",
+                         gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen, micSrc, micSRate, micDWdith);
+            tlkapi_send_string_data(APP_LOG_EN, "tlkdrv_icodec_Mic: enable_4 ", 0, 0);
+            return -TLK_EPARAM;
+        }
+
+        //		tlkapi_info(TLKDRV_CODEC_DBG_FLAG,
+        //					 TLKDRV_CODEC_DBG_SIGN,
+        //					 "tlkdrv_icodec_enable: <MIC> %d %d %d",
+        //					 micSrc,
+        //					 micSRate,
+        //					 micDWdith);
+    }
+
+    if (enMic && gpTlkDrvCodecMicBuffer != NULL && gTlkDrvCodecMicBuffLen != 0) {
+        audio_codec0_input_config_t inputParam;
+        inputParam.input_src   = micSrc;
+        inputParam.sample_rate = micSRate;
+        inputParam.data_format = micDWdith;
+
+#if TLKMDI_CODEC_LOW_POWER_MODE_EN
+        audio_codec0_set_dmic_a_clk(AUDIO_CODEC0_DMIC_CLK_768KHZ);
+#endif
+        audio_codec0_input_init1(&inputParam);
+        audio_codec0_set_input_snr_opt(inputParam.input_src, 0);
+
+#if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
+        if (tlkdrv_codec_is_in_test_mode()) //test mode
+        {
+            audio_codec0_set_input_again(inputParam.input_src, AUDIO_IN_A_GAIN_0_DB);
+            audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_0_DB);
+            //			audio_codec0_set_input_snr_opt(inputParam.input_src,1);
+        } else {
+            audio_codec0_set_input_again(inputParam.input_src, AUDIO_IN_A_GAIN_8_DB);
+            audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_12_DB);
+        }
+#elif (CODEC_INPUT_MODE == CODEC_INPUT_DMIC)
+        audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_30_DB);
+#endif //#if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
+
+        codec_status_init(CODEC_ADC_STATUS, inputParam.input_src);
+
+        /* matrix input config. */
+        unsigned char src_tmp = inputParam.input_src & 0x0f;
+        if (inputParam.data_format == AUDIO_CODEC0_BIT_16_DATA) {
+            if (src_tmp == AUDIO_DMIC_ADC_A1_A2) {
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCA_A1_A2_16BIT);
+            } else if (src_tmp == AUDIO_DMIC_ADC_A1) {
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCA_A1_16BIT);
+            } else if (src_tmp == AUDIO_DMIC_ADC_A2) {
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCA_A2_16BIT);
+            }
+        } else {
+            if (src_tmp == AUDIO_DMIC_ADC_A1_A2) {
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCA_A1_A2_32BIT);
+            } else if (src_tmp == AUDIO_DMIC_ADC_A1) {
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCA_A1_32BIT);
+            } else if (src_tmp == AUDIO_DMIC_ADC_A2) {
+                audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCA_A2_32BIT);
+            }
+        }
+
+        /* rx dma init. */
+        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, gTlkdrvCodecMicDmaChn, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+        reg_audio_clk_rst_en_h &= (~FLD_CLK_RST_MATRIX_EN);
+        reg_audio_clk_rst_en_h |= FLD_CLK_RST_MATRIX_EN;
+        audio_rx_dma_en(gTlkdrvCodecMicDmaChn); /* the rx dma enable must precede the adc enable. */
+    }
+
+    return TLK_ENONE;
+}
+#endif
 #elif (TLKDRV_VOICE_MIC == TLKDRV_CODEC_MICB)
 static int tlkdrv_icodec_mic_enable(bool enMic)
 {
@@ -1076,7 +1489,7 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
             audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_12_DB);
         }
 #elif (CODEC_INPUT_MODE == CODEC_INPUT_DMIC)
-        audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_24_DB);
+        audio_codec0_set_input_dgain(inputParam.input_src, AUDIO_IN_D_GAIN_30_DB);
 #endif //#if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
 
         codec_status_init(CODEC_ADC_STATUS, inputParam.input_src);
@@ -1102,10 +1515,10 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
         }
 
         /* rx dma init. */
-        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, TLKDRV_CODEC_MIC_DMA, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, gTlkdrvCodecMicDmaChn, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
         reg_audio_clk_rst_en_h &= (~FLD_CLK_RST_MATRIX_EN);
         reg_audio_clk_rst_en_h |= FLD_CLK_RST_MATRIX_EN;
-        audio_rx_dma_en(TLKDRV_CODEC_MIC_DMA); /* the rx dma enable must precede the adc enable. */
+        audio_rx_dma_en(gTlkdrvCodecMicDmaChn); /* the rx dma enable must precede the adc enable. */
     }
 
     return TLK_ENONE;
@@ -1222,8 +1635,8 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
         audio_codec0_output_init1(&outputParam);
         audio_codec0_set_output_snr_opt(1);
 
-#if (CODEC_CUSTOMERS_SPEC_REQ) ///-3db
-        if (g_sys_work_mode)   //test mode
+#if (CODEC_CUSTOMERS_SPEC_REQ)              ///-3db
+        if (tlkdrv_codec_is_in_test_mode()) //test mode
         {
             audio_codec0_set_output_again(outputParam.output_dst, AUDIO_OUT_A_GAIN_0_DB);
             audio_codec0_set_output_dgain(outputParam.output_dst, AUDIO_OUT_D_GAIN_0_DB);
@@ -1242,13 +1655,22 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
         /* tx dma init. */
         tlkapi_send_string_data(APP_LOG_EN, "[APP] audio_tx_dma_chain_init", &gTlkDrvCodecMicBuffLen, 4);
 #if (AUDIO_CODEC_LOOPBACK)
-        audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, TLKDRV_CODEC_SPK_DMA, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+#if (0)
+        /*  default setting. 'g_codec_micb_buff' means mono mic 
+            0 - 'g_codec_micb_buff'(mono) loopBack test, 1 - 'gpTlkDrvCodecMicBuffer'(stereo) loopBack test.
+        */
+        extern adc_mono_int g_codec_micb_buff[CODEC_MIC_FIFO_SAMPLES];
+        audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, gTlkdrvCodecSpkDmaChn, (unsigned short *)g_codec_micb_buff, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_mono_int));
 #else
-        audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, TLKDRV_CODEC_SPK_DMA, (unsigned short *)gpTlkDrvCodecSpkBuffer, gTlkDrvCodecSpkBuffLen);
-#endif
+        audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, gTlkdrvCodecSpkDmaChn, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+#endif // #if (0)
+
+#else
+        audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, gTlkdrvCodecSpkDmaChn, (unsigned short *)gpTlkDrvCodecSpkBuffer, gTlkDrvCodecSpkBuffLen);
+#endif // #if (AUDIO_CODEC_LOOPBACK)
         reg_audio_clk_rst_en_h &= (~FLD_CLK_RST_MATRIX_EN);
         reg_audio_clk_rst_en_h |= FLD_CLK_RST_MATRIX_EN;
-        audio_tx_dma_en(TLKDRV_CODEC_SPK_DMA);
+        audio_tx_dma_en(gTlkdrvCodecSpkDmaChn);
 
         //        audio_dac_unmute();
     }
@@ -1262,48 +1684,87 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
 #define ASRC_FS_OUT 768000
 #define PPM         1
 
+#if 0
 // wz_iir, 1 stage, 768kHz
 int ava_wz_iir[24][5] = {
-    {-168435455, 0, 0, 0, 0}, {0x10000000, 0, 0, 0, 0}, {0x10000000, 0, 0, 0, 0}, {0x10000000, 0, 0, 0, 0}, {0x10000000, 0, 0, 0, 0},
+    {-168435455,  0,  0,  0,  0},
+    {0x10000000, 0, 0, 0, 0},
+    {0x10000000, 0, 0, 0, 0},
+    {0x10000000, 0, 0, 0, 0},
+    {0x10000000, 0, 0, 0, 0},
 };
 
 // wz_fir, 128/390 taps, 768kHz
 signed short ava_wz_fir[390] = {
-    92, 93, 94, 93, 92, 91, 88, 85, 82, 79, 76, 72, 69, 66, 64, 62, 60, 59, 59, 59, 60, 61, 62, 64, 67, 69, 72, 75, 77, 79, 81, 83, 84, 85, 85, 84, 84, 82, 80, 78, 76, 73, 70,
-    67, 64, 61, 58, 56, 54, 52, 51, 51, 50, 50, 51, 52, 54, 55, 57, 60, 62, 64, 67, 69, 71, 73, 75, 76, 77, 78, 79, 79, 80, 80, 79, 79, 78, 78, 77, 76, 75, 74, 73, 72, 71, 70,
-    69, 68, 67, 66, 65, 63, 62, 60, 58, 56, 54, 52, 50, 48, 46, 44, 42, 40, 39, 38, 37, 37, 37, 38, 39, 41, 43, 45, 48, 51, 55, 58, 62, 65, 69, 72, 75, 78, 80, 82, 83, 84, 84,
-    84, 83, 82, 80, 78, 75, 73, 70, 67, 65, 62, 60, 58, 56, 55, 54, 54, 54, 54, 55, 56, 57, 59, 61, 62, 64, 66, 67, 69, 69, 70, 70, 70, 69, 67, 65, 63, 61, 57, 54, 51, 47, 43,
-    39, 36, 32, 29, 26, 23, 21, 19, 18, 17, 16, 16, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 28, 28, 28, 28, 28, 27, 26, 25, 23, 22, 20, 19, 17, 15, 14, 12, 11, 9,  8,
-    7,  6,  5,  4,  3,  3,  2,  2,  1,  1,  1,  0,  0,  0,  0,  -1, -1, -1, -1, -2, -2, -2, -2, -3, -3, -3, -3, -3, -3, -3, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4,
-    -4, -4, -4, -5, -5, -5, -5, -4, -4, -4, -3, -3, -2, -2, -1, 0,  1,  2,  2,  3,  4,  5,  6,  7,  7,  8,  8,  8,  8,  8,  8,  8,  7,  6,  5,  5,  4,  3,  2,  0,  -1, -2, -2,
-    -3, -4, -5, -5, -5, -5, -5, -5, -5, -4, -4, -3, -2, -1, 0,  1,  2,  2,  3,  4,  5,  5,  6,  6,  6,  6,  6,  6,  5,  5,  4,  3,  2,  2,  1,  0,  -1, -2, -2, -3, -3, -4, -4,
-    -4, -4, -4, -4, -4, -3, -3, -2, -1, 0,  1,  2,  3,  4,  4,  5,  6,  7,  8,  8,  8,  9,  9,  9,  9,  9,  9,  8,  8,  7,  7,  6,  5,  4,  4,  3,  2,  2,  1,  1};
+    92,  93,  94,  93,  92,  91,  88,  85,  82,  79,  76,  72,  69,  66,  
+    64,  62,  60,  59,  59,  59,  60,  61,  62,  64,  67,  69,  72,  75,  
+    77,  79,  81,  83,  84,  85,  85,  84,  84,  82,  80,  78,  76,  73,  
+    70,  67,  64,  61,  58,  56,  54,  52,  51,  51,  50,  50,  51,  52,  
+    54,  55,  57,  60,  62,  64,  67,  69,  71,  73,  75,  76,  77,  78,  
+    79,  79,  80,  80,  79,  79,  78,  78,  77,  76,  75,  74,  73,  72,  
+    71,  70,  69,  68,  67,  66,  65,  63,  62,  60,  58,  56,  54,  52,  
+    50,  48,  46,  44,  42,  40,  39,  38,  37,  37,  37,  38,  39,  41,  
+    43,  45,  48,  51,  55,  58,  62,  65,  69,  72,  75,  78,  80,  82,  
+    83,  84,  84,  84,  83,  82,  80,  78,  75,  73,  70,  67,  65,  62,  
+    60,  58,  56,  55,  54,  54,  54,  54,  55,  56,  57,  59,  61,  62,  
+    64,  66,  67,  69,  69,  70,  70,  70,  69,  67,  65,  63,  61,  57,  
+    54,  51,  47,  43,  39,  36,  32,  29,  26,  23,  21,  19,  18,  17,  
+    16,  16,  16,  17,  18,  19,  20,  21,  22,  24,  25,  26,  27,  28,  
+    28,  28,  28,  28,  28,  27,  26,  25,  23,  22,  20,  19,  17,  15,  
+    14,  12,  11,  9,  8,  7,  6,  5,  4,  3,  3,  2,  2,  1,  1,  1,  0,  
+    0,  0,  0,  -1,  -1,  -1,  -1,  -2,  -2,  -2,  -2,  -3,  -3,  -3,  -3,  
+    -3,  -3,  -3,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  
+    -4,  -4,  -4,  -4,  -4,  -5,  -5,  -5,  -5,  -4,  -4,  -4,  -3,  -3,  
+    -2,  -2,  -1,  0,  1,  2,  2,  3,  4,  5,  6,  7,  7,  8,  8,  8,  8,  
+    8,  8,  8,  7,  6,  5,  5,  4,  3,  2,  0,  -1,  -2,  -2,  -3,  -4,  -5,  
+    -5,  -5,  -5,  -5,  -5,  -5,  -4,  -4,  -3,  -2,  -1,  0,  1,  2,  2,  3,  
+    4,  5,  5,  6,  6,  6,  6,  6,  6,  5,  5,  4,  3,  2,  2,  1,  0,  -1,  
+    -2,  -2,  -3,  -3,  -4,  -4,  -4,  -4,  -4,  -4,  -4,  -3,  -3,  -2,  -1,  
+    0,  1,  2,  3,  4,  4,  5,  6,  7,  8,  8,  8,  9,  9,  9,  9,  9,  9,  
+    8,  8,  7,  7,  6,  5,  4,  4,  3,  2,  2,  1,  1
+};
 
 signed short ava_wz_fir_trans[390] = {
-    28,   33,   39,   45,   51,   57,   63,   69,   75,   80,   86,   90,   95,   99,   102,  105,  108,  110,  112,  114,  115,  116,  117,  118,  118,  119,  120,  122,
-    123,  125,  128,  130,  133,  137,  140,  144,  149,  153,  157,  162,  166,  170,  174,  178,  181,  184,  186,  188,  189,  190,  191,  191,  191,  191,  191,  191,
-    190,  190,  191,  191,  192,  194,  196,  198,  201,  205,  209,  213,  218,  223,  228,  234,  239,  243,  248,  252,  256,  259,  261,  262,  263,  263,  263,  262,
-    260,  257,  254,  251,  248,  244,  240,  237,  233,  230,  227,  224,  222,  220,  219,  218,  217,  217,  216,  216,  216,  215,  214,  213,  212,  209,  207,  203,
-    199,  195,  189,  183,  177,  170,  163,  156,  148,  141,  133,  126,  118,  112,  105,  99,   94,   89,   85,   81,   77,   74,   71,   68,   65,   62,   59,   55,
-    51,   46,   40,   34,   27,   19,   11,   2,    -8,   -19,  -30,  -41,  -53,  -65,  -77,  -89,  -100, -112, -123, -133, -143, -153, -162, -170, -178, -185, -193, -199,
-    -206, -212, -219, -225, -232, -239, -246, -254, -262, -271, -280, -290, -300, -310, -321, -331, -342, -353, -364, -374, -385, -394, -404, -412, -420, -428, -435, -441,
-    -447, -452, -456, -460, -464, -467, -471, -474, -477, -480, -484, -487, -491, -496, -501, -506, -511, -517, -523, -529, -535, -541, -547, -552, -558, -563, -568, -572,
-    -575, -578, -581, -583, -584, -585, -585, -585, -584, -583, -582, -580, -579, -577, -575, -574, -572, -571, -570, -569, -568, -567, -566, -565, -563, -562, -560, -557,
-    -555, -552, -548, -543, -538, -533, -527, -520, -512, -504, -496, -487, -478, -469, -459, -450, -440, -430, -421, -411, -402, -393, -384, -376, -367, -359, -350, -342,
-    -333, -324, -315, -306, -297, -287, -277, -266, -255, -244, -232, -220, -208, -196, -184, -172, -159, -147, -136, -124, -113, -102, -92,  -82,  -72,  -63,  -54,  -45,
-    -36,  -28,  -19,  -11,  -2,   7,    16,   26,   36,   47,   58,   69,   81,   93,   106,  118,  130,  143,  155,  167,  178,  189,  199,  208,  217,  225,  232,  238,
-    244,  250,  255,  260,  264,  269,  274,  280,  286,  292,  300,  308,  317,  327,  338,  349,  361,  374,  386,  398,  410,  421,  431,  440,  446,  451,  453,  453,
-    450,  444,  435,  423,  408,  391,  370,  347,  322,  295,  267,  238,  208,  178,  148,  119,  91,   65,   41,   19};
+    28,  33,  39,  45,  51,  57,  63,  69,  75,  80,  86,  90,  95,  99,  102,  105,  108,  110,  
+    112,  114,  115,  116,  117,  118,  118,  119,  120,  122,  123,  125,  128,  130,  133,  137,  
+    140,  144,  149,  153,  157,  162,  166,  170,  174,  178,  181,  184,  186,  188,  189,  190,  
+    191,  191,  191,  191,  191,  191,  190,  190,  191,  191,  192,  194,  196,  198,  201,  205,  
+    209,  213,  218,  223,  228,  234,  239,  243,  248,  252,  256,  259,  261,  262,  263,  263,  
+    263,  262,  260,  257,  254,  251,  248,  244,  240,  237,  233,  230,  227,  224,  222,  220,  
+    219,  218,  217,  217,  216,  216,  216,  215,  214,  213,  212,  209,  207,  203,  199,  195,  
+    189,  183,  177,  170,  163,  156,  148,  141,  133,  126,  118,  112,  105,  99,  94,  89,  
+    85,  81,  77,  74,  71,  68,  65,  62,  59,  55,  51,  46,  40,  34,  27,  19,  11,  2,  -8,  
+    -19,  -30,  -41,  -53,  -65,  -77,  -89,  -100,  -112,  -123,  -133,  -143,  -153,  -162,  -170,  
+    -178,  -185,  -193,  -199,  -206,  -212,  -219,  -225,  -232,  -239,  -246,  -254,  -262,  -271,  
+    -280,  -290,  -300,  -310,  -321,  -331,  -342,  -353,  -364,  -374,  -385,  -394,  -404,  -412,  
+    -420,  -428,  -435,  -441,  -447,  -452,  -456,  -460,  -464,  -467,  -471,  -474,  -477,  -480,  
+    -484,  -487,  -491,  -496,  -501,  -506,  -511,  -517,  -523,  -529,  -535,  -541,  -547,  -552,  
+    -558,  -563,  -568,  -572,  -575,  -578,  -581,  -583,  -584,  -585,  -585,  -585,  -584,  -583,  
+    -582,  -580,  -579,  -577,  -575,  -574,  -572,  -571,  -570,  -569,  -568,  -567,  -566,  -565,  
+    -563,  -562,  -560,  -557,  -555,  -552,  -548,  -543,  -538,  -533,  -527,  -520,  -512,  -504,  
+    -496,  -487,  -478,  -469,  -459,  -450,  -440,  -430,  -421,  -411,  -402,  -393,  -384,  -376,  
+    -367,  -359,  -350,  -342,  -333,  -324,  -315,  -306,  -297,  -287,  -277,  -266,  -255,  -244,  
+    -232,  -220,  -208,  -196,  -184,  -172,  -159,  -147,  -136,  -124,  -113,  -102,  -92,  -82,  
+    -72,  -63,  -54,  -45,  -36,  -28,  -19,  -11,  -2,  7,  16,  26,  36,  47,  58,  69,  81,  93,  
+    106,  118,  130,  143,  155,  167,  178,  189,  199,  208,  217,  225,  232,  238,  244,  250,  
+    255,  260,  264,  269,  274,  280,  286,  292,  300,  308,  317,  327,  338,  349,  361,  374,  
+    386,  398,  410,  421,  431,  440,  446,  451,  453,  453,  450,  444,  435,  423,  408,  391,  
+    370,  347,  322,  295,  267,  238,  208,  178,  148,  119,  91,  65,  41,  19
+};
 
 // cz_iir, 4 stages, 768kHz
-int ava_cz_iir[24][5] = {{43382098, -82085258, 43382098, -519261786, 261765041},
-                         {52254459, -96453510, 52254459, -507964658, 247584611},
-                         {9194574, -14494036, 9194574, -497962403, 233422061},
-                         {25369785, 25369785, 0, -246732049, 0},
-                         {0x10000000, 0, 0, 0, 0}};
+int ava_cz_iir[24][5] = {
+    {43382098,  -82085258,   43382098, -519261786,  261765041},
+    {52254459,  -96453510,   52254459, -507964658,  247584611},
+    { 9194574,  -14494036,    9194574, -497962403,  233422061},
+    {25369785,   25369785,          0, -246732049,          0},
+	{0x10000000, 0, 0, 0, 0 }
+};
 // cz_fir, 1/150 taps, 768kHz
-signed short ava_cz_fir[150] = {16384, 0};
-
+signed short ava_cz_fir[150] = {
+    16384, 0
+};
+#endif
 int wz_iir_bypass[24][5] = {
     {0x10000000, 0, 0, 0, 0}, {0x10000000, 0, 0, 0, 0}, {0x10000000, 0, 0, 0, 0}, {0x10000000, 0, 0, 0, 0}, {0x10000000, 0, 0, 0, 0},
 };
@@ -1348,8 +1809,8 @@ void tlkdrv_icodec_anc_enable(bool music)
         audio_matrix_set_anc_src_route(ANC0, ANC_SRC_ROUTE_FIFO, ANC_SRC_DATA_FIFO0); //fifo choose
         audio_anc_set_resample_in_out_fs(ANC0, ANC_RESAMPLE_DAC_DECISION_FS, ANC_RESAMPLE_IN_FS_48K, ANC_RESAMPLE_OUT_FS_768K);
         //resample buffer, note bufferlen == 0????, DMA choose
-        audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, TLKDRV_CODEC_SPK_DMA, (unsigned short *)gpTlkDrvCodecSpkBuffer, gTlkDrvCodecSpkBuffLen);
-        audio_tx_dma_en(TLKDRV_CODEC_SPK_DMA);
+        audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, gTlkdrvCodecSpkDmaChn, (unsigned short *)gpTlkDrvCodecSpkBuffer, gTlkDrvCodecSpkBuffLen);
+        audio_tx_dma_en(gTlkdrvCodecSpkDmaChn);
     } else {
         audio_anc_set_adder2_mode(ANC0, ANC_ERR_MIC_TO_ADDR2);
         audio_anc_set_adder3_mode(ANC0, ANC_WZ_TO_HEADPHONE);
@@ -1360,7 +1821,7 @@ void tlkdrv_icodec_anc_enable(bool music)
 
     /***********************anc filter config****************************/
     audio_anc_set_wz_iir_taps(ANC0, 5);
-    audio_anc_update_wz_iir_coef(ANC0, wz_iir_bypass, 5);
+    audio_anc_update_wz_iir_coef(ANC0, ava_wz_iir, 5);
     audio_anc_set_wz_fir_taps(ANC0, 390);
     audio_anc_update_wz_fir_coef(ANC0, ava_wz_fir, 390);
 
@@ -1472,8 +1933,8 @@ void tlkdrv_icodec_anc_disable(void)
 #endif
 
 #if AUDIO_HD_HAC_EN
-uint32_t     tl751x_audio_freq_table[10] = {16000, 24000, 32000, 44100, 48000, 96000, 192000, 384000, 768000, 0xffffffff};
-signed short drop_coef[9]                = {0, 0, 0, 0, 1, -4, 12, -58, 2100};
+uint32_t tl751x_audio_freq_table[10] = {16000, 24000, 32000, 44100, 48000, 96000, 192000, 384000, 768000, 0xffffffff};
+
 
 tlkdrv_asrc_t        g_hac_asrc_spk_st;
 tlkdrv_asrc_config_t g_hac_asrc_spk_para;
@@ -1716,6 +2177,7 @@ void tlkdrv_hac_setting(tlkdrv_hac_config_t *hac_asrc_st)
     audio_hac_clk_en(hac_asrc_st->hac_chn);
 
     audio_asrc_set_droop_step(hac_asrc_st->hac_chn, ASRC_DROOP_STEP_17TAPS);
+    signed short drop_coef[9] = {0, 0, 0, 0, 1, -4, 12, -58, 2100};
     audio_asrc_update_droop_coef(hac_asrc_st->hac_chn, drop_coef, sizeof(drop_coef) / sizeof(drop_coef[0]));
     audio_hac_bypass_eq(hac_asrc_st->hac_chn); /* Bypass the EQ function by configuring the specified parameters. */
 
@@ -1855,33 +2317,24 @@ void tlkdrv_hac_init(tlkdrv_hac_config_t *t_hac_st, uint32_t sysclk, int input_s
 
     ///System parameter settings
     if (t_hac_st) {
+        static uint8_t s_tlkdrv_hac_dma0 = 0xFF;
+        static uint8_t s_tlkdrv_hac_dma1 = 0xFF;
+        if (s_tlkdrv_hac_dma0 == 0xFF && s_tlkdrv_hac_dma1 == 0XFF) {
+            s_tlkdrv_hac_dma0 = tlkhal_dma_malloc();
+            s_tlkdrv_hac_dma1 = tlkhal_dma_malloc();
+        }
         tlk_hac_para_setting(t_hac_st,
-                             FIFO2,    ///HAC ASRC audio FIFO
-                             DMA10,    ///HAC ASRC input DMA
-                             DMA11,    ///HAC ASRC output DMA
-                             HAC_CHN2, ///HAC ASRC channel
-                             2,        ///STEREO
+                             FIFO2,             ///HAC ASRC audio FIFO
+                             s_tlkdrv_hac_dma0, ///HAC ASRC input DMA
+                             s_tlkdrv_hac_dma1, ///HAC ASRC output DMA
+                             HAC_CHN2,          ///HAC ASRC channel
+                             2,                 ///STEREO
                              hac_data_width_tmp,
                              (signed short *)((signed char *)t_hac_st + hac_struct_size),              ///Input data buffer
                              (signed short *)((signed char *)t_hac_st + hac_struct_size + input_size), ///Output data buffer
                              frame_len                                                                 ///frame length
         );
     }
-    //	else
-    //	{
-    //		tlk_hac_para_setting(
-    //			t_hac_st,
-    //			FIFO3,                           ///HAC ASRC audio FIFO
-    //			DMA14,                            ///HAC ASRC input DMA
-    //			DMA15,                            ///HAC ASRC output DMA
-    //			HAC_CHN3,                        ///HAC ASRC channel
-    //			2,                               ///STEREO
-    //			(signed short *)hac_input_buff,  ///Input data buffer
-    //			(signed short *)hac_output_buff, ///Output data buffer
-    //			frame_len                		///frame length
-    //		);
-    //	}
-
 
     tlkdrv_hac_set_sample(t_hac_st, input_sample, output_sample);
     tlkdrv_hac_setting(t_hac_st);

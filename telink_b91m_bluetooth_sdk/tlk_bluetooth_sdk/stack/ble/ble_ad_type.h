@@ -254,6 +254,12 @@ struct ad_data_channel_map_update_indication
     uint8_t         instant[2]; //Instant
 } __attribute__((packed));
 
+struct ad_data_lea_csis_rsi
+{
+    struct ltv_data header; //refer to DT_CSIP_RSI
+    uint8_t         rsi[6];
+} __attribute__((packed));
+
 //BIGInfo: ACAD, Optional in this context; shall not appear more than once in a block.
 
 //Broadcast_Code: OOB only, Optional in this context (may appear more than once in a block)

@@ -31,13 +31,14 @@
 #include "tlklib/usb/uac/tlkusb_uacctr.h"
 #include "tlkalg/audio/lc3_plus/tlkalg_lc3_plus_interface.h"
 #if (TLK_MW_LL_DONGLE_MUSIC_ENABLE)
-#include "stack/tpsll/tpd/tpd_host_interface.h"
+#include "stack/tpsll/controller/tpd/tpd_host_interface.h"
 
 #if (MCU_CORE_TYPE == MCU_CORE_TL322X)
-#include "stack/tpsll/tpmd/tpmd_host_interface.h"
+#include "stack/tpsll/controller/tpmd/tpmd_host_interface.h"
 #include "stack/tpsll/host/tpsll_hci.h"
 #include "stack/tpsll/host/tpsll_hcicmd.h"
 #endif
+#include "tlkalg/audio/asrc_24bit/tlkalg_ppm_calc.h"
 
 typedef struct
 {
@@ -64,12 +65,10 @@ static uint8_t *s_alg_asrc_16to48_buff = NULL;
 #endif
 
 #if TLKALG_LC3_PLUS_ENC_ENABLE
-static uint8_t *s_alg_lc3_plus_enc_buffer         = NULL;
-static uint8_t *s_alg_lc3_plus_enc_scratch_buffer = NULL;
+static uint8_t *s_alg_lc3_plus_enc_buffer = NULL;
 #endif
 #if TLKALG_LC3_PLUS_DEC_ENABLE
-static uint8_t *s_alg_lc3_plus_dec_buffer         = NULL;
-static uint8_t *s_alg_lc3_plus_dec_scratch_buffer = NULL;
+static uint8_t *s_alg_lc3_plus_dec_buffer = NULL;
 #endif
 
 /**
@@ -103,33 +102,25 @@ static bool tlkmdi_ll_dongle_local_init_alg(bool isMicEn, bool isSpkEn)
 #if TLKALG_LC3_PLUS_ENC_ENABLE
         p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_ENC);
         if (s_alg_lc3_plus_enc_buffer == NULL) {
-            if (tpd_host_is_ultra_latency_mode()) {
+            if (tlk_tpsll_tpd_host_is_ultra_latency_mode()) {
                 p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_ENC_ULTRA_LOW_LATENCY, NULL);
             } else {
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+                p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_ENC_ULTRA_LOW_LATENCY, NULL);
+#else
                 p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_ENC_NORMAL, NULL);
+#endif
             }
 
-            //ENCORD BUFF
-            uint8_t  size_param            = (ALG_SIZE_TYPE_ENCODER << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-            uint16_t lc3_plus_enc_mem_size = p_audio_alg_if->audio_alg_get_size(size_param);
+            uint16_t lc3_plus_enc_mem_size = p_audio_alg_if->audio_alg_get_size(ALG_CHANNEL_STEREO);
             s_alg_lc3_plus_enc_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_enc_mem_size);
 
             if (s_alg_lc3_plus_enc_buffer == NULL) {
                 tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus enc buffer alloc failed");
+            } else {
+                p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_enc_buffer, ALG_CHANNEL_STEREO);
+                tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc_mem_size:: %d", lc3_plus_enc_mem_size);
             }
-            p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_enc_buffer, size_param);
-            tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc_mem_size:: %d", lc3_plus_enc_mem_size);
-
-            //SCRATCH BUFF
-            size_param                        = (ALG_SIZE_TYPE_SCRATCH << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-            lc3_plus_enc_mem_size             = p_audio_alg_if->audio_alg_get_size(size_param);
-            s_alg_lc3_plus_enc_scratch_buffer = (uint8_t *)tlkalg_malloc_func(lc3_plus_enc_mem_size);
-
-            if (s_alg_lc3_plus_enc_scratch_buffer == NULL) {
-                tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc scratch_buffer alloc failed");
-            }
-            p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_enc_scratch_buffer, size_param);
-            tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc_mem_size:: %d", lc3_plus_enc_mem_size);
         }
 #endif
     } else {
@@ -146,10 +137,8 @@ static bool tlkmdi_ll_dongle_local_init_alg(bool isMicEn, bool isSpkEn)
         p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_ENC);
         if (s_alg_lc3_plus_enc_buffer != NULL) {
             tlkalg_free_func(s_alg_lc3_plus_enc_buffer);
-            tlkalg_free_func(s_alg_lc3_plus_enc_scratch_buffer);
             p_audio_alg_if->audio_alg_deinit();
-            s_alg_lc3_plus_enc_buffer         = NULL;
-            s_alg_lc3_plus_enc_scratch_buffer = NULL;
+            s_alg_lc3_plus_enc_buffer = NULL;
         }
 #endif
     }
@@ -173,31 +162,19 @@ static bool tlkmdi_ll_dongle_local_init_alg(bool isMicEn, bool isSpkEn)
 #if TLKALG_LC3_PLUS_DEC_ENABLE
         p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_DEC);
         if (s_alg_lc3_plus_dec_buffer == NULL) {
-            if (tpd_host_is_ultra_latency_mode()) {
+            if (tlk_tpsll_tpd_host_is_ultra_latency_mode()) {
                 p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_ULTRA_LOW_LATENCY, NULL);
             } else {
                 p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_NORMAL, NULL);
             }
 
-            //ENCORD BUFF
-            uint8_t  size_param            = (ALG_SIZE_TYPE_ENCODER << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-            uint16_t lc3_plus_dec_mem_size = p_audio_alg_if->audio_alg_get_size(size_param);
+            uint16_t lc3_plus_dec_mem_size = p_audio_alg_if->audio_alg_get_size(ALG_CHANNEL_LEFT);
             s_alg_lc3_plus_dec_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_dec_mem_size);
             if (s_alg_lc3_plus_dec_buffer == NULL) {
                 tlkapi_printf(APP_AUDIO_LOG_EN, "lc3 plus dec buffer alloc failed");
             }
-            p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_dec_buffer, size_param);
+            p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_dec_buffer, ALG_CHANNEL_LEFT);
 
-            tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_dec_mem_size: %d", lc3_plus_dec_mem_size);
-
-            //SCRATCH BUFF
-            size_param                        = (ALG_SIZE_TYPE_SCRATCH << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-            lc3_plus_dec_mem_size             = p_audio_alg_if->audio_alg_get_size(size_param);
-            s_alg_lc3_plus_dec_scratch_buffer = (uint8_t *)tlkalg_malloc_func(lc3_plus_dec_mem_size);
-            if (s_alg_lc3_plus_dec_scratch_buffer == NULL) {
-                tlkapi_printf(APP_AUDIO_LOG_EN, "lc3 plus dec scratch buffer alloc failed");
-            }
-            p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_dec_scratch_buffer, size_param);
             tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_dec_mem_size: %d", lc3_plus_dec_mem_size);
         }
 #endif
@@ -233,10 +210,8 @@ static bool tlkmdi_ll_dongle_local_init_alg(bool isMicEn, bool isSpkEn)
         p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_DEC);
         if (s_alg_lc3_plus_dec_buffer != NULL) {
             tlkalg_free_func(s_alg_lc3_plus_dec_buffer);
-            tlkalg_free_func(s_alg_lc3_plus_dec_scratch_buffer);
             p_audio_alg_if->audio_alg_deinit();
-            s_alg_lc3_plus_dec_buffer         = NULL;
-            s_alg_lc3_plus_dec_scratch_buffer = NULL;
+            s_alg_lc3_plus_dec_buffer = NULL;
         }
 #endif
 
@@ -337,10 +312,14 @@ void tlkmdi_ll_dongle_stack_switch(void)
     uint8_t audio_mode = tlkmdi_ll_dongle_get_sco_audio_mode();
     if (audio_mode != 0) {
         // DBG_MINGQIAN_CHN10_HIGH;
-        tpd_host_switch_dongle_sco_audio_mode(audio_mode);
+#if (TLK_STK_TPD_ENABLE)
+        tlk_tpsll_tpd_host_switch_dongle_sco_audio_mode(audio_mode);
+#endif
         // DBG_MINGQIAN_CHN10_LOW;
     } else {
-        tpd_host_exit_dongle_sco();
+#if (TLK_STK_TPD_ENABLE)
+        tlk_tpsll_tpd_host_exit_dongle_sco();
+#endif
     }
 }
 
@@ -354,9 +333,12 @@ int tlkmdi_ll_dongle_music_init(void)
     tmemset(&s_tlk_mdi_ll_dongle_audio_ctx, 0, sizeof(s_tlk_mdi_ll_dongle_audio_ctx));
     tlkmdi_tpd_regGetHidCmdCB(tlkmdi_ll_dongle_get_hid_cmd_cb);
 
-    tpd_audio_path_cb_register(ll_dongle_audio_path_callback);
+#if (TLK_STK_TPD_ENABLE)
+    tlk_tpsll_tpd_host_audio_path_cb_register(ll_dongle_audio_path_callback);
+    tlk_tpsll_tpd_controller_traffic_notify_cb_register(ll_dongle_audio_path_traffic_notify);
+#endif
 
-#ifdef DONGLE_AUDIO_PATH_GPIO_DEBUG
+#if DONGLE_AUDIO_PATH_GPIO_DEBUG
     gpio_function_en(GPIO_PF1);
     gpio_output_en(GPIO_PF1);
 
@@ -365,37 +347,98 @@ int tlkmdi_ll_dongle_music_init(void)
 
     gpio_function_en(GPIO_PF3);
     gpio_output_en(GPIO_PF3);
+
+    gpio_function_en(GPIO_PF0);
+    gpio_output_en(GPIO_PF0);
 #endif
 
     return TLK_ENONE;
 }
-
+#if TLKALG_PPM_CALC_BY_SAMPLE
 static uint8_t *spTlkMdiTPSLLSpkPpmBuff = NULL;
-
-/* 
+static uint8_t *spTlkMdiTPSLLMicPpmBuff = NULL;
+#endif
+/*
  * @brief   Initialize the PPM audio algorithm.
  * @param   None
  * @return  None
  */
-void ll_dongle_audio_ppm_init(uint8_t channel)
+void ll_dongle_audio_ppm_init(uint8_t spk_chn, uint8_t mic_chn)
 {
-    audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_SPK_24BIT);
-    uint16_t               ppm_spk_size   = p_audio_alg_if->audio_alg_get_size(channel);
-    spTlkMdiTPSLLSpkPpmBuff               = (uint8_t *)tlkalg_malloc_func(ppm_spk_size);
-    p_audio_alg_if->audio_alg_init(spTlkMdiTPSLLSpkPpmBuff, channel);
+#if TLKALG_PPM_CALC_BY_SAMPLE
+    if (spTlkMdiTPSLLSpkPpmBuff == NULL) {
+#if TLKUAC_PPM_SPK_24BIT_ENABLE
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_SPK_24BIT);
+#else
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_SPK);
+#endif
+        uint16_t ppm_spk_size   = p_audio_alg_if->audio_alg_get_size(spk_chn);
+        spTlkMdiTPSLLSpkPpmBuff = (uint8_t *)tlkalg_malloc_func(ppm_spk_size);
+        p_audio_alg_if->audio_alg_init(spTlkMdiTPSLLSpkPpmBuff, spk_chn);
+        tlkapi_printf(APP_AUDIO_LOG_EN, "spk ppm need size %x", ppm_spk_size);
+    } else {
+        tlkapi_printf(APP_AUDIO_LOG_EN, "spTlkMdiTPSLLSpkPpmBuff haved malloc");
+    }
+
+    if (spTlkMdiTPSLLMicPpmBuff == NULL) {
+#if TLKUAC_PPM_MIC_24BIT_ENABLE
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_MIC_24BIT);
+#else
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_MIC);
+#endif
+        uint16_t ppm_mic_size   = p_audio_alg_if->audio_alg_get_size(mic_chn);
+        spTlkMdiTPSLLMicPpmBuff = (uint8_t *)tlkalg_malloc_func(ppm_mic_size);
+        if (spTlkMdiTPSLLMicPpmBuff) {
+            p_audio_alg_if->audio_alg_init(spTlkMdiTPSLLMicPpmBuff, mic_chn);
+            tlkapi_printf(APP_AUDIO_LOG_EN, "mic ppm need size %x", ppm_mic_size);
+        } else {
+            tlkapi_printf(APP_AUDIO_LOG_EN, "spTlkMdiTPSLLMicPpmBuff malloc fail");
+        }
+    } else {
+        tlkapi_printf(APP_AUDIO_LOG_EN, "spTlkMdiTPSLLMicPpmBuff haved malloc");
+    }
+#else
+    (void)spk_chn;
+    (void)mic_chn;
+#endif
 }
 
-/* 
+/*
  * @brief   Deinitializes the PPM audio algorithm and frees associated resources.
  * @param   None
  * @return  None
  */
 void ll_dongle_audio_ppm_deinit(void)
 {
-    audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_SPK_24BIT);
-    tlkalg_free_func(spTlkMdiTPSLLSpkPpmBuff);
-    p_audio_alg_if->audio_alg_deinit();
-    spTlkMdiTPSLLSpkPpmBuff = NULL;
+#if TLKALG_PPM_CALC_BY_SAMPLE
+    if (spTlkMdiTPSLLSpkPpmBuff) {
+#if TLKUAC_PPM_SPK_24BIT_ENABLE
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_SPK_24BIT);
+#else
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_SPK);
+#endif
+        tlkalg_free_func(spTlkMdiTPSLLSpkPpmBuff);
+        p_audio_alg_if->audio_alg_deinit();
+        spTlkMdiTPSLLSpkPpmBuff = NULL;
+        tlkapi_printf(APP_AUDIO_LOG_EN, "spTlkMdiTPSLLSpkPpmBuff deinit");
+    } else {
+        tlkapi_printf(APP_AUDIO_LOG_EN, "spTlkMdiTPSLLSpkPpmBuff haved deinit");
+    }
+
+    if (spTlkMdiTPSLLMicPpmBuff) {
+#if TLKUAC_PPM_MIC_24BIT_ENABLE
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_MIC_24BIT);
+#else
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_MIC);
+#endif
+        tlkalg_free_func(spTlkMdiTPSLLMicPpmBuff);
+        p_audio_alg_if->audio_alg_deinit();
+        spTlkMdiTPSLLMicPpmBuff = NULL;
+        tlkapi_printf(APP_AUDIO_LOG_EN, "spTlkMdiTPSLLMicPpmBuff deinit");
+    } else {
+        tlkapi_printf(APP_AUDIO_LOG_EN, "spTlkMdiTPSLLMicPpmBuff haved deinit");
+    }
+#endif
 }
 
 /**
@@ -453,10 +496,13 @@ bool tlkmdi_ll_dongle_music_switch(uint16_t handle, uint8_t status)
         s_tlk_mdi_ll_dongle_audio_ctx.spkEn = tlkusb_uac_get_iso_out_enable();
         s_tlk_mdi_ll_dongle_audio_ctx.micEn = tlkusb_uac_get_iso_in_enable();
 #endif
-
-// DBG_MINGQIAN_CHN8_HIGH;
-// DBG_MINGQIAN_CHN8_LOW;
-//ll_dongle_audio_ppm_init(3);
+#if TLKLIB_UAC_PPM_SPK_ENABLE || TLKLIB_UAC_PPM_MIC_ENABLE
+        tlkalg_ppm_calc_init();
+        tlkalg_ppm_setting_init(APP_USB_ISO_OUT_BUFF_IDX_MASK);
+#endif
+        // DBG_MINGQIAN_CHN8_HIGH;
+        // DBG_MINGQIAN_CHN8_LOW;
+        ll_dongle_audio_ppm_init(3, 1);
 #if (MCU_CORE_TYPE == MCU_CORE_TL322X)
         u8 audio_mode = tlkmdi_ll_dongle_get_sco_audio_mode();
         tpsll_hci_send_start_dongle_sco_setup(audio_mode);
@@ -467,8 +513,9 @@ bool tlkmdi_ll_dongle_music_switch(uint16_t handle, uint8_t status)
 // ll_dongle_audio_enter_audio_mode();
 #else
 
-
-        tpd_host_start_dongle_sco_setup(tlkmdi_ll_dongle_get_sco_audio_mode());
+#if (TLK_STK_TPD_ENABLE)
+        tlk_tpsll_tpd_host_start_dongle_sco_setup(tlkmdi_ll_dongle_get_sco_audio_mode());
+#endif
         tlkmdi_ll_dongle_local_init_alg(s_tlk_mdi_ll_dongle_audio_ctx.micEn, s_tlk_mdi_ll_dongle_audio_ctx.spkEn);
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, ll_dongle_audio_main);
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, tlkmdi_ll_dongle_mainloop);
@@ -483,16 +530,18 @@ bool tlkmdi_ll_dongle_music_switch(uint16_t handle, uint8_t status)
         s_tlk_mdi_ll_dongle_audio_ctx.spkEn  = false;
         tlkmdi_ll_dongle_local_init_alg(s_tlk_mdi_ll_dongle_audio_ctx.micEn, s_tlk_mdi_ll_dongle_audio_ctx.spkEn);
 #if (MCU_CORE_TYPE == MCU_CORE_TL322X)
-        // tpmd_host_exit_dongle_sco();
+        // tlk_tpsll_tpmd_host_exit_dongle_sco();
         tpsll_hci_send_exit_dongle_sco();
 #else
-        tpd_host_exit_dongle_sco();
+#if (TLK_STK_TPD_ENABLE)
+        tlk_tpsll_tpd_host_exit_dongle_sco();
+#endif
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, NULL);
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, NULL);
         tlkmdi_audio_stop_timer();
         ll_dongle_clear_status();
 #endif
-        //ll_dongle_audio_ppm_deinit();
+        ll_dongle_audio_ppm_deinit();
         // DBG_MINGQIAN_CHN9_HIGH;
         // DBG_MINGQIAN_CHN9_LOW;
     }

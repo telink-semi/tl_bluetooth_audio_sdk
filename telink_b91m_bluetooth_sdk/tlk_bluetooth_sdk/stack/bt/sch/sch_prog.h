@@ -47,8 +47,8 @@
 
 #include "stack/bt/common/rwip_config.h" // stack configuration
 #include "stack/system/system_internal.h"
-#include <stdint.h>                      // integer
-#include <stdbool.h>                     // boolean
+#include <stdint.h>  // integer
+#include <stdbool.h> // boolean
 
 /*
  * DEFINES
@@ -101,7 +101,7 @@ enum SCH_BT_FRAME_TYPE
  * @brief Callback for interrupt related to the frame
  *
  * @param[in]   timestamp   Timestamp of the programmed frame (in BLE slots, based on local clock)
- * @param[in]   dummy       Dummy value (provided by the driver when programming the frame via sch_prog_push)
+ * @param[in]   dummy       Dummy value (provided by the driver when programming the frame via tlk_bt_ctrl_sch_prog_push)
  * @param[in]   irq_type    IRQ type (0: End Of Frame | 1: RX)
  ****************************************************************************************
  */
@@ -170,7 +170,7 @@ struct sch_prog_params
  * @param[in]  reset    True: reset | False: init
  ****************************************************************************************
  */
-void sch_prog_init(bool reset);
+void tlk_bt_ctrl_sch_prog_init(bool reset);
 
 
 /**
@@ -180,7 +180,7 @@ void sch_prog_init(bool reset);
 * @param[in]   params     Parameters structure
 ****************************************************************************************
 */
-void sch_prog_push(struct sch_prog_params *params);
+void tlk_bt_ctrl_sch_prog_push(struct sch_prog_params *params);
 
 /**
  ****************************************************************************************
@@ -189,7 +189,7 @@ void sch_prog_push(struct sch_prog_params *params);
  * @param[in] et_idx Entry index that trigger the ISR (@note Valid only with 5.0 + ISO HW)
  ****************************************************************************************
  */
-void sch_prog_rx_isr(uint8_t et_idx);
+void tlk_bt_ctrl_sch_prog_rx_isr(uint8_t et_idx);
 
 /**
  ****************************************************************************************
@@ -198,7 +198,7 @@ void sch_prog_rx_isr(uint8_t et_idx);
  * @param[in] et_idx Entry index that trigger the ISR (@note Valid only with 5.0 + ISO HW)
  ****************************************************************************************
  */
-void sch_prog_tx_isr(uint8_t et_idx);
+void tlk_bt_ctrl_sch_prog_tx_isr(uint8_t et_idx);
 
 /**
  ****************************************************************************************
@@ -207,7 +207,7 @@ void sch_prog_tx_isr(uint8_t et_idx);
  * @param[in] et_idx Entry index that trigger the ISR (@note Valid only with 5.0 + ISO HW)
  ****************************************************************************************
  */
-void sch_prog_skip_isr(uint8_t et_idx);
+void tlk_bt_ctrl_sch_prog_skip_isr(uint8_t et_idx);
 
 /**
  ****************************************************************************************
@@ -216,7 +216,7 @@ void sch_prog_skip_isr(uint8_t et_idx);
  * @param[in] et_idx Entry index that trigger the ISR (@note Valid only with 5.0 + ISO HW)
  ****************************************************************************************
  */
-void sch_prog_end_isr(uint8_t et_idx);
+void tlk_bt_ctrl_sch_prog_end_isr(uint8_t et_idx);
 
 /**
  ****************************************************************************************
@@ -225,7 +225,7 @@ void sch_prog_end_isr(uint8_t et_idx);
  * @param[in] et_idx Entry index that trigger the ISR (@note Valid only with 5.0 + ISO HW)
  ****************************************************************************************
  */
-void sch_prog_err_isr(uint8_t et_idx);
+void tlk_bt_ctrl_sch_prog_err_isr(uint8_t et_idx);
 
 
 /**
@@ -238,7 +238,7 @@ void sch_prog_err_isr(uint8_t et_idx);
  * @param[in]   sr_val      Sub rating pattern value, representing the clock LSBs when interrupt is raised
  ****************************************************************************************
  */
-void sch_prog_enable(clk_cbk_t clk_cbk, uint8_t id, uint8_t sr_size, uint8_t sr_val);
+void tlk_bt_ctrl_sch_prog_enable(clk_cbk_t clk_cbk, uint8_t id, uint8_t sr_size, uint8_t sr_val);
 
 /**
  ****************************************************************************************
@@ -247,30 +247,30 @@ void sch_prog_enable(clk_cbk_t clk_cbk, uint8_t id, uint8_t sr_size, uint8_t sr_
  * @param[in]   id          Identification value
  ****************************************************************************************
  */
-void sch_prog_disable(uint8_t id);
+void tlk_bt_ctrl_sch_prog_disable(uint8_t id);
 
 /**
  ****************************************************************************************
  * @brief Handle "clock" interrupt
  ****************************************************************************************
  */
-void sch_prog_clk_isr(void);
+void tlk_bt_ctrl_sch_prog_clk_isr(void);
 /**
  ****************************************************************************************
  * @brief ET reset status_set
  ****************************************************************************************
  */
-void sch_prog_et_reset_status_set(void);
+void tlk_bt_ctrl_sch_prog_et_reset_status_set(void);
 /**
  ****************************************************************************************
  * @brief Get ET number
  ****************************************************************************************
  */
-uint8_t sch_prog_number_get(void);
+uint8_t tlk_bt_ctrl_sch_prog_number_get(void);
 
-uint8_t sch_prog_get_current_et_index(void);
+uint8_t tlk_bt_ctrl_sch_prog_get_current_et_index(void);
 
-sch_time_t sch_prog_get_current_et_start_time();
+sch_time_t tlk_bt_ctrl_sch_prog_get_current_et_start_time();
 
 /// @} SCH_PROG
 #endif // SCH_PROG_H_

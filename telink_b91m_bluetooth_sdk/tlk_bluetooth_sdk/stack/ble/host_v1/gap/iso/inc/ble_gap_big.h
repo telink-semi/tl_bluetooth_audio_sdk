@@ -26,6 +26,12 @@
  *
  *******************************************************************************************************/
 
+#define BLE_GAP_BIG_INVALID_BIG_HANDLE (0xFF)
+
+#ifndef BLE_HOST_GAP_BIG_NUM
+#define BLE_HOST_GAP_BIG_NUM (1)
+#endif
+
 /** < Structure for BIG create parameters. */
 struct ble_host_gap_big_create_param
 {

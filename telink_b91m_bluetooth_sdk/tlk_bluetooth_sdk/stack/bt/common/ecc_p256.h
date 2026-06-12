@@ -38,17 +38,17 @@
 #include "rwip_config.h"
 #if (SECURE_CONNECTIONS)
 
-    #include <stdint.h>
-    #include <stdbool.h>
-    #include "stack/bt/ke/ke.h" // kernel task definitions
-    #include "co_bt.h"
-    /*
+#include <stdint.h>
+#include <stdbool.h>
+#include "stack/bt/ke/ke.h" // kernel task definitions
+#include "co_bt.h"
+/*
  * DEFINES
  ****************************************************************************************
  */
 
-    #define ECC_PUBLICKEY_GENERATION 0x01
-    #define ECC_DHKEY_GENERATION     0x02
+#define ECC_PUBLICKEY_GENERATION 0x01
+#define ECC_DHKEY_GENERATION     0x02
 
 /*
  * STRUCTURE DEFINITIONS
@@ -62,13 +62,13 @@ struct ecc_result_ind
 {
     uint8_t key_res_x[32];
     uint8_t key_res_y[32];
-}__attribute__((packed));
+} __attribute__((packed));
 
-    /*
+/*
  * FUNCTION DECLARATIONS
  ****************************************************************************************
  */
-    #if 0
+#if 0
 /**
  ****************************************************************************************
  * Initialize Elliptic Curve algorithm
@@ -124,7 +124,7 @@ uint8_t ecc_generate_key256(uint8_t key_type, const uint8_t* secret_key, const u
  ****************************************************************************************
  */
 void ecc_get_debug_Keys(uint8_t*secret_key, uint8_t* pub_key_x, uint8_t* pub_key_y);
-    #endif
+#endif
 /**
  ****************************************************************************************
  * @brief Abort a current DHKey generation procedure
@@ -132,7 +132,7 @@ void ecc_get_debug_Keys(uint8_t*secret_key, uint8_t* pub_key_x, uint8_t* pub_key
  * @param[in] task_id    Client task ID (Task type + instance)
  ****************************************************************************************
  */
-void ecc_abort_key256_generation(ke_task_id_t task_id);
+void tlk_bt_ctrl_ecc_abort_key256_generation(ke_task_id_t task_id);
 
 #endif // (SECURE_CONNECTIONS)
 

@@ -30,10 +30,8 @@ SECTIONS
     . = 0x50020000;
     .vectors :AT( NDS_SAG_LMA_FLASH){ KEEP(*(.vectors )) }
    
-    .ram_code   : AT( ALIGN(LOADADDR (.vectors) + SIZEOF (.vectors),ALIGNOF(.ram_code))) 
-        { KEEP(*(.ram_code )) }
-    .text           : AT( ALIGN(LOADADDR (.ram_code) + SIZEOF (.ram_code), ALIGNOF(.text)))
-        { *(.text .stub .text.* .gnu.linkonce.t.* ) KEEP(*(.text.*personality* )) *(.gnu.warning )  }
+    .text           : AT( ALIGN(LOADADDR (.vectors) + SIZEOF (.vectors), ALIGNOF(.text)))
+        { KEEP(*(.ram_code )) *(.text .stub .text.* .gnu.linkonce.t.* ) KEEP(*(.text.*personality* )) *(.gnu.warning )  }
     .rodata         : AT( ALIGN(LOADADDR (.text) + SIZEOF (.text),ALIGNOF(.rodata)))
         { *(.rodata .rodata.* .gnu.linkonce.r.* )}
     .eh_frame_hdr   : AT( ALIGN(LOADADDR (.rodata) + SIZEOF (.rodata),ALIGNOF(.eh_frame_hdr)))

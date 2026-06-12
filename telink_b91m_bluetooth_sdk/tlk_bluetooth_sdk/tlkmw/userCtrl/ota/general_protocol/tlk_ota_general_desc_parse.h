@@ -120,7 +120,7 @@ sTlk_fw_descriptors_node_t *tlkmw_get_fw_descpts_node_by_index(struct sTlk_fw_de
  * @param[out] none
  * @return     none
  */
-void tlkmw_free_total_fw_descptors(sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t *pInterface);
+void tlkmw_free_total_fw_descptors(sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t pInterface);
 
 /**
  * @brief      Parse total firmware descriptors from data
@@ -130,5 +130,5 @@ void tlkmw_free_total_fw_descptors(sTlk_total_fw_descriptors_t *pTotalFwDescptor
  * @param[in]  pInterface        - pointer to OTA interface
  * @return     int - OTA_NONE if success, error code otherwise
  */
-int tlk_ota_parse_total_fw_descriptors(uint8_t *pData, uint16_t dataLen, sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t *pInterface);
+int tlk_ota_parse_total_fw_descriptors(uint8_t *pData, uint16_t dataLen, sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t pInterface);
 #endif

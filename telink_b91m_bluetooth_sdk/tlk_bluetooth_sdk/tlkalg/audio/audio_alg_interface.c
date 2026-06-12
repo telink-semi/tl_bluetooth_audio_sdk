@@ -31,6 +31,7 @@
 #include "tlkalg/audio/opus/tlkalg_opus_interface.h"
 #include "tlkalg/audio/lc3_plus/tlkalg_lc3_plus_interface.h"
 #include "tlkalg/audio/aec/tlkalg_aec_interface.h"
+#include "tlkalg/audio/asrc_24bit/tlkalg_ppm_calc.h"
 #if TLK_ALG_HYBRID_ENABLE
 #include "tlkalg/audio/hybrid/tlkalg_hybrid_interface.h"
 #endif
@@ -52,6 +53,10 @@
 
 #if TLKALG_NN_NS_VAD_ENABLE
 #include "tlkalg/audio/nn_ns_vad/tlkalg_nn_ns_vad_interface.h"
+#endif
+
+#if (TLKALG_BBF_PATH_SEL && TLKALG_BBF_ENABLE)
+#include "tlkalg/audio/bbf/tlkalg_bbf_interface.h"
 #endif
 
 #if (TLKALG_ANS_SPK_ENABLE | TLKALG_ANS_ENABLE)
@@ -93,7 +98,7 @@ const audio_alg_interface_t audio_alg_if[ALG_TYPE_MAX] = {
 #if TLKALG_OPUS_ENC_ENABLE
     [ALG_OPUS_ENC] =
         {
-            .audio_alg_get_size = tlkalg_opus_enc_get_size,
+            .audio_alg_get_size = NULL,
             .audio_alg_init     = tlkalg_opus_enc_init,
             .audio_alg_deinit   = tlkalg_opus_enc_deinit,
             .audio_alg_process  = tlkalg_opus_enc_process,
@@ -128,6 +133,24 @@ const audio_alg_interface_t audio_alg_if[ALG_TYPE_MAX] = {
         },
 #endif
 
+#if TLKALG_MSBC_ENABLE_CH2
+    [ALG_MSBC_DEC_CH2] =
+        {
+            .audio_alg_get_size = tlkalg_msbc_dec_get_size,
+            .audio_alg_init     = tlkalg_msbc_dec_ch2_init,
+            .audio_alg_deinit   = tlkalg_msbc_dec_ch2_deinit,
+            .audio_alg_process  = tlkalg_msbc_dec_ch2_process,
+        },
+
+    [ALG_MSBC_ENC_CH2] =
+        {
+            .audio_alg_get_size = tlkalg_msbc_enc_get_size,
+            .audio_alg_init     = tlkalg_msbc_enc_ch2_init,
+            .audio_alg_deinit   = tlkalg_msbc_enc_ch2_deinit,
+            .audio_alg_process  = tlkalg_msbc_enc_ch2_process,
+        },
+#endif
+
 #if TLKALG_CVSD_ENABLE
     [ALG_CVSD_DEC] =
         {
@@ -143,6 +166,24 @@ const audio_alg_interface_t audio_alg_if[ALG_TYPE_MAX] = {
             .audio_alg_init     = tlkalg_cvsd_enc_init,
             .audio_alg_deinit   = tlkalg_cvsd_enc_deinit,
             .audio_alg_process  = tlkalg_cvsd_enc_process,
+        },
+#endif
+
+#if TLKALG_CVSD_ENABLE_CH2
+    [ALG_CVSD_DEC_CH2] =
+        {
+            .audio_alg_get_size = tlkalg_cvsd_dec_get_size,
+            .audio_alg_init     = tlkalg_cvsd_dec_ch2_init,
+            .audio_alg_deinit   = tlkalg_cvsd_dec_ch2_deinit,
+            .audio_alg_process  = tlkalg_cvsd_dec_ch2_process,
+        },
+
+    [ALG_CVSD_ENC_CH2] =
+        {
+            .audio_alg_get_size = tlkalg_cvsd_enc_get_size,
+            .audio_alg_init     = tlkalg_cvsd_enc_ch2_init,
+            .audio_alg_deinit   = tlkalg_cvsd_enc_ch2_deinit,
+            .audio_alg_process  = tlkalg_cvsd_enc_ch2_process,
         },
 #endif
 
@@ -210,10 +251,11 @@ const audio_alg_interface_t audio_alg_if[ALG_TYPE_MAX] = {
 #if TLKALG_ASRC_16TO48_24BIT_ENABLE
     [ALG_ASRC_16TO48_24BIT] =
         {
-            .audio_alg_get_size = tlkalg_asrc_16to48_24bit_get_size,
-            .audio_alg_init     = tlkalg_asrc_16to48_24bit_init,
-            .audio_alg_deinit   = tlkalg_asrc_16to48_24bit_deinit,
-            .audio_alg_process  = tlkalg_asrc_16to48_24bit_process,
+            .audio_alg_get_size  = tlkalg_asrc_16to48_24bit_get_size,
+            .audio_alg_init      = tlkalg_asrc_16to48_24bit_init,
+            .audio_alg_param_set = tlkalg_asrc_16to48_24bit_param_set,
+            .audio_alg_deinit    = tlkalg_asrc_16to48_24bit_deinit,
+            .audio_alg_process   = tlkalg_asrc_16to48_24bit_process,
         },
 #endif
 
@@ -340,7 +382,7 @@ const audio_alg_interface_t audio_alg_if[ALG_TYPE_MAX] = {
 #endif
 #endif
 
-#if TLKALG_HIGH_PERFORMANCE_24BITS_EN
+#if TLKALG_PPM_SPK_24BIT_ENABLE
     [ALG_PPM_SPK_24BIT] =
         {
             .audio_alg_get_size  = tlkalg_ppm_spk_24bit_get_size,
@@ -350,8 +392,18 @@ const audio_alg_interface_t audio_alg_if[ALG_TYPE_MAX] = {
             .audio_alg_process   = tlkalg_ppm_spk_24bit_process,
         },
 #endif
+#if TLKALG_PPM_MIC_24BIT_ENABLE
+    [ALG_PPM_MIC_24BIT] =
+        {
+            .audio_alg_get_size  = tlkalg_ppm_mic_24bit_get_size,
+            .audio_alg_param_set = tlkalg_ppm_mic_24bit_param_set,
+            .audio_alg_init      = tlkalg_ppm_mic_24bit_init,
+            .audio_alg_deinit    = tlkalg_ppm_mic_24bit_deinit,
+            .audio_alg_process   = tlkalg_ppm_mic_24bit_process,
+        },
+#endif
 
-#if TLKALG_PPM_MIC_ENABLE
+#if TLKALG_PPM_MIC_ENABLE || PROJ_TPSLL_AUDIO_DONGLE
 #if TLKALG_HIGH_PERFORMANCE_EN
     [ALG_PPM_MIC] =
         {
@@ -522,6 +574,16 @@ const audio_alg_interface_t audio_alg_if[ALG_TYPE_MAX] = {
             .audio_alg_deinit    = tlkalg_nn_ns_deinit,
             .audio_alg_param_set = tlkalg_nn_ns_set_param,
             .audio_alg_process   = tlkalg_nn_ns_process,
+        },
+#endif
+
+#if (TLKALG_BBF_PATH_SEL && TLKALG_BBF_ENABLE)
+    [ALG_BBF] =
+        {
+            .audio_alg_get_size = NULL,
+            .audio_alg_init     = tlkalg_bbf_init,
+            .audio_alg_deinit   = tlkalg_bbf_deinit,
+            .audio_alg_process  = tlkalg_bbf_process,
         },
 #endif
 

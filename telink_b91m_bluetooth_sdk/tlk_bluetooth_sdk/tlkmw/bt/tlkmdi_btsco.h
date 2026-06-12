@@ -24,7 +24,6 @@
 #ifndef TLKMDI_BTSCO_H
 #define TLKMDI_BTSCO_H
 
-#define TLKMDI_BTSCO_MAX_NUM       2
 #define TLKMDI_BTSCO_CODEC_ID_CVSD 1
 #define TLKMDI_BTSCO_CODEC_ID_MSBC 2
 
@@ -36,20 +35,6 @@ enum TLKMDI_BTSCO_ROLE_ENUM
 };
 
 typedef void (*TlkMdiBtScoConnCB)(uint16_t aclHandle, uint16_t scoHandle, bool isConn);
-
-typedef struct
-{
-    uint16_t aclHandle;
-    uint16_t scoHandle;
-    uint8_t codec;
-    uint8_t resv[3];
-} tlkmdi_btsco_handle_t;
-
-typedef struct
-{
-    uint32_t                scoCnt;
-    tlkmdi_btsco_handle_t pItem[TLKMDI_BTSCO_MAX_NUM];
-} tlkmdi_btsco_ctrl_t;
 
 /**
  * @brief       This function is used to initialize the SCO module
@@ -64,8 +49,6 @@ int tlkmdi_btsco_init(void);
  * @return      none.
  */
 void tlkmdi_btsco_regCB(TlkMdiBtScoConnCB connCB);
-
-
 
 
 #endif // TLKMDI_BTSCO_H

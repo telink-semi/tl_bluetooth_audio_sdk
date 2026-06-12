@@ -265,7 +265,7 @@ static struct lea_bmr_stream_param s_bis_sync_stream = {
     .frame_duration     = LEA_SELECT_FRAME_DURATION_10,
     .frame_octets       = 120,
     .all_location       = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT,
-    .presentation_delay = 40000, // default use 40ms
+    .presentation_delay = SOURCE_PRESENTATION_DELAY, // default use 40ms
     .num                = 2,
     .bmr_config[0] =
         {

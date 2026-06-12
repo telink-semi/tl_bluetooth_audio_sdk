@@ -42,7 +42,7 @@ void tlksys_timer_coreInit(void);
  * @param[in] userArg : User argument for callback
  * @returns  Result of timer creation
  */
-int tlksys_timer_createStatic(uint16_t taskID, TlkApiTimer_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void* userArg);
+int tlksys_timer_createStatic(uint16_t taskID, TlkApiTimer_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void *userArg);
 
 /**
  * @brief  Create a dynamic timer for specified task
@@ -54,7 +54,7 @@ int tlksys_timer_createStatic(uint16_t taskID, TlkApiTimer_t *pTimer, uint32_t p
  * @param[in] userArg : User argument for callback
  * @returns  Result of timer creation
  */
-int tlksys_timer_create(uint16_t taskID, TlkApiTimerHandle_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void* userArg);
+int tlksys_timer_create(uint16_t taskID, TlkApiTimerHandle_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void *userArg);
 
 /**
  * @brief  Destroy specified timer

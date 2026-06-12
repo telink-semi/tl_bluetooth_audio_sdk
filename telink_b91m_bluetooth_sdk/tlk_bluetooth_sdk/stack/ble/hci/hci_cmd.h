@@ -28,9 +28,6 @@
 #ifndef BLE_HCI_CMD_H_
 #define BLE_HCI_CMD_H_
 
-
-#include "stack/ble/ble_format.h"
-
 /**
  *  @brief  Command Parameters for "7.1.6 Disconnect command"
  */
@@ -261,10 +258,10 @@ typedef enum
 /* Advertising_Filter_Policy */
 typedef enum
 {
-    ADV_FP_ALLOW_SCAN_ANY_ALLOW_CONN_ANY = 0x00,        // Process scan and connection requests from all devices
-    ADV_FP_ALLOW_SCAN_WL_ALLOW_CONN_ANY  = 0x01,        // Process connection requests from all devices and only scan requests from devices that are in the White List.
-    ADV_FP_ALLOW_SCAN_ANY_ALLOW_CONN_WL  = 0x02,        // Process scan requests from all devices and only connection requests from devices that are in the White List..
-    ADV_FP_ALLOW_SCAN_WL_ALLOW_CONN_WL   = 0x03,        // Process scan and connection requests only from devices in the White List.
+    ADV_FP_ALLOW_SCAN_ANY_ALLOW_CONN_ANY = 0x00, // Process scan and connection requests from all devices
+    ADV_FP_ALLOW_SCAN_WL_ALLOW_CONN_ANY  = 0x01, // Process connection requests from all devices and only scan requests from devices that are in the White List.
+    ADV_FP_ALLOW_SCAN_ANY_ALLOW_CONN_WL  = 0x02, // Process scan requests from all devices and only connection requests from devices that are in the White List..
+    ADV_FP_ALLOW_SCAN_WL_ALLOW_CONN_WL   = 0x03, // Process scan and connection requests only from devices in the White List.
 
     ADV_FP_NONE = ADV_FP_ALLOW_SCAN_ANY_ALLOW_CONN_ANY, //adv filter policy set to zero, not use whitelist
 } adv_fp_type_t;                                        //adv_filterPolicy_type_t
@@ -765,7 +762,7 @@ typedef enum
 typedef enum
 {
     HOST_NO_PREFER_REQUIRE_CODED_PHY,
-    HOST_PREFER_S2_CODED_PHY,  //prefer
+    HOST_PREFER_S2_CODED_PHY, //prefer
     HOST_PREFER_S8_CODED_PHY,
     HOST_REQUIRE_S2_CODED_PHY, //require
     HOST_REQUIRE_S8_CODED_PHY,
@@ -863,11 +860,11 @@ typedef enum
 /* Advertising Event Properties type*/
 typedef enum
 {
-    ADV_EVT_PROP_LEGACY_CONNECTABLE_SCANNABLE_UNDIRECTED         = 0x0013,   //  0001 0011'b 	ADV_IND
-    ADV_EVT_PROP_LEGACY_CONNECTABLE_DIRECTED_LOW_DUTY            = 0x0015,   //  0001 0101'b		ADV_DIRECT_IND(low duty cycle)
-    ADV_EVT_PROP_LEGACY_CONNECTABLE_DIRECTED_HIGH_DUTY           = 0x001D,   //  0001 1101'b		ADV_DIRECT_IND(high duty cycle)
-    ADV_EVT_PROP_LEGACY_SCANNABLE_UNDIRECTED                     = 0x0012,   //  0001 0010'b		ADV_SCAN_IND
-    ADV_EVT_PROP_LEGACY_NON_CONNECTABLE_NON_SCANNABLE_UNDIRECTED = 0x0010,   //  0001 0000'b		ADV_NONCONN_IND
+    ADV_EVT_PROP_LEGACY_CONNECTABLE_SCANNABLE_UNDIRECTED         = 0x0013, //  0001 0011'b 	ADV_IND
+    ADV_EVT_PROP_LEGACY_CONNECTABLE_DIRECTED_LOW_DUTY            = 0x0015, //  0001 0101'b		ADV_DIRECT_IND(low duty cycle)
+    ADV_EVT_PROP_LEGACY_CONNECTABLE_DIRECTED_HIGH_DUTY           = 0x001D, //  0001 1101'b		ADV_DIRECT_IND(high duty cycle)
+    ADV_EVT_PROP_LEGACY_SCANNABLE_UNDIRECTED                     = 0x0012, //  0001 0010'b		ADV_SCAN_IND
+    ADV_EVT_PROP_LEGACY_NON_CONNECTABLE_NON_SCANNABLE_UNDIRECTED = 0x0010, //  0001 0000'b		ADV_NONCONN_IND
 
 
     ADV_EVT_PROP_EXTENDED_NON_CONNECTABLE_NON_SCANNABLE_UNDIRECTED = 0x0000, //  0000 0000'b		ADV_EXT_IND + AUX_ADV_IND/AUX_CHAIN_IND
@@ -878,8 +875,8 @@ typedef enum
     ADV_EVT_PROP_EXTENDED_SCANNABLE_DIRECTED                       = 0x0006, //  0000 0110'b		ADV_EXT_IND + AUX_ADV_IND/AUX_CHAIN_IND
 
 
-    ADV_EVT_PROP_EXTENDED_MASK_ANONYMOUS_ADV    = 0x0020,                    //if this mask on(only extended ADV event can mask it), anonymous advertising
-    ADV_EVT_PROP_EXTENDED_MASK_TX_POWER_INCLUDE = 0x0040,                    //if this mask on(only extended ADV event can mask it), TX power include
+    ADV_EVT_PROP_EXTENDED_MASK_ANONYMOUS_ADV    = 0x0020, //if this mask on(only extended ADV event can mask it), anonymous advertising
+    ADV_EVT_PROP_EXTENDED_MASK_TX_POWER_INCLUDE = 0x0040, //if this mask on(only extended ADV event can mask it), TX power include
 
 } advEvtProp_type_t;
 
@@ -1067,7 +1064,7 @@ typedef struct __attribute__((packed))
     u8  adv_handle; //refer to 'adv_handle_t'
     u16 advInter_min;
     u16 advInter_max;
-    u8  property;   //refer to 'perd_adv_prop_t'
+    u8  property; //refer to 'perd_adv_prop_t'
 } hci_le_setPeriodicAdvParam_cmdParam_t;
 
 typedef struct __attribute__((packed))
@@ -1075,7 +1072,7 @@ typedef struct __attribute__((packed))
     u8  adv_handle; //refer to 'adv_handle_t'
     u16 advInter_min;
     u16 advInter_max;
-    u8  property;   //refer to 'perd_adv_prop_t'
+    u8  property; //refer to 'perd_adv_prop_t'
     u8  numSubevents;
     u8  subeventInterval;
     u8  responseSlotDelay;
@@ -1222,7 +1219,7 @@ typedef struct __attribute__((packed))
 {
     u8             adv_handle; //refer to 'adv_handle_t'
     u8             subevent;
-    u8             fp;         //refer to 'init_fp_t'
+    u8             fp; //refer to 'init_fp_t'
     u8             ownAddr_type;
     u8             peerAddr_type;
     u8             peer_addr[6];
@@ -1797,15 +1794,15 @@ typedef enum
  */
 typedef struct __attribute__((packed))
 {
-    u8  big_handle;         /* Used to identify the BIG */
-    u8  adv_handle;         /* Used to identify the periodic advertising train */
-    u8  num_bis;            /* Total number of BISes in the BIG */
-    u8  sdu_intvl[3];       /* The interval, in microseconds, of periodic SDUs */
-    u16 iso_intvl;          /* The time between consecutive BIG anchor points, Time = N * 1.25 ms */
-    u8  nse;                /* The total number of subevents in each interval of each BIS in the BIG */
-    u16 max_sdu;            /* Maximum size of an SDU, in octets */
-    u16 max_pdu;            /* Maximum size, in octets, of payload */
-    u8  phy;                /* The transmitter PHY of packets, BIT(0): LE 1M; BIT(1): LE 2M; BIT(3): LE Coded PHY */
+    u8  big_handle;   /* Used to identify the BIG */
+    u8  adv_handle;   /* Used to identify the periodic advertising train */
+    u8  num_bis;      /* Total number of BISes in the BIG */
+    u8  sdu_intvl[3]; /* The interval, in microseconds, of periodic SDUs */
+    u16 iso_intvl;    /* The time between consecutive BIG anchor points, Time = N * 1.25 ms */
+    u8  nse;          /* The total number of subevents in each interval of each BIS in the BIG */
+    u16 max_sdu;      /* Maximum size of an SDU, in octets */
+    u16 max_pdu;      /* Maximum size, in octets, of payload */
+    u8  phy;          /* The transmitter PHY of packets, BIT(0): LE 1M; BIT(1): LE 2M; BIT(3): LE Coded PHY */
     u8  packing;
     u8  framing;
     u8  bn;                 /* The number of new payloads in each interval for each BIS */
@@ -2086,9 +2083,9 @@ typedef struct __attribute__((packed))
  */
 typedef struct __attribute__((packed))
 {
-    u8                        adv_handle;    //1. only advertising device; 2. advertising and PAST device. adv_handle indicate advertising set.
-    u8                        num_subevent;  //0x00~0x0F
-    pdaSubevtData_subevtCfg_t subevtCfg[0];  //the command max support 15 subevent configurations at a time. refer to core spec.
+    u8                        adv_handle;   //1. only advertising device; 2. advertising and PAST device. adv_handle indicate advertising set.
+    u8                        num_subevent; //0x00~0x0F
+    pdaSubevtData_subevtCfg_t subevtCfg[0]; //the command max support 15 subevent configurations at a time. refer to core spec.
 
 } hci_le_setPeridAdvSubeventData_cmdParam_t; //hci_le_setCigParam_cmdParam_t
 
@@ -2106,9 +2103,9 @@ typedef struct __attribute__((packed))
     u16 sync_handle;
     u16 req_event_count; // indicate PAwR event count. i.e. receive packet in the PAwR event count. ---paEventCounter
 
-    u8 req_subevt_idx;   // indicate subevent. i.e. receive packet in the subevent idx.
-    u8 rsp_subevt_idx;   // the subevent that the response shall be sent in
-    u8 rsp_slot_idx;     // the response slot in which this response data is to be transmitted. note slot need to be in the response subevent.
+    u8 req_subevt_idx; // indicate subevent. i.e. receive packet in the subevent idx.
+    u8 rsp_subevt_idx; // the subevent that the response shall be sent in
+    u8 rsp_slot_idx;   // the response slot in which this response data is to be transmitted. note slot need to be in the response subevent.
     u8 rsp_data_len;
 
     u8 rsp_data[1];
@@ -2132,104 +2129,10 @@ typedef struct __attribute__((packed))
     u8 subeventIdx[0];
 } hci_le_setPeriodicSyncSubevent_cmdParam_t;
 
-/**
- * @brief      get current connection channel map
- * @param[in]  connHandle - connect handle
- * @param[in]  returnChannelMap - current channel map
- * @return     status, 0x00:  succeed
- * 			           other: failed
- */
-ble_sts_t blc_hci_le_readChannelMap(u16 connHandle, u8 *returnChannelMap);
-
-
-/**
- * @brief	   create a CIG and to set the parameters of one or more CISes that are associated with a CIG in the Controller.
- * @param[in]  pCmdParam - Command Parameters buffer pointer
- * @param[out] pRetParam - return Parameters buffer pointer
- * @return     status, 0x00:  succeed
- * 			           other: failed
- */
-ble_sts_t blc_hci_le_setCigParams(hci_le_setCigParam_cmdParam_t *pCmdParam, hci_le_setCigParam_retParam_t *pRetParam);
-
-#if (ULL_FOR_CIS_EN)
-ble_sts_t blc_hci_le_setCigParamsULL(hci_le_setCigParamTest_cmdParam_t *pCmdParam, hci_le_setCigParam_retParam_t *pRetParam);
-#endif
-/**
- * @brief	  create one or more CISes using the connections identified by the ACL_Connection_Handle arrayed parameter.
- * @param[in] pCisPara - Command Parameters buffer pointer
- * @return     status, 0x00:  succeed
- * 			           other: failed
- */
-ble_sts_t blc_hci_le_createCis(hci_le_CreateCisParams_t *pCisPara);
-
-
-ble_sts_t blc_hci_le_removeCig(u8 cigId, hci_le_removeCig_retParam_t *);
-
-
-/**
- * @brief      used to identify and create the isochronous data path between the Host and the Controller for a CIS, CIS configuration,
- * 			   or BIS identified by the Connection_Handle parameter. This command can also be used to configure a codec for each data path.
- * @param[in]  cmdPara - Command Parameters buffer pointer
- * @param[out] pRetParam - Command Parameters buffer pointer
- * @return     status, 0x00:  succeed
- * 					   other: failed
- */
-ble_sts_t blc_hci_le_setupIsoDataPath(hci_le_setupIsoDataPath_cmdParam_t *pCmdPara, hci_le_setupIsoDataPath_retParam_t *pRetParam);
-
-
-/**
- * @brief      used to remove the input and/or output data path(s) associated with a CIS, CIS configuration, or BIS
-			   identified by the Connection_Handle parameter.
- * @param[in]  cmdPara - Command Parameters buffer pointer
- * @param[out] pRetParam - Command Parameters buffer pointer
- * @return     status, 0x00:  succeed
- * 					   other: failed
- */
-ble_sts_t blc_hci_le_removeIsoDataPath(hci_le_rmvIsoDataPath_cmdParam_t *cmdPara, hci_le_rmvIsoDataPath_retParam_t *retPara);
-
-
-/**
- * @brief	   be used to synchronize to a BIG described in the periodic advertising train specified by the sync_handle.
- * @param[in]  pCmdParam - command parameters, refer to "[Vol 4] Part E,7.8.106 LE BIG Create Sync command"
- * @return     status, 0x00:  succeed
- * 					   other: failed
- */
-ble_sts_t blc_hci_le_bigCreateSync(hci_le_bigCreateSyncParams_t *pCmdParam);
-
-
-/**
- * @brief      be used to create a BIG with one or more BISes.All BISes in a BIG have the same value for all parameters.
- * @param[in]  pCmdParam - command parameters, refer to "[Vol 4] Part E,7.8.103 LE Create BIG command"
- * @return     status, 0x00:  succeed
- * 					   other: failed
- */
-ble_sts_t blc_hci_le_createBigParams(hci_le_createBigParams_t *pCmdParam);
-
-
-/**
- * @brief      only be used for testing purposes
- * @param[in]  pCmdParam - command parameters, refer to "[Vol 4] Part E,7.8.104 LE Create BIG Test command"
- * @return     status, 0x00:  succeed
- * 					   other: failed
- */
-ble_sts_t blc_hci_le_createBigParamsTest(hci_le_createBigParamsTest_t *pCmdParam);
-
-
-/**
- * @brief      be used to terminate a BIG identified by the BIG_Handle parameter. also terminate the transmission of all BISes of the BIG.
- *             destroys the associated connection handles of the BISes in the BIG and removes the data paths for all BISes in the BIG
- *             refer to "[Vol 4] Part E,7.8.105 LE Terminate BIG command"
- * @param[in]  pCmdParam - big_handle: Used to identify the BIG
- *                       - reason: is used to indicate the reason why the BIG is to be terminated
- * @return     status, 0x00:  succeed
- * 					   other: failed
- */
-ble_sts_t blc_hci_le_terminateBig(hci_le_terminateBigParams_t *pCmdParam);
-
 typedef struct __attribute__((packed))
 {
     u8  status;
-    u8  Num_Config_Supported;        //range 1-4
+    u8  Num_Config_Supported; //range 1-4
     u16 max_consecutive_procedures_supported;
     u8  Num_Antennas_Supported;      // range 1--4
     u8  Max_Antenna_Paths_Supported; //range 1--4

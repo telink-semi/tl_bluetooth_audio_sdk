@@ -31,7 +31,7 @@
 #include "app_ble_hid.h"
 #include "tlkmw/audio/tlkmw_audio.h"
 #include "tlkapp/tlkapp.h"
-#include "tlkmw/ble/le_audio/inc/lea_us_headset.h"
+#include "tlkmw/ble/le_audio/inc/lea_us.h"
 
 
 #define LE_HEADSET_DEVICE_NAME          "LE headset"
@@ -40,7 +40,7 @@
 
 static char device_name[LE_HEADSET_DEVICE_NAME_MAX_SIZE] = {0};
 
-static struct lea_us_headset_param s_le_headset_param = {
+static struct tlk_mw_lea_cap_headset_param s_le_headset_param = {
     .device_name = device_name,
     .interval    = 50,
     .volume      = 150,

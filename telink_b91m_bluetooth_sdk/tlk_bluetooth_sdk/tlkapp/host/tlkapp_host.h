@@ -28,4 +28,4 @@
  * @param[in]   none.
  * @return      Returns a pointer to the task configuration.
  */
-const tlksys_task_cfg_t * tlkapp_host_getTaskCfg(void);
+const tlksys_task_cfg_t *tlkapp_host_getTaskCfg(void);

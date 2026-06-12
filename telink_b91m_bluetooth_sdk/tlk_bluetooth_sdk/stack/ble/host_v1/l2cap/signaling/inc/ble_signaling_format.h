@@ -294,6 +294,7 @@ struct ble_host_signaling_deal_info
 {
     uint16_t                         conn_handle;
     struct ble_signaling_pdu_format *tx_buffer;
+    void                            *p_conn_info;
 };
 
 typedef uint16_t (*ble_host_signaling_handler)(const struct ble_host_signaling_deal_info *, const struct ble_signaling_pdu_format *);

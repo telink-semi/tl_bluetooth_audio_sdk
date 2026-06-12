@@ -31,12 +31,23 @@
  */
 void tlksys_hal_platform_init(void)
 {
+    const tlksys_hal_platform_init_cfg_t *pCfg = tlksys_hal_port_getPlatformInitCfg();
+    if (pCfg == NULL) {
+        return;
+    }
     sys_init(LDO_AVDD_LDO_DVDD, VBAT_MAX_VALUE_GREATER_THAN_3V6);
+    PLL_192M_D25F_DSP_96M_HCLK_48M_PCLK_48M_MSPI_48M_WT_12M;
     gpio_shutdown(GPIO_ALL);
     gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
     gpio_init(0);
     wd_32k_stop();
     wd_stop();
+    switch (pCfg->lpTmrCfg) {
+    default:
+        mtime_clk_init(CLK_32K_RC);
+        clock_cal_32k_rc();
+        break;
+    }
     plic_preempt_feature_en(CORE_PREEMPT_PRI_MODE0);
     core_interrupt_enable();
 }

@@ -209,7 +209,7 @@ int tlkmw_fs_seek(TlkOsFileCtrlHandle_t file, uint32_t offset)
         return -TLK_EFAIL;
     }
 
-    tlkmw_fs_printf("seek file success, offset=%lu", offset);
+    tlkmw_fs_printf("seek file success, offset=%x", offset);
     return TLK_ENONE;
 }
 

@@ -23,7 +23,7 @@
  *******************************************************************************************************/
 #pragma once
 
-typedef void(*TlkMdiBtCtrlFinishedCB)(void);
+typedef void (*TlkMdiBtCtrlFinishedCB)(void);
 
 /**
  * @brief Force bt to enter the idle state.

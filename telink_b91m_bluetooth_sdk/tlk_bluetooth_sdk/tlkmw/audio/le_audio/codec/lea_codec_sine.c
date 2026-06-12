@@ -31,7 +31,7 @@
 
 #include "lea_codec.h"
 
-#if (LE_AUDIO_CODEC_INPUT_TYPE == LE_AUDIO_CODEC_SAMPLE_SINE_WAVE)
+#if (TLK_MW_LE_AUDIO_ENABLE && LE_AUDIO_CODEC_INPUT_TYPE == LE_AUDIO_CODEC_SAMPLE_SINE_WAVE)
 
 /**
  * @brief       Initialize input stream.

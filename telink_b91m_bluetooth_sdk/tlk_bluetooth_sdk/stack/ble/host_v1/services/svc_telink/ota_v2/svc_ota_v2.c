@@ -45,14 +45,11 @@
 
 #include "../svc_telink.h"
 #include "tlkmw/tlkmw.h"
+#include "stack/ble/host_v1/gap/acl/inc/ble_gap_acl_peripheral.h"
 
 #define TLK_OTA_V2_START_HDL SERVICE_TLK_OTA2_HDL
 
 static int blc_svc_tlkOtaV2WriteValueCallback(uint16_t conn_handle, uint8_t opcode, uint16_t attr_handle, uint8_t *value, uint16_t value_len);
-
-static const uint8_t serviceTlkOtaV2Uuid[16] = {TELINK_OTA_V2_UUID_SERVICE};
-
-static const uint8_t tlkSppOtaV2CharacteristicUuid[16] = {TELINK_SPP_DATA_OTA_V2};
 
 int blc_svc_tlkOtaV2_sendData(uint32_t taskID, uint8_t *data, uint16_t len, void *UserArg);
 
@@ -60,18 +57,10 @@ int blc_svc_tlkOtaV2_sendData(uint32_t taskID, uint8_t *data, uint16_t len, void
  * @brief the structure for Telink SPP service List.
  */
 static const struct atts_attribute tlkOtaV2List[] = {
-    ATTS_PRIMARY_SERVICE_128(serviceTlkOtaV2Uuid),
+    ATTS_PRIMARY_SERVICE_128(tlk_ota_v2_service_att_uuid),
 
     ATTS_CHARACTERISTIC_DECLARATIONS(charPropWriteWriteWithoutNotify),
-    {
-        ATT_PERMISSIONS_WRITE,
-        ATT_128_UUID_LEN,
-        (uint8_t *)(size_t)&tlkSppOtaV2CharacteristicUuid[0],
-        NULL,
-        0,
-        NULL,
-        ATTS_SET_WRITE_CALLBACK,
-    },
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_WRITE, tlk_ota_v2_data_att_uuid, ATTS_SET_WRITE_CALLBACK, 0, NULL, NULL),
     ATTS_COMMON_CCC_DEFINE,
 };
 
@@ -80,6 +69,22 @@ static const struct atts_attribute tlkOtaV2List[] = {
  */
 _attribute_ble_data_retention_ static struct atts_group svcTlkOtaV2Group = {NULL, tlkOtaV2List, NULL, blc_svc_tlkOtaV2WriteValueCallback, TLK_OTA_V2_START_HDL, 0};
 
+void blc_svc_otaStatusNotify(void *pData, uint8_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    if (dataLen < sizeof(sTlkMwNotifyEvent_t)) {
+        return;
+    }
+    sTlkMwNotifyEvent_t *pEvent = (sTlkMwNotifyEvent_t *)pData;
+    if (pEvent->status == TLK_FIRMWARE_OTA_ING) {
+        ble_host_gap_acl_peripheral_disable_latency();
+    } else if (pEvent->status == TLK_FIRMWARE_OTA_FAIL) {
+        ble_host_gap_acl_peripheral_enable_latency();
+    }
+    tlk_printf("[OTA-STATUS] blc_svc_otaStatusNotify status[%d]", pEvent->status);
+}
+
 /**
  * @brief      for user add default OTA V2(Telink) service in all GAP server.
  * @param[in]  none.
@@ -87,10 +92,18 @@ _attribute_ble_data_retention_ static struct atts_group svcTlkOtaV2Group = {NULL
  */
 void blc_svc_addOtaV2Group(void)
 {
-    tlkmw_ota_register_chn_send_interface(TLKMW_OTA_TRANS_CHN_BLE_GENERAL_MODE, blc_svc_tlkOtaV2_sendData);
+    sTlkMwUnitIntf_t interface = {
+        .channel       = TLKMW_OTA_TRANS_CHN_BLE_GENERAL_MODE,
+        .send          = blc_svc_tlkOtaV2_sendData,
+        .recv          = NULL,
+        .get_ota_param = NULL,
+    };
+
+    tlkmw_ota_register_chn_interface(&interface);
 
     svcTlkOtaV2Group.endHandle = svcTlkOtaV2Group.startHandle + ARRAY_SIZE(tlkOtaV2List) - 1;
     blc_gatts_addAttributeServiceGroup(&svcTlkOtaV2Group);
+    tlkmw_ota_register_notify_callback(TLKSYS_TASKID_HOST, blc_svc_otaStatusNotify);
 }
 
 /**
@@ -103,11 +116,6 @@ void blc_svc_removeOtaV2Group(void)
     blc_gatts_removeAttributeServiceGroup(TLK_OTA_V2_START_HDL);
 }
 
-// TODO: yating, application ota start/failure, need to handle here
-// ble_host_gap_acl_peripheral_disable_latency or ble_host_gap_acl_peripheral_enable_latency
-static bool ble_ota_flag = false;
-#include "stack/ble/host_v1/gap/acl/inc/ble_gap_acl_peripheral.h"
-
 static int blc_svc_tlkOtaV2WriteValueCallback(uint16_t conn_handle, uint8_t opcode, uint16_t attr_handle, uint8_t *value, uint16_t value_len)
 {
     (void)opcode;
@@ -117,25 +125,34 @@ static int blc_svc_tlkOtaV2WriteValueCallback(uint16_t conn_handle, uint8_t opco
     (void)value;
     (void)value_len;
 
-    // TODO: yating
-    if (ble_ota_flag == false) {
-        ble_ota_flag = true;
-        //TEMP CODE TODO: YA TING
-        tlksys_pm_setChn(TLKSYS_PM_CHN_OTA, 0, 1);
-#if PROJ_RECORDING_CARD && MCU_CORE_TYPE == MCU_CORE_TL721X && TLK_CFG_RTOS_ENABLE
-        void tlkmdi_ble_set_thread_loop_once_period(uint32_t ms);
-        tlkmdi_ble_set_thread_loop_once_period(5);
-#endif
-        ble_host_gap_acl_peripheral_disable_latency();
-    }
-
-    tlkmw_userctrl_pushDataToTask(conn_handle, value, value_len);
+    tlkmw_userctrl_pushDataToTask(conn_handle, 0, value, value_len);
 
     return ATT_SUCCESS;
+}
+
+typedef struct
+{
+    uint32_t conn_handle;
+    uint16_t len;
+    uint16_t resv;
+    uint8_t *data;
+} blc_svc_ota_v2_pack_t;
+
+void blc_svc_tlkOtaV2_sendData_inHost(void *pData, uint8_t dataLen)
+{
+    if (pData == NULL || dataLen < sizeof(blc_svc_ota_v2_pack_t)) {
+        return;
+    }
+
+    blc_svc_ota_v2_pack_t *pack = (blc_svc_ota_v2_pack_t *)pData;
+
+    ble_gatts_notify(pack->conn_handle & 0xFFFF, TLK_OTA_V2_START_HDL + 2, pack->data, pack->len);
 }
 
 int blc_svc_tlkOtaV2_sendData(uint32_t conn_handle, uint8_t *data, uint16_t len, void *UserArg)
 {
     (void)UserArg;
-    return ble_gatts_notify(conn_handle & 0xFFFF, TLK_OTA_V2_START_HDL + 2, data, len);
+    blc_svc_ota_v2_pack_t package = {.conn_handle = conn_handle, .len = len, .data = data};
+    tlksys_runFuncInTaskWithArg(TLKSYS_TASKID_HOST, blc_svc_tlkOtaV2_sendData_inHost, &package, sizeof(blc_svc_ota_v2_pack_t));
+    return TLK_ENONE;
 }

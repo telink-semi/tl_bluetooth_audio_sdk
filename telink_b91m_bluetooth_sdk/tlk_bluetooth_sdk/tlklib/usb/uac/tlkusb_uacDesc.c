@@ -125,7 +125,7 @@ static uint16_t tlkusb_uacdesc_getReportLens(tlkusb_setup_req_t *pSetup);
 static uint8_t *tlkusb_uacdesc_getReportDesc(tlkusb_setup_req_t *pSetup);
 
 
-const tlkusb_modDesc_t sTlkUsbUacModDesc = {
+tlkusb_modDesc_t sTlkUsbUacModDesc = {
     NULL,                         // GetDeviceLens
     tlkusb_uacdesc_getConfigLens, // GetConfigLens
     tlkusb_uacdesc_getStringLens, // GetStringLens
@@ -144,9 +144,10 @@ static const tlkusb_stdStringDesc_t sMmiUsbAudProductDesc = {2 + sizeof(TLKUSB_A
 static const tlkusb_stdStringDesc_t sMmiUsbAudMicSpkSerialDesc = {2 + sizeof(TLKUSB_AUD_STRING_SERIAL2) - 2, TLKUSB_TYPE_STRING, TLKUSB_AUD_STRING_SERIAL2};
 #elif (TLKUSB_UAC_MIC_ENABLE)
 static const tlkusb_stdStringDesc_t sMmiUsbAudMicSerialDesc = {2 + sizeof(TLKUSB_AUD_STRING_SERIAL0) - 2, TLKUSB_TYPE_STRING, TLKUSB_AUD_STRING_SERIAL0};
-#elif (TLKUSB_UAC_SPK_ENABLE)
-static const tlkusb_stdStringDesc_t sMmiUsbAudSpkSerialDesc = {2 + sizeof(TLKUSB_AUD_STRING_SERIAL1) - 2, TLKUSB_TYPE_STRING, TLKUSB_AUD_STRING_SERIAL1};
 #endif
+//#elif (TLKUSB_UAC_SPK_ENABLE)
+static const tlkusb_stdStringDesc_t sMmiUsbAudSpk1SerialDesc = {2 + sizeof(TLKUSB_AUD_STRING_SERIAL1) - 2, TLKUSB_TYPE_STRING, TLKUSB_AUD_STRING_SERIAL1};
+//    #endif
 
 
 static const tlkusb_uacAudConfigDesc_t sMmiUsbAudConfigDesc = {
@@ -672,6 +673,8 @@ static uint16_t tlkusb_uacdesc_getStringLens(uint8_t index)
 #else
         return 0;
 #endif
+    } else if (index == TLKUSB_STRING_INDEX_SERIAL1) {
+        return sizeof(TLKUSB_AUD_STRING_SERIAL1);
     } else {
         return 0;
     }
@@ -705,10 +708,35 @@ static uint8_t *tlkusb_uacdesc_getStringDesc(uint8_t index)
 #else
         return NULL;
 #endif
+    } else if (index == TLKUSB_STRING_INDEX_SERIAL1) {
+        return (uint8_t *)(&sMmiUsbAudSpk1SerialDesc);
     } else {
         return 0;
     }
 }
 
+void tlkusb_uacModeDesc_set_devDescFunc(void *desc)
+{
+    sTlkUsbUacModDesc.GetDeviceDesc = desc;
+}
 
+void tlkusb_uacModeDesc_set_configDescFunc(void *desc)
+{
+    sTlkUsbUacModDesc.GetConfigDesc = desc;
+}
+
+void tlkusb_uacModeDesc_set_configDescLenFunc(void *desc)
+{
+    sTlkUsbUacModDesc.GetConfigLens = desc;
+}
+
+void tlkusb_uacModeDesc_set_IntfDescFunc(void *desc)
+{
+    sTlkUsbUacModDesc.GetInfDesDesc = desc;
+}
+
+void tlkusb_uacModeDesc_set_IntfDescLenFunc(void *desc)
+{
+    sTlkUsbUacModDesc.GetInfDesLens = desc;
+}
 #endif // #if (TLK_USB_UAC_ENABLE)

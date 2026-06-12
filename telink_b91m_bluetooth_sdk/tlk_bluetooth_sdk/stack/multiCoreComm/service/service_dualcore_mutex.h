@@ -28,22 +28,22 @@
 #pragma once
 
 #ifndef TLKIPC_MUTEX_LOCK_ENABLE
-    #define TLKIPC_MUTEX_LOCK_ENABLE 0
+#define TLKIPC_MUTEX_LOCK_ENABLE 0
 #endif
 
 #if TLKIPC_MUTEX_LOCK_ENABLE
-    #define TLKIPC_MUTEX_LOCK   tlkipc_mutex_lock(0)
-    #define TLKIPC_MUTEX_UNLOCK tlkipc_mutex_unlock(0)
+#define TLKIPC_MUTEX_LOCK   tlkipc_mutex_lock(0)
+#define TLKIPC_MUTEX_UNLOCK tlkipc_mutex_unlock(0)
 #else
-    #define TLKIPC_MUTEX_LOCK
-    #define TLKIPC_MUTEX_UNLOCK
+#define TLKIPC_MUTEX_LOCK
+#define TLKIPC_MUTEX_UNLOCK
 #endif
 
 typedef enum
 {
-	TLKIPC_MUTEX_VCD = 0,
-	TLKIPC_MUTEX_NUM
-}tlkipc_mutex_type_e;
+    TLKIPC_MUTEX_VCD = 0,
+    TLKIPC_MUTEX_NUM
+} tlkipc_mutex_type_e;
 
 /**
  * @brief     Locks a mutex.

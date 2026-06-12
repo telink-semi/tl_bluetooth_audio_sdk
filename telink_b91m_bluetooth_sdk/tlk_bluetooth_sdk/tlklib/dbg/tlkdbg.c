@@ -31,6 +31,10 @@
 #include "tlkdbg_log.h"
 #include "stream_module/tlkdbg_stream.h"
 
+#ifndef CONFIG_TLK_DBG_LEVEL_FLAG
+#define CONFIG_TLK_DBG_LEVEL_FLAG TLKAPI_DBG_FLAG_ALL
+#endif
+
 extern char *tlk_debug_getDbgSign(unsigned int flags);
 extern bool  tlk_debug_logIsEnable(unsigned int flags, unsigned int dbgFlag);
 
@@ -46,8 +50,6 @@ __always_inline static inline bool tlkdbg_isInCriticalSection()
     return tlkos_get_irqState() == TLKOS_IRQ_STATE_IN_IRQ;
 #endif
 }
-
-static uint8_t sTlkDbgMask = TLKAPI_DBG_FLAG_ALL;
 
 /**
  * @brief       Initialize the debug module
@@ -97,7 +99,7 @@ _attribute_noinline_ void tlkdbg_message(uint32_t flags, char *pSign, uint32_t f
     if (tlkdbg_isInCriticalSection()) {
         return;
     }
-    if ((sTlkDbgMask & flagMask) == 0) {
+    if ((CONFIG_TLK_DBG_LEVEL_FLAG & flagMask) == 0) {
         return;
     }
     if (!tlk_debug_logIsEnable(flags, flagMask)) {
@@ -131,7 +133,7 @@ _attribute_noinline_ void tlkdbg_array(uint32_t flags, char *pSign, const char *
         return;
     }
 
-    if ((sTlkDbgMask & TLK_DEBUG_DBG_FLAG_ARRAY) == 0) {
+    if ((CONFIG_TLK_DBG_LEVEL_FLAG & TLK_DEBUG_DBG_FLAG_ARRAY) == 0) {
         return;
     }
     if (!tlk_debug_logIsEnable(flags, TLK_DEBUG_DBG_FLAG_ARRAY)) {

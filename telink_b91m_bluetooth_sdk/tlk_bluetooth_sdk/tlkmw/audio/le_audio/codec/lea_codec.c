@@ -67,8 +67,6 @@ static struct lea_codec_state s_le_codec_state = {
     .output_volume      = 200,
 };
 
-
-#if MCU_CORE_TL752X_TEMP
 __attribute__((weak)) void lea_codec_in_output_stream_init(void) {}
 
 __attribute__((weak)) void lea_codec_in_output_stream_deinit(void) {}
@@ -80,7 +78,6 @@ __attribute__((weak)) void lea_codec_input_stream_deinit(void) {}
 __attribute__((weak)) void lea_codec_output_stream_init(void) {}
 
 __attribute__((weak)) void lea_codec_output_stream_deinit(void) {}
-#endif
 
 /**
  * @brief       Calculate sample rate value from sample rate code.

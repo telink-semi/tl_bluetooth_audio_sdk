@@ -33,6 +33,9 @@
 #include "tlkmw/audio/bt_audio/music/bt_music.h"
 #include "tlkmw/audio/bt_audio/music/bt_music_lhdc.h"
 #include "tlkmw/audio/bt_audio/voice/bt_voice.h"
+#include "tlkmw/audio/bt_audio/voice/bt_voice_forward.h"
+#include "tlkmw/audio/bt_audio/music/bt_music_forward.h"
+
 #include "tlkmw/audio/bt_audio/bt_audio_interface.h"
 #include "tlkmw/audio/common/codec/tlkmw_codec.h"
 #include "tlkmw/audio/common/host_interface/tlkmdi_audio_host_if.h"
@@ -44,6 +47,9 @@
 #include "tlkmw/audio/common/tlkmdi_audio.h"
 #include "tlkmw/audio/common/tlkmdi_audmem.h"
 #include "tlkmw/audio/common/tlkmdi_audio_codec_test.h"
+#include "tlkmw/audio/common/tlkalg_audio_common.h"
+#include "tlkmw/audio/bt_audio_forward/tlkmdi_bt_voice_forward.h"
+#include "tlkmw/audio/bt_audio_forward/tlkmdi_bt_music_forward.h"
 #if (TLK_MW_DSP_COMM_ENABLE)
 #include "tlkmw/audio/common/dsp/tlkmw_audio_dsp.h"
 #include "tlkmw/audio/common/dsp/ipc_service/ipc_audio.h"
@@ -53,6 +59,7 @@
 #endif
 #include "tlkmw/audio/dongle/tlkmdi_audu2h_voice.h"
 #include "tlkmw/audio/dongle/tlkmdi_auduac_music.h"
+#include "tlkmw/audio/local_uac/tlkmdi_local_uac_audio.h"
 
 #include "tlkmw/audio/a2dp_source/tlkmdi_a2dp_out.h"
 
@@ -60,7 +67,7 @@
 #include "tlkmw/audio/le_audio/tlkmdi_lea_us.h"
 #include "tlkmw/audio/le_audio/tlkmdi_lea_bms.h"
 #include "tlkmw/audio/le_audio/tlkmdi_lea_bmr.h"
-#if (TLKSTK_BT_TPS_ENABLE) 
+#if (TLKSTK_BT_TPS_ENABLE)
 #include "tlkmw/audio/ll_audio/ll_audio_data_path.h"
 #include "tlkmw/audio/ll_audio/ll_audio_main.h"
 #include "tlkmw/audio/ll_audio/ll_audio.h"
@@ -71,7 +78,7 @@
 #include "tlkmw/audio/hra_audio/tlkmdi_hra_bt_audio.h"
 #endif
 #endif
-#if TLKMW_SIDETONE_EN 
+#if TLKMW_SIDETONE_EN
 #include "tlkmw/audio/sidetone/tlkmdi_sidetone.h"
 #endif
 #if TLKMW_INTERPHONE_EN
@@ -90,7 +97,7 @@
 #include "tlkmw/audio/anc/tlkmdi_anc.h"
 #include "tlkmw/audio/anc/tlkmdi_anc_handler.h"
 #endif
-#if ((MCU_CORE_TYPE == MCU_CORE_TL721X)||(MCU_CORE_TYPE == MCU_CORE_TL322X))
+#if ((MCU_CORE_TYPE == MCU_CORE_TL721X) || (MCU_CORE_TYPE == MCU_CORE_TL322X))
 #include "tlkmw/audio/ll_dongle/tlkmdi_ll_dongle_music.h"
 #endif
 #include "tlkmw/audio/tone/tlkmdi_tone.h"

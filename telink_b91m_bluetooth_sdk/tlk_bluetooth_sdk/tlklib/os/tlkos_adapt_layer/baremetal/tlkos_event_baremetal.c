@@ -32,7 +32,8 @@
 
 typedef struct
 {
-    uint32_t         length;
+    uint16_t         length;
+    uint16_t         isMalloced;
     uint32_t         evtBits;
     TlkOsEventDealCB cbTab[0];
 } TlkOsEventItem_t;
@@ -56,6 +57,32 @@ static __attribute__((__always_inline__)) inline uint32_t tlkos_event_getCTZ(uin
  * @param[out] evtTabHandle Pointer to store the created event tab handle.
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
+uint32_t tlkos_event_getStaticBufferLen(uint32_t evtTabLen)
+{
+    if (evtTabLen == 0 || evtTabLen > 24) {
+        return 0;
+    }
+    return sizeof(TlkOsEventItem_t) + sizeof(TlkOsEventDealCB) * evtTabLen;
+}
+
+int tlkos_event_createTabStatic(uint32_t evtTabLen, uint8_t *pStaticBuffer, uint32_t staticBufferSize, TlkOsEventTabHandle_t *evtTabHandle)
+{
+    if (evtTabLen == 0 || evtTabLen > 24 || pStaticBuffer == NULL) {
+        return -TLK_EPARAM;
+    }
+    uint32_t needSize = tlkos_event_getStaticBufferLen(evtTabLen);
+    if (staticBufferSize < needSize) {
+        return -TLK_EPARAM;
+    }
+    TlkOsEventItem_t *pTab = (TlkOsEventItem_t *)pStaticBuffer;
+    memset(pTab, 0, needSize);
+    pTab->length = evtTabLen;
+    if (evtTabHandle != NULL) {
+        *evtTabHandle = (TlkOsEventTabHandle_t *)pTab;
+    }
+    return TLK_ENONE;
+}
+
 int tlkos_event_createTab(uint32_t evtTabLen, TlkOsEventTabHandle_t *evtTabHandle)
 {
     if (evtTabLen == 0 || evtTabLen > 24) {
@@ -66,7 +93,8 @@ int tlkos_event_createTab(uint32_t evtTabLen, TlkOsEventTabHandle_t *evtTabHandl
     if (pTab == NULL) {
         return -TLK_ENOMEM;
     }
-    pTab->length = evtTabLen;
+    pTab->length     = evtTabLen;
+    pTab->isMalloced = 1;
     if (evtTabHandle != NULL) {
         *evtTabHandle = (TlkOsEventTabHandle_t *)pTab;
     }
@@ -84,7 +112,11 @@ int tlkos_event_destroyTab(TlkOsEventTabHandle_t evtTabHandle)
         return -TLK_EPARAM;
     }
     TlkOsEventItem_t *pTab = (TlkOsEventItem_t *)evtTabHandle;
-    tlkos_free(pTab);
+    if (pTab->isMalloced) {
+        tlkos_free(pTab);
+    } else {
+        memset(pTab, 0, sizeof(TlkOsEventItem_t) + sizeof(TlkOsEventDealCB) * pTab->length);
+    }
     return TLK_ENONE;
 }
 

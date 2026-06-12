@@ -31,6 +31,6 @@
 
 void tlkipc_mailbox_init(void);
 
-void tlkipc_mailbox_send_data(uint8_t* data, uint32_t maxBlockTimeUs);
+void tlkipc_mailbox_send_data(uint8_t *data, uint32_t maxBlockTimeUs);
 
 void tlk_main_core_ipc_irq_handler(void);

@@ -56,21 +56,31 @@ static struct app_bis_sink_info s_app_bis_sink_info;
 
 
 /*** PACS Server Parameters ***/
-static const struct lea_pac_param s_sink_pac[] = {
-    // LEA_PAC_PARAM(LC3_8_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    LEA_PAC_PARAM(LC3_16_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    // LEA_PAC_PARAM(LC3_24_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    // LEA_PAC_PARAM(LC3_32_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    LEA_PAC_PARAM(LC3_48_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    LEA_PAC_PARAM(LC3_48_4, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
+#define LEA_PACS_SINK_PAC_CHANNEL_1_2_LIST                                                \
+    X(LC3_16_1, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_16_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_24_1, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_24_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_32_1, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_32_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_48_1, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_48_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_48_3, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_48_4, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT)
+
+static const uint8_t s_pacs_sink_pac_channel_1_2[] = {
+#define X(lc3_id, chn, contexts) lc3_id,
+    COUNT_ARGS(LEA_PACS_SINK_PAC_CHANNEL_1_2_LIST) - 1,
+#undef X
+#define X(lc3_id, chn, contexts) LEA_PAC_PARAM(lc3_id, chn, contexts),
+    LEA_PACS_SINK_PAC_CHANNEL_1_2_LIST
+#undef X
 };
 
 static const struct ble_pacss_register_param s_pacss_param = {
-    .sink_pac_num              = ARRAY_SIZE(s_sink_pac),
-    .sink_pac                  = s_sink_pac,
+    .sink_pac_len              = ARRAY_SIZE(s_pacs_sink_pac_channel_1_2),
+    .sink_pac                  = s_pacs_sink_pac_channel_1_2,
     .sink_audio_locations      = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT,
-    .source_pac_num            = 0,
-    .source_pac                = NULL,
     .source_audio_locations    = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT,
     .available_sink_contexts   = LEA_CONTEXT_TYPE_ALL_SELECT,
     .available_source_contexts = LEA_CONTEXT_TYPE_PROHIBITED,
@@ -164,6 +174,18 @@ static void app_bis_sink_event_handler(enum ble_bap_sink_event_id event, const v
     tlk_printf("[APP][BIS] BIS Sink event_msg: %s", hex_to_str(event_msg, 16));
 }
 
+void lea_broadcast_sink_init_mode(void)
+{
+    ble_host_gap_big_init();
+    ble_host_gap_ext_scan_init();
+    ble_host_gap_pa_sync_init();
+    ble_host_gap_big_sync_init();
+
+    ble_lea_register_BASS_control_server(NULL);
+
+    ble_lea_initial_bap_broadcast_sink_role(app_bis_sink_event_handler);
+}
+
 /**
  * @brief       Initialize broadcast sink stack, services, and event callbacks.
  * @param[in]   param   - sink configuration parameters.
@@ -172,10 +194,9 @@ static void app_bis_sink_event_handler(enum ble_bap_sink_event_id event, const v
 void lea_broadcast_sink_init(const struct lea_broadcast_sink_param *param)
 {
     ble_host_gap_extend_adv_init();
-    ble_host_gap_big_init();
-    ble_host_gap_ext_scan_init();
-    ble_host_gap_pa_sync_init();
-    ble_host_gap_big_sync_init();
+
+    lea_broadcast_sink_init_mode();
+
     ble_host_smp_initial(BLE_HOST_SMP_SC_JUST_WORKS_INIT_PARAMS);
     ble_host_smp_store_init(4, 0);
 
@@ -196,7 +217,7 @@ void lea_broadcast_sink_init(const struct lea_broadcast_sink_param *param)
     };
     ble_lea_register_VCS_control_server(&s_vcss_param);
     ble_lea_register_PACS_control_server(&s_pacss_param);
-    ble_lea_register_BASS_control_server(NULL);
+
     blc_svc_calculateDatabaseHash();
 
     uint8_t *bd_addr                    = ble_host_hci_get_bd_addr();
@@ -207,8 +228,6 @@ void lea_broadcast_sink_init(const struct lea_broadcast_sink_param *param)
 
     blc_svc_setDeviceName(s_app_bis_sink_info.device_name);
     blc_svc_setAppearance(BIS_SINK_APPEARANCE);
-
-    ble_lea_initial_bap_broadcast_sink_role(app_bis_sink_event_handler);
 
     ble_host_acl_conn_register_user_data(BLE_HOST_APP_DATA1_USER_ID, &s_app_bis_sink_acl_conn_cb);
 }

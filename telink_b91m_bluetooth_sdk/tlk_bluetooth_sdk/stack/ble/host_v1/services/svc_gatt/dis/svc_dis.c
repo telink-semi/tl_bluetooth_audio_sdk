@@ -117,54 +117,54 @@ static const uint16_t udiForMedicalDevicesLen = sizeof(udiForMedicalDevices);
  * @brief the structure for default DIS service List.
  */
 static const struct atts_attribute disList[] = {
-    ATTS_PRIMARY_SERVICE(serviceDeviceInformationUuid),
+    ATTS_PRIMARY_SERVICE(serviceDeviceInformationAttUuid),
 
 #ifdef DIS_MANUFACTURER_NAME_STRING
     // Manufacturer Name String
-    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicManufacturerNameStringUuid, manufacturerName),
+    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicManufacturerNameStringAttUuid, manufacturerName),
 #endif
 
 #ifdef DIS_MODEL_NUMBER_STRING
     // Model Number String
-    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicModelNumberStringUuid, modelNumber),
+    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicModelNumberStringAttUuid, modelNumber),
 #endif
 
 #ifdef DIS_SERIAL_NUMBER_STRING
     // Serial Number String
-    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicSerialNumberStringUuid, serialNumber),
+    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicSerialNumberStringAttUuid, serialNumber),
 #endif
 
 #ifdef DIS_HARDWARE_REVISION_STRING
     // Hardware Revision String
-    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicHardwareRevisionStringUuid, hardwareRevision),
+    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicHardwareRevisionStringAttUuid, hardwareRevision),
 #endif
 
 #ifdef DIS_FIRMWARE_REVISION_STRING
     // Firmware Revision String
-    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicFirmwareRevisionStringUuid, firmwareRevision),
+    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicFirmwareRevisionStringAttUuid, firmwareRevision),
 #endif
 
 #ifdef DIS_SOFTWARE_REVISION_STRING
     // Software Revision String
-    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicSoftwareRevisionStringUuid, softwareRevision),
+    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicSoftwareRevisionStringAttUuid, softwareRevision),
 #endif
 
 #if defined(DIS_SYSTEM_ID_MANUFACTURER) && defined(DIS_SYSTEM_ID_OUI)
     // System ID
-    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicSystemIdUuid, systemId),
+    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicSystemIdAttUuid, systemId),
 #endif
 
 #ifdef DIS_IEEE_11073_20601_REGULATORY_CERTIFICATION_DATA_LIST
     // IEEE 11073-20601 Regulatory Certification Data List
-    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicIEEE_11073_20601DataListUuid, IEEE_DataList),
+    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicIeee1107320601DataListAttUuid, IEEE_DataList),
 #endif
 
     // PNP ID
-    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicPnpIdUuid, PnPID),
+    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicPnpIdAttUuid, PnPID),
 
 #ifdef DIS_UDI_FOR_MEDICAL_DEVICES
     // UDI for Medical Devices
-    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicUdiForMedicalDevicesUuid, udiForMedicalDevices),
+    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicUdiForMedicalDevicesAttUuid, udiForMedicalDevices),
 #endif
 };
 

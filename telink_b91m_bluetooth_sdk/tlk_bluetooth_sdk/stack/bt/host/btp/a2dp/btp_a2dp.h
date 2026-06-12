@@ -378,6 +378,8 @@ extern bool btp_a2dpsrc_isInStream(uint16_t aclHandle);
  *******************************************************************************/
 extern int btp_a2dpsrc_setSampleRate(uint16_t aclHandle, uint32_t sampleRate);
 
+extern int btp_a2dpsrc_reconfigSbcParam(uint16_t aclHandle, uint8_t *pParam, uint16_t paramLen);
+
 /******************************************************************************
  * Function: btp_a2dpsnk_getSampleRate
  * Descript: Get Sample Rate for Codec.
@@ -405,9 +407,11 @@ int btp_a2dpsrc_getAllCapability(uint16_t aclHandle);
  * Return: Returning TLK_ENONE(0x00) or -TLK_EBUSY means the close process success.
  * 		If others value is returned means the abort process fail.
  *******************************************************************************/
-int         btp_a2dpsrc_setConfiguration(uint16_t aclHandle);
-extern uint btp_a2dpsrc_getBitpool(uint16_t aclHandle);
-extern uint btp_a2dpsrc_getBlockSize(uint16_t aclHandle);
+int          btp_a2dpsrc_setConfiguration(uint16_t aclHandle);
+extern uint  btp_a2dpsrc_getBitpool(uint16_t aclHandle);
+extern uint  btp_a2dpsrc_getBlockSize(uint16_t aclHandle);
+extern void *btp_a2dpsnk_getCodecCap(uint16_t aclHandle);
+extern void *btp_a2dpsrc_getCodecCap(uint16_t aclHandle);
 
 #endif // #if (TLKBTP_CFG_A2DPSRC_ENABLE)
 

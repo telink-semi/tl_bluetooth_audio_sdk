@@ -23,30 +23,30 @@
  *******************************************************************************************************/
 #pragma once
 
-typedef struct 
+typedef struct
 {
     uint8_t  chn;
     uint8_t  mode;
     uint16_t resv;
-}tlkhal_timer_cfg_t;
+} tlkhal_timer_cfg_t;
 
 /**
  * @brief  Start timer
  * @param[in] cfg : Pointer to timer configuration structure
  * @returns  None.
  */
-void tlkhal_timer_start(const tlkhal_timer_cfg_t* cfg);
+void tlkhal_timer_start(const tlkhal_timer_cfg_t *cfg);
 
 /**
  * @brief  Stop timer
  * @param[in] cfg : Pointer to timer configuration structure
  * @returns  None.
  */
-void tlkhal_timer_stop(const tlkhal_timer_cfg_t* cfg);
+void tlkhal_timer_stop(const tlkhal_timer_cfg_t *cfg);
 
 /**
  * @brief  Set timer mode
  * @param[in] cfg : Pointer to timer configuration structure
  * @returns  None.
  */
-void tlkhal_timer_set_mode(const tlkhal_timer_cfg_t* cfg);
+void tlkhal_timer_set_mode(const tlkhal_timer_cfg_t *cfg);

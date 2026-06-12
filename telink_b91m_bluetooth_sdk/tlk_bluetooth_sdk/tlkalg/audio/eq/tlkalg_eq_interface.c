@@ -53,12 +53,42 @@ static nds_bq_df1_f32_t s_instance_eq_run_right = {0};
 // static nds_bq_df1_f32_t* s_instance_eq_run_ptr_left           = NULL;
 // static nds_bq_df1_f32_t* s_instance_eq_run_ptr_right          = NULL;
 
+
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN) && (TLKALG_BONE_CODUCTION_EN))
+#if (BONE_TYPE_SEL == DIGITAL_BONE_MIC)
+static const unsigned char eq_digital_bone_mic_default_tab[] = {
+    0x00, 0x00, 0x02, 0x18, 0x00, 0x00, 0x78, 0x00, 0xb0, 0x04, 0x02, 0x00, 0x5c, 0xf9, 0x50, 0x14, 0x60, 0x09, 0x00, 0x00,
+};
+#else
+static const unsigned char eq_analog_bone_mic_default_tab[] = {
+    0x00, 0x00, 0x02, 0x18, 0x00, 0x00, 0x78, 0x00, 0xb0, 0x04, 0x02, 0x00, 0x5c, 0xf9, 0xc0, 0x19, 0x60, 0x09, 0x00, 0x00,
+};
+#endif
+
+#else
+
 static const unsigned char eq_sys_default_tab[] = {
     /// 0826
     0x00, 0x00, 0x09, 0x15, 0x38, 0xff, 0x14, 0x00, 0xe8, 0x03, 0x02, 0x00, 0xae, 0xfc, 0x96, 0x00, 0xbc, 0x02, 0x00, 0x00, 0x70, 0xfe, 0x2c, 0x01, 0xbc, 0x02, 0x00,
     0x00, 0x3e, 0xfe, 0xe8, 0x03, 0xe8, 0x03, 0x00, 0x00, 0xc2, 0x01, 0xc4, 0x09, 0xdc, 0x05, 0x00, 0x00, 0xa2, 0xfe, 0xd8, 0x0e, 0xe8, 0x03, 0x00, 0x00, 0xa8, 0xfd,
     0x88, 0x13, 0xd0, 0x07, 0x00, 0x00, 0xb4, 0xfb, 0xf4, 0x1a, 0xd0, 0x07, 0x00, 0x00, 0x2c, 0x01, 0xc8, 0x32, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /// CRC
 };
+
+// static const unsigned char eq_sys_default_tab[] = {
+//     ///10stages
+//     0x00, 0x00, 0x0a, 0x74,
+//     0x30, 0xf8, 0x32, 0x00, 0xd0, 0x07, 0x00, 0x01,
+//     0xb0, 0x04, 0x10, 0x09, 0xd0, 0x07, 0x00, 0x01,
+//     0x50, 0xfb, 0xee, 0x11, 0xd0, 0x07, 0x00, 0x01,
+//     0x40, 0x06, 0xd6, 0x1a, 0xd0, 0x07, 0x00, 0x01,
+//     0x40, 0x06, 0xb4, 0x23, 0xd0, 0x07, 0x00, 0x01,
+//     0xf0, 0xf1, 0x9c, 0x2c, 0xd0, 0x07, 0x00, 0x01,
+//     0x50, 0xfb, 0x7a, 0x35, 0xd0, 0x07, 0x00, 0x01,
+//     0xb0, 0x04, 0x58, 0x3e, 0xd0, 0x07, 0x00, 0x01,
+//     0x40, 0x06, 0x74, 0x40, 0xd0, 0x07, 0x00, 0x01,
+//     0x50, 0xfb, 0x44, 0x48, 0xd0, 0x07, 0x00, 0x01,
+// };
+
 
 static const unsigned char eq_voice_mic_default_tab[] = {
     /// ZZ
@@ -69,6 +99,8 @@ static const unsigned char eq_voice_spk_default_tab[] = {
     /// highpass lowpass
     0x00, 0x00, 0x02, 0x05, 0x00, 0x00, 0xb4, 0x00, 0x84, 0x03, 0x02, 0x00, 0x00, 0x00, 0xb8, 0x0b, 0x84, 0x03, 0x01, 0x00,
 };
+
+#endif
 
 /**
  * @brief   Resets all EQ states to zero.
@@ -132,11 +164,19 @@ void tlkalg_eq_read_para_from_flash(uint32_t addr)
         //read flash and copy data to s_eq_filter_music/mic/spk
     } else {
         tlkapi_trace(0xFFFFFFFF, "[TEST]", "invalid eq para load flash addr");
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN) && (TLKALG_BONE_CODUCTION_EN))
+#if (BONE_TYPE_SEL == DIGITAL_BONE_MIC)
+        tmemcpy(&s_eq_filter_voice_mic, eq_digital_bone_mic_default_tab, sizeof(eq_digital_bone_mic_default_tab));
+#elif (BONE_TYPE_SEL == ANALOG_BONE_MIC)
+        tmemcpy(&s_eq_filter_voice_mic, eq_analog_bone_mic_default_tab, sizeof(eq_analog_bone_mic_default_tab));
+#endif
+#else
 #if (EQ_VOICE_ENABLE)
         tmemcpy(&s_eq_filter_voice_mic, eq_voice_mic_default_tab, sizeof(eq_voice_mic_default_tab));
         tmemcpy(&s_eq_filter_voice_spk, eq_voice_spk_default_tab, sizeof(eq_voice_spk_default_tab));
 #endif
         tmemcpy(&s_eq_filter_music, eq_sys_default_tab, sizeof(eq_sys_default_tab));
+#endif
     }
 }
 
@@ -165,6 +205,9 @@ int8_t tlkalg_eq_init(uint8_t *p_buff, uint8_t channel)
 
     tlkalg_eq_reset_all_state();
 
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN) && (TLKALG_BONE_CODUCTION_EN))
+    tlkalg_eq_calculate_coefficient(16000, &s_eq_filter_voice_mic, s_coeff_voice_mic);
+#else
 #if (EQ_VOICE_ENABLE)
     tlkalg_eq_calculate_coefficient(16000, &s_eq_filter_voice_mic, s_coeff_voice_mic);
     tlkalg_eq_calculate_coefficient(16000, &s_eq_filter_voice_spk, s_coeff_voice_spk);
@@ -172,6 +215,7 @@ int8_t tlkalg_eq_init(uint8_t *p_buff, uint8_t channel)
 
     tlkalg_eq_calculate_coefficient(s_eq_param.samplerate, &s_eq_filter_music, s_coeff_music);
     tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_eq_init samplerate %d", s_eq_param.samplerate);
+#endif
 
     return 0;
 }
@@ -336,8 +380,8 @@ int tlkalg_eq_process_24bit(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t chan
             psrc += ni;
             pdes += ni;
         } else if (channel == ALG_CHANNEL_STEREO) {
-            int data_in_left[EQ_SAMPLE_NUM_MAX], data_in_right[EQ_SAMPLE_NUM_MAX];
-            int data_out_left[EQ_SAMPLE_NUM_MAX], data_out_right[EQ_SAMPLE_NUM_MAX];
+            int data_in_left[ni], data_in_right[ni];
+            int data_out_left[ni], data_out_right[ni];
             for (int i = 0; i < ni; i++) {
                 data_in_left[i]  = psrc[2 * i];
                 data_in_right[i] = psrc[2 * i + 1];

@@ -28,20 +28,19 @@
 #ifndef TPSLL_HOSTEVENT_H_
 #define TPSLL_HOSTEVENT_H_
 
-#include "stack/tpsll/tph/tph_host_interface.h"
-#include "stack/tpsll/tpt/tpt_host_interface.h"
-#include "stack/tpsll/tpd/tpd_host_interface.h"
-#include "stack/tpsll/tpmd/tpmd_host_interface.h"
-
+#include "stack/tpsll/controller/tph/tph_host_interface.h"
+#include "stack/tpsll/controller/tpt/tpt_host_interface.h"
+#include "stack/tpsll/controller/tpd/tpd_host_interface.h"
+#include "stack/tpsll/controller/tpmd/tpmd_host_interface.h"
 
 
 typedef int (*tpsll_event_func)(uint8_t *pData, uint16_t dataLen);
 
-#define TPSLL_EVT_REGISTER(evtID, func)             \
-int evtID##_FUNC(uint8_t *pData, uint16_t dataLen)     \
-{                                                   \
-    return func(pData, dataLen);                    \
-}   
+#define TPSLL_EVT_REGISTER(evtID, func)                \
+    int evtID##_FUNC(uint8_t *pData, uint16_t dataLen) \
+    {                                                  \
+        return func(pData, dataLen);                   \
+    }
 
 typedef enum
 {
@@ -62,12 +61,13 @@ typedef enum
     TPSLL_EVTID_DONGLE_READ_HEADSET_MODE,
     TPSLL_EVTID_HEADSET_STIMER_START,
     TPSLL_EVTID_HEADSET_MODE_CHANGE,
+    TPSLL_EVTID_HEADSET_ACL_MSG_DEAL,
 
     //for mesh_audio_dongle
     TPSLL_EVTID_HEADSET_CONNECT,
     TPSLL_EVTID_HEADSET_DISCONNECT,
 
-    #if (TLKSTK_BTTPSLL_TWS_ENABLE)
+#if (TLKSTK_BTTPSLL_TWS_ENABLE)
     TPSLL_EVTID_TWS_ACL_SETUP_COMPLETE,
     TPSLL_EVTID_TWS_SLAVE_PROFILE_INFO_SYNC,
     TPSLL_EVTID_TWS_SLAVE_SAMPLE_SYNC,
@@ -77,15 +77,15 @@ typedef enum
     TPSLL_EVTID_TWS_DISCONNECTED,
     TPSLL_EVTID_TWS_UI_TIMER_SYNC,
     TPSLL_EVTID_TWS_DONGLE_MAC_UPDATE,
-    TPSLL_EVTID_TWS_DONGLE_DISCONNECTED, 
-    TPSLL_EVTID_TWS_MASTER_SLAVE_HANDOVER_SUCC, 
-    TPSLL_EVTID_TWS_SLAVE_HANDOVER_HOST_STATUS_SYNC, 
-    TPSLL_EVTID_TWS_HEADSET_ROLE_NOTIFY,  
+    TPSLL_EVTID_TWS_DONGLE_DISCONNECTED,
+    TPSLL_EVTID_TWS_MASTER_SLAVE_HANDOVER_SUCC,
+    TPSLL_EVTID_TWS_SLAVE_HANDOVER_HOST_STATUS_SYNC,
+    TPSLL_EVTID_TWS_HEADSET_ROLE_NOTIFY,
     TPSLL_EVTID_TWS_HEADSET_HANDOVER_INFO_EXTRACT,
     TPSLL_EVTID_TWS_CONNECT_SETUP_TIMEOUT,
     TPSLL_EVTID_TWS_SLAVE_SCO_SETUP_COMPLETE,
     TPSLL_EVTID_TWS_MASTER_SYNC_PROFILE,
-    #endif  
+#endif
 
     TPSLL_EVTID_MAX,
 } TPSLL_EVTID_ENUM;
@@ -95,8 +95,8 @@ typedef struct
     uint8_t  mac_addr[6];
     uint8_t  chn;
     uint8_t  rsvd;
-    uint32_t  accessCode;
-}tpsll_connect_info_Evt_t;
+    uint32_t accessCode;
+} tpsll_connect_info_Evt_t;
 
 typedef struct
 {
@@ -105,8 +105,7 @@ typedef struct
 } tpsll_getAcChnidEvt_t;
 
 void tpsll_hostIrqEvt_regCB(uint16_t evtID, tpsll_event_func func);
-int tpsll_exe_event(uint16_t evtID, uint8_t *pData, uint16_t dataLen);
-
+int  tpsll_exe_event(uint16_t evtID, uint8_t *pData, uint16_t dataLen);
 
 
 #if MCU_DUAL_CORE_ENABLE && defined(MCU_CORE_N22)
@@ -136,7 +135,7 @@ int tpsll_send_getHeadsetFnoCompleteEvt(uint16_t frameNum);
 
 int tpsll_send_getHeadsetCurModeCompleteEvt(uint8_t curMode);
 
-int tpsll_send_dongleSpeakerDataEvt(u8 rx_packet_id, u32 mix_tick, u8 pdu_format, u8 *speaker_data, u8 speaker_data_len);
+int tpsll_send_dongleSpeakerDataEvt(uint8_t rx_packet_id, uint32_t mix_tick, uint8_t pdu_format, uint8_t *speaker_data, uint8_t speaker_data_len);
 
 int tpsll_send_stimerStartEvt(uint32_t clockTick, uint8_t latency_mode, uint8_t latest_ptr, uint8_t sco_num_in_bt);
 
@@ -154,7 +153,7 @@ int tpsll_send_twsSyncTick(uint32_t m_tick, uint32_t s_tick, uint8_t *p_data);
 
 int tpsll_send_tws_aclSetupCompleteEvt(uint16_t handle, uint8_t btAddr[6], uint8_t linkKey[16]);
 
-int tpsll_send_tws_slaveSyncProfileInfoEvt(uint8_t pType,  uint16_t Info, void *param, uint8_t paramLen);
+int tpsll_send_tws_slaveSyncProfileInfoEvt(uint8_t pType, uint16_t Info, void *param, uint8_t paramLen);
 
 // int tpsll_send_tws_slaveSyncSampleEvt(tws_music_sync_cfg_t *m_sync_sample_cfg, tws_music_sync_cfg_t *s_sync_sample_cfg);
 
@@ -183,8 +182,9 @@ int tpsll_send_tws_masterSyncProfileEvt(uint8_t *pAddr, uint16_t s_profile_info,
 int tpsll_send_tws_headsetRoleNotifyEvt(uint8_t role);
 int tpsll_send_tws_headsetHandoverInfoExtract();
 int tpsll_send_tws_connectSetUpTimeoutEvt();
+int tpsll_send_headset_recvAclMsgDealEvt(uint8_t dst_id, uint8_t msg_id, uint8_t cmd, uint8_t *pData, uint8_t dataLen);
 #else
 int tpsll_send_tws_slaveScoSetupCompleteEvt(uint8_t airmode, uint8_t *pAddr);
-#endif 
+#endif
 
 #endif // #define TPSLL_HOSTEVENT_H_

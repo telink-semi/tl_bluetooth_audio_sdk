@@ -40,10 +40,10 @@
 static void tlkmw_dualcore_memcpy(tlkmw_dualcore_boot_cfg_t *cfg)
 {
     // Copy IRAM data from source to destination address
-    memcpy((void *)(cfg->iram_dst_addr | cfg->no_cache_bit),(void *)cfg->iram_src_addr,cfg->iram_size);
+    memcpy((void *)(cfg->iram_dst_addr | cfg->no_cache_bit), (void *)cfg->iram_src_addr, cfg->iram_size);
 
     // Copy DRAM data from source to destination address
-    memcpy((void *)(cfg->dram_dst_addr | cfg->no_cache_bit),(void *)cfg->dram_src_addr,cfg->dram_size);
+    memcpy((void *)(cfg->dram_dst_addr | cfg->no_cache_bit), (void *)cfg->dram_src_addr, cfg->dram_size);
 }
 
 /**
@@ -55,7 +55,7 @@ static void tlkmw_dualcore_memcpy(tlkmw_dualcore_boot_cfg_t *cfg)
  */
 void tlkmw_dualcore_boot(tlkmw_dualcore_boot_cfg_t *cfg)
 {
-    tlkmw_dualcore_memcpy(cfg);  
+    tlkmw_dualcore_memcpy(cfg);
 }
 
 #else
@@ -68,6 +68,6 @@ void tlkmw_dualcore_boot(tlkmw_dualcore_boot_cfg_t *cfg)
  */
 void tlkmw_dualcore_boot(tlkmw_dualcore_boot_cfg_t *cfg)
 {
-    (void) cfg;
+    (void)cfg;
 }
 #endif

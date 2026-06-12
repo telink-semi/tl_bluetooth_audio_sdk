@@ -59,7 +59,7 @@
  *********************************************************************************************************************/
 
 #ifndef BT_AUTO_PWR_DFT
-    #define BT_AUTO_PWR_DFT 0x28 // slice
+#define BT_AUTO_PWR_DFT 0x28 // slice
 #endif
 
 /**********************************************************************************************************************
@@ -81,8 +81,9 @@
 
 #define BT_RADIO_RX_POWER_UP      (100 - BT_RADIO_RX_PATH_DELAY) //CEVA bug
 
-#define BT_RADIO_TP_TX_POWER_UP   110                            //>108
+#define BT_RADIO_TP_TX_POWER_UP   110 //>108
 #define BT_RADIO_IQ_TX_POWER_UP   100
+#define BT_RADIO_TX_POWER_UP      100
 #define BT_RADIO_IQ_POWER_DOWN    4
 #define BT_RADIO_TP_POWER_DOWN    8
 
@@ -131,7 +132,7 @@ typedef struct
 {
     unsigned char slice;
     unsigned char scale;
-    signed char dbm;
+    signed char   dbm;
 } __attribute__((__packed__)) ext_btrf_expwr_t;
 
 #define reg_dma_rx_wptr REG_ADDR8(0x801004f4)
@@ -207,8 +208,8 @@ __INLINE void ext_btrf_setBtTailDelay(int v)
 
 void ext_btrf_init(void);
 void ext_btrf_ACLTxPower_init(uint8_t link_id);
-bool ext_btrf_txpwr_inc(uint8_t link_id,uint8_t mode);
-bool ext_btrf_txpwr_dec(uint8_t link_id,uint8_t mode);
+bool ext_btrf_txpwr_inc(uint8_t link_id, uint8_t mode);
+bool ext_btrf_txpwr_dec(uint8_t link_id, uint8_t mode);
 void ext_btrf_txpwr_max(uint8_t link_id);
 
 
@@ -228,8 +229,8 @@ void ext_btrf_changeRadioMode(EXT_BTRF_RADIO_TX_MODE_ENUM mode);
 
 void ext_btrf_rxCalibtration(void);
 
-void ext_btrf_brManualInit(void);
-void ext_btrf_radioInit(void);
-int8_t ext_btrf_rssi_convert(uint8_t rssi);
+void    ext_btrf_brManualInit(void);
+void    ext_btrf_radioInit(void);
+int8_t  ext_btrf_rssi_convert(uint8_t rssi);
 uint8_t ext_btrf_pwr_dbm_get(uint8_t tx_pwr, uint8_t mod);
 #endif //EXT_BT_RF_H

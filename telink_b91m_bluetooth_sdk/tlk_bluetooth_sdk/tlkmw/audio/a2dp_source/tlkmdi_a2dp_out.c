@@ -24,7 +24,10 @@
 #include "tl_common.h"
 #include "drivers.h"
 #include "tlkapi/tlkapi.h"
-#if (TLKBTP_CFG_A2DPSRC_ENABLE)
+
+#ifdef BT_A2DP_OUT_INPUT_TYPE
+
+#if (TLKBTP_CFG_A2DPSRC_ENABLE && !TEMP_A2DP_OUT_NEW_VERSION)
 #include "tlkmw/tlkmw.h"
 #include "tlkalg/audio/audio_alg_interface.h"
 #include "stack/bt/host/btp/btp_stdio.h"
@@ -51,7 +54,6 @@ static void tlkmdi_a2dp_out_resetParam(int sample_rate)
     sTlkA2dpOutCtrl.lagTime   = 0;
     sTlkA2dpOutCtrl.cacheFrm  = 0;
     sTlkA2dpOutCtrl.sndFrame  = 0;
-    sTlkA2dpOutCtrl.sendFail  = false;
 }
 
 /**
@@ -78,7 +80,6 @@ static int tlkmdi_a2dp_out_a2dpStatusEvt(uint8_t *pData, uint16_t dataLen)
             btp_a2dpsrc_suspend(pEvt->handle);
         }
         btp_avrcp_notifyPlayState(pEvt->handle, BTP_AVRCP_PLAY_STATE_PAUSED);
-        btp_avrcp_setPlayState(pEvt->handle, BTP_AVRCP_PLAY_STATE_PAUSED);
         return -TLK_EFAIL;
     }
 
@@ -93,7 +94,7 @@ static int tlkmdi_a2dp_out_a2dpStatusEvt(uint8_t *pData, uint16_t dataLen)
             return -TLK_EFAIL;
         }
 
-        sTlkA2dpOutCtrl.frmSize = TLKMDI_A2DP_OUT_FRAME_SIZE;
+        sTlkA2dpOutCtrl.frmSize = tlkalg_sbc_enc_get_data_len();
         sTlkA2dpOutCtrl.pktNumb = (pEvt->mtuSize - 13) / sTlkA2dpOutCtrl.frmSize;
         if (sTlkA2dpOutCtrl.pktNumb > TLKMDI_A2DP_OUT_FRAME_MAX_NUMB) {
             sTlkA2dpOutCtrl.pktNumb = TLKMDI_A2DP_OUT_FRAME_MAX_NUMB;
@@ -108,27 +109,21 @@ static int tlkmdi_a2dp_out_a2dpStatusEvt(uint8_t *pData, uint16_t dataLen)
         tlk_printf("tlkmdi_a2dp_out_a2dpStatusEvt[START]: frmSize[%d], pktNumb[%d], pktTime[%d], sampRate[%d], localSampRate[%d]", sTlkA2dpOutCtrl.frmSize, sTlkA2dpOutCtrl.pktNumb,
                    sTlkA2dpOutCtrl.pktTime, sampleRate, tlkmdi_a2dp_codec_hal_get_sampleRate());
 
-        uint16_t sampleRate_temp;
-        int      time_temp;
-        uint8_t  sbcBlock = 16;
-        uint8_t  subBand  = 8;
+        uint8_t sbcBlock = 16;
+        uint8_t subBand  = 8;
 
         sTlkA2dpOutCtrl.samples_per_frame = sbcBlock * subBand;
+        // one sbc frame play time-tick(After rounding off to the nearest whole number);
+        sTlkA2dpOutCtrl.unitTime         = (10000 * sTlkA2dpOutCtrl.samples_per_frame * SYSTEM_TIMER_TICK_1US + spkSampleRate / 200) / (spkSampleRate / 100);
+        sTlkA2dpOutCtrl.playtimePerFrame = sTlkA2dpOutCtrl.samples_per_frame * 1000 * 1000 / spkSampleRate; // one sbc frame play time-us;
 
-        sampleRate_temp                  = spkSampleRate / 100;
-        sTlkA2dpOutCtrl.unitTime         = (10000 * sTlkA2dpOutCtrl.samples_per_frame * SYSTEM_TIMER_TICK_1US + sampleRate_temp / 2) / sampleRate_temp;
-        time_temp                        = sTlkA2dpOutCtrl.samples_per_frame * 1000 * 1000;
-        sTlkA2dpOutCtrl.playtimePerFrame = time_temp / spkSampleRate; // one sbc frame play time;
-
-        tlk_printf("tlkmdi_a2dp_out_a2dpStatusEvt[START]: time_temp[%d], unitTime[%d], perFrame[%d]", time_temp, sTlkA2dpOutCtrl.unitTime, sTlkA2dpOutCtrl.playtimePerFrame);
+        tlk_printf("tlkmdi_a2dp_out_a2dpStatusEvt[START]: unitTime[%d], perFrame[%d]", sTlkA2dpOutCtrl.unitTime, sTlkA2dpOutCtrl.playtimePerFrame);
 
         if (tlkmdi_a2dp_out_isBusy()) {
             tlkmdi_a2dp_out_user_notify(true);
         }
 
         btp_avrcp_notifyPlayState(pEvt->handle, BTP_AVRCP_PLAY_STATE_PLAYING);
-        btp_avrcp_setPlayState(pEvt->handle, BTP_AVRCP_PLAY_STATE_PLAYING);
-        sTlkA2dpOutCtrl.isSuppSet = btp_avrcp_isSupportSetVolume(pEvt->handle);
 
         tlkmdi_a2dp_out_resetParam(spkSampleRate);
 
@@ -145,7 +140,6 @@ static int tlkmdi_a2dp_out_a2dpStatusEvt(uint8_t *pData, uint16_t dataLen)
         tlk_printf("tlkmdi_a2dp_out_a2dpStatusEvt[CLOSE]: 002");
         sTlkA2dpOutCtrl.pktNumb = 0;
         btp_avrcp_notifyPlayState(pEvt->handle, BTP_AVRCP_PLAY_STATE_PAUSED);
-        btp_avrcp_setPlayState(pEvt->handle, BTP_AVRCP_PLAY_STATE_PAUSED);
         if (sTlkA2dpOutCtrl.enable) {
             tlkmdi_audio_sendCloseEvt(TLKAUD_TYPE_A2DP_OUT, sTlkA2dpOutCtrl.handle);
         }
@@ -181,32 +175,36 @@ static int tlkmdi_a2dp_out_reConfigCompleteEvt(uint8_t *pData, uint16_t dataLen)
 */
 static void tlkmdi_a2dp_out_keyChangedEvt(uint16_t aclHandle, uint8_t keyID, uint8_t isPress)
 {
+    //This function is callback which run in host thread.
     tlk_printf("tlkmdi_a2dp_out_keyChangedEvt:{handle-%d,keyID-%d,isPress-%d enable-%d}", aclHandle, keyID, isPress, sTlkA2dpOutCtrl.enable);
 
     if (sTlkA2dpOutCtrl.enable == false) {
         return;
     }
-    if (!isPress) {
-        if (keyID == BTP_AVRCP_KEYID_PLAY) {
-            if (!sTlkA2dpOutCtrl.enable) {
-                tlkmdi_a2dp_out_start(aclHandle, 0);
-            } else {
-                btp_avrcp_notifyPlayState(aclHandle, BTP_AVRCP_PLAY_STATE_PAUSED);
-            }
-        } else if (keyID == BTP_AVRCP_KEYID_STOP || keyID == BTP_AVRCP_KEYID_PAUSE) {
-            if (sTlkA2dpOutCtrl.enable) {
-                tlkmdi_a2dp_out_close(aclHandle);
-            } else {
-                btp_avrcp_notifyPlayState(aclHandle, BTP_AVRCP_PLAY_STATE_PAUSED);
-            }
-        } else if (keyID == BTP_AVRCP_KEYID_FORWARD) {
-            if (sTlkA2dpOutCtrl.enable) {
-                tlkmdi_a2dp_out_next();
-            }
-        } else if (keyID == BTP_AVRCP_KEYID_BACKWARD) {
-            if (sTlkA2dpOutCtrl.enable) {
-                tlkmdi_a2dp_out_previous();
-            }
+    if (isPress) {
+        return;
+    }
+    //only care key release and do action
+    //TODO: ziyu In uac not thread safe
+    if (keyID == BTP_AVRCP_KEYID_PLAY) {
+        if (!sTlkA2dpOutCtrl.enable) {
+            tlkmdi_a2dp_out_start(aclHandle, 0);
+        } else {
+            btp_avrcp_notifyPlayState(aclHandle, BTP_AVRCP_PLAY_STATE_PAUSED);
+        }
+    } else if (keyID == BTP_AVRCP_KEYID_STOP || keyID == BTP_AVRCP_KEYID_PAUSE) {
+        if (sTlkA2dpOutCtrl.enable) {
+            tlkmdi_a2dp_out_close(aclHandle);
+        } else {
+            btp_avrcp_notifyPlayState(aclHandle, BTP_AVRCP_PLAY_STATE_PAUSED);
+        }
+    } else if (keyID == BTP_AVRCP_KEYID_FORWARD) {
+        if (sTlkA2dpOutCtrl.enable) {
+            tlkmdi_a2dp_out_next();
+        }
+    } else if (keyID == BTP_AVRCP_KEYID_BACKWARD) {
+        if (sTlkA2dpOutCtrl.enable) {
+            tlkmdi_a2dp_out_previous();
         }
     }
 }
@@ -312,7 +310,8 @@ bool tlkmdi_a2dp_out_initBuffer(bool enable)
             }
         }
 
-        /*TODO: init by enc type: AAC or SBC*/
+        tlkalg_sbc_enc_update_bitpool(btp_a2dpsrc_getBitpool(sTlkA2dpOutCtrl.handle));
+
         if (sTlkA2dpOutCtrl.pA2dpEncBuff == NULL) {
             p_audio_alg_if = audio_alg_get_interface_by_type(ALG_SBC_ENC);
             if (p_audio_alg_if == NULL) {
@@ -432,9 +431,6 @@ static void tlkmdi_a2dp_out_handler(void)
         intv = 1000000;
     }
 
-    // DBG_YATING_CHN0_HIGH;
-    // DBG_YATING_CHN0_LOW;
-
     tlkmdi_audio_task_set_next_irq(intv);
 
     refTime = clock_time() | 1;
@@ -458,7 +454,7 @@ static void tlkmdi_a2dp_out_handler(void)
     if (used_samples >= (sampleRate / 1000 * 2 * 8) && !sTlkA2dpOutCtrl.startflag) {
         sTlkA2dpOutCtrl.startflag = 1;
         sTlkA2dpOutCtrl.refTime   = clock_time() | 1;
-        sTlkA2dpOutCtrl.lagTime   = 0;
+        sTlkA2dpOutCtrl.lagTime   = sTlkA2dpOutCtrl.unitTime;
     }
 
     if (sTlkA2dpOutCtrl.startflag) {
@@ -491,7 +487,7 @@ static void tlkmdi_a2dp_out_handler(void)
 
                 extern uint8_t tlkbt_hci_aclGetAvalSize(void);
                 if (tlkbt_hci_aclGetAvalSize() < 2) {
-                    sTlkA2dpOutCtrl.sendFail = true;
+                    //send fail
                 } else {
                     uint16_t pktLen;
                     uint32_t timeStamp;
@@ -501,11 +497,10 @@ static void tlkmdi_a2dp_out_handler(void)
                     sTlkA2dpOutCtrl.cacheFrm -= sTlkA2dpOutCtrl.pktNumb;
                     sTlkA2dpOutCtrl.pA2dpFramesBuff[0] = sTlkA2dpOutCtrl.pktNumb;
                     if (TLK_ENONE == btp_a2dpsrc_sendMediaData(sTlkA2dpOutCtrl.handle, sTlkA2dpOutCtrl.seqNumber, timeStamp, sTlkA2dpOutCtrl.pA2dpFramesBuff, pktLen)) {
-                        sTlkA2dpOutCtrl.sendFail = false;
                         sTlkA2dpOutCtrl.sndFrame = 0;
                         sTlkA2dpOutCtrl.seqNumber++;
                     } else {
-                        sTlkA2dpOutCtrl.sendFail = true;
+                        //send fail
                     }
                 }
             } else {
@@ -537,11 +532,12 @@ bool tlkmdi_a2dp_out_switch(uint16_t handle, uint8_t status)
         enable = false;
     }
 
+    sTlkA2dpOutCtrl.handle = handle;
+
     if (!tlkmdi_a2dp_out_initBuffer(enable)) {
         return false;
     }
 
-    sTlkA2dpOutCtrl.handle    = handle;
     sTlkA2dpOutCtrl.enable    = enable;
     sTlkA2dpOutCtrl.running   = enable;
     sTlkA2dpOutCtrl.startflag = 0;
@@ -565,7 +561,6 @@ bool tlkmdi_a2dp_out_switch(uint16_t handle, uint8_t status)
         tlkmdi_audio_setup_and_start_timer();
 
         btp_avrcp_notifyPlayState(sTlkA2dpOutCtrl.handle, BTP_AVRCP_PLAY_STATE_PLAYING);
-        btp_avrcp_setPlayState(sTlkA2dpOutCtrl.handle, BTP_AVRCP_PLAY_STATE_PLAYING);
 
         if (btp_a2dpsrc_getSampleRate(handle) != sampleRate) {
             ret = btp_a2dpSrc_setSampleRate01(handle, sampleRate);
@@ -577,7 +572,6 @@ bool tlkmdi_a2dp_out_switch(uint16_t handle, uint8_t status)
 
             if (ret != TLK_ENONE) {
                 btp_avrcp_notifyPlayState(sTlkA2dpOutCtrl.handle, BTP_AVRCP_PLAY_STATE_PAUSED);
-                btp_avrcp_setPlayState(sTlkA2dpOutCtrl.handle, BTP_AVRCP_PLAY_STATE_PAUSED);
                 return false;
             } else {
                 sTlkA2dpOutCtrl.waitFlag |= TLKMDI_A2DP_OUT_WAIT_FLAG_START_RSP;
@@ -587,12 +581,14 @@ bool tlkmdi_a2dp_out_switch(uint16_t handle, uint8_t status)
         tlkmdi_a2dp_out_resetParam(sampleRate);
     } else {
         if (sTlkA2dpOutCtrl.handle != handle) {
-            return -TLK_EHANDLE;
+            return false;
         }
 
+        sTlkA2dpOutCtrl.handle = 0;
+
         tlkmw_audio_btif_inform_host_audio_dis(handle);
-        btp_avrcp_notifyPlayState(sTlkA2dpOutCtrl.handle, BTP_AVRCP_PLAY_STATE_PAUSED);
-        btp_a2dpsrc_suspend(sTlkA2dpOutCtrl.handle);
+        btp_avrcp_notifyPlayState(handle, BTP_AVRCP_PLAY_STATE_PAUSED);
+        btp_a2dpsrc_suspend(handle);
 
         tlkmdi_audio_stop_timer();
     }
@@ -665,3 +661,4 @@ int tlkmdi_a2dp_out_init(void)
 
 
 #endif //#if (TLKBTP_CFG_A2DPSRC_ENABLE)
+#endif

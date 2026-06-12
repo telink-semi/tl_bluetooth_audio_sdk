@@ -33,7 +33,7 @@ typedef enum
 
 typedef void (*tlkmdi_tpmd_state_change_cb)(uint8_t state);
 
-typedef void (*tlkmdi_tpmd_hidCmdCB)(uint16_t handle,uint8_t cmd);
+typedef void (*tlkmdi_tpmd_hidCmdCB)(uint16_t handle, uint8_t cmd);
 
 typedef enum
 {
@@ -46,16 +46,16 @@ typedef enum
 
 typedef struct
 {
-    uint32_t         tpsll_ac;
-    uint8_t         tpsll_ch;
-    uint8_t         cur_status;
-    uint16_t         timeout;
-    uint8_t         local_addr[6];
-    uint8_t         null_addr0[6];
-    uint8_t         null_addr1[6];
-    uint8_t         addr_paired_headset[6];
-    uint16_t         startPairing;
-    uint16_t         headsetIsConn;
+    uint32_t tpsll_ac;
+    uint8_t  tpsll_ch;
+    uint8_t  cur_status;
+    uint16_t timeout;
+    uint8_t  local_addr[6];
+    uint8_t  null_addr0[6];
+    uint8_t  null_addr1[6];
+    uint8_t  addr_paired_headset[6];
+    uint16_t startPairing;
+    uint16_t headsetIsConn;
 } tlkmdi_mesh_audio_dongle_item_t; // 52bytes
 
 /**

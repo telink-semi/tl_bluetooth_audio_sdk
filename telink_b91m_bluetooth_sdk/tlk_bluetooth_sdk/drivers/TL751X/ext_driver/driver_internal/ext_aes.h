@@ -26,7 +26,6 @@
 
 #include "common/types.h"
 
-
 //*********************Note: CRYPT*****************************/
 enum
 {
@@ -48,7 +47,6 @@ enum
 #define reg_rf_tlk_aad  REG_ADDR8(REG_BASEBAND_BASE_ADDR + 0xbc)
 
 
-
 #define reg_ccm_control REG_ADDR8(REG_BB_LL_BASE_ADDR + 0x3f)
 
 enum
@@ -63,9 +61,9 @@ enum
 #define reg_rf_rx_ccm_pkt_cnt0_31  REG_ADDR32(REG_BB_LL_BASE_ADDR + 0x48)
 #define reg_rf_rx_ccm_pkt_cnt32_38 REG_ADDR8(REG_BB_LL_BASE_ADDR + 0x4c)
 
-#define CV_LLBT_BASE (0xd4160000)
+#define CV_LLBT_BASE               (0xd4160000)
 
-#define reg_rwbtcntl REG_ADDR32(CV_LLBT_BASE)
+#define reg_rwbtcntl               REG_ADDR32(CV_LLBT_BASE)
 
 enum
 {

@@ -82,9 +82,7 @@
  */
 #if (TLK_DEV_CODEC_ENABLE)
 
-#define TLKDRV_CODEC_MIC_DMA  DMA2
 #define TLKDRV_CODEC_MIC_FIFO FIFO0
-#define TLKDRV_CODEC_SPK_DMA  DMA3
 #define TLKDRV_CODEC_SPK_FIFO FIFO0
 
 
@@ -119,34 +117,10 @@
 //UART0
 #define TLKDEV_SERIAL0_TX_PIN 0
 #define TLKDEV_SERIAL0_RX_PIN 0
-#define TLKDEV_SERIAL0_TX_DMA 0
-#define TLKDEV_SERIAL0_RX_DMA 0
 //UART1
 #define TLKDEV_SERIAL1_TX_PIN GPIO_PG6
 #define TLKDEV_SERIAL1_RX_PIN GPIO_PG5
-#define TLKDEV_SERIAL1_TX_DMA DMA6
-#define TLKDEV_SERIAL1_RX_DMA DMA7
 #endif //TLK_DEV_SERIAL_ENABLE
-
-/**
-     * @brief USB Configuration
-     */
-#if 0 //(TLK_CFG_USB_ENABLE)
-#define TLK_CFG_USB_NUMB       2
-#define TLK_CFG_USB_UDB_INDEX  1
-#define TLK_CFG_USB_UAC_INDEX  0
-#define TLK_CFG_USB_MSC_INDEX  (TLK_CFG_USB_NUMB + 1) //means not support now.
-
-#define TLK_USB0_DP_PIN        GPIO_PA4
-#define TLK_USB0_DM_PIN        GPIO_PA3
-#define TLK_USB1_DP_PIN        GPIO_PA6 //used for dbg
-#define TLK_USB1_DM_PIN        GPIO_PA5 //used for dbg
-
-#define TLKUSB_UDB_EDP_DBG_IN  USB1_EDP3_IN
-#define TLKUSB_UDB_EDP_DBG_OUT USB1_EDP5_OUT
-#define TLKUSB_UDB_EDP_VCD_IN  USB1_EDP8_IN
-#define TLKUSB_UDB_EDP_VCD_OUT USB1_EDP6_OUT
-#endif //TLK_CFG_USB_ENABLE
 
 /**
  *  @brief  GPIO definition for debug_io

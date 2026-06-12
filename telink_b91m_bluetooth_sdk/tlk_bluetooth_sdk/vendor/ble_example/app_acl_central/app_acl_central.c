@@ -71,7 +71,7 @@ static void app_acl_central_init_command(void)
     ble_host_gap_scan_init();
 
     ble_host_gap_evt_add_subscriber(&s_adv_report_evt);
-    int ret = ble_host_gap_scan_set_param(BLE_HOST_GAP_SCAN_PARAM_BASIC_UNFILTERED, BLE_HOST_GAP_ACTIVE_SCAN(80, 100));
+    int ret = ble_host_gap_scan_set_param(BLE_HOST_GAP_SCAN_PARAM_BASIC_UNFILTERED, BLE_HOST_GAP_ACTIVE_SCAN(100, 80));
     tlk_printf("GAP set scan param ret = 0x%x", ret);
     ble_host_gap_scan_set_filter(BLE_HOST_GAP_SCAN_FILTER_ALL_NON_CONN);
 

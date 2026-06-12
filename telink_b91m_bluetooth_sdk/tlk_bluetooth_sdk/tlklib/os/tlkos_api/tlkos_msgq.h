@@ -24,6 +24,13 @@
 #pragma once
 
 /**
+ * @brief     Gets the required static buffer length for creating a message queue.
+ * @param[in] qLength Maximum number of messages in the queue.
+ * @returns   Required buffer size in bytes.
+ */
+uint32_t tlkos_msgq_getStaticBufferLen(uint32_t qLength);
+
+/**
  * @brief     Creates a message queue.
  * @param[out] pMsgQHandle Pointer to store the created message queue handle.
  * @param[in] msgMaxSize Maximum size of each message in the queue.
@@ -31,6 +38,17 @@
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
 int tlkos_msgq_create(TlkOsMsgQHandle_t *pMsgQHandle, uint32_t msgMaxSize, uint32_t qLength);
+
+/**
+ * @brief     Creates a message queue with a static buffer.
+ * @param[out] pMsgQHandle Pointer to store the created message queue handle.
+ * @param[in] msgMaxSize Maximum size of each message in the queue.
+ * @param[in] qLength Maximum number of messages in the queue.
+ * @param[in] pStaticBuffer Pointer to the static buffer provided by the user.
+ * @param[in] staticBufferSize Size of the static buffer in bytes.
+ * @returns   0 indicates success, other values indicate corresponding error codes.
+ */
+int tlkos_msgq_createStatic(TlkOsMsgQHandle_t *pMsgQHandle, uint32_t msgMaxSize, uint32_t qLength, uint8_t *pStaticBuffer, uint32_t staticBufferSize);
 
 /**
  * @brief     Destroys a message queue.

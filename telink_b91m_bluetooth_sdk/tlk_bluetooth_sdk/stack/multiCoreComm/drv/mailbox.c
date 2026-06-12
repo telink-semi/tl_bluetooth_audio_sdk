@@ -35,30 +35,29 @@
 
 void tlkipc_mailbox_init(void)
 {
-	tlkipc_hal_mailbox_init();
+    tlkipc_hal_mailbox_init();
 }
 
-_attribute_ram_code_sec_ void tlkipc_mailbox_send_data(uint8_t* data, uint32_t maxBlockTimeUs)
+_attribute_ram_code_sec_ void tlkipc_mailbox_send_data(uint8_t *data, uint32_t maxBlockTimeUs)
 {
-	if(maxBlockTimeUs > MAILBOX_TX_MAX_BLOCK_TIME_US){
-		maxBlockTimeUs = MAILBOX_TX_MAX_BLOCK_TIME_US;
-	}
-	uint32_t clockTime = clock_time();
-	do{
-		if(tlkipc_hal_is_mailbox_busy()){
-			continue;
-		}
-		uint32_t critical = tlkipc_enterCritical();
-		if(tlkipc_hal_is_mailbox_busy()){
-			tlkipc_leaveCritical(critical);
-			continue;
-		}
-		tlkipc_hal_mailbox_send(data,8);
-		tlkipc_leaveCritical(critical);
-		break;
-	}while(!clock_time_exceed(clockTime, maxBlockTimeUs));
+    if (maxBlockTimeUs > MAILBOX_TX_MAX_BLOCK_TIME_US) {
+        maxBlockTimeUs = MAILBOX_TX_MAX_BLOCK_TIME_US;
+    }
+    uint32_t clockTime = clock_time();
+    do {
+        if (tlkipc_hal_is_mailbox_busy()) {
+            continue;
+        }
+        uint32_t critical = tlkipc_enterCritical();
+        if (tlkipc_hal_is_mailbox_busy()) {
+            tlkipc_leaveCritical(critical);
+            continue;
+        }
+        tlkipc_hal_mailbox_send(data, 8);
+        tlkipc_leaveCritical(critical);
+        break;
+    } while (!clock_time_exceed(clockTime, maxBlockTimeUs));
 }
-
 
 
 #endif

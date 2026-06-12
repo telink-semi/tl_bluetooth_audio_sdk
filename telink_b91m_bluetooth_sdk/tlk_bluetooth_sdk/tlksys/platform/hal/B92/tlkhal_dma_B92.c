@@ -24,6 +24,56 @@
 #include "../../api/tlkhal_api.h"
 #include "drivers.h"
 #if MCU_CORE_TYPE == CHIP_TYPE_B92
+//DMA0 DMA1 used for RF
+static uint32_t sTlkhalDmaMask = BIT(0) | BIT(1);
+
+uint8_t tlkhal_dma_malloc_ex(uint8_t notAcceptChn0)
+{
+    uint8_t  pos = notAcceptChn0 == 0 ? 0 : 1;
+    uint32_t r   = core_interrupt_disable();
+    for (size_t i = pos; i < DMA7 + 1; i++) {
+        if (!(sTlkhalDmaMask & BIT(i))) {
+            sTlkhalDmaMask |= BIT(i);
+            core_restore_interrupt(r);
+            return DMA0 + i;
+        }
+    }
+    core_restore_interrupt(r);
+    TLKHAL_ASSERT(0);
+    return DMA7 + 1;
+}
+
+uint8_t tlkhal_dma_malloc(void)
+{
+    return tlkhal_dma_malloc_ex(0);
+}
+
+void tlkhal_dma_free(uint8_t chn)
+{
+    TLKHAL_ASSERT(chn < DMA7 + 1);
+    if (sTlkhalDmaMask & BIT(chn)) {
+        uint32_t r = core_interrupt_disable();
+        sTlkhalDmaMask &= ~BIT(chn);
+        core_restore_interrupt(r);
+    }
+}
+
+uint32_t tlkhal_dma_getIdleNum(void)
+{
+    uint32_t cnt = 0;
+    for (size_t i = 0; i < DMA7 + 1; i++) {
+        if (!(sTlkhalDmaMask & BIT(i))) {
+            cnt++;
+        }
+    }
+    return cnt;
+}
+
+uint32_t tlkhal_dma_getChnPoolMask(void)
+{
+    return sTlkhalDmaMask;
+}
+
 /**
  * @brief     Clears the irq of terminal count status for a specified DMA channel.
  * @param[in] dmaChn The DMA channel number to clear.

@@ -48,9 +48,9 @@ static uint16_t acl_hid_conn_handle = 0x0000;
 static void app_ble_hid_report_consume_control(uint16_t consumer_key)
 {
     if (acl_hid_conn_handle) {
-        ble_hids_notify_input_report(acl_hid_conn_handle, BLE_HOST_HID_REPORT_ID_CONSUME_CONTROL_INPUT, (u8 *) &consumer_key, 2);
+        ble_hids_notify_input_report(acl_hid_conn_handle, BLE_HOST_HID_REPORT_ID_CONSUME_CONTROL_INPUT, (u8 *)&consumer_key, 2);
         consumer_key = 0;
-        ble_hids_notify_input_report(acl_hid_conn_handle, BLE_HOST_HID_REPORT_ID_CONSUME_CONTROL_INPUT, (u8 *) &consumer_key, 2);
+        ble_hids_notify_input_report(acl_hid_conn_handle, BLE_HOST_HID_REPORT_ID_CONSUME_CONTROL_INPUT, (u8 *)&consumer_key, 2);
     }
 }
 
@@ -99,7 +99,7 @@ static void app_ble_hid_acl_connected(struct ble_host_conn *conn)
  */
 static void app_ble_hid_acl_disconnected(struct ble_host_conn *conn, uint8_t reason)
 {
-    (void) reason;
+    (void)reason;
     tlkmw_host_linkmgr_delLink(TLKMDI_HOST_LINK_TYPE_BLE, conn->conn_handle);
     if (conn->conn_handle == acl_hid_conn_handle) {
         acl_hid_conn_handle = 0;
@@ -107,7 +107,7 @@ static void app_ble_hid_acl_disconnected(struct ble_host_conn *conn, uint8_t rea
 }
 
 static const struct ble_host_acl_conn_callbacks s_app_hid_acl_conn_callbacks = {
-    .connected = app_ble_hid_acl_connected,
+    .connected    = app_ble_hid_acl_connected,
     .disconnected = app_ble_hid_acl_disconnected,
 };
 
@@ -125,7 +125,7 @@ void app_ble_hid_init(void)
     ble_basic_register_DIS_control_server();
     ble_basic_register_ScPS_control_server();
 
-    extern const unsigned char tlk_hid_keyboard_report_map[];
+    extern const unsigned char  tlk_hid_keyboard_report_map[];
     extern const unsigned short tlk_hid_keyboard_report_map_len;
     ble_hid_register_HID_control_server(BLE_HIDS_INITIAL_PARAMS_DEFAULT(tlk_hid_keyboard_report_map, tlk_hid_keyboard_report_map_len));
 

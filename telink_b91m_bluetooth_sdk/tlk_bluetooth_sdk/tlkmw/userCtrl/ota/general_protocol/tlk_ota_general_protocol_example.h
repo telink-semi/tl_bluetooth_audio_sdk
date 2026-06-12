@@ -53,8 +53,8 @@ typedef struct
 
     tlk_ota_timer_handle_t timer;
 
-    uint8_t              *p_cache_buffer; //Cache fw data, when the cache reaches the limit of TLKMW_OTA_WRITE_CACHE_SIZE, it is written to the flash.
-    nvds_ota_Interface_t *ota_intf;
+    uint8_t             *p_cache_buffer; //Cache fw data, when the cache reaches the limit of TLKMW_OTA_WRITE_CACHE_SIZE, it is written to the flash.
+    nvds_ota_Interface_t ota_intf;
 } sTlkMwOta_t;
 
 /**
@@ -69,7 +69,7 @@ int tlkmw_ota_load_cur_img_header(void);
  * @param   pInterface - Pointer to OTA interface structure
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlk_ota_general_protocol_detail_init(nvds_ota_Interface_t *pInterface);
+int tlk_ota_general_protocol_detail_init(nvds_ota_Interface_t pInterface);
 
 /**
  * @brief   Get pointer to the OTA control structure

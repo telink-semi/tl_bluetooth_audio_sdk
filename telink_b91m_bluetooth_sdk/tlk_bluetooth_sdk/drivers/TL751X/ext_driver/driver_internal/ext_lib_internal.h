@@ -52,9 +52,9 @@ void rf_enable_bb_debug(void);
 /******************************* dbgErrorCode start ******************************************************************/
 /* for debug (write ram)*/
 #if MCU_CORE_N22
-    #define DBG_SRAM_ADDR 0x50020014
+#define DBG_SRAM_ADDR 0x50020014
 #else
-    #define DBG_SRAM_ADDR 0x20014
+#define DBG_SRAM_ADDR 0x20014
 #endif
 #define PKE_OPERAND_MAX_WORD_LEN (0x08)
 #define PKE_OPERAND_MAX_BIT_LEN  (0x100)
@@ -132,10 +132,10 @@ typedef enum
  */
 enum
 {
-    SYSTEM_TIMER_TICK_78US125 = 1875,   //78.125uS = 78.125*24=1875
-    SYSTEM_TIMER_TICK_125US   = 3000,   //125*24
-    SYSTEM_TIMER_TICK_156US25 = 3750,   // 156.25uS = 156.25*24=7500
-    SYSTEM_TIMER_TICK_312US5 = 7500,
+    SYSTEM_TIMER_TICK_78US125 = 1875, //78.125uS = 78.125*24=1875
+    SYSTEM_TIMER_TICK_125US   = 3000, //125*24
+    SYSTEM_TIMER_TICK_156US25 = 3750, // 156.25uS = 156.25*24=7500
+    SYSTEM_TIMER_TICK_312US5  = 7500,
     SYSTEM_TIMER_TICK_40MS    = 960000, //24000*40=960000
 };
 
@@ -239,7 +239,7 @@ __INLINE int tick1_out_range_of_tick2(unsigned int tick1, unsigned int tick2, un
 
 /******************************* ext_pm start ******************************************************************/
 #ifndef PM_32k_RC_CALIBRATION_ALGORITHM_EN
-    #define PM_32k_RC_CALIBRATION_ALGORITHM_EN 1 //
+#define PM_32k_RC_CALIBRATION_ALGORITHM_EN 1 //
 #endif
 
 #define SYS_NEED_REINIT_EXT32K   BIT(1)
@@ -308,7 +308,7 @@ typedef struct pmb_clock_drift
 
 } pm_clock_drift_t;
 
-extern pm_clock_drift_t pmbcd;
+extern pm_clock_drift_t  pmbcd;
 extern pm_clock_drift_t *g_p_pmbcd;
 
 /* pm 32k rc sw cal alg */
@@ -317,7 +317,7 @@ extern pm_clock_drift_t *g_p_pmbcd;
  * @brief       Reset the 32k rc calibration function.
  * @return      none.
  */
-void         pm_ble_32k_rc_cal_reset(void);
+void pm_ble_32k_rc_cal_reset(void);
 
 /**
  * @brief      32k rc calibration function.
@@ -325,13 +325,13 @@ void         pm_ble_32k_rc_cal_reset(void);
  * @param      rc32_cnt    - the 32k rc counter value.
  * @return     none.
  */
-void         pm_ble_32k_rc_cal_offset (int offset_tick, int rc32_cnt);
+void pm_ble_32k_rc_cal_offset(int offset_tick, int rc32_cnt);
 
 /**
  * @brief       32k rc calibration clock compensation.
  * @return      32k calibration value after compensation.
  */
-unsigned int pm_ble_32k_rc_get_calib (void);
+unsigned int pm_ble_32k_rc_get_calib(void);
 
 /**
  * @brief       Get the latest 32k rc calibration time.
@@ -344,7 +344,7 @@ unsigned int pm_ble_32k_rc_get_latest_offset_cal_time(void);
  * @param[in]   tick        - the reference 16M system clock value.
  * @return      none.
  */
-void         pm_ble_32k_rc_update_sleep_tick (unsigned int tick_32k, unsigned int tick);
+void pm_ble_32k_rc_update_sleep_tick(unsigned int tick_32k, unsigned int tick);
 #endif //#if (PM_32k_RC_CALIBRATION_ALGORITHM_EN)
 
 
@@ -359,12 +359,10 @@ void         pm_ble_32k_rc_update_sleep_tick (unsigned int tick_32k, unsigned in
  */
 void mcu_oscillator_crystal_calibration(void);
 
-typedef int (*suspend_handler_t)(void);
 typedef void (*check_32k_clk_handler_t)(void);
 typedef unsigned int (*pm_get_32k_clk_handler_t)(void);
 typedef void (*pm_tim_recover_handler_t)(void);
 
-extern suspend_handler_t        func_before_suspend;
 extern check_32k_clk_handler_t  pm_check_32k_clk_stable;
 extern pm_get_32k_clk_handler_t pm_get_32k_tick;
 extern pm_tim_recover_handler_t pm_tim_recover;
@@ -384,9 +382,9 @@ typedef struct
 extern pm_share_sleep_info_t g_pm_share_sleep_info;
 
 extern pm_status_info_s *g_p_pm_status_info;
-extern unsigned int *g_p_sleep_32k_rc_cnt;
-extern unsigned int *g_p_sleep_stimer_tick;
-extern unsigned int *g_p_sleep_n22_sleep_tick;
+extern unsigned int     *g_p_sleep_32k_rc_cnt;
+extern unsigned int     *g_p_sleep_stimer_tick;
+extern unsigned int     *g_p_sleep_n22_sleep_tick;
 
 /******************************* ext_pm end ********************************************************************/
 

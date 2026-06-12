@@ -29,14 +29,14 @@
  * @param[in]  none
  * @returns initialization result, TLK_ENONE means success
  */
-int  tlkmdi_bt_voice_init(void);
+int tlkmdi_bt_voice_init(void);
 
 /**
  * @brief  disable bt voice
  * @param[in]  none
  * @returns none
  */
-int  tlkmdi_bt_voice_disable(void);
+int tlkmdi_bt_voice_disable(void);
 
 /**
  * @brief  switch bt voice state

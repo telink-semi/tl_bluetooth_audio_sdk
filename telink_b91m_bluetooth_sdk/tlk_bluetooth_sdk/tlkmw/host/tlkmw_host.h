@@ -45,6 +45,18 @@ void tlkmw_host_resetController(void);
 void tlkmw_host_closeController(void);
 
 /**
+ * @brief  Antenna initialization weak hook.
+ * This function is a weak symbol that can be overridden by the application.
+ * By default no antenna-specific setup is required; override it when your
+ * board needs special antenna configuration (e.g. RF switch, external PA/LNA,
+ * antenna diversity, matching network tuning).
+ * 
+ * @param[in]   none.
+ * @return      none.
+ */
+void tlkmw_host_antennaInitHook(void);
+
+/**
  * @brief       This function checks if C2H is pending.
  * @param[in]   none.
  * @return      Returns true if C2H is pending, otherwise false.

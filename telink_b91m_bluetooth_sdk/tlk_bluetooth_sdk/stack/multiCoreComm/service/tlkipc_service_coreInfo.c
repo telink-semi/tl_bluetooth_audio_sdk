@@ -102,8 +102,13 @@ static tlkipc_service_coreInfo_t *volatile sp_tlkipc_service_coreInfo = NULL;
 
 int tlkipc_service_coreInfo_sync(void)
 {
-    tlkipc_hal_mailbox_send(NULL, 4);
-    while (sp_tlkipc_service_coreInfo == NULL || sp_tlkipc_service_coreInfo->state != TLKIPC_STATE_READY);
+    static int AA = 0;
+    tlkipc_hal_mailbox_send(&AA, 4);
+    while (sp_tlkipc_service_coreInfo == NULL || sp_tlkipc_service_coreInfo->state != TLKIPC_STATE_READY) {
+        AA++;
+        delay_ms(5);
+        tlkipc_hal_mailbox_send(&AA, 4);
+    }
     return 0;
 }
 

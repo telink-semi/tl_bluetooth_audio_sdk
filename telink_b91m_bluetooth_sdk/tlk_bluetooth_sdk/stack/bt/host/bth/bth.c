@@ -52,9 +52,6 @@ int bth_init(void)
     if (ret == TLK_ENONE) {
         ret = bth_l2cap_init(TLK_STK_BTPSM_NUMB, TLK_STK_BTCHN_NUMB, TLK_STK_BTACL_NUMB);
     }
-    if (ret == TLK_ENONE) {
-        ret = bth_sco_setTxRxBandwidth(SYNC_BANDWIDTH_DONT_CARE, SYNC_BANDWIDTH_DONT_CARE);
-    }
     if (ret != TLK_ENONE) {
         bth_deinit();
     }

@@ -43,10 +43,6 @@
 #include "../svc_telink.h"
 
 #define OTA_START_HDL SERVICE_TELINK_OTA_HDL
-
-static const uint8_t serviceOtaUuid[16] = {TELINK_OTA_UUID_SERVICE};
-
-static const uint8_t otaOutUuid[16] = {TELINK_SPP_DATA_OTA};
 //// OTA attribute values
 
 static const uint8_t  otaData    = 0x00;
@@ -59,22 +55,14 @@ static const uint16_t otaOutDescLen = sizeof(otaOutDesc);
  * @brief the structure for default OTA(Telink) service List.
  */
 static const struct atts_attribute otaList[] = {
-    ATTS_PRIMARY_SERVICE_128(serviceOtaUuid),
+    ATTS_PRIMARY_SERVICE_128(tlk_ota_service_att_uuid),
 
     ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadWriteWithoutNotify),
-    {ATT_PERMISSIONS_RDWR, ATT_128_UUID_LEN, (uint8_t *)(size_t)&otaOutUuid[0], (uint16_t *)(size_t)&otaDataLen, sizeof(otaData), (uint8_t *)(size_t)&otaData,
-     ATTS_SET_WRITE_CALLBACK},
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_RDWR, tlk_ota_data_att_uuid, ATTS_SET_WRITE_CALLBACK, sizeof(otaData), &otaDataLen, &otaData),
+
     ATTS_COMMON_CCC_DEFINE,
 
-    {
-        ATT_PERMISSIONS_READ,
-        ATT_16_UUID_LEN,
-        (uint8_t *)(size_t)descriptorCharacteristicUserDescriptionUuid,
-        (uint16_t *)(size_t)&otaOutDescLen,
-        sizeof(otaOutDesc),
-        (uint8_t *)(size_t)otaOutDesc,
-        0,
-    },
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_READ, descriptorCharacteristicUserDescriptionAttUuid, ATTS_SET_NONE, sizeof(otaOutDesc), &otaOutDescLen, otaOutDesc),
 };
 
 /*

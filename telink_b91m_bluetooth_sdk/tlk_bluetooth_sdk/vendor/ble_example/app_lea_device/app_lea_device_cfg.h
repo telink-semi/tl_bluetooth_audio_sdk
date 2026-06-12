@@ -25,6 +25,5 @@
 #include "tlkmw/ble/le_audio/inc/lea_us_stk_cfg.h"
 #include "tlkmw/ble/le_audio/inc/lea_broadcast_sink_stk_cfg.h"
 
-#define TLK_CFG_FLASH_USER_USBID_ADDR (0xD6000)
-#define TLK_CFG_FLASH_LE_TWS_SIRK_ADDR (0xD6010)
-
+#define TLK_CFG_FLASH_USER_USBID_ADDR  (0xF8000)
+#define TLK_CFG_FLASH_LE_TWS_SIRK_ADDR (0xF8010)

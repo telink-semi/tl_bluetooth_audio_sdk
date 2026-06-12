@@ -35,8 +35,11 @@
 #define TMR_IRQ_BIT TMR_STA_TMR0
 #endif
 
+#ifndef TLKMDI_AUDIO_HIGH_TASK_STASK_SIZE
+#define TLKMDI_AUDIO_HIGH_TASK_STASK_SIZE (2 * 1024)
+#endif
+
 static TlkOsEventTabHandle_t sTlkMdiAudIrqEvtHandle              = 0;
-static TlkOsMutexHandle_t    sTlkMdiAudCriticalMutexHandle       = 0;
 static TlkOsSemphrHandle_t   sTlkMdiAudHighProTaskSemp           = 0;
 static TlkMdiAudioCB_t       sTlkMdiAudioCB[TLKMDI_AUDIO_CB_NUM] = {0};
 static TlkApiTimer_t         sTlkMdiAudioMainDelayRunTmr         = {0};
@@ -106,7 +109,7 @@ static void tlkmdi_audio_dsp_main_task(void)
  */
 static void tlkmdi_audio_dsp_ready_task(void)
 {
-#if TLK_MW_DSP_COMM_ENABLE
+#if (TLK_MW_DSP_COMM_ENABLE && !TLKADU_MIDBUF_ENABLE)
     if (dsp_rdy_first_flag) {
         dsp_rdy_first_flag = false;
         return;
@@ -199,20 +202,20 @@ void tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TYPE_ENUM cbType, TlkMdiAudioCB_t 
  */
 void tlkmdi_audio_use_rtos(void)
 {
-    _attribute_os_heap_sec_ static uint8_t tlkmdi_audio_irq_task_buffer[TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE];
-    TlkosTaskExtCfg_t                      cfg = {
-                             .pStaticBuffer    = tlkmdi_audio_irq_task_buffer,
-                             .staticBufferSize = TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE,
+    _attribute_os_heap_sec_ __attribute__((aligned(4))) static uint8_t tlkmdi_audio_irq_event_buffer[128];
+    _attribute_os_heap_sec_ __attribute__((aligned(4))) static uint8_t tlkmdi_audio_irq_task_buffer[TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE];
+    TlkosTaskExtCfg_t                                                  cfg = {
+                                                         .pStaticBuffer    = tlkmdi_audio_irq_task_buffer,
+                                                         .staticBufferSize = TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE,
     };
     tlkos_task_create(tlkmdi_audio_irq_task, "AUD_IRQ", TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE, TLKSYS_TASK_AUDIO_IRQ_PRIORITY, NULL, &cfg, NULL);
 
-    tlkos_event_createTab(TLKMDI_AUDIO_CB_NUM, &sTlkMdiAudIrqEvtHandle);
-    tlkos_recursiveMutex_create(&sTlkMdiAudCriticalMutexHandle);
+    tlkos_event_createTabStatic(TLKMDI_AUDIO_CB_NUM, tlkmdi_audio_irq_event_buffer, sizeof(tlkmdi_audio_irq_event_buffer), &sTlkMdiAudIrqEvtHandle);
     tlksys_timer_createStatic(TLKSYS_TASKID_AUDIO, &sTlkMdiAudioMainDelayRunTmr, 3 * 1000, false, tlkmdi_audio_MainDelayRunTimer, NULL);
 
     (void)tlkmdi_audio_high_priority_task;
 #if TLKSTK_BT_TPS_ENABLE
-    tlkos_task_create(tlkmdi_audio_high_priority_task, "AUD_H", 2 * 1024, TLKSYS_TASK_AUDIO_HIGH_TASK_PRIORITY, NULL, NULL, NULL);
+    tlkos_task_create(tlkmdi_audio_high_priority_task, "AUD_H", TLKMDI_AUDIO_HIGH_TASK_STASK_SIZE, TLKSYS_TASK_AUDIO_HIGH_TASK_PRIORITY, NULL, NULL, NULL);
     tlkos_semphr_createCounting(&sTlkMdiAudHighProTaskSemp, 10, 0);
 #endif
 }
@@ -224,7 +227,7 @@ void tlkmdi_audio_use_rtos(void)
 _always_inline void tlkmdi_audio_enterCritical(void)
 {
 #if TLK_CFG_RTOS_ENABLE
-    tlkos_recursiveMutex_lock(sTlkMdiAudCriticalMutexHandle);
+    tlksys_mutex_lock(TLKSYS_MUTEX_AUDIO);
 #else
     tlkos_enter_critical();
 #endif
@@ -237,7 +240,7 @@ _always_inline void tlkmdi_audio_enterCritical(void)
 _always_inline void tlkmdi_audio_leaveCritical(void)
 {
 #if TLK_CFG_RTOS_ENABLE
-    tlkos_recursiveMutex_unlock(sTlkMdiAudCriticalMutexHandle);
+    tlksys_mutex_unlock(TLKSYS_MUTEX_AUDIO);
 #else
     tlkos_leave_critical();
 #endif
@@ -304,13 +307,25 @@ _attribute_ram_code_sec_ void tlkmdi_audio_timer_irq_handler(void)
  */
 _attribute_ram_code_sec_ void tlkmdi_audio_fifo_irq_handler(void)
 {
-#if TX_FIFO_IRQ_ENABLE
     if (audio_get_fifo_irq_status(AUDIO_TX_FIFO0)) {
         audio_clr_fifo_irq_status(AUDIO_TX_FIFO0);
+#if !TLK_CFG_RTOS_ENABLE
+        if (sTlkMdiAudioCB[TLKMDI_AUDIO_CB_FIFO]) {
+            sTlkMdiAudioCB[TLKMDI_AUDIO_CB_FIFO]();
+        }
 #else
+#if TLKADU_MIDBUF_ENABLE
+        extern void tlkaud_fifo_irq_handler(void);
+        tlkaud_fifo_irq_handler();
+        tlkmdi_audio_wakeUpHighPriorityTask();
+#else
+        tlkos_event_setFromIsr(sTlkMdiAudIrqEvtHandle, TLKMDI_AUDIO_CB_FIFO);
+#endif //TLKADU_MIDBUF_ENABLE
+#endif
+    }
+
     if (audio_get_fifo_irq_status(AUDIO_RX_FIFO0)) {
         audio_clr_fifo_irq_status(AUDIO_RX_FIFO0);
-#endif
 #if !TLK_CFG_RTOS_ENABLE
         if (sTlkMdiAudioCB[TLKMDI_AUDIO_CB_FIFO]) {
             sTlkMdiAudioCB[TLKMDI_AUDIO_CB_FIFO]();

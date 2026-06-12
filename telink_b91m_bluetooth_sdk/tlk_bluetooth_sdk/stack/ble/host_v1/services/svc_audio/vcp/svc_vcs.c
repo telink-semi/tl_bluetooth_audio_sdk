@@ -43,13 +43,12 @@
 
 #include "vendor/common/user_config.h"
 #include "svc_vcp.h"
+#include "../aics/svc_aics.h"
 
-#define APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM 0
+#define VCS_START_HDL         SERVICE_VOLUME_CONTROL_HDL
 
-#define VCS_START_HDL                          SERVICE_VOLUME_CONTROL_HDL
-
-#define VCS_VOL_STATE_FIX_LEN                  3
-#define VCS_VOL_FLAGS_FIX_LEN                  1
+#define VCS_VOL_STATE_FIX_LEN 3
+#define VCS_VOL_FLAGS_FIX_LEN 1
 
 _attribute_ble_data_retention_ static uint8_t vcsVolumeStateValue[VCS_VOL_STATE_FIX_LEN];
 static const uint16_t                         vcsVolumeStateValueLen = VCS_VOL_STATE_FIX_LEN;
@@ -57,25 +56,25 @@ static const uint16_t                         vcsVolumeStateValueLen = VCS_VOL_S
 _attribute_ble_data_retention_ static uint8_t vcsVolumeFlagsValue;
 static const uint16_t                         vcsVolumeFlagsValueLen = VCS_VOL_FLAGS_FIX_LEN;
 
-extern const uint16_t aicsIncludeValue[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM][3];
+extern const uint16_t aicsIncludeValue[LEA_AICS_SERVICE_COUNT][3];
 extern const uint16_t vocsIncludeValue[LEA_VCP_INCLUDED_VOCS_SERVER_NUM][3];
 
 /*
  * @brief the structure for default VCS service List.
  */
 static const struct atts_attribute vcsList[] = {
-    ATTS_PRIMARY_SERVICE(serviceVolumeControlUuid),
+    ATTS_PRIMARY_SERVICE(serviceVolumeControlAttUuid),
 
-#if APP_AUDIO_VCS_INCLUDE_AICS_INSTANCE_NUM > 0
+#if LEA_AICS_SERVICE_COUNT > 0
     ATTS_INCLUDE_DEFINE(&aicsIncludeValue[0][0]),
 #endif
-#if APP_AUDIO_VCS_INCLUDE_AICS_INSTANCE_NUM > 1
+#if LEA_AICS_SERVICE_COUNT > 1
     ATTS_INCLUDE_DEFINE(&aicsIncludeValue[1][0]),
 #endif
-#if APP_AUDIO_VCS_INCLUDE_AICS_INSTANCE_NUM > 2
+#if LEA_AICS_SERVICE_COUNT > 2
     ATTS_INCLUDE_DEFINE(&aicsIncludeValue[2][0]),
 #endif
-#if APP_AUDIO_VCS_INCLUDE_AICS_INSTANCE_NUM > 3
+#if LEA_AICS_SERVICE_COUNT > 3
     ATTS_INCLUDE_DEFINE(&aicsIncludeValue[3][0]),
 #endif
 
@@ -93,14 +92,14 @@ static const struct atts_attribute vcsList[] = {
 #endif
 
     //Volume State
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicVolumeStateUuid, vcsVolumeStateValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicVolumeStateAttUuid, vcsVolumeStateValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Volume Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWrite, characteristicVolumeControlPointUuid),
+    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWrite, characteristicVolumeControlPointAttUuid),
 
     //Volume Flags
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicVolumeFlagsUuid, vcsVolumeFlagsValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicVolumeFlagsAttUuid, vcsVolumeFlagsValue),
     ATTS_COMMON_CCC_DEFINE,
 };
 

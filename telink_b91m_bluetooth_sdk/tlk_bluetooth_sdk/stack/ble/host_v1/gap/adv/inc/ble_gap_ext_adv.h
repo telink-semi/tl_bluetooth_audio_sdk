@@ -244,3 +244,13 @@ int ble_host_gap_extend_adv_start(uint8_t adv_handle);
  *   @return BLE_HOST_ERR_SUCC if stop extended advertising successfully, otherwise an error code.
  */
 int ble_host_gap_extend_adv_stop(uint8_t adv_handle);
+
+/**
+ *   @brief Set the random address of an existing extended advertising set.
+ *
+ *   @param[in] adv_handle The handle of the extended advertising set to set.
+ *   @param[in] addr The random address to set.
+ *
+ *   @return BLE_HOST_ERR_SUCC if set random address successfully, otherwise an error code.
+ */
+int ble_host_gap_extend_adv_set_rand_addr(uint8_t adv_handle, const uint8_t *addr);

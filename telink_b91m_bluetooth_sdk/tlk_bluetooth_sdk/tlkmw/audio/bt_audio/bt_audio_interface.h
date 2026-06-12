@@ -28,7 +28,27 @@
 #include "tlkapi/tlkapi.h"
 
 #if SCO_ENC_QUEUE_ENABLE
-extern uint8_t g_sco_data_buff[];
+
+#define SCO_ENC_BUFF_FRAME_SIZE 64
+#define SCO_ENC_BUFF_NUM        3
+
+#define SCO_ENC_QUEUE_ID_0      0
+#define SCO_ENC_QUEUE_ID_1      1
+
+#define SCO_ENC_QUEUE_ID_HF     SCO_ENC_QUEUE_ID_0
+#define SCO_ENC_QUEUE_ID_AG     SCO_ENC_QUEUE_ID_1
+
+typedef struct sco_enc_buff_context
+{
+    uint8_t *p_sco_enc_buff;
+    uint16_t sco_enc_buff_frame_size;
+    uint16_t sco_enc_buff_num;
+    uint16_t sco_enc_buff_wptr;
+    uint16_t sco_enc_buff_rptr;
+} sco_enc_buff_context_t;
+
+extern sco_enc_buff_context_t g_sco_enc_buf_ctx[SCO_ENC_QUEUE_NUM];
+extern uint8_t                g_sco_data_buff[SCO_ENC_QUEUE_NUM][SCO_ENC_BUFF_FRAME_SIZE * SCO_ENC_BUFF_NUM];
 #endif
 
 /**
@@ -132,38 +152,18 @@ void btif_audio_power_control(uint8_t mode);
 
 /**
  * @brief  set hfp codec
+ * @param[in]  queue_id - queue id
  * @param[in]  hfp_codec: HFP_CODEC_ID_CVSD HFP_CODEC_ID_MSBC
  * @returns none
  */
-void btif_set_hfp_codec(uint8_t hfp_codec);
+void btif_set_hfp_codec(uint8_t queue_id, uint8_t hfp_codec);
 
 /**
  * @brief  get hfp codec
- * @param[in]  none
+ * @param[in]  queue_id - queue id
  * @returns HFP_CODEC_ID_CVSD HFP_CODEC_ID_MSBC
  */
-uint8_t btif_get_hfp_codec(void);
-
-/**
- * @brief  set bt music silent flag
- * @param[in]  val  the value
- * @returns none
- */
-void btif_set_bt_music_silent_flag(uint8_t val);
-
-/**
- * @brief  get bt music silent flag
- * @param[in]  none 
- * @returns TRUE or FALSE
- */
-uint8_t btif_get_bt_music_silent_flag(void);
-
-/**
- * @brief  get bt music silent tick
- * @param[in]  none 
- * @returns ticks
- */
-uint8_t btif_get_bt_music_silent_tick(void);
+uint8_t btif_get_hfp_codec(uint8_t queue_id);
 
 /**
  * @brief  register sco data callback
@@ -200,6 +200,24 @@ void bt_voice_init_mic_enc_buff(void);
  * @param[in]  none
  * @returns available count
  */
-uint8_t btif_get_sco_enc_buff_available(void);
+uint8_t btif_get_sco_enc_buff_available(uint8_t queue_id);
+
+/**
+ * @brief  update sco encode buffer read pointer
+ * @param[in] queue_id
+ */
+void btif_update_sco_enc_buff_rptr(uint8_t queue_id);
+
+/**
+ * @brief  get sco data from stack and push to encode buffer
+ * @param[in] id          - frame id
+ * @param[in] sco_handle  - sco connection handle
+ * @param[in] p_data      - sco data start address
+ * @param[in] len         - sco data length
+ * @returns none
+ */
+void    btif_voice_recv_sco_frame(uint8_t id, uint16_t sco_handle, uint8_t *p_data, uint16_t len);
+void    btif_voice_get_sco_frame(uint8_t id, uint16_t sco_handle, uint8_t *p, uint16_t len);
+uint8_t btif_get_sco_queue_id(uint16_t sco_handle);
 
 #endif

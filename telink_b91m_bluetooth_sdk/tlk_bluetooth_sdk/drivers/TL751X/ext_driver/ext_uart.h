@@ -38,7 +38,7 @@
  * @brief	debug UART port selection, user can change in app_config.h
  */
 #ifndef TLKAPI_DEBUG_UART_PORT
-    #define TLKAPI_DEBUG_UART_PORT DBG_UART_PORT0
+#define TLKAPI_DEBUG_UART_PORT DBG_UART_PORT0
 #endif
 
 
@@ -46,11 +46,11 @@
  * @brief	define debug UART channel according to UART port selection. don not change
  */
 #if (TLKAPI_DEBUG_UART_PORT == DBG_UART_PORT0)
-    #define DEBUG_UART_CHANNEL UART0
+#define DEBUG_UART_CHANNEL UART0
 #elif (TLKAPI_DEBUG_UART_PORT == DBG_UART_PORT1)
-    #define DEBUG_UART_CHANNEL UART1
+#define DEBUG_UART_CHANNEL UART1
 #else
-    #error "unsupported UART channel"
+#error "unsupported UART channel"
 #endif
 
 
@@ -58,7 +58,7 @@
  * @brief	debug UART TX DMA selection, user can change in app_config.h
  */
 #ifndef TLKAPI_DEBUG_UART_TX_DMA
-    #define TLKAPI_DEBUG_UART_TX_DMA DMA4
+#define TLKAPI_DEBUG_UART_TX_DMA DMA4
 #endif
 
 
@@ -66,14 +66,14 @@
  * @brief	debug UART TX pin selection, user can change in app_config.h
  */
 #ifndef TLKAPI_DEBUG_UART_TX_PIN
-    #define TLKAPI_DEBUG_UART_TX_PIN GPIO_FC_PD3
+#define TLKAPI_DEBUG_UART_TX_PIN GPIO_FC_PD3
 #endif
 
 /**
  * @brief	debug UART RX pin selection, user can change in app_config.h
  */
 #ifndef TLKAPI_DEBUG_UART_RX_PIN
-    #define TLKAPI_DEBUG_UART_RX_PIN GPIO_FC_PA5
+#define TLKAPI_DEBUG_UART_RX_PIN GPIO_FC_PA5
 #endif
 
 
@@ -81,7 +81,7 @@
  * @brief	debug UART baudrate definition, user can change in app_config.h
  */
 #ifndef TLKAPI_DEBUG_UART_BAUDRATE
-    #define TLKAPI_DEBUG_UART_BAUDRATE 1000000
+#define TLKAPI_DEBUG_UART_BAUDRATE 1000000
 #endif
 
 

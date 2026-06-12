@@ -124,6 +124,14 @@ typedef struct __attribute__((packed))
     uint8_t  reserved[2];
 } handshake_t;
 
+typedef struct __attribute__((packed))
+{
+    uint16_t d25f_alg_type;
+    uint8_t  bbf_type;
+    uint8_t  alg_dis;
+    uint8_t  reserved[2];
+} handshake_response_t;
+
 /** IPC_DSP2D25F_HANDSHAKE_DONE */
 typedef struct __attribute__((packed))
 {
@@ -243,6 +251,8 @@ uint8_t d25f_send_request_to_dsp(ipc_message_type_e type, uint8_t *buffer, uint8
  * @return      1 if successful, 0 otherwise
  */
 uint8_t d25f_send_handshake_msg(void);
+
+uint8_t d25f_response_handshake_msg(void);
 
 /**
  * @brief       Send mode change message

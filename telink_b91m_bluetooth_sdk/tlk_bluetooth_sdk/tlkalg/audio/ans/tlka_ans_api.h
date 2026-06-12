@@ -28,7 +28,7 @@
 
 /*! Version number to ensure header and binary are matching. */
 #define W_NS_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
-#define W_NS_VERSION W_NS_VERSION_INT(0, 2, 0)
+#define W_NS_VERSION                          W_NS_VERSION_INT(0, 2, 0)
 
 /* Whether to enable the GSC module */
 //#define GSCON 0

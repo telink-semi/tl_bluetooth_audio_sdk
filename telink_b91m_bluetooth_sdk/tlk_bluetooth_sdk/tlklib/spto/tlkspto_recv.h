@@ -46,14 +46,6 @@ void tlkspto_recv_reset(void);
 void tlkspto_recv_regCB(TlkCpcRecvCB recvCB);
 
 /**
- * @brief       Set receive buffer.
- * @param[in]   pBuffer - Buffer pointer.
- * @param[in]   buffLen - Buffer length.
- * @return      none.
- */
-void tlkspto_recv_setBuffer(uint8_t *pBuffer, uint16_t buffLen);
-
-/**
  * @brief       Handle received data.
  * @param[in]   pData - Data pointer.
  * @param[in]   dataLen - Data length.

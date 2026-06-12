@@ -78,10 +78,10 @@ typedef int (*ke_msg_func_t)(ke_msg_id_t const msgid, void const *param, ke_task
 
 /// Macro for message handler function declaration or definition
 #define KE_MSG_HANDLER(msg_name, param_struct) \
-    __STATIC int msg_name##_handler(ke_msg_id_t const msgid, param_struct const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+    __STATIC int tlk_bt_ctrl_##msg_name##_handler(ke_msg_id_t const msgid, param_struct const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 
 #define KE_MSG_HANDLER_NO_STATIC(msg_name, param_struct) \
-    int msg_name##_handler(ke_msg_id_t const msgid, param_struct const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
+    int tlk_bt_ctrl_##msg_name##_handler(ke_msg_id_t const msgid, param_struct const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id)
 
 /// Macro for message handlers table declaration or definition
 #define KE_MSG_HANDLER_TAB(task) static const struct ke_msg_handler task##_msg_handler_tab[] =
@@ -119,7 +119,7 @@ struct ke_task_desc
  * @brief Initialize Kernel task module.
  ****************************************************************************************
  */
-void ke_task_init(void);
+void tlk_bt_ctrl_ke_task_init(void);
 
 /**
  ****************************************************************************************
@@ -131,7 +131,7 @@ void ke_task_init(void);
  * @return                     Status
  ****************************************************************************************
  */
-uint8_t ke_task_create(uint8_t task_type, struct ke_task_desc const *p_task_desc);
+uint8_t tlk_bt_ctrl_ke_task_create(uint8_t task_type, struct ke_task_desc const *p_task_desc);
 
 /**
  ****************************************************************************************
@@ -142,7 +142,7 @@ uint8_t ke_task_create(uint8_t task_type, struct ke_task_desc const *p_task_desc
  * @return                     Status
  ****************************************************************************************
  */
-uint8_t ke_task_delete(uint8_t task_type);
+uint8_t tlk_bt_ctrl_ke_task_delete(uint8_t task_type);
 
 /**
  ****************************************************************************************
@@ -153,7 +153,7 @@ uint8_t ke_task_delete(uint8_t task_type);
  * @return          Current state of the task
  ****************************************************************************************
  */
-ke_state_t ke_state_get(ke_task_id_t const id);
+ke_state_t tlk_bt_ctrl_ke_state_get(ke_task_id_t const id);
 
 /**
  ****************************************************************************************
@@ -168,7 +168,7 @@ ke_state_t ke_state_get(ke_task_id_t const id);
  *
  ****************************************************************************************
  */
-void ke_state_set(ke_task_id_t const id, ke_state_t const state_id);
+void tlk_bt_ctrl_ke_state_set(ke_task_id_t const id, ke_state_t const state_id);
 
 /**
  ****************************************************************************************
@@ -182,7 +182,7 @@ void ke_state_set(ke_task_id_t const id, ke_state_t const state_id);
  * @return KE_MSG_CONSUMED
  ****************************************************************************************
  */
-int ke_msg_discard(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+int tlk_bt_ctrl_ke_msg_discard(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
 /**
  ****************************************************************************************
@@ -196,7 +196,7 @@ int ke_msg_discard(ke_msg_id_t const msgid, void const *param, ke_task_id_t cons
  * @return KE_MSG_CONSUMED
  ****************************************************************************************
  */
-int ke_msg_save(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
+int tlk_bt_ctrl_ke_msg_save(ke_msg_id_t const msgid, void const *param, ke_task_id_t const dest_id, ke_task_id_t const src_id);
 
 
 /**
@@ -207,7 +207,7 @@ int ke_msg_save(ke_msg_id_t const msgid, void const *param, ke_task_id_t const d
  * @param[in] task The Task Identifier that shall be flushed.
  ****************************************************************************************
  */
-void ke_task_msg_flush(ke_task_id_t task);
+void tlk_bt_ctrl_ke_task_msg_flush(ke_task_id_t task);
 
 
 /**
@@ -220,7 +220,7 @@ void ke_task_msg_flush(ke_task_id_t task);
  * @return Task identifier if valid, invalid identifier else.
  ****************************************************************************************
  */
-ke_task_id_t ke_task_check(ke_task_id_t task);
+ke_task_id_t tlk_bt_ctrl_ke_task_check(ke_task_id_t task);
 
 /// @} TASK
 

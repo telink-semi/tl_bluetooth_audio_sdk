@@ -26,19 +26,19 @@
  *
  *******************************************************************************************************/
 
+extern const uint8_t g_ble_host_l2cap_common_log_enable;
+extern const uint8_t g_ble_host_l2cap_log_enable;
+extern const uint8_t g_ble_host_l2cap_att_log_enable;
+extern const uint8_t g_ble_host_l2cap_coc_log_enable;
+extern const uint8_t g_ble_host_l2cap_eatt_log_enable;
+extern const uint8_t g_ble_host_l2cap_signaling_log_enable;
+extern const uint8_t g_ble_host_l2cap_smp_log_enable;
 
-extern uint8_t g_ble_host_l2cap_log_enable;
-extern uint8_t g_ble_host_l2cap_att_log_enable;
-extern uint8_t g_ble_host_l2cap_coc_log_enable;
-extern uint8_t g_ble_host_l2cap_eatt_log_enable;
-extern uint8_t g_ble_host_l2cap_signaling_log_enable;
-extern uint8_t g_ble_host_l2cap_smp_log_enable;
-
-#define BLE_L2CAP_LOG_OUTPUT(log, en, str, ...)  \
-    do {                                         \
-        if (en && g_ble_host_l2cap_log_enable) { \
-            log("[L2CAP]" str, ##__VA_ARGS__);   \
-        }                                        \
+#define BLE_L2CAP_LOG_OUTPUT(log, en, str, ...)         \
+    do {                                                \
+        if (en && g_ble_host_l2cap_common_log_enable) { \
+            log("[L2CAP]" str, ##__VA_ARGS__);          \
+        }                                               \
     } while (0)
 
 #define BLE_HOST_L2CAP_COMMON_ERROR(str, ...)    BLE_L2CAP_LOG_OUTPUT(BLE_HOST_SAL_LOG_ERROR, g_ble_host_l2cap_log_enable, str, ##__VA_ARGS__)

@@ -25,43 +25,58 @@
 #include "../controller_config.h"
 #if (CONTROLLER_MODE == BTBLE_HEADSET)
 
-    #if (MCU_CORE_TYPE == MCU_CORE_TL751X)
-    #define TLKHW_TYPE        TLKHW_TL751X_EVK_C1T368A20_V1_0
-    #else
-    #error "config hardware !!!"
-    #endif
-
-	#define VCD_DEFINE_SELECT   VCD_DEFINE_BTBLE_HEADSET
-
-    #define ACL_CENTRAL_MAX_NUM 0 // ACL central maximum number
-    #define ACL_PERIPHR_MAX_NUM 1 // ACL central maximum number
-	#define BLE_HEADSET_CONTROLLER_EN	1
-
-    /**********************LED DEFINE**************************/
-    #define PB5_OUTPUT_ENABLE 1
-    #define PB6_OUTPUT_ENABLE 1
-    #define PB7_OUTPUT_ENABLE 1
-    #define PC0_OUTPUT_ENABLE 1
-    #define PB5_FUNC          AS_GPIO
-    #define PB6_FUNC          AS_GPIO
-    #define PB7_FUNC          AS_GPIO
-    #define PC0_FUNC          AS_GPIO
-
-    #define LED_GREEN         GPIO_PA4
-    #define LED_BLUE          GPIO_PB6
-    #define LED_RED           GPIO_PB7
-    #define LED_WHITE         GPIO_PC0
-#if CHIP_TYPE==CHIP_TYPE_TL752X
-    #define TLK_CFG_SUSPEND_ENABLE  (0) //1: enable suspend + wfi module
+#if (MCU_CORE_TYPE == MCU_CORE_TL751X)
+#define TLKHW_TYPE TLKHW_TL751X_EVK_C1T368A20_V1_0
 #else
-	#define TLK_CFG_SUSPEND_ENABLE  (1) //1: enable suspend + wfi module
+#error "config hardware !!!"
 #endif
 
-    #define TLK_SM_LOG_ENABLE     1
+#define VCD_DEFINE_SELECT         VCD_DEFINE_BTBLE_HEADSET
 
-    #define TLK_CFG_N22_VCD_ENABLE                       1
-    #define APP_LOG_EN                    1
-	#define DEBUG_ZHAOWEI_GPIO_ENABLE_LYNX 0
-    #include "vendor/common/default_config.h"
+#define ACL_CENTRAL_MAX_NUM       0 // ACL central maximum number
+#define ACL_PERIPHR_MAX_NUM       1 // ACL central maximum number
+#define BLE_HEADSET_CONTROLLER_EN 1
+
+#if (GET_BLE_CONTROLLER_MODE == BLE_MODE_RECORDING_CARD)
+#define BLE_ACL_SINGLE_RATE_OPTIMIZE 1
+#define ACL_CONN_MAX_RX_OCTETS       251
+#define ACL_PERIPHR_MAX_TX_OCTETS    251
+#endif
+
+/**********************LED DEFINE**************************/
+#define PB5_OUTPUT_ENABLE 1
+#define PB6_OUTPUT_ENABLE 1
+#define PB7_OUTPUT_ENABLE 1
+#define PC0_OUTPUT_ENABLE 1
+
+#ifndef PB5_FUNC
+#define PB5_FUNC AS_GPIO
+#endif
+#ifndef PB6_FUNC
+#define PB6_FUNC AS_GPIO
+#endif
+#ifndef PB7_FUNC
+#define PB7_FUNC AS_GPIO
+#endif
+#ifndef PC0_FUNC
+#define PC0_FUNC AS_GPIO
+#endif
+
+#define LED_GREEN GPIO_PA4
+#define LED_BLUE  GPIO_PB6
+#define LED_RED   GPIO_PB7
+#define LED_WHITE GPIO_PC0
+#if CHIP_TYPE == CHIP_TYPE_TL752X
+#define TLK_CFG_SUSPEND_ENABLE (0) //1: enable suspend + wfi module
+#else
+#define TLK_CFG_SUSPEND_ENABLE (1) //1: enable suspend + wfi module
+#endif
+
+#define TLK_SM_LOG_ENABLE              1
+
+#define TLK_CFG_N22_VCD_ENABLE         1
+#define APP_LOG_EN                     1
+#define DEBUG_ZHAOWEI_GPIO_ENABLE_LYNX 0
+#include "vendor/common/default_config.h"
 
 #endif

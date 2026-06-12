@@ -35,9 +35,9 @@
  */
 static void tlkapp_bt_tpt_stateChgCB(uint8_t state)
 {
-    if(state == TLKMDI_TPSLL_STATE_CHANGE_CB_PAIR){
+    if (state == TLKMDI_TPSLL_STATE_CHANGE_CB_PAIR) {
         tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_SYS, 0, TLKAPP_UI_STATE_PARING);
-    }else if(state == TLKMDI_TPSLL_STATE_CHANGE_CB_CONNECT){
+    } else if (state == TLKMDI_TPSLL_STATE_CHANGE_CB_CONNECT) {
         // 0xFFF0 TPSLL handle
         tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_TPSLL, 0xFFF0, TLKAPP_UI_STATE_CONNECTED);
 
@@ -50,7 +50,7 @@ static void tlkapp_bt_tpt_stateChgCB(uint8_t state)
 
         uint32_t taskID = 0xFFF0 + ((uint32_t)TLKAUD_TYPE_TPH_AUDIO << 16);
         tlkapp_audioScheduler_updateTaskSafe(taskID, info, 0);
-    }else if(state == TLKMDI_TPSLL_STATE_CHANGE_CB_DISCONNECT){
+    } else if (state == TLKMDI_TPSLL_STATE_CHANGE_CB_DISCONNECT) {
         // 0xFFF0 TPSLL handle
         tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_TPSLL, 0xFFF0, TLKAPP_UI_STATE_IDLE);
 
@@ -85,7 +85,7 @@ static void tlkapp_host_tpt_start(void)
  * @param[in]   none.
  * @return      Returns a pointer to the Tpsll TWS module.
  */
-TlkAppHostModule_t* tlkapp_host_tpt_getModule(void)
+TlkAppHostModule_t *tlkapp_host_tpt_getModule(void)
 {
     static const TlkAppHostModuleCfg_t cfgs = {
         .hostType = TLKSYS_MSG_HOST_TYPE_TPT,
@@ -98,5 +98,4 @@ TlkAppHostModule_t* tlkapp_host_tpt_getModule(void)
     };
     return &module;
 }
-#endif 
-
+#endif

@@ -28,7 +28,7 @@
 #include "tlkdrv_i2s_ex_codec_config.h"
 
 #if (MCU_CORE_TYPE == MCU_CORE_TL721X && TLKDRV_CODEC_ICODEC_ENABLE)
-    #include "drivers.h"
+#include "drivers.h"
 
 #ifndef I2S_CODEC_SEL
 #define I2S_CODEC_SEL 0
@@ -55,17 +55,17 @@ typedef struct
 
 typedef struct
 {
-	uint8_t	state;
-	uint8_t	type;
+    uint8_t state;
+    uint8_t type;
     int16_t delayMs;
     int16_t timerOnceMs;
     int16_t resv;
-}tlkdrv_icodec_status_t;
+} tlkdrv_icodec_status_t;
 
-#define CODEC_STAT1_DELAY_US 		1000
-#define CODEC_STAT0_DELAY_US 		25000
-#define CODEC_ADC_STATUS			0x08
-#define CODEC_DAC_STATUS			0x80
+#define CODEC_STAT1_DELAY_US 1000
+#define CODEC_STAT0_DELAY_US 25000
+#define CODEC_ADC_STATUS     0x08
+#define CODEC_DAC_STATUS     0x80
 
 /**
  * @brief Set audio receive write pointer

@@ -337,6 +337,10 @@ _IRESET_ENTRY:
     .org 0x22
 
 _ISTART:
+#if 1
+    j    _ISTART
+/*close retention back code on audio sdk, not support deep retention,reduce ram cost*/
+#else
 #if 0
     // add debug, PB4 output 1
     lui     t0, 0x80140
@@ -574,6 +578,7 @@ _IMAIN_FUNC:
     nop
 _IEND:
     j    _IEND
+#endif
 
 
 .text

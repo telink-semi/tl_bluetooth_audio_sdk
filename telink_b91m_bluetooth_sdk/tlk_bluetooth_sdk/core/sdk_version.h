@@ -51,7 +51,7 @@
 
 // Version : CERTIFICATION_MARK.SOFT_STRUCTURE.Major.Minor Patch
 #define CERTIFICATION_MARK   6
-#define SOFT_STRUCTURE       0
+#define SOFT_STRUCTURE       1
 #define MAJOR_VERSION        0
 #define MINOR_VERSION        0
 #define PATCH_NUM            0
@@ -65,41 +65,41 @@
  * will replace with this macro value.
  */
 #if (MCU_CORE_TYPE == MCU_CORE_B91)
-    #define B91_SDK_VERSION_NUM           CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM               B91_SDK_VERSION_NUM
+#define B91_SDK_VERSION_NUM           CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
+#define SDK_VERSION_NUM               B91_SDK_VERSION_NUM
 
-    #define SDK_VERSION1(sdk_version_num) "$$$B91_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
+#define SDK_VERSION1(sdk_version_num) "$$$B91_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
 #elif (MCU_CORE_TYPE == MCU_CORE_B92)
-    #define B92_SDK_VERSION_NUM           CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM               B92_SDK_VERSION_NUM
+#define B92_SDK_VERSION_NUM           CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
+#define SDK_VERSION_NUM               B92_SDK_VERSION_NUM
 
-    #define SDK_VERSION1(sdk_version_num) "$$$B92_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
+#define SDK_VERSION1(sdk_version_num) "$$$B92_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
 #elif (MCU_CORE_TYPE == MCU_CORE_TL751X)
-    #define TL751X_SDK_VERSION_NUM        CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM               TL751X_SDK_VERSION_NUM
+#define TL751X_SDK_VERSION_NUM        CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
+#define SDK_VERSION_NUM               TL751X_SDK_VERSION_NUM
 
-    #define SDK_VERSION1(sdk_version_num) "$$$TL751X_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
+#define SDK_VERSION1(sdk_version_num) "$$$TL751X_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
 #elif (MCU_CORE_TYPE == MCU_CORE_TL753X)
-    #define TL753X_SDK_VERSION_NUM        CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM               TL753X_SDK_VERSION_NUM
+#define TL753X_SDK_VERSION_NUM        CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
+#define SDK_VERSION_NUM               TL753X_SDK_VERSION_NUM
 
-    #define SDK_VERSION1(sdk_version_num) "$$$TL753X_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
+#define SDK_VERSION1(sdk_version_num) "$$$TL753X_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
 #elif (MCU_CORE_TYPE == MCU_CORE_TL721X)
-    #define TL721X_SDK_VERSION_NUM        CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM               TL721X_SDK_VERSION_NUM
+#define TL721X_SDK_VERSION_NUM        CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
+#define SDK_VERSION_NUM               TL721X_SDK_VERSION_NUM
 
-    #define SDK_VERSION1(sdk_version_num) "$$$TL721X_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
+#define SDK_VERSION1(sdk_version_num) "$$$TL721X_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
 
 #elif (MCU_CORE_TYPE == MCU_CORE_TL322X)
-    #define TL322X_SDK_VERSION_NUM        CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM               TL322X_SDK_VERSION_NUM
+#define TL322X_SDK_VERSION_NUM        CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
+#define SDK_VERSION_NUM               TL322X_SDK_VERSION_NUM
 
-    #define SDK_VERSION1(sdk_version_num) "$$$TL322X_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
+#define SDK_VERSION1(sdk_version_num) "$$$TL322X_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
 #else
-    #define CHIP_SDK_VERSION_NUM        CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
-    #define SDK_VERSION_NUM               CHIP_SDK_VERSION_NUM
+#define CHIP_SDK_VERSION_NUM          CERTIFICATION_MARK.SOFT_STRUCTURE.MAJOR_VERSION.MINOR_VERSION
+#define SDK_VERSION_NUM               CHIP_SDK_VERSION_NUM
 
-    #define SDK_VERSION1(sdk_version_num) "$$$CHIP_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
+#define SDK_VERSION1(sdk_version_num) "$$$CHIP_tlk_bluetooth_audio_sdk_V" #sdk_version_num "$$$"
 #endif
 
 

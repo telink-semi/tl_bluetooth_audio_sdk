@@ -40,7 +40,7 @@ void tlkusb_deInit(uint8_t index);
  * @param[in]   usbID   - the USB ID to set.
  * @returns     TLK_ENONE if successful, -TLK_EPARAM if the index is invalid.
  */
-int  tlkusb_init(uint8_t index, uint16_t usbID);
+int tlkusb_init(uint8_t index, uint16_t usbID);
 
 /**
  * @brief       This function sets the USB module with the specified mode type.

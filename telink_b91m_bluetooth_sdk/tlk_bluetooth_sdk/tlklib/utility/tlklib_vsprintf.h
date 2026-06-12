@@ -41,14 +41,13 @@ int tlklib_snprintf(char *buf, size_t size, const char *fmt, ...);
 #endif
 
 #if TLK_CFG_VSPRINTF_USE_STD_LIB
-    #define tlk_vsnprintf(buf, size, fmt, ap)  vsnprintf((buf), (size), (fmt), (ap))
-    #define tlk_snprintf(buf, size, fmt, ...)  snprintf((buf), (size), (fmt), ##__VA_ARGS__)
-    #define tlk_vsprintf(buf, fmt, ap)         vsprintf((buf), (fmt), (ap))
-    #define tlk_sprintf(buf, size, fmt, ...)   sprintf((buf), (fmt), ##__VA_ARGS__)
+#define tlk_vsnprintf(buf, size, fmt, ap) vsnprintf((buf), (size), (fmt), (ap))
+#define tlk_snprintf(buf, size, fmt, ...) snprintf((buf), (size), (fmt), ##__VA_ARGS__)
+#define tlk_vsprintf(buf, fmt, ap)        vsprintf((buf), (fmt), (ap))
+#define tlk_sprintf(buf, size, fmt, ...)  sprintf((buf), (fmt), ##__VA_ARGS__)
 #else
-    #define tlk_vsnprintf(buf, size, fmt, ap)  tlklib_vsnprintf((buf), (size), (fmt), (ap))
-    #define tlk_snprintf(buf, size, fmt, ...)  tlklib_snprintf((buf), (size), (fmt), ##__VA_ARGS__)
-    #define tlk_vsprintf(buf, fmt, ap)         tlklib_vsprintf((buf), (fmt), (ap))
-    #define tlk_sprintf(buf, size, fmt, ...)   tlklib_sprintf((buf), (fmt), ##__VA_ARGS__)
+#define tlk_vsnprintf(buf, size, fmt, ap) tlklib_vsnprintf((buf), (size), (fmt), (ap))
+#define tlk_snprintf(buf, size, fmt, ...) tlklib_snprintf((buf), (size), (fmt), ##__VA_ARGS__)
+#define tlk_vsprintf(buf, fmt, ap)        tlklib_vsprintf((buf), (fmt), (ap))
+#define tlk_sprintf(buf, size, fmt, ...)  tlklib_sprintf((buf), (fmt), ##__VA_ARGS__)
 #endif
-

@@ -46,7 +46,7 @@
 #include "../render_cap/aics/inc/aicsc.h"
 #include "../render_cap/aics/inc/aicss.h"
 
-#include "../render_cap/mics/inc/mics.h"   
+#include "../render_cap/mics/inc/mics.h"
 #include "../render_cap/mics/inc/micsc.h"
 #include "../render_cap/mics/inc/micss.h"
 

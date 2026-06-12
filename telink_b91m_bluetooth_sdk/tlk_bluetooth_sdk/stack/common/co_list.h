@@ -96,7 +96,7 @@ typedef struct co_list co_list_t;
  ****************************************************************************************
  */
 /// pop a specific element from the list
-#define CO_LIST_POP_ELT(list, elt) co_list_extract(&(list), &(elt->hdr));
+#define CO_LIST_POP_ELT(list, elt) tlk_bt_ctrl_co_list_extract(&(list), &(elt->hdr));
 
 /*
  * FUNCTION DECLARATIONS
@@ -109,7 +109,7 @@ typedef struct co_list co_list_t;
  * @param list           Pointer to the list structure.
  ****************************************************************************************
  */
-void co_list_init(struct co_list *list);
+void tlk_bt_ctrl_co_list_init(struct co_list *list);
 
 /**
  ****************************************************************************************
@@ -122,7 +122,7 @@ void co_list_init(struct co_list *list);
  *
  ****************************************************************************************
  */
-void co_list_pool_init(struct co_list *list, void *pool, size_t elmt_size, uint32_t elmt_cnt);
+void tlk_bt_ctrl_co_list_pool_init(struct co_list *list, void *pool, size_t elmt_size, uint32_t elmt_cnt);
 
 /**
  ****************************************************************************************
@@ -133,7 +133,7 @@ void co_list_pool_init(struct co_list *list, void *pool, size_t elmt_size, uint3
  *
  ****************************************************************************************
  */
-void co_list_push_back(struct co_list *list, struct co_list_hdr *list_hdr);
+void tlk_bt_ctrl_co_list_push_back(struct co_list *list, struct co_list_hdr *list_hdr);
 
 /**
  ****************************************************************************************
@@ -146,7 +146,7 @@ void co_list_push_back(struct co_list *list, struct co_list_hdr *list_hdr);
  * @param last_hdr       Pointer to the last element to append
  ****************************************************************************************
  */
-void co_list_push_back_sublist(struct co_list *list, struct co_list_hdr *first_hdr, struct co_list_hdr *last_hdr);
+void tlk_bt_ctrl_co_list_push_back_sublist(struct co_list *list, struct co_list_hdr *first_hdr, struct co_list_hdr *last_hdr);
 
 /**
  ****************************************************************************************
@@ -156,7 +156,7 @@ void co_list_push_back_sublist(struct co_list *list, struct co_list_hdr *first_h
  * @param list_hdr       Pointer to the header to add at the beginning of the list
  ****************************************************************************************
  */
-void co_list_push_front(struct co_list *list, struct co_list_hdr *list_hdr);
+void tlk_bt_ctrl_co_list_push_front(struct co_list *list, struct co_list_hdr *list_hdr);
 
 /**
  ****************************************************************************************
@@ -165,7 +165,7 @@ void co_list_push_front(struct co_list *list, struct co_list_hdr *list_hdr);
  * @return The pointer to the element extracted, and NULL if the list is empty.
  ****************************************************************************************
  */
-struct co_list_hdr *co_list_pop_front(struct co_list *list);
+struct co_list_hdr *tlk_bt_ctrl_co_list_pop_front(struct co_list *list);
 
 /**
  ****************************************************************************************
@@ -177,7 +177,7 @@ struct co_list_hdr *co_list_pop_front(struct co_list *list);
  * @return true if the element is found in the list, false otherwise
  ****************************************************************************************
  */
-bool co_list_extract(struct co_list *list, struct co_list_hdr *list_hdr);
+bool tlk_bt_ctrl_co_list_extract(struct co_list *list, struct co_list_hdr *list_hdr);
 
 /**
  ****************************************************************************************
@@ -190,7 +190,7 @@ bool co_list_extract(struct co_list *list, struct co_list_hdr *list_hdr);
  * @param elt_to_rem_hdr Pointer to the element to be extracted
  ****************************************************************************************
  */
-void co_list_extract_after(struct co_list *list, struct co_list_hdr *elt_ref_hdr, struct co_list_hdr *elt_to_rem_hdr);
+void tlk_bt_ctrl_co_list_extract_after(struct co_list *list, struct co_list_hdr *elt_ref_hdr, struct co_list_hdr *elt_to_rem_hdr);
 
 /**
  ****************************************************************************************
@@ -203,7 +203,7 @@ void co_list_extract_after(struct co_list *list, struct co_list_hdr *elt_ref_hdr
  * @param[in]  last_hdr       Pointer to the last element to extract ()
  ****************************************************************************************
  */
-void co_list_extract_sublist(struct co_list *list, struct co_list_hdr *ref_hdr, struct co_list_hdr *last_hdr);
+void tlk_bt_ctrl_co_list_extract_sublist(struct co_list *list, struct co_list_hdr *ref_hdr, struct co_list_hdr *last_hdr);
 
 /**
  ****************************************************************************************
@@ -215,7 +215,7 @@ void co_list_extract_sublist(struct co_list *list, struct co_list_hdr *ref_hdr, 
  * @return true if the element is found in the list, false otherwise
  ****************************************************************************************
  */
-bool co_list_find(struct co_list *list, struct co_list_hdr *list_hdr);
+bool tlk_bt_ctrl_co_list_find(struct co_list *list, struct co_list_hdr *list_hdr);
 
 /**
  ****************************************************************************************
@@ -228,7 +228,7 @@ bool co_list_find(struct co_list *list, struct co_list_hdr *list_hdr);
  * @param list2    Pointer to the list to append to list1
  ****************************************************************************************
  */
-void co_list_merge(struct co_list *list1, struct co_list *list2);
+void tlk_bt_ctrl_co_list_merge(struct co_list *list1, struct co_list *list2);
 
 /**
  ****************************************************************************************
@@ -241,7 +241,7 @@ void co_list_merge(struct co_list *list1, struct co_list *list2);
  * @return true if the element is found in the list, false otherwise
  ****************************************************************************************
  */
-void co_list_insert_before(struct co_list *list, struct co_list_hdr *elt_ref_hdr, struct co_list_hdr *elt_to_add_hdr);
+void tlk_bt_ctrl_co_list_insert_before(struct co_list *list, struct co_list_hdr *elt_ref_hdr, struct co_list_hdr *elt_to_add_hdr);
 
 /**
  ****************************************************************************************
@@ -254,7 +254,7 @@ void co_list_insert_before(struct co_list *list, struct co_list_hdr *elt_ref_hdr
  * @return true if the element is found in the list, false otherwise
  ****************************************************************************************
  */
-void co_list_insert_after(struct co_list *list, struct co_list_hdr *elt_ref_hdr, struct co_list_hdr *elt_to_add_hdr);
+void tlk_bt_ctrl_co_list_insert_after(struct co_list *list, struct co_list_hdr *elt_ref_hdr, struct co_list_hdr *elt_to_add_hdr);
 
 
 /**
@@ -266,7 +266,7 @@ void co_list_insert_after(struct co_list *list, struct co_list_hdr *elt_ref_hdr,
  * @return Number of elements present in the list
  ****************************************************************************************
  */
-uint16_t co_list_size(struct co_list *list);
+uint16_t tlk_bt_ctrl_co_list_size(struct co_list *list);
 
 /**
  ****************************************************************************************

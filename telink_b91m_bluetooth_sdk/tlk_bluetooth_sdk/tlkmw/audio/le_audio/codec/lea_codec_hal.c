@@ -31,7 +31,7 @@
 
 #if (TLK_MW_LE_AUDIO_ENABLE)
 
-#if (LE_AUDIO_CODEC_INPUT_TYPE == LE_AUDIO_CODEC_TYPE_CODEC)
+#if (LE_AUDIO_CODEC_INPUT_TYPE == LE_AUDIO_CODEC_TYPE_CODEC || LE_AUDIO_CODEC_INPUT_TYPE == LE_AUDIO_CODEC_MIDDLE_BUF)
 /**
  * @brief       Read input value from codec.
  * @param[out]  p_buffer    - pointer to the buffer to store the read data.
@@ -45,14 +45,14 @@ bool tlk_lea_codec_read_input_value(uint8_t *p_buffer, uint16_t buffer_len)
     }
 
 #if LEA_CODEC_INPUT_MODE == LEA_CODEC_MODE_LEFT_ONLY
-    int16_t *p_data = (int16_t *) p_buffer;
+    int16_t *p_data = (int16_t *)p_buffer;
     for (int i = 0; i < buffer_len / 4; i++) {
         p_data[2 * i + 1] = p_data[2 * i];
     }
 #endif
 
 #if LEA_CODEC_INPUT_MODE == LEA_CODEC_MODE_RIGHT_ONLY
-    int16_t *p_data = (int16_t *) p_buffer;
+    int16_t *p_data = (int16_t *)p_buffer;
     for (int i = 0; i < buffer_len / 2; i++) {
         p_data[2 * i] = p_data[2 * i + 1];
     }
@@ -75,8 +75,8 @@ bool tlk_lea_codec_read_input_value(uint8_t *p_buffer, uint16_t buffer_len)
  */
 void tlk_lea_codec_write_output_value(uint8_t *p_buffer, uint16_t buffer_len)
 {
-    tlkdrv_codec_fillSpkBuff((uint8_t *) p_buffer, buffer_len);
+    tlkdrv_codec_fillSpkBuff((uint8_t *)p_buffer, buffer_len);
 }
 #endif
 
-#endif      // TLK_MW_LE_AUDIO_ENABLE
+#endif // TLK_MW_LE_AUDIO_ENABLE

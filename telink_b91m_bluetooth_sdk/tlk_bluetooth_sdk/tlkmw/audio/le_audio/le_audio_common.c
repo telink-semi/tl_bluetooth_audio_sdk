@@ -42,6 +42,12 @@
 
 #include "le_audio_common.h"
 
+#if TLKADU_MIDBUF_ENABLE
+#include "vendor/GameSir_Xiaoji/audio_mw/tlkaud_audio_mw.h"
+#endif
+
+#include "tlklib/usb/uac/tlkusb_uac.h"
+
 #if (TLK_MW_LE_AUDIO_ENABLE)
 
 #define LEA_FIX_TIMESTAMP_ERROR      1
@@ -67,7 +73,10 @@ struct lea_config_info
 static struct lea_config_info s_le_audio_input;
 
 static struct lea_config_info s_le_audio_output;
-
+#if TLKAUD_LEA_PLAY_FLOW_CTRL_EN
+uint32_t lea_tmr_ideal_tick = 0;
+bool     render_sync_flag   = false;
+#endif
 /**
  * @brief       Reset input configuration cache and mark ISO handles invalid.
  * @return      none.
@@ -613,7 +622,9 @@ static struct lea_output_audio_pkt_node *lea_insert_output_audio_pkt(uint32_t re
         SLIST_INSERT_HEAD(&output_pkt_header, pNewNode, next);
         // tlkapi_printf(1, "insert first packet");
         // tlkapi_printf(1, "insert first packet next time is %x %x %x", render_point, clock_time(), render_point - clock_time());
+#if !TLKAUD_LEA_PLAY_FLOW_CTRL_EN
         tlkmdi_audio_task_set_next_irq(next_irq_us);
+#endif
         new_node_used = true;
     } else {
         pNode                                   = SLIST_FIRST(&output_pkt_header);
@@ -748,6 +759,7 @@ static void lea_output_receive_sdu_packet(uint16_t conn_handle, uint32_t timesta
  * @brief       Program audio timer IRQ based on head packet render time.
  * @return      none.
  */
+#if !TLKAUD_LEA_PLAY_FLOW_CTRL_EN
 static void lea_output_set_next_irq(void)
 {
     struct lea_output_audio_pkt_node *pNode = SLIST_FIRST(&output_pkt_header);
@@ -762,13 +774,76 @@ static void lea_output_set_next_irq(void)
         }
     }
 }
-
+#endif
 /**
  * @brief       Audio timer interrupt handler that renders queued PCM frames.
  * @return      none.
  */
 void lea_output_timer_irq(void)
 {
+#if TLKAUD_LEA_PLAY_FLOW_CTRL_EN
+    uint32_t tdiff_us, tdiff_tick;
+    tlkmdi_audio_stop_timer();
+
+    uint32_t tick_cur = clock_time();
+    if (tick_cur > lea_tmr_ideal_tick) {
+        tdiff_tick = tick_cur - lea_tmr_ideal_tick;
+    } else {
+        tdiff_tick = 0xffffffff - lea_tmr_ideal_tick + tick_cur;
+    }
+    tdiff_us = LEA_TRANS_PLAY_DATA_INTVAL - tdiff_tick / SYSTEM_TIMER_TICK_1US;
+    lea_tmr_ideal_tick += LEA_TRANS_PLAY_DATA_INTVAL * SYSTEM_TIMER_TICK_1US;
+
+    if (tdiff_us > LEA_TRANS_PLAY_DATA_INTVAL * 2) {
+        tdiff_us           = LEA_TRANS_PLAY_DATA_INTVAL;
+        lea_tmr_ideal_tick = tick_cur + LEA_TRANS_PLAY_DATA_INTVAL * SYSTEM_TIMER_TICK_1US;
+    }
+
+    tlkmdi_audio_task_set_next_irq(tdiff_us);
+
+    if (!SLIST_EMPTY(&output_pkt_header) && tlkaud_midbuf_get_spk_idlelen() >= TLKADU_MIDBUF_SPK_LEN / 2) {
+        struct lea_output_audio_pkt_node *pNode = SLIST_FIRST(&output_pkt_header);
+        if (pNode == NULL) {
+            return;
+        }
+        if (!render_sync_flag) {
+            uint32_t tick_diff   = pNode->render_point - clock_time();
+            uint16_t sample_diff = tick_diff / 500; //1sample = 500ticks in 48kHz
+            if (sample_diff > (TLKADU_MIDBUF_SPK_LEN - s_le_audio_output.sample_count)) {
+                tlkapi_printf(APP_LOG_EN, "render sync fail %d", sample_diff);
+                return;
+            }
+            tlkmdi_midbuf_sync_spk(sample_diff);
+            render_sync_flag = true;
+            tlkapi_printf(APP_LOG_EN, "render sync succ %d", sample_diff);
+        }
+        int16_t *left_data  = lea_codec_get_mute_buffer();
+        int16_t *right_data = lea_codec_get_mute_buffer();
+        int      sample_num = s_le_audio_output.sample_count;
+
+        if (pNode->location & LEA_LOCATION_FRONT_LEFT) {
+            left_data = pNode->left_data;
+        }
+
+        if (pNode->location & LEA_LOCATION_FRONT_RIGHT) {
+            right_data = pNode->right_data;
+        }
+
+        lea_codec_output_set_audio_data(left_data, right_data, sample_num);
+
+        lea_free_output_pkt_header();
+    }
+
+    tlkaud_uac_spk_data_downlink(LEA_TRANS_PLAY_DATA_INTVAL / 1000);
+
+    // if (tlkaud_get_audio_mode() & AUDIO_UAC_MIC) {
+    //     uint32_t sr = tlkusb_uac_get_iso_in_SampleRate();
+    //     uint16_t smp_len = (sr / 1000) * (LEA_TRANS_PLAY_DATA_INTVAL / 1000);
+    //     tlkaud_uac_mic_data_uplink(smp_len, sr);
+    // }
+
+
+#else
     struct lea_output_audio_pkt_node *pNode = SLIST_FIRST(&output_pkt_header);
 
     if (pNode == NULL) {
@@ -793,6 +868,7 @@ void lea_output_timer_irq(void)
     lea_free_output_pkt_header();
 
     lea_output_set_next_irq();
+#endif
 }
 
 #endif //#if (TLKAPI_LE_AUDIO_COMMON_ENABLE)

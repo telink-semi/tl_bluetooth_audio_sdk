@@ -42,14 +42,12 @@
 
 typedef enum
 {
-    BTH_ACL_ATTR_NONE         = 0x00,
-    BTH_ACL_ATTR_CONN         = 0x01,
-    BTH_ACL_ATTR_PAIR_DONE    = 0x02,
-    BTH_ACL_ATTR_AUTH_DONE    = 0x04,
-    BTH_ACL_ATTR_ENC_DONE     = 0x08,
-    BTH_ACL_ATTR_CONN_EVT     = 0x80,
-    BTH_ACL_ATTR_LK_NOTI_DONE = 0x10,
-    BTH_ACL_ATTR_ALLOW_SNIFF  = 0x20,
+    BTH_ACL_ATTR_NONE        = 0x00,
+    BTH_ACL_ATTR_CONN        = 0x01,
+    BTH_ACL_ATTR_PAIR_DONE   = 0x02,
+    BTH_ACL_ATTR_AUTH_DONE   = 0x04,
+    BTH_ACL_ATTR_ENC_DONE    = 0x08,
+    BTH_ACL_ATTR_ALLOW_SNIFF = 0x10,
 } BTH_ACL_ATTRS_ENUM;
 
 typedef enum
@@ -87,14 +85,15 @@ typedef enum
 
 typedef enum
 {
-    BTH_ACL_OTH_BUSY_NONE              = 0x00,
-    BTH_ACL_OTH_BUSY_SEND_INFO_REQ     = 0x01,
-    BTH_ACL_OTH_BUSY_SEND_INFO_RSP     = 0x02,
-    BTH_ACL_OTH_BUSY_SEND_SNIFF_REQ    = 0x04,
-    BTH_ACL_OTH_BUSY_SEND_UNSNIFF_REQ  = 0x08,
-    BTH_ACL_OTH_BUSY_ENTER_SNIFF       = 0x10,
-    BTH_ACL_OTH_BUSY_LEAVE_SNIFF       = 0x20,
-    BTH_ACL_OTH_BUSY_SEND_GET_NAME_REQ = 0x40,
+    BTH_ACL_OTH_BUSY_NONE                      = 0x00,
+    BTH_ACL_OTH_BUSY_SEND_INFO_REQ             = 0x01,
+    BTH_ACL_OTH_BUSY_SEND_INFO_RSP             = 0x02,
+    BTH_ACL_OTH_BUSY_SEND_SNIFF_REQ            = 0x04,
+    BTH_ACL_OTH_BUSY_SEND_UNSNIFF_REQ          = 0x08,
+    BTH_ACL_OTH_BUSY_ENTER_SNIFF               = 0x10,
+    BTH_ACL_OTH_BUSY_LEAVE_SNIFF               = 0x20,
+    BTH_ACL_OTH_BUSY_SEND_GET_NAME_REQ         = 0x40,
+    BTH_ACL_OTH_BUSY_SEND_INFO_REQ_FIX_CHANNEL = 0x80,
 } BTH_ACL_OTH_BUSYS_ENUM;
 
 typedef enum
@@ -103,16 +102,6 @@ typedef enum
     BTH_ACL_SNIFF_BUSY_SCO  = 0x01,
     BTH_ACL_SNIFF_BUSY_HOST = 0x02,
 } BTH_ACL_SNIFF_BUSYS_ENUM;
-
-typedef void (*bth_headset_enable_bt_active_callback_t)(void);
-extern bth_headset_enable_bt_active_callback_t bth_headset_enable_bt_active_cb;
-
-__INLINE void bth_headset_enable_bt_active_cb_register(bth_headset_enable_bt_active_callback_t callback)
-{
-    if (callback) {
-        bth_headset_enable_bt_active_cb = callback;
-    }
-}
 
 /******************************************************************************
  * Function: bth_acl_setWaitTimeout
@@ -139,7 +128,7 @@ int bth_acl_setInitRole(uint8_t btaddr[6], uint8_t initRole);
  *         @pinCode[IN]--The pin code.
  * Return: TLK_ENONE is set success, others means failure.
  *******************************************************************************/
-int bth_acl_setPinCode(uint8_t btaddr[6], uint8_t pinCode[4]);
+int bth_acl_setPinCode(uint8_t btaddr[6], uint8_t *p_pincode, uint8_t pin_len);
 
 /******************************************************************************
  * Function: bth_acl_setLinkKey
@@ -199,16 +188,6 @@ void bth_acl_destroy(uint16_t aclHandle);
  * Return: TLK_ENONE is set success, others means failure.
  *******************************************************************************/
 int bth_acl_connectCancel(uint8_t btaddr[6]);
-
-/******************************************************************************
- * Function: bth_acl_disconnByAddr
- * Descript: This interface be used to disconnect the acl link which
- *           specify by bt address.
- * Params:
- *     @btaddr[IN]--The peer device address.
- * Return: TLK_ENONE is set success, others means failure.
- *******************************************************************************/
-int bth_acl_disconnByAddr(uint8_t btaddr[6]);
 
 /******************************************************************************
  * Function: bth_acl_enableSniff
@@ -477,7 +456,12 @@ void bth_acl_sendGetNameReq(uint16_t handle);
 
 int bth_acl_setPeerExtFeature(uint16_t handle, uint32_t extFeature);
 int bth_acl_getPeerExtFeature(uint16_t handle, uint32_t *pExtFeature);
-int bth_acl_acl_establish(uint8_t *p, int len);
 
-void bth_acl_modifyLinkkeyRequestFunc(int (*callback)(uint8_t *, uint8_t *));
+int bth_acl_setPeerFixChannelSupport(uint16_t handle, uint8_t fix_channel);
+
+uint8_t bth_acl_getPeerFixChannelSupport(uint16_t handle);
+
+uint8_t bth_acl_get_current_role(uint16_t acl_handle);
+int     bth_acl_sendInfoReqWithFixChannel(uint16_t handle);
+
 #endif // BTH_ACL_H

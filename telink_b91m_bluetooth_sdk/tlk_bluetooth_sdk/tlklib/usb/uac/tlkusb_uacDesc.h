@@ -24,6 +24,8 @@
 #ifndef TLKUSB_AUDIO_DESC_H
 #define TLKUSB_AUDIO_DESC_H
 
+#include "tlklib/usb/tlkusb_struct.h"
+
 #if (TLK_USB_UAC_ENABLE)
 
 
@@ -157,7 +159,11 @@ typedef struct
 #endif
 } __attribute__((packed)) tlkusb_uacAudConfigDesc_t;
 
-
+void tlkusb_uacModeDesc_set_devDescFunc(void *desc);
+void tlkusb_uacModeDesc_set_configDescFunc(void *desc);
+void tlkusb_uacModeDesc_set_configDescLenFunc(void *desc);
+void tlkusb_uacModeDesc_set_IntfDescFunc(void *desc);
+void tlkusb_uacModeDesc_set_IntfDescLenFunc(void *desc);
 #endif // #if (TLK_USB_UAC_ENABLE)
 
 #endif // TLKUSB_AUDIO_DESC_H

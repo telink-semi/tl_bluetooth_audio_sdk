@@ -36,3 +36,10 @@ void tlkapp_host_bt_taskInitCompletedHook(void);
  * @returns   None.
  */
 void tlkapp_host_bt_taskStartHook(void);
+
+/**
+ * @brief     Provides a hook function to select the handle that is used to trigger siri(assistant).
+ * @param[in] None.
+ * @returns   bt handle that is used to trigger siri(assistant).
+ */
+uint16_t tlkapp_host_bt_selectHandleToTriggerSiriHook(void);

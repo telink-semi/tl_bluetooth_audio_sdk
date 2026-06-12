@@ -25,7 +25,9 @@
 
 enum
 {
-    SPI_CLK_20MHZ = 0,
+    SPI_CLK_40MHZ = 0,
+    SPI_CLK_30MHZ,
+    SPI_CLK_20MHZ,
     SPI_CLK_15MHZ,
     SPI_CLK_10MHZ,
     SPI_CLK_4MHZ,
@@ -62,7 +64,7 @@ void hal_spi_master_byte_trans(uint8_t w, uint8_t *dr);
  * @param[in]   len    - length of data to write.
  * @return      Returns 1 on success, 0 on failure.
  */
-int  hal_spi_master_write(uint8_t *dat, int len);
+int hal_spi_master_write(uint8_t *dat, int len);
 
 /**
  * @brief       This function reads data via SPI master.
@@ -70,14 +72,29 @@ int  hal_spi_master_write(uint8_t *dat, int len);
  * @param[in]   len    - length of data to read.
  * @return      Returns 1 on success, 0 on failure.
  */
-int  hal_spi_master_read(uint8_t *dat, int len);
+int hal_spi_master_read(uint8_t *dat, int len);
 
 /**
  * @brief       This function sets the SPI master clock speed.
  * @param[in]   is_low_speed    - speed setting (use SPI_CLK_* enums).
  * @return      Returns 1 on success.
  */
-int  hal_spi_master_clk_set(int is_low_speed);
+int hal_spi_master_clk_set(int is_low_speed);
+
+/**
+ * @brief       This function sets the SPI master dual mode enable/disable.
+ * @param[in]   en    - enable/disable.
+ * @return      none.
+ */
+void hal_spi_master_dual_mode_en(uint8_t en);
+
+/**
+ * @brief       This function sets the SPI master quad mode enable/disable.
+ * @param[in]   en    - enable/disable.
+ * @param[in]   io23_level -io2 and io3 level when quad mode disable.
+ * @return      none.
+ */
+void hal_spi_master_quad_mode_en(uint8_t en, uint8_t io23_level);
 
 /**
  * @brief       This function initializes the SPI master.
@@ -85,3 +102,10 @@ int  hal_spi_master_clk_set(int is_low_speed);
  * @return      none.
  */
 void hal_spi_master_init(void);
+
+/**
+ * @brief       This function deinitializes the SPI master.
+ * @param[in]   none.
+ * @return      none.
+ */
+void hal_spi_master_deinit(void);

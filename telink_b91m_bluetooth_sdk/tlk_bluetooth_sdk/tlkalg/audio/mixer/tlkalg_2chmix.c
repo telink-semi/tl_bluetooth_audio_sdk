@@ -24,7 +24,7 @@
 #include "tl_common.h"
 #include "tlkapi/tlkapi.h"
 #include "tlkalg/audio/mixer/tlkalg_2chmix.h"
- 
+
 /**
  * @brief   This function performs a downmix of two audio channels into one.
  * @param[in]   pLeft   - Pointer to the start of the left channel audio data.

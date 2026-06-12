@@ -28,4 +28,4 @@
  * @param[in]   none.
  * @return      Returns a pointer to the Tpsll Mesh Dongle module.
  */
-TlkAppHostModule_t* tlkapp_host_tpmd_getModule(void);
+TlkAppHostModule_t *tlkapp_host_tpmd_getModule(void);

@@ -36,13 +36,12 @@
 #include "tlkmw/audio/a2dp_to_bis/tlkmdi_a2dp_to_bis.h"
 #include "tlkmw/audio/a2dp_to_bis/tlkmdi_a2dp_to_bis_le_music.h"
 
-#define EXT_ADV_SID               8
+#define EXT_ADV_SID              8
 
-#define EXT_ADV_INTERVAL          (60) //60ms  or 120ms
+#define EXT_ADV_INTERVAL         (60) //60ms  or 120ms
 
-#define BIS_SOURCE_COMPLETE_NAME  "A2DP to BIS Demo"
+#define BIS_SOURCE_COMPLETE_NAME "A2DP to BIS Demo"
 
-#define SOURCE_PRESENTATION_DELAY 40000 //20ms    presentation delay, unit is 1us.
 #if MCU_CORE_TL752X_TEMP
 #define SOURCE_TRANSMIT_LATENCY 3 // bis transmit delay, unit is sdu interval(7.5ms or 10ms).
 #else
@@ -232,7 +231,9 @@ static void app_ble_big_create_callback(uint8_t status, struct ble_host_ble_host
         };
         lea_a2dp_to_bis_init(&bis_config);
 #endif
-
+#if (MCU_DUAL_CORE_ENABLE)
+        tlkmdi_a2dp_to_bis_set_total_delay(param->sync_delay + SOURCE_PRESENTATION_DELAY);
+#endif
         // blc_ll_setBisSduSplitIntoPduStrategy(BIS_SDU_2_PDU_STRATEGY1);
         // blc_ll_regBigBcstGetSduRefApCallback(big_bcst_1st_sdu_ref_ap_callback);
     }

@@ -59,28 +59,30 @@ enum tpsll_hci_opcode
     TPSLL_HCI_START_HEADSET_CONNECTION_SETUP_OPCODE = 0x0016,
     TPSLL_HCI_HEADSET_CUR_IS_LEFT_OPCODE            = 0x0017,
 
-    TPSLL_HCI_TWS_WRITE_PROFILE_SYNC_INFO_OPCODE    = 0x0018,
-    TPSLL_HCI_TWS_READ_PROFILE_SYNC_INFO_OPCODE     = 0x0019,
-    TPSLL_HCI_TWS_SEND_LMP_DATA_OPCODE              = 0x001A,
-    TPSLL_HCI_TWS_SEND_ACL_DATA_OPCODE              = 0x001B,
-    TPSLL_HCI_TWS_READ_LINK_INFO_OPCODE             = 0x001C,
-    TPSLL_HCI_TWS_SET_SINGLE_ROLE_OPCODE            = 0x001D,
-    TPSLL_HCI_TWS_WRITE_AC_CHNID_OPCODE             = 0x001E,
-    TPSLL_HCI_TWS_START_HANDOVER_OPCODE             = 0x001F,
-    TPSLL_HCI_TWS_START_HANDOVER_REQ_OPCODE         = 0x0020,
-    TPSLL_HCI_TWS_WRITE_HANDOVER_INFO_OPCODE        = 0x0021,
-    TPSLL_HCI_TWS_REQUEST_SYNC_HOST_TIMER           = 0x0022,
+    TPSLL_HCI_TWS_WRITE_PROFILE_SYNC_INFO_OPCODE = 0x0018,
+    TPSLL_HCI_TWS_READ_PROFILE_SYNC_INFO_OPCODE  = 0x0019,
+    TPSLL_HCI_TWS_SEND_LMP_DATA_OPCODE           = 0x001A,
+    TPSLL_HCI_TWS_SEND_ACL_DATA_OPCODE           = 0x001B,
+    TPSLL_HCI_TWS_READ_LINK_INFO_OPCODE          = 0x001C,
+    TPSLL_HCI_TWS_SET_SINGLE_ROLE_OPCODE         = 0x001D,
+    TPSLL_HCI_TWS_WRITE_AC_CHNID_OPCODE          = 0x001E,
+    TPSLL_HCI_TWS_START_HANDOVER_OPCODE          = 0x001F,
+    TPSLL_HCI_TWS_START_HANDOVER_REQ_OPCODE      = 0x0020,
+    TPSLL_HCI_TWS_WRITE_HANDOVER_INFO_OPCODE     = 0x0021,
+    TPSLL_HCI_TWS_REQUEST_SYNC_HOST_TIMER        = 0x0022,
 
-	TPSLL_HCI_START_TPSLL_TASK           		    = 0x0023,
-    TPSLL_HCI_SET_HEADSET_LE_MODE_OPCODE            = 0x0024,
-    TPSLL_HCI_CLEAR_HEADSET_LE_MODE_OPCODE          = 0x0025,
-	TPSLL_HCI_READ_HEADSET_LE_MODE_OPCODE           = 0x0026,
-    TPSLL_HCI_TX_POWER_CONTROL_OPCODE               = 0x0027,
-    TPSLL_HCI_SNIFF_REQUEST_OPCODE                  = 0x0028,
-    
+    TPSLL_HCI_START_TPSLL_TASK             = 0x0023,
+    TPSLL_HCI_SET_HEADSET_LE_MODE_OPCODE   = 0x0024,
+    TPSLL_HCI_CLEAR_HEADSET_LE_MODE_OPCODE = 0x0025,
+    TPSLL_HCI_READ_HEADSET_LE_MODE_OPCODE  = 0x0026,
+    TPSLL_HCI_TX_POWER_CONTROL_OPCODE      = 0x0027,
+    TPSLL_HCI_SNIFF_REQUEST_OPCODE         = 0x0028,
+
     //for mesh_audio_dongle
-	TPSLL_HCI_DONGLE_SCO_SETUP                      = 0x0029,
-    TPSLL_HCI_DONGLE_EXIT_SCO_SETUP                 = 0x0030,
+    TPSLL_HCI_DONGLE_SCO_SETUP      = 0x0029,
+    TPSLL_HCI_DONGLE_EXIT_SCO_SETUP = 0x0030,
+
+    TPSLL_HCI_DONGLE_SET_OTA_STATUS = 0x0031,
 };
 
 /******************************************************************************
@@ -416,6 +418,15 @@ int tpsll_hci_startTpsllTaskCmd(uint8_t isLeft, void *futureUse);
 int tpsll_hci_setPower_Control(uint8_t obj, uint8_t pwr_opcode);
 
 /******************************************************************************
+ * Function: tpsll_hci_setPower_index
+ * Descript: use to control local tx power or remote device power.
+ * Params:
+ *       @pwr_opcode[IN]--power index , set power level index from host, match enum "rf_power_level_index_e"
+ * Return: TLK_ENONE is success, other value is failure.
+ *******************************************************************************/
+int tpsll_hci_setPower_Index(uint8_t power_index);
+
+/******************************************************************************
  * Function: tpsll_hci_sniff_Request
  * Descript: use to enter sniff mode request.
  * Params:
@@ -426,5 +437,7 @@ int tpsll_hci_sniff_Request(uint8_t request_type);
 
 int tpsll_hci_send_start_dongle_sco_setup(uint8_t audio_mode);
 int tpsll_hci_send_exit_dongle_sco(void);
+
+int tpsll_hci_set_dongle_ota_status(uint8_t is_ota_running);
 #endif
 #endif

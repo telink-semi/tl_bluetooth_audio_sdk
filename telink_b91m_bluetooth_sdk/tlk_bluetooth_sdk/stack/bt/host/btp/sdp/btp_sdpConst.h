@@ -54,7 +54,7 @@
 #define BTP_SDP_A2DP_SRC_HANDLE     0x00100017
 #define BTP_SDP_A2DP_SNK_HANDLE     0x00100018
 #define BTP_SDP_ATT_HANDLE          0x00100019
-#define BTP_SDP_PBAP_PCE_HANDLE     0x0010001A  
+#define BTP_SDP_PBAP_PCE_HANDLE     0x0010001A
 #define BTP_SDP_PBAP_PSE_HANDLE     0x0010001B
 #define BTP_SDP_MICS_HANDLE         0x0010101C
 #define BTP_SDP_MCS_HANDLE          0x0010101D
@@ -65,24 +65,24 @@
 /*
  * macro used in sdp database
  */
-#define BTP_SDP_HEADSET_VERSION    0x0100
-#define BTP_SDP_OPP_PROTOCOL_VERSION    0x0100
-#define BTP_SDP_FTP_PROTOCOL_VERSION    0x0100
-#define BTP_SDP_DUN_PROTOCOL_VERSION    0x0100
-#define BTP_SDP_A2DP_PROTOCOL_VERSION   0x0103
-#define BTP_SDP_AVRCP_PROTOCOL_VERSION  0x0104
-#define BTP_SDP_PNP_PROTOCOL_VERSION    0x0100
+#define BTP_SDP_HEADSET_VERSION        0x0100
+#define BTP_SDP_OPP_PROTOCOL_VERSION   0x0100
+#define BTP_SDP_FTP_PROTOCOL_VERSION   0x0100
+#define BTP_SDP_DUN_PROTOCOL_VERSION   0x0100
+#define BTP_SDP_A2DP_PROTOCOL_VERSION  0x0103
+#define BTP_SDP_AVRCP_PROTOCOL_VERSION 0x0104
+#define BTP_SDP_PNP_PROTOCOL_VERSION   0x0100
 
-#define BTP_SDP_HFP_PROFILE_VERSION     0x0108
-#define BTP_SDP_OPP_PROFILE_VERSION     0x0100
-#define BTP_SDP_FTP_PROFILE_VERSION     0x0100
-#define BTP_SDP_DUN_PROFILE_VERSION     0x0100
-#define BTP_SDP_A2DP_PROFILE_ERSION     0x0103
-#define BTP_SDP_AVRCP_PROFILE_VERSION   0x0106
-#define BTP_SDP_PNP_PROFILE_VERSION     0x0100
+#define BTP_SDP_HFP_PROFILE_VERSION    0x0108
+#define BTP_SDP_OPP_PROFILE_VERSION    0x0100
+#define BTP_SDP_FTP_PROFILE_VERSION    0x0100
+#define BTP_SDP_DUN_PROFILE_VERSION    0x0100
+#define BTP_SDP_A2DP_PROFILE_ERSION    0x0103
+#define BTP_SDP_AVRCP_PROFILE_VERSION  0x0106
+#define BTP_SDP_PNP_PROFILE_VERSION    0x0100
 
 
-#define BTP_SDP_SRV_MAX_NUMB       16
+#define BTP_SDP_SRV_MAX_NUMB           16
 
 /*
  * Possible values for attribute-id are listed below.
@@ -245,19 +245,19 @@ typedef enum
 
 typedef struct
 {
-    uint16_t  uuid;
-    uint16_t  dtype; // Refer to BTP_SDP_DTYPE_ENUM
-    uint16_t  dsize; // Refer to BTP_SDP_DSIZE_ENUM
-    uint16_t  resv2byte;
-    uint32_t  flag;
-    uint32_t  value;
+    uint16_t uuid;
+    uint16_t dtype; // Refer to BTP_SDP_DTYPE_ENUM
+    uint16_t dsize; // Refer to BTP_SDP_DSIZE_ENUM
+    uint16_t resv2byte;
+    uint32_t flag;
+    uint32_t value;
     uint8_t *pValue;
 } btp_sdp_serviceItem_t;
 
 typedef struct
 {
-    uint32_t                 handle;
-    uint32_t                 count;
+    uint32_t               handle;
+    uint32_t               count;
     btp_sdp_serviceItem_t *pItem;
 } btp_sdp_serviceList_t;
 

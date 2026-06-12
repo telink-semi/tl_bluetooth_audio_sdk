@@ -26,11 +26,11 @@
 
 #include "tl_common.h"
 
-#if(MCU_CORE_TL752X_TEMP)
-extern signed int   sin_48k_stereo_24bit[96] __attribute__((aligned(4)));
+#if (MCU_CORE_TL752X_TEMP)
+extern signed int sin_48k_stereo_24bit[96] __attribute__((aligned(4)));
 #endif
 
-    #if (TLK_DBG_AUDIO_ENABLE)
+#if (TLK_DBG_AUDIO_ENABLE)
 extern signed short sin_48k_stereo[] __attribute__((aligned(4)));
 extern signed short sin_48k_mono_d1[] __attribute__((aligned(4)));
 extern signed short sin_48k_mono_d2[] __attribute__((aligned(4)));
@@ -41,7 +41,7 @@ extern signed short sin_16k_mono[16];
 extern signed short sin_16k_stereo[32];
 extern int          array_count;
 
-    #endif
+#endif
 
 /**
  * @brief       This function is used to get sine wave data for codec debugging

@@ -27,7 +27,7 @@
 #if (TLK_MW_DSP_COMM_ENABLE)
 
 #if (MCU_CORE_TYPE == MCU_CORE_TL752X)
-#include "hal_mailbox.h"
+#include "hal/hal_mailbox.h"
 #else
 #include "mailbox.h"
 #endif
@@ -149,12 +149,17 @@ audio_ram_code void d25f_process_ipc_msg(void)
         switch (msg.header.type) {
         case IPC_DSP2D25F_HANDSHAKE_DONE:
         {
-            tlkdrv_dsp_bootOkCB();
             tlksys_task_setEvt(TLKSYS_TASKID_AUDIO, TLKSYS_TASK_EVT_AUD_DSP_RDY);
             handshake_done_t handshake_done;
             tmemcpy(&handshake_done, msg.payload, IPC_MSG_PAYLOAD_LEN);
             gDspVersion = handshake_done.dsp_fw_version;
             tlkapi_trace(DSP_DBG_FLAG, DSP_DBG_SIGN, "dsp_fw_version: 0x%x\n", handshake_done.dsp_fw_version);
+#if (TLKMW_RECORDING_CARD_EN)
+            delay_us(50);
+            d25f_response_handshake_msg();
+            delay_us(50);
+#endif
+            tlkdrv_dsp_bootOkCB();
             break;
         }
         case IPC_DSP2D25F_SET_PARAM_DONE:
@@ -173,18 +178,20 @@ audio_ram_code void d25f_process_ipc_msg(void)
             set_param_buf_ctx->pcm_buff_wptr       = index;
             d25f_update_enc_buff_rptr(IPC_SET_PARAM_PATH_2);
             if (set_param_done.status == 1) {
-#if TLKALG_ANC_ENABLE
                 uint16_t param_data_len = 0;
+                uint8_t *data           = d25f_get_pcm_data_from_dsp(&param_data_len, IPC_SET_PARAM_PATH_2);
+                int     *pdata          = (int *)data;
                 if (set_param_done.para_type == ANC_PARA) {
-                    uint8_t *pcm_data = d25f_get_pcm_data_from_dsp(&param_data_len, IPC_SET_PARAM_PATH_2);
-                    int     *pdata    = (int *)pcm_data;
-                    if (ALG_PARA == pcm_data[0]) {
+#if TLKALG_ANC_ENABLE
+                    if (ALG_PARA == pdata[0]) {
                         tlkalg_anc_load_para((uint8_t *)(pdata + 1));
-                    } else if (MODE_PARA == pcm_data[0]) {
+                    } else if (MODE_PARA == pdata[0]) {
                         tlkalg_anc_proc_mode_para(pdata + 1);
                     }
-                }
 #endif
+                } else if (set_param_done.para_type == COMMON_PARA) {
+                    tlkmw_dsp_alg_common_para(pdata[0]);
+                }
             }
             break;
         }
@@ -203,7 +210,8 @@ audio_ram_code void d25f_process_ipc_msg(void)
 
             if (data_process_done.alg_type == BT_VOICE_CVSD_ENC || data_process_done.alg_type == BT_VOICE_MSBC_ENC || data_process_done.alg_type == LL_AUDIO_ENC ||
                 data_process_done.alg_type == HRA_ALG || data_process_done.alg_type == HRA_MUSIC || data_process_done.alg_type == BT_VOICE ||
-                data_process_done.alg_type == LL_VOICE || data_process_done.alg_type == VAD_NN_NS || data_process_done.alg_type == DSP_BYPASS) {
+                data_process_done.alg_type == LL_VOICE || data_process_done.alg_type == VAD_NN_NS || data_process_done.alg_type == BBF_VAD_NN_NS ||
+                data_process_done.alg_type == DSP_BYPASS) {
                 id = IPC_DATA_PATH_0;
             } else if (data_process_done.alg_type == BT_VOICE_CVSD_DEC || data_process_done.alg_type == BT_VOICE_MSBC_DEC || data_process_done.alg_type == LL_AUDIO_DEC ||
                        data_process_done.alg_type == BT_MUSIC_AAC_DEC || data_process_done.alg_type == BT_MUSIC_SBC_DEC) {

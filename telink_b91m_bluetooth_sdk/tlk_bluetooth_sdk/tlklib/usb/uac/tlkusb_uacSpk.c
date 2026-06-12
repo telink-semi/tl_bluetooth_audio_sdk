@@ -37,14 +37,18 @@
 
 #include "drivers.h"
 #include "stack/stack.h"
-
+#include "tlkalg/audio/asrc_24bit/tlkalg_ppm_calc.h"
 /////////////////////////////////////
-s16 last_speaker_vol  = 0x7fff;
-u8  last_speaker_step = 0xff;
+s16 last_speaker_vol   = 0x7fff;
+u8  last_speaker_step  = 0xff;
+s16 last_speaker1_vol  = 0x7fff;
+u8  last_speaker1_step = 0xff;
 ////////////////////////////////////
-int     usb_vol_music = 0;
-int     gradual_vol   = 0;
-uint8_t gLeaPpmStatus = 0;
+int     usb_vol_music  = 0;
+int     gradual_vol    = 0;
+int     usb_vol1_music = 0;
+int     gradual_vol1   = 0;
+uint8_t gLeaPpmStatus  = 0;
 // #if TLK_SIMPLE_PPM_EN
 uint32_t ppm_tick_last      = 0;
 uint32_t ppm_counter        = 0;
@@ -197,7 +201,8 @@ u16 volume_scale_iphone_table[] = {0,    55,   58,   62,   69,   78,   87,   98,
 ////////////////////////////////////////////////////////////////////////////////
 
 
-static uint8_t sTlkUsbAudSpkEnable = 0;
+static uint8_t sTlkUsbAudSpkEnable  = 0;
+static uint8_t sTlkUsbAudSpk1Enable = 0;
 
 static tlku2h_ppm_para_t tlkusb_uacspk_ppm_para = {.start_flag = false, .tick_last = 0, .tick_rem = 0, .sample_diff = 0};
 
@@ -212,6 +217,9 @@ int tlkusb_uacspk_init(void)
     g_tlk_usb_cfg.out_sample_rate = TLKUSB_AUD_SPK_SAMPLE_RATE_DEF;
     tlkusb_uacspk_setVolume(TLKUSB_AUDSPK_VOL_MAX);
 
+    sTlkUsbAudSpk1Enable           = false;
+    g_tlk_usb_cfg.out1_sample_rate = TLKUSB_AUD_SPK_SAMPLE_RATE_DEF;
+    tlkusb_uacspk1_setVolume(TLKUSB_AUDSPK_VOL_MAX);
     return TLK_ENONE;
 }
 
@@ -225,6 +233,11 @@ bool tlkusb_uacspk_getEnable(void)
     return sTlkUsbAudSpkEnable;
 }
 
+bool tlkusb_uacspk1_getEnable(void)
+{
+    return sTlkUsbAudSpk1Enable;
+}
+
 /**
  * @brief     Enable or disable the USB audio speaker
  * @param[in] enable Enable(true) or disable(false) the speaker
@@ -234,8 +247,26 @@ void tlkusb_uacspk_setEnable(bool enable)
 {
     sTlkUsbAudSpkEnable = enable;
     if (enable) {
-        reg_usb_ep_ptr(TLKUSB_UAC_EDP_SPK)  = 0;
+#ifndef _B91_
+        usbhw_reset_ep_ptr(TLKUSB_UAC_EDP_SPK);
+#else
+        reg_usb_ep_ptr(TLKUSB_UAC_EDP_SPK) = 0;
+#endif
         reg_usb_ep_ctrl(TLKUSB_UAC_EDP_SPK) = 0x01; // ACK first packet
+    } else {
+    }
+}
+
+void tlkusb_uacspk1_setEnable(bool enable)
+{
+    sTlkUsbAudSpk1Enable = enable;
+    if (enable) {
+#ifndef _B91_
+        usbhw_reset_ep_ptr(TLKUSB_UAC_EDP_SPK1);
+#else
+        reg_usb_ep_ptr(TLKUSB_UAC_EDP_SPK1) = 0;
+#endif
+        reg_usb_ep_ctrl(TLKUSB_UAC_EDP_SPK1) = 0x01; // ACK first packet
     } else {
     }
 }
@@ -248,6 +279,11 @@ void tlkusb_uacspk_setEnable(bool enable)
 uint tlkusb_uacspk_getVolumeStatus(void)
 {
     return (g_tlk_usb_cfg.out_mute << 7) | (g_tlk_usb_cfg.out_vol_step & 0x7f);
+}
+
+uint tlkusb_uacspk1_getVolumeStatus(void)
+{
+    return (g_tlk_usb_cfg.out1_mute << 7) | (g_tlk_usb_cfg.out1_vol_step & 0x7f);
 }
 
 #if (TLKUSB_AUD_SPK_RESOLUTION_BIT == 24)
@@ -292,6 +328,30 @@ int16_t tlkusb_uacspk_getVolume(void)
 
     spk_status = tlkusb_uacspk_getVolumeStatus();
     cur_vol_db = (int16_t)g_tlk_usb_cfg.out_volume;
+
+    if ((last_spk_vol_db != cur_vol_db) || (last_spk_step != spk_status)) {
+        if (spk_status & APP_AUDIO_SPK_MUTE_MASK) {
+            linear_vol = 0;
+        } else {
+            linear_vol = tlkusb_uacspk_volume_db_to_linear(cur_vol_db);
+        }
+        last_spk_vol_db = cur_vol_db;
+        last_spk_step   = spk_status;
+    }
+
+    return linear_vol;
+}
+
+int16_t tlkusb_uacspk1_getVolume(void)
+{
+    uint8_t        spk_status;
+    int16_t        cur_vol_db;
+    static uint8_t last_spk_step   = APP_AUDIO_DEFAULT_VOL_STEP;
+    static int16_t last_spk_vol_db = APP_AUDIO_DEFAULT_VOL_DB;
+    static int32_t linear_vol      = 0;
+
+    spk_status = tlkusb_uacspk1_getVolumeStatus();
+    cur_vol_db = (int16_t)g_tlk_usb_cfg.out1_volume;
 
     if ((last_spk_vol_db != cur_vol_db) || (last_spk_step != spk_status)) {
         if (spk_status & APP_AUDIO_SPK_MUTE_MASK) {
@@ -378,6 +438,55 @@ uint tlkusb_uacspk_getVolume(void)
 
     return usb_vol_music;
 }
+
+uint tlkusb_uacspk1_getVolume(void)
+{
+    u32 index;
+    u8  i;
+
+    if (gradual_vol1 != usb_vol1_music) {
+        if (gradual_vol1 > usb_vol1_music) {
+            usb_vol1_music += 100;
+            if (usb_vol1_music > gradual_vol1) {
+                usb_vol1_music = gradual_vol1;
+            }
+        } else {
+            usb_vol1_music -= 100;
+            if (usb_vol1_music < gradual_vol1) {
+                usb_vol1_music = gradual_vol1;
+            }
+        }
+    }
+
+    s16 vol_temp  = g_tlk_usb_cfg.out1_volume;
+    u8  step_temp = (g_tlk_usb_cfg.out1_mute << 7) | (g_tlk_usb_cfg.out1_vol_step & 0x7f);
+
+    if ((last_speaker1_vol != vol_temp) || (last_speaker1_step != step_temp)) {
+        if (step_temp & 0x80) {
+            usb_vol1_music = 0;
+            gradual_vol1   = 0;
+        } else {
+            index = blc_get_iphone_volume_scale(vol_temp);
+            if (index >= 67) {
+                for (i = 0; i < sizeof(volume_relative_value_table) / 2; i++) {
+                    if (vol_temp <= volume_relative_value_table[i]) {
+                        break;
+                    }
+                }
+                if (i > 100) {
+                    i = 100;
+                }
+                gradual_vol1 = volume_scale_table[i];
+            } else {
+                gradual_vol1 = volume_scale_iphone_table[index];
+            }
+        }
+        last_speaker1_vol  = vol_temp;
+        last_speaker1_step = step_temp;
+    }
+
+    return usb_vol1_music;
+}
 #endif
 
 /**
@@ -395,6 +504,16 @@ void tlkusb_uacspk_setVolume(int16_t volume)
     }
 }
 
+void tlkusb_uacspk1_setVolume(int16_t volume)
+{
+    g_tlk_usb_cfg.out1_volume = volume;
+    if (volume < TLKUSB_AUDSPK_VOL_MIN) {
+        g_tlk_usb_cfg.out1_vol_step = 0;
+    } else {
+        g_tlk_usb_cfg.out1_vol_step = (volume - TLKUSB_AUDSPK_VOL_MIN) / TLKUSB_AUDSPK_VOL_RES;
+    }
+}
+
 /**
  * @brief     Mute or unmute the USB audio speaker
  * @param[in] enable Mute(true) or unmute(false)
@@ -403,6 +522,11 @@ void tlkusb_uacspk_setVolume(int16_t volume)
 void tlkusb_uacspk_enterMute(bool enable)
 {
     g_tlk_usb_cfg.out_mute = enable;
+}
+
+void tlkusb_uacspk1_enterMute(bool enable)
+{
+    g_tlk_usb_cfg.out1_mute = enable;
 }
 
 /**
@@ -581,6 +705,19 @@ int tlkusb_uacspk_setInfCmdDeal(int type)
     return TLK_ENONE;
 }
 
+int tlkusb_uacspk1_setInfCmdDeal(int type)
+{
+    if (type == AUDIO_FEATURE_MUTE) {
+        g_tlk_usb_cfg.out1_mute = tlkusb_hal_read_ctrl_ep_data(TLK_CFG_USB_UAC_INDEX);
+    } else if (type == AUDIO_FEATURE_VOLUME) {
+        int16_t val = (int16_t)tlkusb_hal_read_ctrl_ep_u16(TLK_CFG_USB_UAC_INDEX);
+        tlkusb_uacspk1_setVolume(val);
+    } else {
+        return -TLK_ENOSUPPORT;
+    }
+    return TLK_ENONE;
+}
+
 /**
  * @brief     Handle get interface command for USB audio speaker
  * @param[in] req  Request type
@@ -595,6 +732,33 @@ int tlkusb_uacspk_getInfCmdDeal(int req, int type)
         switch (req) {
         case AUDIO_REQ_GetCurrent:
             usbhw_write_ctrl_ep_u16(g_tlk_usb_cfg.out_volume);
+            break;
+        case AUDIO_REQ_GetMinimum:
+            usbhw_write_ctrl_ep_u16(TLKUSB_AUDSPK_VOL_MIN);
+            break;
+        case AUDIO_REQ_GetMaximum:
+            usbhw_write_ctrl_ep_u16(TLKUSB_AUDSPK_VOL_MAX);
+            break;
+        case AUDIO_REQ_GetResolution:
+            usbhw_write_ctrl_ep_u16(TLKUSB_AUDSPK_VOL_RES);
+            break;
+        default:
+            return -TLK_ENOSUPPORT;
+        }
+    } else {
+        return -TLK_ENOSUPPORT;
+    }
+    return TLK_ENONE;
+}
+
+int tlkusb_uacspk1_getInfCmdDeal(int req, int type)
+{
+    if (type == AUDIO_FEATURE_MUTE) {
+        tlkusb_hal_write_ctrl_ep_data(TLK_CFG_USB_UAC_INDEX, g_tlk_usb_cfg.out1_mute);
+    } else if (type == AUDIO_FEATURE_VOLUME) {
+        switch (req) {
+        case AUDIO_REQ_GetCurrent:
+            usbhw_write_ctrl_ep_u16(g_tlk_usb_cfg.out1_volume);
             break;
         case AUDIO_REQ_GetMinimum:
             usbhw_write_ctrl_ep_u16(TLKUSB_AUDSPK_VOL_MIN);
@@ -633,6 +797,20 @@ int tlkusb_uacspk_setEdpCmdDeal(int type)
     return TLK_ENONE;
 }
 
+int tlkusb_uacspk1_setEdpCmdDeal(int type)
+{
+    if (type == AUDIO_EPCONTROL_SamplingFreq) {
+        uint32_t value                 = tlkusb_hal_read_ctrl_ep_data(TLK_CFG_USB_UAC_INDEX);
+        g_tlk_usb_cfg.out1_sample_rate = value;
+        value                          = tlkusb_hal_read_ctrl_ep_data(TLK_CFG_USB_UAC_INDEX);
+        g_tlk_usb_cfg.out1_sample_rate |= value << 8;
+        value = tlkusb_hal_read_ctrl_ep_data(TLK_CFG_USB_UAC_INDEX);
+        g_tlk_usb_cfg.out1_sample_rate |= value << 16;
+        // TODO: Sample Rate Changed
+    }
+    return TLK_ENONE;
+}
+
 //Fill cache data when usb irq is delayed;
 #if (TLKUSB_AUD_SPK_RESOLUTION_BIT == 24)
 static int32_t g_tlk_iso_out_cache_samples[TLKUSB_AUD_SPK_SAMPLES * 2] = {0};
@@ -642,14 +820,14 @@ static int32_t g_tlk_iso_out_cache_samples[TLKUSB_AUD_SPK_SAMPLES * 2] = {0};
  * @param[in] none
  * @return    sample data
  */
-__INLINE uint32_t tlkusb_iso_out_read_ep_one_chn()
+__INLINE uint32_t tlkusb_iso_out_read_ep_one_chn(uint8_t endpoint)
 {
     uint32_t samples_data   = 0;
     uint8_t  chn_pos        = TLKUSB_AUD_SPK_RESOLUTION_BIT / 8;
     uint8_t *p_samples_data = (uint8_t *)&samples_data;
 
     for (int i = 0; i < chn_pos; i++) {
-        p_samples_data[i] = reg_usb_ep_dat(TLKUSB_UAC_EDP_SPK);
+        p_samples_data[i] = reg_usb_ep_dat(endpoint);
     }
 
     if (p_samples_data[chn_pos - 1] & BIT(7)) {
@@ -666,11 +844,11 @@ static int16_t g_tlk_iso_out_cache_samples[TLKUSB_AUD_SPK_SAMPLES * 2] = {0};
  * @param[in] none
  * @return    sample data
  */
-__INLINE uint16_t tlkusb_iso_out_read_ep_one_chn()
+__INLINE uint16_t tlkusb_iso_out_read_ep_one_chn(uint8_t endpoint)
 {
     uint16_t data = 0;
-    data          = reg_usb_ep_dat(TLKUSB_UAC_EDP_SPK);
-    data |= (reg_usb_ep_dat(TLKUSB_UAC_EDP_SPK) << 8);
+    data          = reg_usb_ep_dat(endpoint);
+    data |= (reg_usb_ep_dat(endpoint) << 8);
 
     return data;
 }
@@ -725,7 +903,7 @@ _attribute_ram_code_sec_ void tlkusb_uacspk_recvData(uint32_t tick)
     }
 
     for (index = 0; index < TLKUSB_AUD_SPK_SAMPLES * 2; index++) {
-        data = tlkusb_iso_out_read_ep_one_chn();
+        data = tlkusb_iso_out_read_ep_one_chn(TLKUSB_UAC_EDP_SPK);
 
         g_tlk_iso_out_cache_samples[index]                                         = data;
         g_tlk_usb_cfg.iso_out[g_tlk_usb_cfg.out_w & APP_USB_ISO_OUT_BUFF_IDX_MASK] = data;
@@ -801,8 +979,50 @@ _attribute_ram_code_sec_ void tlkusb_uacspk_recvData(uint32_t tick)
 #endif
 
     reg_usb_ep_ctrl(TLKUSB_UAC_EDP_SPK) = FLD_EP_DAT_ACK;
+#if TLKALG_PPM_CALC_BY_SAMPLE
+    if (tlkalg_sample_ppm_mode_idle(&g_uac_ppm_ctrl)) {
+        tlkalg_set_sample_ppm_mode(&g_uac_ppm_ctrl, ASRC_MUSIC_MODE);
+        tlkalg_reset_sample_ppm_calc(&g_uac_ppm_ctrl);
+        tlkalg_set_sample_ppm_mask(&g_uac_ppm_ctrl, APP_USB_ISO_OUT_BUFF_IDX_MASK);
+        tlkalg_set_sample_ppm_channel(&g_uac_ppm_ctrl, tlkusb_uac_get_iso_out_Channels());
+    }
+#endif
 }
 
+#if (TLK_USB_UAC_DUAL_SOUNDCARD_MODE)
+_attribute_ram_code_sec_ void tlkusb_uacspk1_recvData(uint32_t tick)
+{
+    g_tlk_usb_cfg.tick_out1 = tick;
+    usbhw_clr_eps_irq_inline(BIT(TLKUSB_UAC_EDP_SPK1));
+    unsigned int length = usbhw_get_ep_ptr_inline(TLKUSB_UAC_EDP_SPK1);
+
+#ifndef _B91_
+    usbhw_reset_ep_ptr(TLKUSB_UAC_EDP_SPK1);
+#else
+    reg_usb_ep_ptr(TLKUSB_UAC_EDP_SPK1) = 0;
+#endif
+    if ((length != TLKUSB_AUD_SPK_CHANNEL_LENGTH) && (length != 0)) {
+        reg_usb_ep_ctrl(TLKUSB_UAC_EDP_SPK1) = FLD_EP_DAT_ACK;
+        return;
+    }
+
+    for (unsigned int index = 0; index < TLKUSB_AUD_SPK_SAMPLES * 2; index++) {
+        unsigned int data                                                            = tlkusb_iso_out_read_ep_one_chn(TLKUSB_UAC_EDP_SPK1);
+        g_tlk_usb_cfg.iso_out1[g_tlk_usb_cfg.out1_w & APP_USB_ISO_OUT_BUFF_IDX_MASK] = data;
+        g_tlk_usb_cfg.out1_w++;
+        g_tlk_usb_cfg.out1_w &= APP_USB_ISO_OUT_BUFF_IDX_MASK;
+    }
+    reg_usb_ep_ctrl(TLKUSB_UAC_EDP_SPK1) = FLD_EP_DAT_ACK;
+#if TLKALG_PPM_CALC_BY_SAMPLE
+    if (tlkalg_sample_ppm_mode_idle(&g_uac_ppm_ctrl)) {
+        tlkalg_set_sample_ppm_mode(&g_uac_ppm_ctrl, ASRC_MUSIC1_MODE);
+        tlkalg_reset_sample_ppm_calc(&g_uac_ppm_ctrl);
+        tlkalg_set_sample_ppm_mask(&g_uac_ppm_ctrl, APP_USB_ISO_OUT_BUFF_IDX_MASK);
+        tlkalg_set_sample_ppm_channel(&g_uac_ppm_ctrl, tlkusb_uac_get_iso_out_Channels());
+    }
+#endif
+}
+#endif
 /**
  * @brief     Close the USB audio speaker
  * @param[in] none
@@ -813,7 +1033,7 @@ void tlkusb_uacspk_close(void)
     g_tlk_usb_cfg.tick_out   = 0;
     g_tlk_usb_cfg.iso_out_en = false;
     if (sTlkUsbReportUacStatusCB != NULL && (tlkusb_uac_get_state() != TLKUSB_UAC_IDLE)) {
-        sTlkUsbReportUacStatusCB(g_tlk_usb_cfg.iso_in_en, g_tlk_usb_cfg.iso_out_en);
+        sTlkUsbReportUacStatusCB(g_tlk_usb_cfg.iso_in_en, g_tlk_usb_cfg.iso_out_en || g_tlk_usb_cfg.iso_out1_en);
         tlkusb_uac_reset_out_config();
     }
 }

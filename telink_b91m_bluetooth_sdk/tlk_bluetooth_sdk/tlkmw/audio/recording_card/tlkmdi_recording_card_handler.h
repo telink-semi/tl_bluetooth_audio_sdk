@@ -24,14 +24,19 @@
 #ifndef _TLKMDI_RECORDING_CARD_HANDLER_H_
 #define _TLKMDI_RECORDING_CARD_HANDLER_H_
 
-#define RECORDING_CARD_MIC_FRAME_SIZE   (16*20)
+#define RECORDING_CARD_MIC_FRAME_SIZE (16 * 20)
 
 #ifndef MIC_FRAME_SIZE
 #define MIC_FRAME_SIZE RECORDING_CARD_MIC_FRAME_SIZE
 #endif
+#if TLKALG_GET_AUDIO_DATA_EN
+extern uint8_t spi_debug_buff[RECORDING_CARD_MIC_FRAME_SIZE * (TLKALG_BBF_ENABLE + 3) * 2 + 8];
+#endif
 
 typedef void (*tlkalg_recording_card_fill_enc_data_t)(uint8_t *pbuff, uint16_t len);
 typedef void (*tlkalg_recording_card_fill_pcm_data_t)(uint8_t *pbuff, uint16_t len);
+
+extern int8_t alg_bone_data_switch;
 
 /**
  * @brief       This function initializes the recording card algorithm.
@@ -61,6 +66,16 @@ void tlkmdi_recording_card_fifo_irq_init(uint16_t byte_num);
  */
 void tlkmdi_recording_card_fifo_irq_handler_func(void);
 
+int8_t tlkmdi_recording_card_fifo_irq_process_6(adc_mono_int *data_buff);
+int8_t tlkmdi_recording_card_fifo_irq_process_4(adc_mono_int *data_buff);
+int8_t tlkmdi_recording_card_fifo_irq_process_2(adc_mono_int *data_buff);
+int8_t tlkmdi_recording_card_fifo_irq_process(adc_mono_int *data_buff);
+
+
+void tlkmdi_recording_card_process_pcm_from_dsp(int8_t *pcm);
+
+void tlkmdi_recording_card_clean_dsp_queue(void);
+
 /**
  * @brief       This function processes DSP messages for the recording card.
  * @param[in]   enc_buff_wptr - write pointer of the encoded buffer.
@@ -82,5 +97,6 @@ void tlkmdi_recording_card_fillEncData_register(tlkalg_recording_card_fill_enc_d
  * @return      none.
  */
 void tlkmdi_recording_card_fillPcmData_register(tlkalg_recording_card_fill_pcm_data_t func);
+
 
 #endif

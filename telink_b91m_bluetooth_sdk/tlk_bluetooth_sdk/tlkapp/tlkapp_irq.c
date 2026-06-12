@@ -61,7 +61,6 @@ struct TRAP_VAL
 };
 
 volatile struct TRAP_VAL trap_value;
-volatile uint32_t        AAAA_trap = 0;
 
 static inline void tlkapp_trap_handler(uint32_t mtval, uint32_t mepc, uint32_t mstatus, uint32_t mcause, uint32_t mdcause, uint32_t ra)
 {
@@ -72,7 +71,6 @@ static inline void tlkapp_trap_handler(uint32_t mtval, uint32_t mepc, uint32_t m
     trap_value.mdcause = mdcause;
     trap_value.ra      = ra;
 
-    AAAA_trap++;
     tlkapi_printf(1, "*** app_trap_handler *** %d %d %x %d", trap_value.mcause, trap_value.mtval, trap_value.mepc, trap_value.ra);
     tlkapi_printf(1, "*** error code mark *** FFFFFFFF");
 
@@ -116,7 +114,7 @@ _attribute_ram_code_sec_noinline_ void trap_entry(void)
  */
 _attribute_retention_code_ void stimer_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_SYSTIMER);
+    tlk_sys_irq_handler(IRQ_SYSTIMER);
 }
 PLIC_ISR_REGISTER_OS(stimer_irq_handler, IRQ_SYSTIMER)
 
@@ -127,7 +125,7 @@ PLIC_ISR_REGISTER_OS(stimer_irq_handler, IRQ_SYSTIMER)
  */
 _attribute_retention_code_ void ble_rf_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_ZB_RT);
+    tlk_sys_irq_handler(IRQ_ZB_RT);
 }
 PLIC_ISR_REGISTER_OS(ble_rf_irq_handler, IRQ_ZB_RT)
 
@@ -139,7 +137,7 @@ PLIC_ISR_REGISTER_OS(ble_rf_irq_handler, IRQ_ZB_RT)
  */
 _attribute_retention_code_ void bt_rf_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_ZB_BT);
+    tlk_sys_irq_handler(IRQ_ZB_BT);
 }
 PLIC_ISR_REGISTER_OS(bt_rf_irq_handler, IRQ_ZB_BT)
 #endif
@@ -239,7 +237,7 @@ PLIC_ISR_REGISTER_OS(d25f_ipc_message_irq_handler, IRQ_MAILBOX_DSP_TO_D25)
  * @param[in]	none
  * @return      none
  */
-__attribute__((weak)) _attribute_ram_code_sec_ void tlk_uart0_irq_handler(void)
+__attribute__((weak)) void tlk_uart0_irq_handler(void)
 {
 #if TLK_DEV_SERIAL_ENABLE
     tlkdrv_uart_irqHandler(0);
@@ -252,7 +250,7 @@ PLIC_ISR_REGISTER_OS(tlk_uart0_irq_handler, IRQ_UART0)
  * @param[in]	none
  * @return      none
  */
-__attribute__((weak)) _attribute_ram_code_sec_ void tlk_uart1_irq_handler(void)
+__attribute__((weak)) void tlk_uart1_irq_handler(void)
 {
 #if TLK_DEV_SERIAL_ENABLE
     tlkdrv_uart_irqHandler(1);
@@ -269,24 +267,28 @@ PLIC_ISR_REGISTER_OS(tlk_uart1_irq_handler, IRQ_UART1)
  *      ╚██████╔╝███████║██████╔╝
  *       ╚═════╝ ╚══════╝╚═════╝ 
  ******************************************************************************/
-
+#if MCU_CORE_TYPE != MCU_CORE_TL753X
 /**
  * @brief       Usb ctrl ep interrupt handler.
  * @param[in]   none
  * @return      none
  */
 #if MCU_CORE_TYPE != MCU_CORE_TL322X && MCU_CORE_TYPE != MCU_CORE_TL752X
-__attribute__((weak)) _attribute_ram_code_sec_ void tlk_usb_ctrl_ep_irq_handler(void)
+__attribute__((weak)) void tlk_usb_ctrl_ep_irq_handler(void)
 {
 #if (TLK_CFG_USB_ENABLE)
     tlkusb_ctrl_ep_irq_handler(0);
 #endif
 }
+
 PLIC_ISR_REGISTER_OS(tlk_usb_ctrl_ep_irq_handler, IRQ_USB_CTRL_EP_SETUP)
 PLIC_ISR_REGISTER_OS(tlk_usb_ctrl_ep_irq_handler, IRQ_USB_CTRL_EP_DATA)
 PLIC_ISR_REGISTER_OS(tlk_usb_ctrl_ep_irq_handler, IRQ_USB_CTRL_EP_STATUS)
 PLIC_ISR_REGISTER_OS(tlk_usb_ctrl_ep_irq_handler, IRQ_USB_RESET)
 PLIC_ISR_REGISTER_OS(tlk_usb_ctrl_ep_irq_handler, IRQ_USB_CTRL_EP_SETINF)
+#if TLK_USB_REMOTEWAKEUP_EN
+PLIC_ISR_REGISTER_OS(tlk_usb_ctrl_ep_irq_handler, IRQ_USB_PWDN)
+#endif
 
 /**
  * @brief       Usb ep interrupt handler.
@@ -308,7 +310,7 @@ PLIC_ISR_REGISTER_OS(tlk_usb_ep_irq_handler, IRQ_USB_ENDPOINT)
  * @param[in]   none
  * @return      none
  */
-__attribute__((weak)) _attribute_ram_code_sec_ void tlk_usb1_ctrl_ep_irq_handler(void)
+__attribute__((weak)) void tlk_usb1_ctrl_ep_irq_handler(void)
 {
 #if (TLK_CFG_USB_ENABLE)
     tlkusb_ctrl_ep_irq_handler(1);
@@ -356,7 +358,7 @@ void usb0_irq_handler(void)
 PLIC_ISR_REGISTER_OS(usb0_irq_handler, IRQ_USB0)
 #endif
 #endif
-
+#endif
 /******************************************************************************
  *      █████╗ ██╗   ██╗██████╗ ██╗ ██████╗ 
  *     ██╔══██╗██║   ██║██╔══██╗██║██╔═══██╗
@@ -395,7 +397,7 @@ PLIC_ISR_REGISTER_OS(tlk_audio_fifo_irq_handler, IRQ_DFIFO)
  * @param[in]	none
  * @return      none
  */
-#if MCU_CORE_TYPE == MCU_CORE_TL751X
+#if MCU_CORE_TYPE == MCU_CORE_TL751X || MCU_CORE_TYPE == MCU_CORE_TL753X
 
 #define GPIO_IRQ_HANDLER(N)                                    \
     __attribute__((weak)) void tlk_gpio_irq##N##_handler(void) \
@@ -443,17 +445,10 @@ PLIC_ISR_REGISTER_OS(tlk_gpio_irq_handler, GPIO_IRQn)
 * @param[in]	none
 * @return       none
 */
-#if MCU_CORE_TYPE != MCU_CORE_B91
-__attribute__((weak)) void tlk_lspi_irq_handler(void)
-{
-#if TLK_DRV_SPI_ENABLE
-    extern void lspi_irq_handler(void);
-    lspi_irq_handler();
-#endif
-}
-#if (!MCU_CORE_TL752X_TEMP)
+#if MCU_CORE_TYPE != MCU_CORE_B91 && !MCU_CORE_TL752X_TEMP
+__attribute__((weak)) void tlk_lspi_irq_handler(void) {}
+
 PLIC_ISR_REGISTER_OS(tlk_lspi_irq_handler, IRQ_LSPI);
-#endif
 #endif
 
 #if TLK_CFG_FS_ENABLE
@@ -481,18 +476,19 @@ PLIC_ISR_REGISTER_OS(gspi_irq_handler, IRQ_GSPI)
  * @param[in]	none
  * @return      none
  */
-__attribute__((weak)) _attribute_ram_code_sec_ void tlk_dma_irq_handler(void)
+__attribute__((weak)) void tlk_dma_irq_handler(void)
 {
 #if TLK_DEV_SERIAL_ENABLE
     tlkdrv_serial_dmaIrqHandler();
 #endif
-#if TLK_DRV_SPI_ENABLE
-    tlkdrv_spi_dmaIrqHandler();
-#endif
 }
-#if (!MCU_CORE_TL752X_TEMP)
+#ifdef IRQ_DMA
 PLIC_ISR_REGISTER_OS(tlk_dma_irq_handler, IRQ_DMA)
-#else
+#endif
+#ifdef IRQ_DMA1
+PLIC_ISR_REGISTER_OS(tlk_dma_irq_handler, IRQ_DMA1)
+#endif
+#ifdef IRQ_CPU_DMA
 PLIC_ISR_REGISTER_OS(tlk_dma_irq_handler, IRQ_CPU_DMA)
 #endif
 

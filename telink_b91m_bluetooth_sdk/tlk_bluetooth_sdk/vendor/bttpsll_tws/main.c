@@ -40,10 +40,6 @@ const tlksys_hal_platform_init_cfg_t *tlksys_hal_port_getPlatformInitCfg(void)
 #else
         .gpioCfg = TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN,
 #endif
-
-#if (TLK_CFG_FLASH_PROT_ENABLE)
-        .flashProtectEn = 1,
-#endif
     };
     return &cfg;
 }

@@ -82,7 +82,7 @@ static void app_serial_recv(uint8_t *pFrame, uint16_t frmLen)
  */
 void bluetooth_host_snoop_initial(void)
 {
-    tlkdrv_serial_mount(UART0, BT_SNOOP_SERIAL_BAUDRATE, TLKDEV_SERIAL0_TX_PIN, TLKDEV_SERIAL0_RX_PIN, TLKDEV_SERIAL0_TX_DMA, TLKDEV_SERIAL0_RX_DMA);
+    tlkdrv_serial_mount(UART0, BT_SNOOP_SERIAL_BAUDRATE, TLKDEV_SERIAL0_TX_PIN, TLKDEV_SERIAL0_RX_PIN, tlkhal_dma_malloc_ex(1), tlkhal_dma_malloc_ex(1));
     tlkdrv_serial_setTxQFifo(UART0, BT_SNOOP_TX_BUFF_NUMBER, BT_SNOOP_TX_BUFF_SIZE + 4, s_uart_send_buffer, BT_SNOOP_TX_BUFF_NUMBER * (BT_SNOOP_TX_BUFF_SIZE + 4));
     tlkdrv_serial_setRxQFifo(UART0, BT_SNOOP_TX_BUFF_NUMBER, BT_SNOOP_RX_BUFF_SIZE + 4, s_uart_receive_buffer, BT_SNOOP_TX_BUFF_NUMBER * (BT_SNOOP_RX_BUFF_SIZE + 4));
     tlkdrv_serial_regCB(UART0, app_serial_recv);
@@ -122,7 +122,7 @@ static uint16_t crc16_ccitt(const uint8_t *data, uint16_t len)
  */
 static void ble_host_send_btsnoop_data(uint8_t type, const uint8_t *data, uint16_t data_len)
 {
-    tlkdrv_serial_mount(UART0, BT_SNOOP_SERIAL_BAUDRATE, TLKDEV_SERIAL0_TX_PIN, TLKDEV_SERIAL0_RX_PIN, TLKDEV_SERIAL0_TX_DMA, TLKDEV_SERIAL0_RX_DMA);
+    tlkdrv_serial_mount(UART0, BT_SNOOP_SERIAL_BAUDRATE, TLKDEV_SERIAL0_TX_PIN, TLKDEV_SERIAL0_RX_PIN, 0, 0);
     tlkdrv_serial_open(UART0);
     uint8_t debug_buffer[data_len + 7];
 

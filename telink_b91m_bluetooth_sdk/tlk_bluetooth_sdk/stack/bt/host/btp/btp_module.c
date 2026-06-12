@@ -28,21 +28,22 @@
 #include "tl_common.h"
 #include "tlkapi/tlkapi.h"
 #if (TLK_STK_BT_ENABLE)
-    #include "btp_stdio.h"
-    #include "btp_adapt.h"
-    #include "btp.h"
-    #include "btp_module.h"
-    #include "sdp/btp_sdp.h"
-    #include "a2dp/btp_a2dp.h"
-    #include "avrcp/btp_avrcp.h"
-    #include "rfcomm/btp_rfcomm.h"
-    #include "hfp/btp_hfp.h"
-    #include "spp/btp_spp.h"
-    #include "a2dp/btp_a2dp.h"
-    #include "pbap/btp_pbap.h"
-    #include "hid/btp_hid.h"
-    #include "att/btp_att.h"
-    #include "iap/btp_iap.h"
+#include "btp_stdio.h"
+#include "btp_adapt.h"
+#include "btp.h"
+#include "btp_module.h"
+#include "sdp/btp_sdp.h"
+#include "a2dp/btp_a2dp.h"
+#include "avrcp/btp_avrcp.h"
+#include "rfcomm/btp_rfcomm.h"
+#include "hfp/btp_hfp.h"
+#include "spp/btp_spp.h"
+#include "a2dp/btp_a2dp.h"
+#include "pbap/btp_pbap.h"
+#include "hid/btp_hid.h"
+#include "att/btp_att.h"
+#include "iap/btp_iap.h"
+#include "avrcp/cover_art/btp_coverArt.h"
 
 int btp_module_connect(uint16_t aclHandle, uint8_t ptype, uint8_t usrID, uint8_t channel)
 {
@@ -54,51 +55,51 @@ int btp_module_connect(uint16_t aclHandle, uint8_t ptype, uint8_t usrID, uint8_t
         ret = btp_sdp_connect(aclHandle, usrID);
         break;
     case BTP_PTYPE_RFC:
-    #if (TLKBTP_CFG_PBAP_ENABLE)
+#if (TLKBTP_CFG_PBAP_ENABLE)
         ret = btp_rfcomm_connect(aclHandle);
-    #endif
+#endif
         break;
     case BTP_PTYPE_HFP:
-    #if (TLKBTP_CFG_HFP_ENABLE)
+#if (TLKBTP_CFG_HFP_ENABLE)
         ret = btp_hfp_connect(aclHandle, usrID, channel);
-    #else
+#else
         (void)channel;
-    #endif
+#endif
         break;
     case BTP_PTYPE_SPP:
-    #if (TLKBTP_CFG_SPP_ENABLE)
+#if (TLKBTP_CFG_SPP_ENABLE)
         ret = btp_spp_connect(aclHandle, channel);
-    #endif
+#endif
         break;
     case BTP_PTYPE_IAP:
-    #if (TLKBTP_CFG_IAP_ENABLE)
+#if (TLKBTP_CFG_IAP_ENABLE)
         ret = btp_iap_connect(aclHandle, channel);
-    #endif
+#endif
         break;
     case BTP_PTYPE_A2DP:
-    #if (TLKBTP_CFG_A2DP_ENABLE)
+#if (TLKBTP_CFG_A2DP_ENABLE)
         ret = btp_a2dp_connect(aclHandle, usrID);
-    #endif
+#endif
         break;
     case BTP_PTYPE_AVRCP:
-    #if (TLKBTP_CFG_AVRCP_ENABLE)
+#if (TLKBTP_CFG_AVRCP_ENABLE)
         ret = btp_avrcp_connect(aclHandle, usrID);
-    #endif
+#endif
         break;
     case BTP_PTYPE_PBAP:
-    #if (TLKBTP_CFG_PBAP_ENABLE)
+#if (TLKBTP_CFG_PBAP_ENABLE)
         ret = btp_pbap_connect(aclHandle, usrID, channel, false);
-    #endif
+#endif
         break;
     case BTP_PTYPE_HID:
-    #if (TLKBTP_CFG_HID_ENABLE)
+#if (TLKBTP_CFG_HID_ENABLE)
         ret = btp_hid_connect(aclHandle, usrID);
-    #endif
+#endif
         break;
     case BTP_PTYPE_ATT:
-    #if (TLKBTP_CFG_ATT_ENABLE)
+#if (TLKBTP_CFG_ATT_ENABLE)
         ret = btp_att_connect(aclHandle, usrID);
-    #endif
+#endif
         break;
     }
     return ret;
@@ -114,49 +115,54 @@ int btp_module_disconn(uint16_t aclHandle, uint8_t ptype, uint8_t usrID)
         ret = btp_sdp_disconn(aclHandle, usrID);
         break;
     case BTP_PTYPE_RFC:
-    #if (TLKBTP_CFG_RFC_ENABLE)
+#if (TLKBTP_CFG_RFC_ENABLE)
         ret = btp_rfcomm_disconn(aclHandle);
-    #endif
+#endif
         break;
     case BTP_PTYPE_HFP:
-    #if (TLKBTP_CFG_HFP_ENABLE)
+#if (TLKBTP_CFG_HFP_ENABLE)
         ret = btp_hfp_disconn(aclHandle, usrID);
-    #endif
+#endif
         break;
     case BTP_PTYPE_SPP:
-    #if (TLKBTP_CFG_SPP_ENABLE)
+#if (TLKBTP_CFG_SPP_ENABLE)
         ret = btp_spp_disconn(aclHandle);
-    #endif
+#endif
         break;
     case BTP_PTYPE_IAP:
-    #if (TLKBTP_CFG_IAP_ENABLE)
+#if (TLKBTP_CFG_IAP_ENABLE)
         ret = btp_iap_disconn(aclHandle);
-    #endif
+#endif
         break;
     case BTP_PTYPE_A2DP:
-    #if (TLKBTP_CFG_A2DP_ENABLE)
+#if (TLKBTP_CFG_A2DP_ENABLE)
         ret = btp_a2dp_disconn(aclHandle);
-    #endif
+#endif
         break;
     case BTP_PTYPE_AVRCP:
-    #if (TLKBTP_CFG_AVRCP_ENABLE)
+#if (TLKBTP_CFG_AVRCP_ENABLE)
         ret = btp_avrcp_disconn(aclHandle, usrID);
-    #endif
+#endif
         break;
     case BTP_PTYPE_PBAP:
-    #if (TLKBTP_CFG_PBAP_ENABLE)
+#if (TLKBTP_CFG_PBAP_ENABLE)
         ret = btp_pbap_disconn(aclHandle, usrID);
-    #endif
+#endif
         break;
     case BTP_PTYPE_HID:
-    #if (TLKBTP_CFG_HID_ENABLE)
+#if (TLKBTP_CFG_HID_ENABLE)
         ret = btp_hid_disconn(aclHandle, usrID);
-    #endif
+#endif
         break;
     case BTP_PTYPE_ATT:
-    #if (TLKBTP_CFG_ATT_ENABLE)
+#if (TLKBTP_CFG_ATT_ENABLE)
         ret = btp_att_disconn(aclHandle, usrID);
-    #endif
+#endif
+        break;
+    case BTP_PTYPE_COVERART:
+#if (TLKBTP_CFG_COVERARTCLT_ENABLE)
+        ret = btp_coverArtclt_disconn(aclHandle);
+#endif
         break;
     }
     return ret;

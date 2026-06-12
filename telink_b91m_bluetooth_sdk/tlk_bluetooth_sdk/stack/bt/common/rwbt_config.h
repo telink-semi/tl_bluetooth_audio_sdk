@@ -56,10 +56,10 @@
 
 /// Maximum number of ACL links
 #ifndef MAX_NB_ACTIVE_ACL
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
-    #define MAX_NB_ACTIVE_ACL 1
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
+#define MAX_NB_ACTIVE_ACL 1
 #else
-    #define MAX_NB_ACTIVE_ACL 2
+#define MAX_NB_ACTIVE_ACL 2
 #endif
 #endif
 /// BT Heap size
@@ -78,28 +78,21 @@
 
 /// Number of TX LMP buffers
 #if (MAX_NB_ACTIVE_ACL > 3)
-    #define BT_LMP_BUF_NB_TX (2 * MAX_NB_ACTIVE_ACL)
-#else  // (MAX_NB_ACTIVE_ACL > 3)
-    #define BT_LMP_BUF_NB_TX (20)
+#define BT_LMP_BUF_NB_TX (2 * MAX_NB_ACTIVE_ACL)
+#else // (MAX_NB_ACTIVE_ACL > 3)
+#define BT_LMP_BUF_NB_TX (20)
 #endif // (MAX_NB_ACTIVE_ACL > 3)
-#if EBQ_BT_CTRLER_ONLY_TEST_MODE
-     /// Maximum ACL Data Packet Size
-#define ACL_DATA_BUF_SIZE 15//Run #1763 - /LMP/ENC/BI-02-C	[Encryption, Central, Reject Role Switch]
-
-#else
-     /// Maximum ACL Data Packet Size
+/// Maximum ACL Data Packet Size
 #define ACL_DATA_BUF_SIZE DH5_3_PACKET_SIZE
-
-#endif
 
 /// Normal Rx window size
 #define NORMAL_WIN_SIZE 70
 
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
 /// Advance margin for slave acl.
-#define LD_SLAVE_ET_ADVANCE_MARGIN_US  30//((NORMAL_WIN_SIZE - 10)/2)
+#define LD_SLAVE_ET_ADVANCE_MARGIN_US 30 //((NORMAL_WIN_SIZE - 10)/2)
 #else
-#define LD_SLAVE_ET_ADVANCE_MARGIN_US  20//((NORMAL_WIN_SIZE - 10)/2)
+#define LD_SLAVE_ET_ADVANCE_MARGIN_US 20 //((NORMAL_WIN_SIZE - 10)/2)
 #endif
 /// Range of key size supported by the FW
 #define ENC_KEY_SIZE_MAX  16
@@ -107,13 +100,13 @@
 #define ENC_KEY_SIZE_MASK 0xFFFF
 
 /// Inquiry response TX power (the value code depends on radio used)
-//#define INQ_RSP_TX_PWR  rwip_rf.txpwr_max
+//#define INQ_RSP_TX_PWR  tlk_bt_ctrl_g_rwip_rf.txpwr_max
 #define INQ_RSP_TX_PWR 0x28
 
 /// Size of the inquiry result filtering list
 #define INQ_FILT_LEN 10
 //power need changed
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
 #define ACCESS_TX_POWER 0x07
 #else
 #define ACCESS_TX_POWER 0x28
@@ -123,27 +116,27 @@
 /******************************************************************************************/
 
 /// Maximum number of Synchronous connections (0 to 2)
-#define CFG_VOHCI   1
+#define CFG_VOHCI 1
 #ifndef MAX_NB_SYNC
-	#define MAX_NB_SYNC 1
+#define MAX_NB_SYNC 2
 #endif
 
 /// Flag indicating if debug mode is activated or not
 #if defined(CFG_VOHCI) && (MAX_NB_SYNC > 0)
 #if !BT_TEST_CODE_HCI_DIS
-    #define VOICE_OVER_HCI 1
+#define VOICE_OVER_HCI 1
 #endif
 #else
-    #define VOICE_OVER_HCI 0
+#define VOICE_OVER_HCI 0
 #endif // defined (CFG_VOHCI) && (MAX_NB_SYNC > 0)
 
 #if VOICE_OVER_HCI
-    /// Number of Synchronous TX buffers used for one VoHCI link
-	#define SYNC_TX_BUF_NB 8
-    /// Number of Synchronous RX buffers used for one VoHCI link
-	#define SYNC_RX_BUF_NB 8
-    /// Guard space reserved for HCI header in Sync RX buffers
-    #define SYNC_RX_BUF_HEADER_SPACE (HCI_SYNC_HDR_LEN + 1)
+/// Number of Synchronous TX buffers used for one VoHCI link
+#define SYNC_TX_BUF_NB 8
+/// Number of Synchronous RX buffers used for one VoHCI link
+#define SYNC_RX_BUF_NB 8
+/// Guard space reserved for HCI header in Sync RX buffers
+#define SYNC_RX_BUF_HEADER_SPACE (HCI_SYNC_HDR_LEN + 1)
 #endif //(VOICE_OVER_HCI)
 
 /// Synchronous link negotiation number of retries
@@ -244,9 +237,9 @@ enum rwbt_pti_config_idx
 
 /// Support of Connectionless Slave Broadcast
 #if defined(CFG_CSB)
-    #define CSB_SUPPORT 1
+#define CSB_SUPPORT 1
 #else
-    #define CSB_SUPPORT 0
+#define CSB_SUPPORT 0
 #endif // defined (CFG_CSB)
 
 /******************************************************************************************/
@@ -255,9 +248,9 @@ enum rwbt_pti_config_idx
 
 /// Support of Piconet Clock Adjust
 #if defined(CFG_PCA)
-    #define PCA_SUPPORT 1
+#define PCA_SUPPORT 1
 #else
-    #define PCA_SUPPORT 0
+#define PCA_SUPPORT 0
 #endif // defined (CFG_PCA)
 
 /// PCA update period (in sec)
@@ -279,6 +272,11 @@ enum rwbt_pti_config_idx
 #define LE_ACL_S_HANDLE   BIT(6)
 #define LE_CIS_HANDLE     BIT(5)
 #define LE_BIS_HANDLE     BIT(4)
+
+#if (0) /// Read only here, avoid overlapping.
+#define TPSLL_ACL_CONHDL_HANDLE BIT(8)
+#endif
+
 /// Bit set for BT SCO connection handles
 #define BT_SYNC_CONHDL_OFF                   (8)
 #define BT_SYNC_CONHDL_MSK                   (((1 << MAX_NB_SYNC) - 1) << BT_SYNC_CONHDL_OFF)

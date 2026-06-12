@@ -1,13 +1,12 @@
 /********************************************************************************************************
  * @file    rz.h
  *
- * @brief   This is the header file for tl322X
+ * @brief   This is the header file for tl322x
  *
  * @author  Driver Group
  * @date    2025
  *
  * @par     Copyright (c) 2025, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
- *          All rights reserved.
  *
  *          Licensed under the Apache License, Version 2.0 (the "License");
  *          you may not use this file except in compliance with the License.

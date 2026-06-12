@@ -23,7 +23,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#if TLK_DEV_RTC_ENABLE	
+#if TLK_DEV_RTC_ENABLE
 #include <time.h>
 
 void tlkdrv_rtc_init(void);
@@ -38,4 +38,3 @@ void tlkdrv_rtc_setTime(struct tm *time);
 
 void tlkdrv_rtc_powerOffSave(void);
 #endif
-

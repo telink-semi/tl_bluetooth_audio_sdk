@@ -41,8 +41,8 @@
 
 #include "stack/bt/common/rwip_config.h" // stack configuration
 
-#include <stdint.h>                      // integer
-#include <stdbool.h>                     // boolean
+#include <stdint.h>  // integer
+#include <stdbool.h> // boolean
 
 /*
  * MACROS
@@ -108,7 +108,7 @@ struct sch_alarm_tag
  * @brief Initialize the Scheduling alarm.
  ****************************************************************************************
  */
-void sch_alarm_init(bool reset);
+void tlk_bt_ctrl_sch_alarm_init(bool reset);
 
 /**
  ****************************************************************************************
@@ -118,7 +118,7 @@ void sch_alarm_init(bool reset);
  *
  ****************************************************************************************
  */
-void sch_alarm_timer_isr(void);
+void tlk_bt_ctrl_sch_alarm_timer_isr(void);
 
 /**
  ****************************************************************************************
@@ -130,7 +130,7 @@ void sch_alarm_timer_isr(void);
  * @param[in] elt      Pointer to the alarm element to be programmed
  ****************************************************************************************
  */
-void sch_alarm_set(struct sch_alarm_tag *elt);
+void tlk_bt_ctrl_sch_alarm_set(struct sch_alarm_tag *elt);
 
 /**
  ****************************************************************************************
@@ -141,7 +141,7 @@ void sch_alarm_set(struct sch_alarm_tag *elt);
  * @return 0 - no error / 1:255 - error
  ****************************************************************************************
  */
-uint8_t sch_alarm_clear(struct sch_alarm_tag *elt);
+uint8_t tlk_bt_ctrl_sch_alarm_clear(struct sch_alarm_tag *elt);
 
 ///@} SCH_ALARM
 

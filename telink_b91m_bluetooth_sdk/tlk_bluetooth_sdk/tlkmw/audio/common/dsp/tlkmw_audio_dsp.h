@@ -25,13 +25,13 @@
 
 #if (TLK_MW_DSP_COMM_ENABLE)
 
-    #define D25F_FW_VERSION 0x80000001
+#define D25F_FW_VERSION 0x80000001
 
-    #ifndef audio_ram_code
-        #define audio_ram_code _attribute_ram_code_
-    #endif
+#ifndef audio_ram_code
+#define audio_ram_code _attribute_ram_code_
+#endif
 
-    #define SL_DSP_EN 1
+#define SL_DSP_EN 1
 
 typedef enum
 {
@@ -60,7 +60,8 @@ typedef enum
     HRA_VOICE,
     BT_VOICE,
     LL_VOICE,
-	VAD_NN_NS,
+    VAD_NN_NS,
+    BBF_VAD_NN_NS,
     DSP_BYPASS
 } dsp_process_type_t;
 
@@ -85,19 +86,19 @@ app_dsp_context_t *d25f_get_dsp_app_ctx(uint8_t id);
 /**
  * @brief       Initialize IPC buffer
  */
-void               d25f_init_ipc_buffer(void);
+void d25f_init_ipc_buffer(void);
 
 /**
  * @brief       Set algorithm type
  * @param[in]   alg_type - Algorithm type
  * @param[in]   id - IPC data path ID
  */
-void               d25f_set_alg_type(uint8_t alg_type, uint8_t id);
+void d25f_set_alg_type(uint8_t alg_type, uint8_t id);
 
 /**
  * @brief       Initialize DSP environment
  */
-void               d25f_init_dsp_env(void);
+void d25f_init_dsp_env(void);
 
 /**
  * @brief       Initialize TLK middleware DSP
@@ -126,7 +127,7 @@ bool tlkmw_dsp_isWorking(void);
  * @param[in]   id - IPC data path ID
  * @return      Pointer to PCM data
  */
-uint8_t           *d25f_get_pcm_data_from_dsp(uint16_t *data_len, uint8_t id);
+uint8_t *d25f_get_pcm_data_from_dsp(uint16_t *data_len, uint8_t id);
 
 /**
  * @brief       Send audio data to DSP
@@ -135,7 +136,7 @@ uint8_t           *d25f_get_pcm_data_from_dsp(uint16_t *data_len, uint8_t id);
  * @param[in]   id - IPC data path ID
  * @return      1 if successful, 0 otherwise
  */
-uint8_t            d25f_send_audio_data_to_dsp(uint8_t *p_data, uint16_t len, uint8_t id);
+uint8_t d25f_send_audio_data_to_dsp(uint8_t *p_data, uint16_t len, uint8_t id);
 
 /**
  * @brief       Get BT voice available NN buffer length
@@ -159,5 +160,5 @@ uint8_t d25f_get_ll_voice_available_nn_buff_len(int *ps, int *pd, uint16_t len);
  * @brief       Reset DSP voice NN communication status
  */
 void dsp_voice_nn_comm_reset_status(void);
-
+void tlkmw_dsp_alg_common_para(int para);
 #endif

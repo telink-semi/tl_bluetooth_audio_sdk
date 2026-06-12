@@ -27,9 +27,9 @@
 
 #if (TLKSTK_BT_TPS_ENABLE)
 
-#if (TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
+#if ((TLK_MW_DSP_COMM_ENABLE && !TLKADU_MIDBUF_ENABLE) && !TLK_CFG_HRA_ENABLE)
 
-int ll_dsp_ret_data_buff[TLKALG_DSP_RET_NN_DATA_LEN_LL];
+int      ll_dsp_ret_data_buff[TLKALG_DSP_RET_NN_DATA_LEN_LL];
 uint16_t ll_dsp_wptr = 0;
 uint16_t ll_dsp_rptr = 0;
 
@@ -42,7 +42,7 @@ uint32_t g_ll_voice_alg_spk_rptr = 0;
  */
 void ll_voice_dsp_dp_sync_mic_spk_index(uint16_t sample)
 {
-    uint32_t mic_rptr = tlkdrv_codec_sync_mic_samples(sample);
+    uint32_t mic_rptr       = tlkdrv_codec_sync_mic_samples(sample);
     g_ll_voice_alg_spk_rptr = (mic_rptr - 180) & (CODEC_SPK_FIFO_SAMPLES - 1);
 }
 
@@ -57,8 +57,8 @@ audio_ram_code uint8_t ll_voice_dsp_dp_get_mic_data(int *p_des, uint16_t samples
     adc_int mic_stereo_48k_24bit[480];
 
 
-    int buff_alg_in[480] = {0};
-    int *pout = buff_alg_in;
+    int  buff_alg_in[480] = {0};
+    int *pout             = buff_alg_in;
 
     tlkdrv_codec_readMicData((uint8_t *)mic_stereo_48k_24bit, samples * 3 * sizeof(adc_int), 0); //stereo
 #if 0
@@ -77,20 +77,20 @@ audio_ram_code uint8_t ll_voice_dsp_dp_get_mic_data(int *p_des, uint16_t samples
     	buff_alg_in[k] = (int)mic_stereo_16k_16bit[k] << 8;
     }
 #else
-    adc_int mic_stereo_16k_24bit[160];
+    adc_int                mic_stereo_16k_24bit[160];
     audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16_24BIT);
     p_audio_alg_if->audio_alg_process((uint8_t *)mic_stereo_48k_24bit, (uint8_t *)mic_stereo_16k_24bit, samples * 3, 0, 0);
 
     int *mic_psrc = (int *)mic_stereo_16k_24bit;
-    for (int k = 0; k < samples*2; k++) {
-    	buff_alg_in[k] = mic_psrc[k];
+    for (int k = 0; k < samples * 2; k++) {
+        buff_alg_in[k] = mic_psrc[k];
     }
 #endif
     // spk data     +6 pick one sample from 3 stereo 48k samples
     int *spk_psrc = (int *)g_codec_spk_buff;
     for (int j = 0; j < samples; j++) {
         buff_alg_in[samples * 2 + j] = spk_psrc[g_ll_voice_alg_spk_rptr];
-        g_ll_voice_alg_spk_rptr = ((g_ll_voice_alg_spk_rptr + 6)  & (CODEC_SPK_FIFO_SAMPLES - 1));
+        g_ll_voice_alg_spk_rptr      = ((g_ll_voice_alg_spk_rptr + 6) & (CODEC_SPK_FIFO_SAMPLES - 1));
     }
 
     for (int k = 0; k < samples * 3; k++) {
@@ -153,10 +153,10 @@ void ll_voice_dsp_msg_process_callback(uint8_t enc_buff_wptr, uint8_t type)
 
     int *p_src = (int *)pcm_data;
     // tlkapi_warn(TLKDRV_CODEC_DBG_FLAG, TLKDRV_CODEC_DBG_SIGN, "dsp ret len %d", pcm_data_len);
-    for(int i = 0; i < pcm_data_len/4; i++) {
+    for (int i = 0; i < pcm_data_len / 4; i++) {
         ll_dsp_ret_data_buff[ll_dsp_wptr++] = *p_src++;
         ll_dsp_wptr %= TLKALG_DSP_RET_NN_DATA_LEN_LL;
-    }    
+    }
 }
 #endif
 #endif

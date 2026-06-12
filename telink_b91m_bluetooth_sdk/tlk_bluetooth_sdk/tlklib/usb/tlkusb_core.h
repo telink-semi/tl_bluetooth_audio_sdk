@@ -28,7 +28,7 @@
 #include "tlkusb_hal.h"
 
 #ifndef SL_STACK_VCD_EN
-    #define SL_STACK_VCD_EN 1
+#define SL_STACK_VCD_EN 1
 #endif
 
 /**
@@ -37,14 +37,21 @@
  * @param[in]   usbID   - the USB identifier.
  * @return      TLK_ENONE on success, otherwise is failure.
  */
-int    tlkusb_core_init(uint8_t index, uint16_t usbID);
+int tlkusb_core_init(uint8_t index, uint16_t usbID);
+
+/**
+ * @brief       This function enable or disable usb suspend.
+ * @param[in]   index   - the USB instance index.
+ * @return
+ */
+void tlkusb_set_usb_suspend_enable(uint8_t index, uint8_t en);
 
 /**
  * @brief       This function handles USB core events and processes control transfers.
  * @param[in]   index   - the USB instance index.
  * @return      none.
  */
-void   tlkusb_core_handler(uint8_t index);
+void tlkusb_core_handler(uint8_t index);
 
 /**
  * @brief       This function gets the current mode of the USB module.

@@ -32,7 +32,7 @@
 #define CIS_TX_PDU_BUF_EXT_LEN 13 //user can't modify this value !!!
 
 //attention: if CIS_CONN_PARAM_LENGTH change,please change CIS_CONN_PARAM_LENGTH len simultaneously in cis_stack.h
-#define               CIS_CONN_PARAM_LENGTH 412 //user can't modify this value !!!
+#define CIS_CONN_PARAM_LENGTH 412 //user can't modify this value !!!
 //#define             CIS_CONN_PARAM_LENGTH                           sizeof(ll_cis_conn_t)
 
 

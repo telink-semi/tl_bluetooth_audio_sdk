@@ -36,9 +36,10 @@ typedef enum
     TPSLL_HCI_TYPE_SCO_DATA = 0x02,
 } TLKTPSLL_HCI_TYPE_ENUM;
 
-typedef void (* tlktpsll_hci_rxC2HSpeakerDataCB)(uint32_t tick, uint8_t rx_packet_id, uint8_t wptr, uint8_t *p_data, uint8_t len);
+typedef void (*tlktpsll_hci_rxC2HSpeakerDataCB)(uint32_t tick, uint8_t rx_packet_id, uint8_t wptr, uint8_t *p_data, uint8_t len);
 void tlktpsll_hci_registerC2HSpeakerData(tlktpsll_hci_rxC2HSpeakerDataCB cb);
 void tlktpsll_hci_recvC2HData(uint8_t *pData, uint32_t dataLen);
+void tlktpsll_hci_sco_recvC2HData(uint8_t *pData, uint32_t dataLen);
 int  tlktpsll_hci_sendH2cCmd(uint16_t opcode, uint8_t *pData, uint16_t dataLen);
 int  tlktpsll_hci_sendScoData(uint16_t opcode, uint8_t *pData, uint16_t dataLen);
 #endif

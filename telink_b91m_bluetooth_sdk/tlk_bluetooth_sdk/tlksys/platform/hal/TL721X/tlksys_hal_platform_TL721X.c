@@ -31,69 +31,58 @@
  */
 void tlksys_hal_platform_init(void)
 {
-    const tlksys_hal_platform_init_cfg_t * pCfg = tlksys_hal_port_getPlatformInitCfg();
-    if(pCfg == NULL){
+    const tlksys_hal_platform_init_cfg_t *pCfg = tlksys_hal_port_getPlatformInitCfg();
+    if (pCfg == NULL) {
         return;
     }
 
     /* For TL721X, must before sys_init, sys_init use ext_driver(from BLE SDK legacy design).
      * DRV pm_sleep_apis, RTOS 32k source, sys_pm module need this */
     switch (pCfg->lpTmrCfg) {
-        case TLKSYS_HAL_INIT_LP_TMR_CFG_32kXTAL:
-            blc_pm_select_external_32k_crystal();
-            break;
-        default:
-            blc_pm_select_internal_32k_crystal();
-            break;
+    case TLKSYS_HAL_INIT_LP_TMR_CFG_32kXTAL:
+        blc_pm_select_external_32k_crystal();
+        break;
+    default:
+        blc_pm_select_internal_32k_crystal();
+        break;
     }
+    tlkhal_flash_init(!pCfg->flashProtectClose);
+    tlkhal_flash_4line_enable();
 
-    extern void tlkapp_flash_prot_init(unsigned char flash_protect_en);
-    tlkapp_flash_prot_init(pCfg->flashProtectEn);
-
-    extern void tlkapp_flash_enable_4line(unsigned char en);
-    switch (pCfg->flashLineCfg){
-        case TLKSYS_HAL_INIT_FLASH_LINE_CFG_4LINE_DIS:
-            tlkapp_flash_enable_4line(0);
-            break;  
-        default:
-            tlkapp_flash_enable_4line(1);
-            break;
-    }
-
-    switch (pCfg->powerCfg){
-        default:
-            sys_init(DCDC_0P94_DCDC_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
-            break;
+    switch (pCfg->powerCfg) {
+    default:
+        sys_init(DCDC_0P94_DCDC_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
+        break;
     }
 
     gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
     wd_32k_stop();
     wd_stop();
-#if(PROJ_TPSLL_AUDIO_DONGLE)
+#if (PROJ_TPSLL_AUDIO_DONGLE)
     pm_set_dvdd(CORE_0P9V_SRAM_0P9V_BB_0P9V, DMA1, 1000);
 #endif
     analog_write_reg8(0x0f, (analog_read_reg8(0x0f) & 0x0f) | (12 << 4));
     analog_write_reg8(0x0e, (analog_read_reg8(0x0e) & 0x8f) | (5 << 4));
-    
-    tlkhal_clock_setLevel(pCfg->clockLevel,NULL);
-    
+
+    tlkhal_clock_setLevel(pCfg->clockLevel, NULL);
+
     pm_update_status_info(1);
 
-    switch (pCfg->gpioCfg){
-        case TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN:
-            gpio_shutdown(GPIO_ALL);
-            break;  
-        default:
-            gpio_init(0);
-            break;
+    switch (pCfg->gpioCfg) {
+    case TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN:
+        gpio_shutdown(GPIO_ALL);
+        break;
+    default:
+        gpio_init(0);
+        break;
     }
-    switch (pCfg->calibrationCfg){
-        case TLKSYS_HAL_INIT_CALIBRATION_CFG_DIS:
-            break;  
-        default:
-            extern void calibration_func(void);
-            calibration_func();
-            break;
+    switch (pCfg->calibrationCfg) {
+    case TLKSYS_HAL_INIT_CALIBRATION_CFG_DIS:
+        break;
+    default:
+        extern void calibration_func(void);
+        calibration_func();
+        break;
     }
 
     flash_plic_preempt_config(1, 1);

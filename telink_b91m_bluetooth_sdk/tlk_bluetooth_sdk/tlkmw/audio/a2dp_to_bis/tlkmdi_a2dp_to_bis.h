@@ -82,7 +82,7 @@ uint16_t tlkmdi_a2dp_to_bis_is_enabled(void);
  * @param[in] None
  * @return TLK_ENONE is success,other value is false.
  */
-int  tlkmdi_a2dp_to_bis_init(void);
+int tlkmdi_a2dp_to_bis_init(void);
 
 /**
  * @brief       Start A2DP to BIS streaming
@@ -90,7 +90,7 @@ int  tlkmdi_a2dp_to_bis_init(void);
  * @param[in]   param - Additional parameters (unused)
  * @return      TLK_ENONE if successful, -TLK_EREPEAT if already enabled
  */
-int  tlkmdi_a2dp_to_bis_start(uint16_t handle, uint32_t param);
+int tlkmdi_a2dp_to_bis_start(uint16_t handle, uint32_t param);
 
 /**
  * @brief       Close A2DP to BIS streaming
@@ -179,7 +179,7 @@ uint32_t tlkmdi_a2dp_to_bis_get_middle_idle_size(void);
  * @param[in]   dataLen - Length of data in bytes
  * @return      true if successful, false otherwise
  */
-bool     tlkmdi_a2dp_to_bis_fill_middle_buff(uint8_t *pData, uint16_t dataLen);
+bool tlkmdi_a2dp_to_bis_fill_middle_buff(uint8_t *pData, uint16_t dataLen);
 
 /**
  * @brief       Get data from middle buffer
@@ -187,21 +187,21 @@ bool     tlkmdi_a2dp_to_bis_fill_middle_buff(uint8_t *pData, uint16_t dataLen);
  * @param[in]   dataLen - Length of data to read in bytes
  * @return      true if successful, false otherwise
  */
-bool     tlkmdi_a2dp_to_bis_get_data_middle_buff(uint8_t *pData, uint16_t dataLen);
+bool tlkmdi_a2dp_to_bis_get_data_middle_buff(uint8_t *pData, uint16_t dataLen);
 
 /**
  * @brief       Timer interrupt handler for A2DP to BIS
  * @param       None
  * @return      None
  */
-void     tlkmdi_a2dp_to_bis_timer_irq_handler(void);
+void tlkmdi_a2dp_to_bis_timer_irq_handler(void);
 
 /**
  * @brief       Synchronize middle buffer pointers
  * @param[in]   sample - Sample count to synchronize to
  * @return      None
  */
-void     tlkmdi_a2dp_to_bis_sync_middle_buff(uint16_t sample);
+void tlkmdi_a2dp_to_bis_sync_middle_buff(uint16_t sample);
 
 /**
  * @brief       Set BIS synchronization flag
@@ -216,4 +216,11 @@ void tlkmdi_a2dp_to_bis_set_bis_sync_flag(void);
  * @return      true if synchronized, false otherwise
  */
 bool tlkmdi_a2dp_to_bis_get_sync_flag(void);
+
+/**
+ * @brief       Set total delay for A2DP to BIS
+ * @param[in]   total_delay - Total delay in microseconds
+ * @return      None
+ */
+void tlkmdi_a2dp_to_bis_set_total_delay(uint32_t total_delay);
 #endif

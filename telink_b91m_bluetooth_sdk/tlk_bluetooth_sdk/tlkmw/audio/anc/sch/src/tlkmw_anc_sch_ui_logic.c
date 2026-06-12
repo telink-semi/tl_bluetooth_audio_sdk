@@ -34,22 +34,22 @@
  */
 static void tlkmw_anc_sch_ui_next_prev_core(uint8_t isNext)
 {
-    if(tlkmw_anc_sch_isRunning() == 0){
+    if (tlkmw_anc_sch_isRunning() == 0) {
         return;
     }
-    if(tlkmw_anc_bt_voice_getRunningHandle()){
+    if (tlkmw_anc_bt_voice_getRunningHandle()) {
         return;
     }
     uint16_t handle = tlkmw_anc_bt_music_getRunningHandle();
-    if(handle){
+    if (handle) {
         uint8_t key = isNext ? AUD_BTIF_AVRCP_KEYID_FORWARD : AUD_BTIF_AVRCP_KEYID_BACKWARD;
         tlkmdi_audio_btif_avrcp_sendKey(handle, key);
         return;
     }
     handle = tlkmw_anc_tpsll_getRunningHandle();
-    if(handle){
+    if (handle) {
         uint8_t key = isNext ? AUD_TPSIF_KEYID_PLAY_FORWARD : AUD_TPSIF_KEYID_PLAY_BACKWARD;
-        tlkmdi_audio_tpsif_sendKey(handle, key);   
+        tlkmdi_audio_tpsif_sendKey(handle, key);
     }
 }
 
@@ -60,23 +60,23 @@ static void tlkmw_anc_sch_ui_next_prev_core(uint8_t isNext)
  */
 static void tlkmw_anc_sch_ui_volume_core(uint8_t isInc)
 {
-    if(tlkmw_anc_sch_isRunning() == 0){
+    if (tlkmw_anc_sch_isRunning() == 0) {
         return;
     }
     uint16_t handle = tlkmw_anc_bt_voice_getRunningHandle();
-    if(handle){
+    if (handle) {
         tlkmdi_audio_btif_VolumeOperate(handle, isInc, false);
         return;
     }
     handle = tlkmw_anc_bt_music_getRunningHandle();
-    if(handle){
+    if (handle) {
         tlkmdi_audio_btif_VolumeOperate(handle, isInc, true);
         return;
     }
     handle = tlkmw_anc_tpsll_getRunningHandle();
-    if(handle){
+    if (handle) {
         uint8_t key = isInc ? AUD_TPSIF_KEYID_VOL_UP : AUD_TPSIF_KEYID_VOL_DOWN;
-        tlkmdi_audio_tpsif_sendKey(handle,key);
+        tlkmdi_audio_tpsif_sendKey(handle, key);
     }
 }
 
@@ -87,11 +87,11 @@ static void tlkmw_anc_sch_ui_volume_core(uint8_t isInc)
  */
 static void tlkmw_anc_sch_ui_call_core(uint8_t isAccept)
 {
-    if(tlkmw_anc_sch_isRunning() == 0){
+    if (tlkmw_anc_sch_isRunning() == 0) {
         return;
     }
     uint16_t handle = tlkmw_anc_bt_voice_getRunningHandle();
-    if(handle == 0){
+    if (handle == 0) {
         return;
     }
     uint16_t msgID = isAccept ? TLKSYS_BT_MSGID_HF_SEND_CALL_ACCEPT : TLKSYS_BT_MSGID_HF_SEND_CALL_HUNGUP;
@@ -145,29 +145,29 @@ void tlkmw_anc_sch_ui_volume_down(void)
  */
 void tlkmw_anc_sch_ui_playpause(void)
 {
-    if(tlkmw_anc_sch_isRunning() == 0){
+    if (tlkmw_anc_sch_isRunning() == 0) {
         return;
     }
     uint16_t handle = tlkmw_anc_bt_voice_getRunningHandle();
-    if(handle){
+    if (handle) {
         return;
     }
     handle = tlkmw_anc_bt_music_getRunningHandle();
-    if(handle){
+    if (handle) {
         tlkmdi_audio_btif_avrcp_sendKey(handle, AUD_BTIF_AVRCP_KEYID_PAUSE);
         return;
     }
     handle = tlkmw_anc_tpsll_getRunningHandle();
-    if(handle){
-        tlkmdi_audio_tpsif_sendKey(handle,AUD_TPSIF_KEYID_PLAY_PAUSE);
+    if (handle) {
+        tlkmdi_audio_tpsif_sendKey(handle, AUD_TPSIF_KEYID_PLAY_PAUSE);
         return;
     }
     handle = tlkmw_anc_bt_music_getFirstPausedHandle();
-    if(handle){
+    if (handle) {
         tlkmdi_audio_btif_avrcp_sendKey(handle, AUD_BTIF_AVRCP_KEYID_PLAY);
         return;
     }
-    tlkmdi_audio_tpsif_sendKey(0xFFF0,AUD_TPSIF_KEYID_PLAY_PAUSE);
+    tlkmdi_audio_tpsif_sendKey(0xFFF0, AUD_TPSIF_KEYID_PLAY_PAUSE);
 }
 
 /**
@@ -190,4 +190,4 @@ void tlkmw_anc_sch_ui_call_reject(void)
     tlkmw_anc_sch_ui_call_core(0);
 }
 
-#endif 
+#endif

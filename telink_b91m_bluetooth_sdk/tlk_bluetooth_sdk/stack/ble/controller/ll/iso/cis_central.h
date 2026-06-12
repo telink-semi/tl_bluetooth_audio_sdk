@@ -53,5 +53,27 @@ ble_sts_t blc_ll_initCisCentralModule_initCigParametersBuffer(u8 *pCigParamBuf, 
  */
 ble_sts_t blc_ll_setCigTimingOffsetOfAclCentral(u8 acl_cen_index, u16 offset_custom_us);
 
+/**
+ * @brief	   create a CIG and to set the parameters of one or more CISes that are associated with a CIG in the Controller.
+ * @param[in]  pCmdParam - Command Parameters buffer pointer
+ * @param[out] pRetParam - return Parameters buffer pointer
+ * @return     status, 0x00:  succeed
+ * 			           other: failed
+ */
+ble_sts_t blc_hci_le_setCigParams(hci_le_setCigParam_cmdParam_t *pCmdParam, hci_le_setCigParam_retParam_t *pRetParam);
+
+#if (ULL_FOR_CIS_EN)
+ble_sts_t blc_hci_le_setCigParamsULL(hci_le_setCigParamTest_cmdParam_t *pCmdParam, hci_le_setCigParam_retParam_t *pRetParam);
+#endif
+
+/**
+ * @brief	  create one or more CISes using the connections identified by the ACL_Connection_Handle arrayed parameter.
+ * @param[in] pCisPara - Command Parameters buffer pointer
+ * @return     status, 0x00:  succeed
+ * 			           other: failed
+ */
+ble_sts_t blc_hci_le_createCis(hci_le_CreateCisParams_t *pCisPara);
+
+ble_sts_t blc_hci_le_removeCig(u8 cigId, hci_le_removeCig_retParam_t *);
 
 #endif /* CIS_CENTRAL_H_ */

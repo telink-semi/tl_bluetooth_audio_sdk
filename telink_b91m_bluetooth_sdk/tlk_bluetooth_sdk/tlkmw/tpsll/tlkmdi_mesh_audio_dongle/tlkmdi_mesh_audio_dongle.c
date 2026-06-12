@@ -33,7 +33,7 @@
 #include "stack/multiCoreComm/service/service_shareMemory.h"
 #include "stack/tpsll/host/tpsll_hcicmd.h"
 #include "stack/tpsll/host/tpsll_hostevent.h"
-#include "stack/tpsll/tpmd/tpmd_host_interface.h"
+#include "stack/tpsll/controller/tpmd/tpmd_host_interface.h"
 #include "stack/multiCoreComm/service/service_mailbox.h"
 
 #define TPMD_DONGLE_SETUP_COMMON_ACCESSCODE 0x56291435
@@ -179,14 +179,14 @@ void tlkmdi_mesh_audio_dongle_pairing_init(uint8_t *pData, uint8_t dataLen)
     }
 
     uint8_t result = 0;
-    // result = tpmd_dongle_start_disconnection(TPMD_DISCONNECT_REASON_DONGLE_SETUP);
+    // result = tlk_tpsll_tpmd_dongle_start_disconnection(TPMD_DISCONNECT_REASON_DONGLE_SETUP);
     tlkapi_sendU32s(DUMP_APP_MSG, "[[]]app_dongle_pairing_handle discon result", result, 0, 0, 0);
     //    if(result)
     //    {
     //        tlkmdi_tpmd_delete_all_user_data();
     //
-    //    	// tpmd_dongle_set_setup_ac_chn(TPMD_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPMD_HOST_DONGLE_SETUP_COMMON_CHN);
-    //    	// tpmd_host_dongle_start_connection_scan();
+    //    	// tlk_tpsll_tpmd_dongle_set_setup_ac_chn(TPMD_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPMD_HOST_DONGLE_SETUP_COMMON_CHN);
+    //    	// tlk_tpsll_tpmd_host_dongle_start_connection_scan();
     //    }
 }
 

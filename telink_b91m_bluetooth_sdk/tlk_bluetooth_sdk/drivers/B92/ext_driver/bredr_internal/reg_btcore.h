@@ -73,64 +73,64 @@ __INLINE void bt_rwbtcntl_set(uint32_t value)
     REG_BT_WR(BT_RWBTCNTL_ADDR, value);
 }
 
-#define BT_TOKEN_CNTL0   (REG_BTCORE_BASE_ADDR + 0x264)
-#define BT_TOKEN_CNTL1   (REG_BTCORE_BASE_ADDR + 0x265)
-#define BT_TOKEN_CNTL2   (REG_BTCORE_BASE_ADDR + 0x266)
-#define BT_TOKEN_CNTL3   (REG_BTCORE_BASE_ADDR + 0x267)
+// #define BT_TOKEN_CNTL0   (REG_BTCORE_BASE_ADDR + 0x264)
+// #define BT_TOKEN_CNTL1   (REG_BTCORE_BASE_ADDR + 0x265)
+// #define BT_TOKEN_CNTL2   (REG_BTCORE_BASE_ADDR + 0x266)
+// #define BT_TOKEN_CNTL3   (REG_BTCORE_BASE_ADDR + 0x267)
 
-#define BT_TOKENPWRUPDN0 (REG_BTCORE_BASE_ADDR + 0x268)
-#define BT_TOKENPWRUPDN1 (REG_BTCORE_BASE_ADDR + 0x269)
-#define BT_TOKENPWRUPDN2 (REG_BTCORE_BASE_ADDR + 0x270)
-#define BT_TOKENPWRUPDN3 (REG_BTCORE_BASE_ADDR + 0x271)
+// #define BT_TOKENPWRUPDN0 (REG_BTCORE_BASE_ADDR + 0x268)
+// #define BT_TOKENPWRUPDN1 (REG_BTCORE_BASE_ADDR + 0x269)
+// #define BT_TOKENPWRUPDN2 (REG_BTCORE_BASE_ADDR + 0x270)
+// #define BT_TOKENPWRUPDN3 (REG_BTCORE_BASE_ADDR + 0x271)
 
-#define BT_TOKEN_CNTL    (REG_BTCORE_BASE_ADDR + 0x264)
-#define BT_TOKEN_PWRUPDN (REG_BTCORE_BASE_ADDR + 0x268)
-#define BT_TOKEN_BYPASS  (REG_BTCORE_BASE_ADDR + 0x26C)
-#define BT_TOKEN_TOKENFS (REG_BTCORE_BASE_ADDR + 0x270)
+// #define BT_TOKEN_CNTL    (REG_BTCORE_BASE_ADDR + 0x264)
+// #define BT_TOKEN_PWRUPDN (REG_BTCORE_BASE_ADDR + 0x268)
+// #define BT_TOKEN_BYPASS  (REG_BTCORE_BASE_ADDR + 0x26C)
+// #define BT_TOKEN_TOKENFS (REG_BTCORE_BASE_ADDR + 0x270)
 
-// BT_TOKEN_CNTL
-__INLINE uint32_t bt_token_cntl_get(void)
-{
-    return REG_BT_RD(BT_TOKEN_CNTL);
-}
+// // BT_TOKEN_CNTL
+// __INLINE uint32_t bt_token_cntl_get(void)
+// {
+//     return REG_BT_RD(BT_TOKEN_CNTL);
+// }
 
-__INLINE void bt_token_cntl_set(uint32_t value)
-{
-    REG_BT_WR(BT_TOKEN_CNTL, value);
-}
+// __INLINE void bt_token_cntl_set(uint32_t value)
+// {
+//     REG_BT_WR(BT_TOKEN_CNTL, value);
+// }
 
-// BT_TOKENPWRUPDN
-__INLINE uint32_t bt_token_pwrupdn_get(void)
-{
-    return REG_BT_RD(BT_TOKEN_PWRUPDN);
-}
+// // BT_TOKENPWRUPDN
+// __INLINE uint32_t bt_token_pwrupdn_get(void)
+// {
+//     return REG_BT_RD(BT_TOKEN_PWRUPDN);
+// }
 
-__INLINE void bt_token_pwrupdn_set(uint32_t value)
-{
-    REG_BT_WR(BT_TOKEN_PWRUPDN, value);
-}
+// __INLINE void bt_token_pwrupdn_set(uint32_t value)
+// {
+//     REG_BT_WR(BT_TOKEN_PWRUPDN, value);
+// }
 
-// BT_TOKEN_BYPASS
-__INLINE uint32_t bt_token_bypass_get(void)
-{
-    return REG_BT_RD(BT_TOKEN_BYPASS);
-}
+// // BT_TOKEN_BYPASS
+// __INLINE uint32_t bt_token_bypass_get(void)
+// {
+//     return REG_BT_RD(BT_TOKEN_BYPASS);
+// }
 
-__INLINE void bt_token_bypass_set(uint32_t value)
-{
-    REG_BT_WR(BT_TOKEN_BYPASS, value);
-}
+// __INLINE void bt_token_bypass_set(uint32_t value)
+// {
+//     REG_BT_WR(BT_TOKEN_BYPASS, value);
+// }
 
-// BT_TOKEN_TOKENFS
-__INLINE uint32_t bt_token_tokenfs_get(void)
-{
-    return REG_BT_RD(BT_TOKEN_TOKENFS);
-}
+// // BT_TOKEN_TOKENFS
+// __INLINE uint32_t bt_token_tokenfs_get(void)
+// {
+//     return REG_BT_RD(BT_TOKEN_TOKENFS);
+// }
 
-__INLINE void bt_token_tokenfs_set(uint32_t value)
-{
-    REG_BT_WR(BT_TOKEN_TOKENFS, value);
-}
+// __INLINE void bt_token_tokenfs_set(uint32_t value)
+// {
+//     REG_BT_WR(BT_TOKEN_TOKENFS, value);
+// }
 
 // field definitions
 #define BT_MASTER_SOFT_RST_BIT    ((uint32_t)0x80000000)
@@ -13926,5 +13926,437 @@ __INLINE void bt_pcmsinkptr_pcmsinkptr0_setf(uint16_t pcmsinkptr0)
     REG_BT_WR(BT_PCMSINKPTR_ADDR, (REG_BT_RD(BT_PCMSINKPTR_ADDR) & ~((uint32_t)0x0000FFFF)) | ((uint32_t)pcmsinkptr0 << 0));
 }
 
+/* Notice : Todo by mingqian in 20260511, comfirmed with ZhaoWei.
+ * 1. Add B92 Token register setting from TL751X.
+ * 2. At present, It is only to solve the compilation errors, these interfaces will not be actually invoked.
+ */
+
+/**
+ * @brief RWBTTOKEN_CNTL register definition
+ * <pre>
+ *   Bits           Field Name   Reset Value
+ *  -----   ------------------   -----------
+ *     28       OB_EARLYTERM_EN   0x1
+ *     27          OB_BYPASS_EN   0
+ *     26          OB_ACTIVE_EN   0
+ *     25       OB_ACTIVE_TXDIS   0
+ *     24       MDM_CONSERVE_EN   0
+ *     23       TOKEN_TXPWR_SEL   0
+ *     22       AUTO_CAPTURE_EN   0x1
+ *  21:16          TOKEN_NWINSZ   0xA
+ *  15:12           RXGRD_SHIFT   0x3
+ *  11:06           TOKEN_TXDLY   0
+ *  05:00           TOKEN_RXDLY   0xA
+ * </pre>
+ */
+
+#define BT_TOKEN_CNTL_ADDR (REG_BTCORE_BASE_ADDR + 0x264)
+
+__INLINE uint32_t bt_rwbttoken_cntl_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0xFFFFFFFF)) >> 0);
+}
+
+__INLINE void bt_rwbttoken_cntl_setf(uint32_t bttoken_cntl)
+{
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0xFFFFFFFF)) | ((uint32_t)bttoken_cntl << 0));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_token_rxdly_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x0000003F)) >> 0);
+}
+
+__INLINE void bt_rwbttoken_cntl_token_rxdly_setf(uint8_t token_rxdly)
+{
+    ASSERT_ERR((((uint32_t)token_rxdly << 0) & ~((uint32_t)0xFFFFFFC0)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0xFFFFFFC0)) | ((uint32_t)token_rxdly << 0));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_token_txdly_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x00000FC0)) >> 6);
+}
+
+__INLINE void bt_rwbttoken_cntl_token_txdly_setf(uint8_t token_txdly)
+{
+    ASSERT_ERR((((uint32_t)token_txdly << 6) & ~((uint32_t)0xFFFFF03F)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0xFFFFF03F)) | ((uint32_t)token_txdly << 6));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_rxgrd_shift_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x0000F000)) >> 12);
+}
+
+__INLINE void bt_rwbttoken_cntl_rxgrd_shift_setf(uint8_t rxgrd_shift)
+{
+    ASSERT_ERR((((uint32_t)rxgrd_shift << 12) & ~((uint32_t)0xFFFF0FFF)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0xFFFF0FFF)) | ((uint32_t)rxgrd_shift << 12));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_token_nwinsz_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x003F0000)) >> 16);
+}
+
+__INLINE void bt_rwbttoken_cntl_token_nwinsz_setf(uint8_t nwinsz)
+{
+    ASSERT_ERR((((uint32_t)nwinsz << 16) & ~((uint32_t)0xFFC0FFFF)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0xFFC0FFFF)) | ((uint32_t)nwinsz << 16));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_auto_cap_en_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x00400000)) >> 22);
+}
+
+__INLINE void bt_rwbttoken_cntl_auto_cap_en_setf(uint8_t en)
+{
+    ASSERT_ERR((((uint32_t)en << 22) & ~((uint32_t)0xFFBFFFFF)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0xFFBFFFFF)) | ((uint32_t)en << 22));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_token_txpwr_sel_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x00800000)) >> 23);
+}
+
+__INLINE void bt_rwbttoken_cntl_token_txpwr_sel_setf(uint8_t en)
+{
+    ASSERT_ERR((((uint32_t)en << 23) & ~((uint32_t)0xFF7FFFFF)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0xFF7FFFFF)) | ((uint32_t)en << 23));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_mdm_conserve_en_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x01000000)) >> 24);
+}
+
+__INLINE void bt_rwbttoken_cntl_mdm_conserve_en_setf(uint8_t en)
+{
+    ASSERT_ERR((((uint32_t)en << 24) & ~((uint32_t)0x01000000)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0x01000000)) | ((uint32_t)en << 24));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_ob_active_txdis_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x02000000)) >> 25);
+}
+
+__INLINE void bt_rwbttoken_cntl_ob_active_txdis_setf(uint8_t en)
+{
+    ASSERT_ERR((((uint32_t)en << 25) & ~((uint32_t)0x02000000)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0x02000000)) | ((uint32_t)en << 25));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_ob_active_en_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x04000000)) >> 26);
+}
+
+__INLINE void bt_rwbttoken_cntl_ob_active_en_setf(uint8_t en)
+{
+    ASSERT_ERR((((uint32_t)en << 26) & ~((uint32_t)0x04000000)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0x04000000)) | ((uint32_t)en << 26));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_ob_bypass_en_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x08000000)) >> 27);
+}
+
+__INLINE void bt_rwbttoken_cntl_ob_bypass_en_setf(uint8_t en)
+{
+    ASSERT_ERR((((uint32_t)en << 27) & ~((uint32_t)0x08000000)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0x08000000)) | ((uint32_t)en << 27));
+}
+
+__INLINE uint8_t bt_rwbttoken_cntl_ob_earlyteam_en_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_CNTL_ADDR);
+    return ((localVal & ((uint32_t)0x10000000)) >> 28);
+}
+
+__INLINE void bt_rwbttoken_cntl_ob_earlyteam_en_setf(uint8_t en)
+{
+    ASSERT_ERR((((uint32_t)en << 28) & ~((uint32_t)0x10000000)) == 0);
+    REG_BT_WR(BT_TOKEN_CNTL_ADDR, (REG_BT_RD(BT_TOKEN_CNTL_ADDR) & ~((uint32_t)0x10000000)) | ((uint32_t)en << 28));
+}
+
+/**
+ * @brief RWBTTOKEN_PWRUPDN register definition
+ * <pre>
+ *   Bits           Field Name   Reset Value
+ *  -----   ------------------   -----------
+ *  31:24          TOKEN_TXPWR   0x0
+ *  22:16      TOKEN_RXPATHDLY   0xD
+ *  15:08      TOKEN_RXPWRUPCT   0x25
+ *  07:00      TOKEN_TXPWRUPCT   0x2B
+ * </pre>
+ */
+
+#define BT_TOKENPWRUPDN_ADDR (REG_BTCORE_BASE_ADDR + 0x268)
+
+__INLINE uint32_t bt_rwbttoken_pwrupdn_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKENPWRUPDN_ADDR);
+    return ((localVal & ((uint32_t)0xFFFFFFFF)) >> 0);
+}
+
+__INLINE void bt_rwbttoken_pwrupdn_setf(uint32_t pwrupdn)
+{
+    REG_BT_WR(BT_TOKENPWRUPDN_ADDR, (REG_BT_RD(BT_TOKENPWRUPDN_ADDR) & ~((uint32_t)0xFFFFFFFF)) | ((uint32_t)pwrupdn << 0));
+}
+
+__INLINE uint8_t bt_rwbttoken_pwrupdn_txpwrupct_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKENPWRUPDN_ADDR);
+    return ((localVal & ((uint32_t)0x000000FF)) >> 0);
+}
+
+__INLINE void bt_rwbttoken_pwrupdn_txpwrupct_setf(uint8_t txpwrupct)
+{
+    ASSERT_ERR((((uint32_t)txpwrupct << 0) & ~((uint32_t)0x000000FF)) == 0);
+    REG_BT_WR(BT_TOKENPWRUPDN_ADDR, (REG_BT_RD(BT_TOKENPWRUPDN_ADDR) & ~((uint32_t)0x000000FF)) | ((uint32_t)txpwrupct << 0));
+}
+
+__INLINE uint8_t bt_rwbttoken_pwrupdn_rxpwrupct_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKENPWRUPDN_ADDR);
+    return ((localVal & ((uint32_t)0x0000FF00)) >> 8);
+}
+
+__INLINE void bt_rwbttoken_pwrupdn_rxpwrupct_setf(uint8_t rxpwrupct)
+{
+    ASSERT_ERR((((uint32_t)rxpwrupct << 8) & ~((uint32_t)0x0000FF00)) == 0);
+    REG_BT_WR(BT_TOKENPWRUPDN_ADDR, (REG_BT_RD(BT_TOKENPWRUPDN_ADDR) & ~((uint32_t)0x0000FF00)) | ((uint32_t)rxpwrupct << 8));
+}
+
+__INLINE uint8_t bt_rwbttoken_pwrupdn_rxpathldy_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKENPWRUPDN_ADDR);
+    return ((localVal & ((uint32_t)0x007F0000)) >> 16);
+}
+
+__INLINE void bt_rwbttoken_pwrupdn_rxpathldy_setf(uint8_t rxpathldy)
+{
+    ASSERT_ERR((((uint32_t)rxpathldy << 16) & ~((uint32_t)0x007F0000)) == 0);
+    REG_BT_WR(BT_TOKENPWRUPDN_ADDR, (REG_BT_RD(BT_TOKENPWRUPDN_ADDR) & ~((uint32_t)0x007F0000)) | ((uint32_t)rxpathldy << 16));
+}
+
+__INLINE uint8_t bt_rwbttoken_pwrupdn_txpwr_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKENPWRUPDN_ADDR);
+    return ((localVal & ((uint32_t)0xFF000000)) >> 24);
+}
+
+__INLINE void bt_rwbttoken_pwrupdn_txpwr_setf(uint8_t txpwr)
+{
+    ASSERT_ERR((((uint32_t)txpwr << 16) & ~((uint32_t)0xFF000000)) == 0);
+    REG_BT_WR(BT_TOKENPWRUPDN_ADDR, (REG_BT_RD(BT_TOKENPWRUPDN_ADDR) & ~((uint32_t)0xFF000000)) | ((uint32_t)txpwr << 24));
+}
+
+/**
+ * @brief RWBTTOKEN_BYPASS register definition
+ * <pre>
+ *   Bits           Field Name   Reset Value
+ *  -----   ------------------   -----------
+ *  28:24      TOKEN_3M_BYPASS   0x1F
+ *  20:16      TOKEN_2M_BYPASS   0x1F
+ *  08:00      TOKEN_1M_BYPASS   0x1FF
+ * </pre>
+ */
+
+#define BT_TOKEN_BYPASS_ADDR (REG_BTCORE_BASE_ADDR + 0x26C)
+
+__INLINE uint32_t bt_rwbttoken_bypass_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_BYPASS_ADDR);
+    return ((localVal & ((uint32_t)0xFFFFFFFF)) >> 0);
+}
+
+__INLINE void bt_rwbttoken_bypass_setf(uint32_t bypass)
+{
+    REG_BT_WR(BT_TOKEN_BYPASS_ADDR, (REG_BT_RD(BT_TOKEN_BYPASS_ADDR) & ~((uint32_t)0xFFFFFFFF)) | ((uint32_t)bypass << 0));
+}
+
+__INLINE uint16_t bt_rwbttoken_bypass_1m_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_BYPASS_ADDR);
+    return ((localVal & ((uint32_t)0x000001FF)) >> 0);
+}
+
+__INLINE void bt_rwbttoken_bypass_1m_setf(uint16_t bypass)
+{
+    ASSERT_ERR((((uint32_t)bypass << 0) & ~((uint32_t)0x000001FF)) == 0);
+    REG_BT_WR(BT_TOKEN_BYPASS_ADDR, (REG_BT_RD(BT_TOKEN_BYPASS_ADDR) & ~((uint32_t)0x000001FF)) | ((uint32_t)bypass << 0));
+}
+
+__INLINE uint16_t bt_rwbttoken_bypass_2m_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_BYPASS_ADDR);
+    return ((localVal & ((uint32_t)0x001F0000)) >> 16);
+}
+
+__INLINE void bt_rwbttoken_bypass_2m_setf(uint16_t bypass)
+{
+    ASSERT_ERR((((uint32_t)bypass << 16) & ~((uint32_t)0x001F0000)) == 0);
+    REG_BT_WR(BT_TOKEN_BYPASS_ADDR, (REG_BT_RD(BT_TOKEN_BYPASS_ADDR) & ~((uint32_t)0x001F0000)) | ((uint32_t)bypass << 16));
+}
+
+__INLINE uint16_t bt_rwbttoken_bypass_3m_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_BYPASS_ADDR);
+    return ((localVal & ((uint32_t)0x1F000000)) >> 24);
+}
+
+__INLINE void bt_rwbttoken_bypass_3m_setf(uint16_t bypass)
+{
+    ASSERT_ERR((((uint32_t)bypass << 24) & ~((uint32_t)0x1F000000)) == 0);
+    REG_BT_WR(BT_TOKEN_BYPASS_ADDR, (REG_BT_RD(BT_TOKEN_BYPASS_ADDR) & ~((uint32_t)0x1F000000)) | ((uint32_t)bypass << 24));
+}
+
+/**
+ * @brief RWBTTOKEN_NFS register definition
+ * <pre>
+ *   Bits           Field Name   		 Reset Value
+ *  -----   -------------------------    -----------
+ *  31:24  TOKENFS_PREFETCHABORT_TIME   	0xA4
+ *  23:16       TOKENFS_PREFETCH_TIME   	0xA0
+ *  15:08        TOKENFS_TXPWRUP_TIME   	0x3C
+ *  07:00        TOKENFS_RXPWRUP_TIME   	0x32
+ * </pre>
+ */
+#define BT_TOKEN_TOKENFS_ADDR (REG_BTCORE_BASE_ADDR + 0x270)
+
+__INLINE uint32_t bt_rwbttoken_nfs_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_TOKENFS_ADDR);
+    return ((localVal & ((uint32_t)0xFFFFFFFF)) >> 0);
+}
+
+__INLINE void bt_rwbttoken_nfs_setf(uint32_t nfs)
+{
+    REG_BT_WR(BT_TOKEN_TOKENFS_ADDR, (REG_BT_RD(BT_TOKEN_TOKENFS_ADDR) & ~((uint32_t)0xFFFFFFFF)) | ((uint32_t)nfs << 0));
+}
+
+__INLINE uint8_t bt_rwbttoken_nfs_rxpwrup_time_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_TOKENFS_ADDR);
+    return ((localVal & ((uint32_t)0x000000FF)) >> 0);
+}
+
+__INLINE void bt_rwbttoken_nfs_rxpwrup_time_setf(uint8_t rxpwrup_time)
+{
+    ASSERT_ERR((((uint32_t)rxpwrup_time << 0) & ~((uint32_t)0x000000FF)) == 0);
+    REG_BT_WR(BT_TOKEN_TOKENFS_ADDR, (REG_BT_RD(BT_TOKEN_TOKENFS_ADDR) & ~((uint32_t)0x000000FF)) | ((uint32_t)rxpwrup_time << 0));
+}
+
+__INLINE uint8_t bt_rwbttoken_nfs_txpwrup_time_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_TOKENFS_ADDR);
+    return ((localVal & ((uint32_t)0x0000FF00)) >> 8);
+}
+
+__INLINE void bt_rwbttoken_nfs_txpwrup_time_setf(uint8_t txpwrup_time)
+{
+    ASSERT_ERR((((uint32_t)txpwrup_time << 8) & ~((uint32_t)0x0000FF00)) == 0);
+    REG_BT_WR(BT_TOKEN_TOKENFS_ADDR, (REG_BT_RD(BT_TOKEN_TOKENFS_ADDR) & ~((uint32_t)0x0000FF00)) | ((uint32_t)txpwrup_time << 8));
+}
+
+__INLINE uint8_t bt_rwbttoken_nfs_prefetch_time_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_TOKENFS_ADDR);
+    return ((localVal & ((uint32_t)0x00FF0000)) >> 16);
+}
+
+__INLINE void bt_rwbttoken_nfs_prefetch_time_setf(uint8_t prefetch_time)
+{
+    ASSERT_ERR((((uint32_t)prefetch_time << 16) & ~((uint32_t)0x00FF0000)) == 0);
+    REG_BT_WR(BT_TOKEN_TOKENFS_ADDR, (REG_BT_RD(BT_TOKEN_TOKENFS_ADDR) & ~((uint32_t)0x00FF0000)) | ((uint32_t)prefetch_time << 16));
+}
+
+__INLINE uint8_t bt_rwbttoken_nfs_prefetch_abort_time_getf(void)
+{
+    uint32_t localVal = REG_BT_RD(BT_TOKEN_TOKENFS_ADDR);
+    return ((localVal & ((uint32_t)0xFF000000)) >> 24);
+}
+
+__INLINE void bt_rwbttoken_nfs_prefetch_abort_time_setf(uint8_t prefetch_abort_time)
+{
+    ASSERT_ERR((((uint32_t)prefetch_abort_time << 24) & ~((uint32_t)0xFF000000)) == 0);
+    REG_BT_WR(BT_TOKEN_TOKENFS_ADDR, (REG_BT_RD(BT_TOKEN_TOKENFS_ADDR) & ~((uint32_t)0xFF000000)) | ((uint32_t)prefetch_abort_time << 24));
+}
+
+#define BT_TOKEN_CNTL0   (REG_BTCORE_BASE_ADDR + 0x264)
+#define BT_TOKEN_CNTL1   (REG_BTCORE_BASE_ADDR + 0x265)
+#define BT_TOKEN_CNTL2   (REG_BTCORE_BASE_ADDR + 0x266)
+#define BT_TOKEN_CNTL3   (REG_BTCORE_BASE_ADDR + 0x267)
+
+#define BT_TOKENPWRUPDN0 (REG_BTCORE_BASE_ADDR + 0x268)
+#define BT_TOKENPWRUPDN1 (REG_BTCORE_BASE_ADDR + 0x269)
+#define BT_TOKENPWRUPDN2 (REG_BTCORE_BASE_ADDR + 0x270)
+#define BT_TOKENPWRUPDN3 (REG_BTCORE_BASE_ADDR + 0x271)
+
+#define BT_TOKEN_CNTL    (REG_BTCORE_BASE_ADDR + 0x264)
+#define BT_TOKEN_PWRUPDN (REG_BTCORE_BASE_ADDR + 0x268)
+#define BT_TOKEN_BYPASS  (REG_BTCORE_BASE_ADDR + 0x26C)
+#define BT_TOKEN_TOKENFS (REG_BTCORE_BASE_ADDR + 0x270)
+
+// BT_TOKEN_CNTL
+__INLINE uint32_t bt_token_cntl_get(void)
+{
+    return REG_BT_RD(BT_TOKEN_CNTL);
+}
+
+__INLINE void bt_token_cntl_set(uint32_t value)
+{
+    REG_BT_WR(BT_TOKEN_CNTL, value);
+}
+
+// BT_TOKENPWRUPDN
+__INLINE uint32_t bt_token_pwrupdn_get(void)
+{
+    return REG_BT_RD(BT_TOKEN_PWRUPDN);
+}
+
+__INLINE void bt_token_pwrupdn_set(uint32_t value)
+{
+    REG_BT_WR(BT_TOKEN_PWRUPDN, value);
+}
+
+// BT_TOKEN_BYPASS
+__INLINE uint32_t bt_token_bypass_get(void)
+{
+    return REG_BT_RD(BT_TOKEN_BYPASS);
+}
+
+__INLINE void bt_token_bypass_set(uint32_t value)
+{
+    REG_BT_WR(BT_TOKEN_BYPASS, value);
+}
+
+// BT_TOKEN_TOKENFS
+__INLINE uint32_t bt_token_tokenfs_get(void)
+{
+    return REG_BT_RD(BT_TOKEN_TOKENFS);
+}
+
+__INLINE void bt_token_tokenfs_set(uint32_t value)
+{
+    REG_BT_WR(BT_TOKEN_TOKENFS, value);
+}
 
 #endif // _REG_BTCORE_H_

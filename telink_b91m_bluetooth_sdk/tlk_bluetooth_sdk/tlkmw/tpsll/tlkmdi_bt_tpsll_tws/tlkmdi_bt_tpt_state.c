@@ -26,7 +26,7 @@
 #include "tlkapi/tlkapi.h"
 
 static TlkMdiTptCaseState_t sTlkMdiTptLocalCaseState = {0};
-static TlkMdiTptCaseState_t sTlkMdiTptPeerCaseState = {0};
+static TlkMdiTptCaseState_t sTlkMdiTptPeerCaseState  = {0};
 
 /**
  * @brief       Check if the current device is acting as slave role
@@ -34,7 +34,7 @@ static TlkMdiTptCaseState_t sTlkMdiTptPeerCaseState = {0};
  * @note        This function checks if the current TWS role is either slave or observer,
  *              which are considered as slave roles in the TWS (True Wireless Stereo) system
  */
-__attribute__((weak))  bool tlkmdi_bt_tpt_isSlave()
+__attribute__((weak)) bool tlkmdi_bt_tpt_isSlave()
 {
     return false;
 }
@@ -46,7 +46,7 @@ __attribute__((weak))  bool tlkmdi_bt_tpt_isSlave()
  * @note        In TWS (True Wireless Stereo) systems, both Master and Arbiter roles
  *              are considered as master-like roles in terms of control and coordination
  */
-__attribute__((weak))  bool tlkmdi_bt_tpt_isMaster()
+__attribute__((weak)) bool tlkmdi_bt_tpt_isMaster()
 {
     return false;
 }
@@ -57,7 +57,7 @@ __attribute__((weak))  bool tlkmdi_bt_tpt_isMaster()
  * @note        This function checks whether the TWS is operating in 
  *              single mode, which means only one device is active without a paired TWS partner.
  */
-__attribute__((weak))  bool tlkmdi_bt_tpt_isSingle()
+__attribute__((weak)) bool tlkmdi_bt_tpt_isSingle()
 {
     return false;
 }
@@ -67,7 +67,7 @@ __attribute__((weak))  bool tlkmdi_bt_tpt_isSingle()
  * @return      bool - TRUE if connected, FALSE if not connected.
  * @note        Connection is determined by checking that the current role is neither IDLE nor SINGLE.
  */
-__attribute__((weak))  bool tlkmdi_bt_tpt_isConnected()
+__attribute__((weak)) bool tlkmdi_bt_tpt_isConnected()
 {
     return false;
 }
@@ -77,7 +77,7 @@ __attribute__((weak))  bool tlkmdi_bt_tpt_isConnected()
  * @param[in]   None.
  * @return      true if it is left earphone, false otherwise.
  */
-__attribute__((weak))  bool tlkmdi_bt_tpt_isLeft()
+__attribute__((weak)) bool tlkmdi_bt_tpt_isLeft()
 {
     return false;
 }
@@ -87,7 +87,7 @@ __attribute__((weak))  bool tlkmdi_bt_tpt_isLeft()
  * @param[in]   None.
  * @return      true if in the charging case, false otherwise.
  */
-__attribute__((weak))  bool tlkmdi_bt_tpt_isInBox()
+__attribute__((weak)) bool tlkmdi_bt_tpt_isInBox()
 {
     return false;
 }
@@ -100,7 +100,7 @@ __attribute__((weak))  bool tlkmdi_bt_tpt_isInBox()
  *              charging case, then it is in ear. But this may not be accurate 
  *              as the device could be out of the case but not yet in ear (e.g. in air).
  */
-__attribute__((weak))  bool tlkmdi_bt_tpt_isInEar()
+__attribute__((weak)) bool tlkmdi_bt_tpt_isInEar()
 {
     return !tlkmdi_bt_tpt_isInBox();
 

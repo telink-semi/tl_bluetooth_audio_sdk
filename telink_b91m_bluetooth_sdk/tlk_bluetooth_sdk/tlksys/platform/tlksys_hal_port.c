@@ -23,9 +23,7 @@
  *******************************************************************************************************/
 #include "tl_common.h"
 
-__attribute__((weak)) const tlksys_hal_platform_init_cfg_t * tlksys_hal_port_getPlatformInitCfg(void)
+__attribute__((weak)) const tlksys_hal_platform_init_cfg_t *tlksys_hal_port_getPlatformInitCfg(void)
 {
     return NULL;
 }
-
-

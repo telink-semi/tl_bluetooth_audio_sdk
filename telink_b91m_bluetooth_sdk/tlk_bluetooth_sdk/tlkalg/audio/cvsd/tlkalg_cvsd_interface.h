@@ -43,13 +43,13 @@ uint16_t tlkalg_cvsd_dec_get_size(uint8_t channel);
  * @param[in]   channel - Number of audio channels.
  * @return      0 on error, non-zero on success.
  */
-int8_t   tlkalg_cvsd_dec_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_cvsd_dec_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief   Deinitialize the CVSD decoder.
  * @return      Always returns 0.
  */
-int8_t   tlkalg_cvsd_dec_deinit(void);
+int8_t tlkalg_cvsd_dec_deinit(void);
 
 /**
  * @brief   Process the CVSD decoding and packet loss concealment.
@@ -60,7 +60,7 @@ int8_t   tlkalg_cvsd_dec_deinit(void);
  * @param[in]   channel - Number of audio channels (not used).
  * @return      Always returns 120.
  */
-int      tlkalg_cvsd_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_cvsd_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 /**
  * @brief   Calculate the size required for the CVSD encoder buffer.
@@ -75,13 +75,13 @@ uint16_t tlkalg_cvsd_enc_get_size(uint8_t channel);
  * @param[in]   channel - Number of audio channels.
  * @return      0 on error, non-zero on success.
  */
-int8_t   tlkalg_cvsd_enc_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_cvsd_enc_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief   Deinitialize the CVSD encoder.
  * @return      Always returns 0.
  */
-int8_t   tlkalg_cvsd_enc_deinit(void);
+int8_t tlkalg_cvsd_enc_deinit(void);
 
 /**
  * @brief   Process the CVSD encoding.
@@ -92,5 +92,16 @@ int8_t   tlkalg_cvsd_enc_deinit(void);
  * @param[in]   channel - Number of audio channels (not used).
  * @return      TRUE on success.
  */
-int      tlkalg_cvsd_enc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_cvsd_enc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+
+#if TLKALG_CVSD_ENABLE_CH2
+int8_t tlkalg_cvsd_dec_ch2_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_cvsd_dec_ch2_deinit(void);
+int    tlkalg_cvsd_dec_ch2_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+
+int8_t tlkalg_cvsd_enc_ch2_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_cvsd_enc_ch2_deinit(void);
+int    tlkalg_cvsd_enc_ch2_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+#endif
+
 #endif

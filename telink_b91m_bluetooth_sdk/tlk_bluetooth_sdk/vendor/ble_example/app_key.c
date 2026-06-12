@@ -117,16 +117,6 @@ static void app_key_init(void)
 {
     /* Initialize default key configuration */
     app_key_defaultConfig_initial();
-
-    /* Clear all vendor configuration callback functions (initialize to NULL) */
-    tlkdrv_key_registerVendorConfig1Callback(NULL);
-    tlkdrv_key_registerVendorConfig2Callback(NULL);
-    tlkdrv_key_registerVendorConfig3Callback(NULL);
-    tlkdrv_key_registerVendorConfig4Callback(NULL);
-    tlkdrv_key_registerVendorConfig5Callback(NULL);
-    tlkdrv_key_registerVendorConfig6Callback(NULL);
-    tlkdrv_key_registerVendorConfig7Callback(NULL);
-    tlkdrv_key_registerVendorConfig8Callback(NULL);
 }
 
 /**

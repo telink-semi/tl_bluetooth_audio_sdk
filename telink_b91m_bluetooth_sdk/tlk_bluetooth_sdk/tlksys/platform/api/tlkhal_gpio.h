@@ -23,36 +23,36 @@
  *******************************************************************************************************/
 #pragma once
 
-typedef void(*TlkHalGpioIrqCB_t)(void);
+typedef void (*TlkHalGpioIrqCB_t)(void);
 
 typedef enum
 {
     TLKHAL_GPIO_IRQ_TRIGGER_RISING_EDGE,
     TLKHAL_GPIO_IRQ_TRIGGER_FALLING_EDGE,
-}TlkhalGpioIrqTriggerMode_e;
+} TlkhalGpioIrqTriggerMode_e;
 
 typedef enum
 {
     TLKHAL_GPIO_PULL_FLOAT,
     TLKHAL_GPIO_PULL_UP_DEFAULT,
     TLKHAL_GPIO_PULL_DOWN_DEFAULT,
-}TlkhalGpioPullUpDownCfg_e;
+} TlkhalGpioPullUpDownCfg_e;
 
-typedef struct 
+typedef struct
 {
-    uint8_t  pmWakeUpEn:4;
-    uint8_t  pmWakeUpLevel:4;
-    uint8_t  pullUpDownCfg;  //refer to TlkhalGpioPullUpDownCfg_e
+    uint8_t  pmWakeUpEn    : 4;
+    uint8_t  pmWakeUpLevel : 4;
+    uint8_t  pullUpDownCfg; //refer to TlkhalGpioPullUpDownCfg_e
     uint16_t gpio;
-}TlkhalGpioInputCfg_t;
+} TlkhalGpioInputCfg_t;
 
-typedef struct 
+typedef struct
 {
-    uint8_t              triggerMode;
-    uint8_t              resv;
-    uint16_t             gpio;
-    TlkHalGpioIrqCB_t    cb;
-}TlkhalGpioIrqChnCfg_t;
+    uint8_t           triggerMode;
+    uint8_t           resv;
+    uint16_t          gpio;
+    TlkHalGpioIrqCB_t cb;
+} TlkhalGpioIrqChnCfg_t;
 
 /**
  * @brief  Shut down all GPIOs
@@ -73,7 +73,7 @@ void tlkhal_gpio_setInput(const TlkhalGpioInputCfg_t *cfg);
  * @param[in] cfg : Pointer to GPIO input configuration
  * @returns  None.
  */
-bool tlkhal_gpio_mallocIrqChn(uint8_t *chn, const TlkhalGpioIrqChnCfg_t* cfg);
+bool tlkhal_gpio_mallocIrqChn(uint8_t *chn, const TlkhalGpioIrqChnCfg_t *cfg);
 
 /**
  * @brief  Free a GPIO interrupt channel
@@ -109,5 +109,4 @@ void tlkhal_gpio_irqHandler(uint8_t chn);
  * @param[in] res : Pull-up/down configuration
  * @returns  None.
  */
-void tlkhal_gpio_set_up_down_res(uint16_t gpio_pin,TlkhalGpioPullUpDownCfg_e res);
-
+void tlkhal_gpio_set_up_down_res(uint16_t gpio_pin, TlkhalGpioPullUpDownCfg_e res);

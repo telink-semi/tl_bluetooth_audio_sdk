@@ -36,7 +36,7 @@ typedef __int32 int32_t;
 
 
 /*! Version number to ensure header and binary are matching. */
-#define LC3A_VERSION LC3A_VERSION_INT(0, 0, 11)
+#define LC3A_VERSION LC3A_VERSION_INT(0, 1, 4)
 
 /*! Maximum number of supported channels.
  */
@@ -169,13 +169,13 @@ int tlka_lc3a_get_version(void);
 /*************** Encoder API *****************/
 typedef struct _LC3P_ENC_CFG_Param
 {
-    int32_t           samplerate;
-    int32_t           channels;
-    LC3_FrameDuration frame_dms;
-    int32_t           hrmode;
-    LC3_WavFormat     wavFormat_in;
-    int32_t           lfe;
-    int32_t           bitrate;
+    int32_t samplerate;
+    int32_t channels;
+    int32_t frame_dms;
+    int32_t hrmode;
+    int32_t wavFormat_in;
+    int32_t lfe;
+    int32_t bitrate;
 } LC3P_ENC_CFG_Param;
 
 /*! Get size of the LC3 encoder struct buffer.
@@ -356,12 +356,12 @@ typedef enum
 
 typedef struct _LC3P_DEC_CFG_Param
 {
-    int32_t           samplerate;
-    int32_t           channels;
-    LC3PLUS_PlcMethod plc_method;
-    LC3_FrameDuration frame_dms;
-    int32_t           hrmode;
-    LC3_WavFormat     wavFormat_out;
+    int32_t samplerate;
+    int32_t channels;
+    int32_t plc_method;
+    int32_t frame_dms;
+    int32_t hrmode;
+    int32_t wavFormat_out;
 } LC3P_DEC_CFG_Param;
 
 /*! Get size of the LC3 decoder struct buffer
@@ -477,7 +477,7 @@ int tlka_lc3a_dec_get_delay(LC3PLUS_Dec *decoder);
  *
  *  The data format is configured with lc3plus_dec_init().
  *
- *  If the input is corrupted and cannot be decoded, LC3PLUS_DECODE_ERROR
+ *  If the input is corrupted and cannnot be decoded, LC3PLUS_DECODE_ERROR
  *  is returned and packet loss concealment is applied, meaning the
  *  output is still valid. If error protection is enabled,
  *  lc3plus_dec_get_error_report() provides information on the decoding

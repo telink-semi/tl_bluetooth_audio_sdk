@@ -146,7 +146,8 @@ struct ble_host_conn
 
     /** < Current encryption information. */
     uint32_t smp_index;   /** <index of the SMP context used by this connection, If not bonding or not paired, it is 0x00000000*/
-    uint8_t  enc_ltk[16]; /** < encryption long term key. */
+    uint8_t  enc_ltk[16]; /** < encryption long term key. If pair mode is legacy, first pair using stk value. */
+    uint8_t  ltk[16];     /** < Always get LTK. */
 
     /* own and peer address, id, ota address */
     struct ble_addr own_ota_addr;  //own address over the air, updated after connection complete event
@@ -334,12 +335,20 @@ bool ble_host_conn_get_phy(uint16_t conn_handle, uint8_t *tx_phy, uint8_t *rx_ph
 uint32_t ble_host_acl_conn_get_smp_index(uint16_t conn_handle);
 
 /**
- * @brief       Get the Long Term Key (LTK) for an ACL connection.
+ * @brief       Get the Long Term Key (LTK) for an ACL connection, if legacy pairing, get STK.
  * @param[in]   conn_handle    - the connection handle.
  * @param[out]  ltk             - pointer to the buffer to store the 16-byte LTK.
  * @return      BLE_HOST_ERR_SUCC if successful, BLE_HOST_ERR_INVALID_CONN_HANDLE if connection not found, BLE_HOST_ERR_ACL_NOT_ENCRYPTED if not encrypted.
  */
 int ble_host_acl_conn_get_ltk(uint16_t conn_handle, uint8_t ltk[16]);
+
+/**
+ * @brief       Get the Long Term Key (LTK) for an ACL connection, always get TLK if available.
+ * @param[in]   conn_handle    - the connection handle.
+ * @param[out]  ltk             - pointer to the buffer to store the 16-byte LTK.
+ * @return      BLE_HOST_ERR_SUCC if successful, BLE_HOST_ERR_INVALID_CONN_HANDLE if connection not found, BLE_HOST_ERR_ACL_NOT_ENCRYPTED if not encrypted.
+ */
+int ble_host_acl_conn_get_always_ltk(uint16_t conn_handle, uint8_t ltk[16]);
 
 /**
  * @brief       Get the own address type.
@@ -371,20 +380,17 @@ bool ble_host_hci_get_le_supported_controller(void);
  * @param[in]   features    - the LE features to check (bitmask).
  * @return      true if all specified features are supported, false otherwise.
  */
-bool ble_host_hci_check_le_features_support(uint64_t features);
+bool ble_host_hci_check_le_features_support(uint32_t features);
 
 /**
- * @brief       Get the LE features supported by the controller.
- * @return      the LE features bitmask.
+ *  @brief this function is used to set the LE features(Host Supported only).
+ *
+ *  @param[in] features: LE features bitmask.
+ *  @param[in] support: true if support, false if not support.
+ *
+ *  @note This function is only for Host Supported LE features.
  */
-uint64_t ble_host_hci_get_le_features(void);
-
-/**
- * @brief       Set the HCI supported commands.
- * @param[in]   sup_cmd     - the supported commands bitmask.
- * @return      none.
- */
-void ble_host_hci_set_hci_supported_cmd(uint32_t sup_cmd);
+void ble_host_hci_set_le_features_host_support(uint32_t features, bool support);
 
 /**
  * @brief       Read the controller basic information including version, features, and BD address.

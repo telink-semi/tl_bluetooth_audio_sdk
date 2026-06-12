@@ -63,8 +63,10 @@ static int tlkapp_audio_startEvtDeal(uint8_t *pData, uint8_t dataLen)
     uint16_t handle   = ((uint16_t)pData[3] << 8) | pData[2];
     tlkapi_trace(TLKAPP_AUDIO_DBG_FLAG, TLKAPP_AUDIO_DBG_SIGN, "tlkapp_audio_startEvtDeal: optype-%d", optype);
     uint8_t audioType = TLKAPP_AUDIO_SCHEDULER_AUDIO_TYPE_MUSIC;
-    if (optype == TLKAUD_TYPE_CC_BT_VOICE || optype == TLKAUD_TYPE_LEA_US_VOICE) {
+    if (optype == TLKAUD_TYPE_CC_BT_VOICE || optype == TLKAUD_TYPE_LEA_US_VOICE || optype == TLKAUD_TYPE_BT_VOICE_FORWARD) {
         audioType = TLKAPP_AUDIO_SCHEDULER_AUDIO_TYPE_VOICE;
+    } else if (optype == TLKAUD_TYPE_UAC_LOCAL_AUDIO) {
+        audioType = TLKAPP_AUDIO_SCHEDULER_AUDIO_TYPE_MUSIC_AND_VOICE;
     }
     uint32_t taskID = handle + ((uint32_t)optype << 16);
     if (optype == TLKAUD_TYPE_CC_BT_VOICE && !tlkmdi_audio_btif_allowedCreateScoWithoutHfp(handle)) {
@@ -224,10 +226,8 @@ static int tlkapp_audio_recInEarStateChgDeal(uint8_t *pData, uint8_t dataLen)
     }
     uint8_t isInEar = pData[0];
     (void)isInEar;
-#ifndef TL753X_ADAPT
 #if (TLK_DEV_CODEC_ENABLE)
     tlkdrv_codec_forceMuteEnable(!isInEar);
-#endif
 #endif
     return TLK_ENONE;
 }

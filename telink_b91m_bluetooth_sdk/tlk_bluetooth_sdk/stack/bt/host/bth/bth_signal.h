@@ -435,4 +435,7 @@ int bth_signal_sendRejectRsp(uint16_t handle, uint8_t identify, uint16_t reason,
 
 int bth_signal_enableRtnOption(uint16_t aclHandle, uint16_t psmID, bool enable);
 
+uint8_t bth_signal_get_next_sig_id(void);
+;
+
 #endif // BTH_SIGNAL_H

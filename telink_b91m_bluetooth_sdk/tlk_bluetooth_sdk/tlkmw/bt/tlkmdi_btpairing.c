@@ -27,33 +27,34 @@
 
 #if (TLK_MW_BTPAIRING_ENABLE)
 
-#define TLKMDI_BTREC_DBG_FLAG ((TLK_MAJOR_DBGID_MDI_BT << 24) | (TLK_MINOR_DBGID_MDI_BT_REC << 16) | TLK_DEBUG_DBG_FLAG_ALL)
-#define TLKMDI_BTREC_DBG_SIGN "[MDI]"
+#define TLKMDI_BTREC_DBG_FLAG                  ((TLK_MAJOR_DBGID_MDI_BT << 24) | (TLK_MINOR_DBGID_MDI_BT_REC << 16) | TLK_DEBUG_DBG_FLAG_ALL)
+#define TLKMDI_BTREC_DBG_SIGN                  "[MDI]"
 
-#define TLKMDI_BTSPAIRING_MODE_TIME_S          120     //120S
+#define TLKMDI_BTSPAIRING_MODE_TIME_S          120 //120S
 
-#define TLKMDI_BTSPAIRING_CHECK_INTERVAL       5000    //5ms
-#define TLKMDI_BTSPAIRING_CHECK_INTERVAL_100MS 100000  // 100ms
+#define TLKMDI_BTSPAIRING_CHECK_INTERVAL       5000   //5ms
+#define TLKMDI_BTSPAIRING_CHECK_INTERVAL_100MS 100000 // 100ms
 
 typedef enum
 {
-    TLKMDI_BTPAIRING_MODE_IDLE,
-    TLKMDI_BTPAIRING_MODE_WAITING_DISABLE_SCAN,
-    TLKMDI_BTPAIRING_MODE_WAITING_CLEAN_LINK, /*cancel bt reconnection, or disconnect link*/
-    TLKMDI_BTPAIRING_MODE_CLEAN_LINK,
-    TLKMDI_BTPAIRING_MODE_WAITING_ACTIVE,
-    TLKMDI_BTPAIRING_MODE_ACTIVE,
-} TLKMDI_BTPAIRING_MODE_ENUM;
+    TLKMDI_BTPAIRING_STATE_IDLE,
+    TLKMDI_BTPAIRING_STATE_WAITING_DISABLE_SCAN,
+    TLKMDI_BTPAIRING_STATE_WAITING_CLEAN_LINK, /*cancel bt reconnection, or disconnect link*/
+    TLKMDI_BTPAIRING_STATE_CLEAN_LINK,
+    TLKMDI_BTPAIRING_STATE_WAITING_ACTIVE,
+    TLKMDI_BTPAIRING_STATE_ACTIVE,
+} TLKMDI_BTPAIRING_STATE_ENUM;
 
 typedef struct
 {
-    uint16_t       state;
-    uint16_t       timeout; /* the number of 1s unit */
-    TlkApiTimer_t  timer;
+    uint8_t           state;
+    uint8_t           mode;
+    uint16_t          timeout; /* the number of 1s unit */
+    TlkMdiBtPairingCB cb;
+    TlkApiTimer_t     timer;
 } tlkmdi_bt_pairing_t;
 
 static tlkmdi_bt_pairing_t sTlkMdiBtParingCtrl = {0};
-static TlkMdiBtPairingCB   sTlkMdiBtParingCB   = NULL;
 
 /**
  * @brief      bt pairing timer callback
@@ -61,77 +62,88 @@ static TlkMdiBtPairingCB   sTlkMdiBtParingCB   = NULL;
  * @param[in]  userArg: user argument
  * @returns    none
 */
-static void tlkmdi_btParing_timer(TlkApiTimerHandle_t pTimer, void* userArg)
+static void tlkmdi_btParing_timer(TlkApiTimerHandle_t pTimer, void *userArg)
 {
     (void)pTimer;
     (void)userArg;
     uint8_t bt_link_count = tlkmdi_btacl_getUsedCount();
 
-    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_MODE_WAITING_DISABLE_SCAN) {
+    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_STATE_WAITING_DISABLE_SCAN) {
         if (tlkmdi_btGetScan_state() == TLKMDI_BTSCAN_MODE_BOTH_DISABLE) {
-            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_WAITING_CLEAN_LINK;
+            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_WAITING_CLEAN_LINK;
         } else {
             tlksys_timer_reStart(TLKSYS_TASKID_HOST, pTimer);
             return;
         }
     }
 
-    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_MODE_WAITING_CLEAN_LINK) {
+    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_STATE_WAITING_CLEAN_LINK) {
         if (tlkmdi_btRecon_isInBusy()) {
             tlkmdi_btRecon_close();
-            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_CLEAN_LINK;
+            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_CLEAN_LINK;
         }
-        if (bt_link_count) {
-            for (uint8_t i = 0; i < TLKMDI_BTACL_ITEM_NUMB; i++) {
+        if (bt_link_count && sTlkMdiBtParingCtrl.mode == TLKMDI_BTPAIRING_MODE_CLEAN_LINK) {
+            for (size_t i = 0; i < TLKMDI_BTACL_ITEM_NUMB; i++) {
                 tlkmdi_btacl_item_t *pItem = tlkmdi_btacl_getConnItemByIndex(i);
-                if (pItem) {
+                if (pItem != NULL) {
                     tlkapi_array(TLKMDI_BTREC_DBG_FLAG, TLKMDI_BTREC_DBG_SIGN, "tlkmdi_btParing_timer discon btaddr", pItem->btaddr, 6);
                     tlkmdi_btacl_disconn(pItem->handle, 0x13);
                 }
-            }
-            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_CLEAN_LINK;
+            } //CLEAN_LINK_MODE : just disconnect all acl
+            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_CLEAN_LINK;
+        } else if (bt_link_count && sTlkMdiBtParingCtrl.mode == TLKMDI_BTPAIRING_MODE_RETAIN_LINK) {
+            for (size_t i = 0; i < TLKMDI_BTACL_ITEM_NUMB; i++) {
+                tlkmdi_btacl_item_t *pItem = tlkmdi_btacl_getConnItemByIndex(i);
+                if (pItem != NULL) {
+                    uint8_t ret = tlkmdi_btPairing_retainLinkHook(pItem->handle);
+                    if (ret != TLK_ENONE) {
+                        sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_IDLE;
+                        ;
+                        return;
+                    }
+                }
+            } //RETAIN_LINK_MODE : do hook,such as:avrcp pause,sco disconnect,etc
         }
 
-        if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_MODE_WAITING_CLEAN_LINK) { /* no link need to be clean */
-            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_WAITING_ACTIVE;
+        if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_STATE_WAITING_CLEAN_LINK) { /* no link need to be clean */
+            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_WAITING_ACTIVE;
         }
     }
 
 
-    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_MODE_CLEAN_LINK) {
-        if (tlkmdi_btRecon_isInBusy() == false && bt_link_count == 0) {
-            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_WAITING_ACTIVE;
+    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_STATE_CLEAN_LINK) {
+        if (tlkmdi_btRecon_isInBusy() == false && (bt_link_count == 0 || sTlkMdiBtParingCtrl.mode != TLKMDI_BTPAIRING_MODE_CLEAN_LINK)) {
+            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_WAITING_ACTIVE;
         }
     }
 
-    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_MODE_WAITING_ACTIVE) {
+    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_STATE_WAITING_ACTIVE) {
         tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_BOTH_SCAN, TLKMDI_BTSPAIRING_MODE_TIME_S);
-        sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_ACTIVE;
-        tlksys_timer_setPeriod(TLKSYS_TASKID_HOST,&sTlkMdiBtParingCtrl.timer,TLKMDI_BTSPAIRING_CHECK_INTERVAL_100MS);
+        sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_ACTIVE;
+        tlksys_timer_setPeriod(TLKSYS_TASKID_HOST, &sTlkMdiBtParingCtrl.timer, TLKMDI_BTSPAIRING_CHECK_INTERVAL_100MS);
 
         sTlkMdiBtParingCtrl.timeout = (TLKMDI_BTSPAIRING_MODE_TIME_S * 1000 * 1000) / TLKMDI_BTSPAIRING_CHECK_INTERVAL_100MS; /* counter pairing mode timeout 2mins*/
-        if (sTlkMdiBtParingCB != NULL) {
-            sTlkMdiBtParingCB(TLKMDI_BTPAIRING_CB_STATE_ACTIVE);
+        if (sTlkMdiBtParingCtrl.cb != NULL) {
+            sTlkMdiBtParingCtrl.cb(TLKMDI_BTPAIRING_CB_STATE_ACTIVE);
         }
     }
 
-    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_MODE_ACTIVE) {
+    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_STATE_ACTIVE) {
         if (sTlkMdiBtParingCtrl.timeout == 0) {
-            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_IDLE;
-            if (sTlkMdiBtParingCB != NULL) {
-                sTlkMdiBtParingCB(TLKMDI_BTPAIRING_CB_STATE_TIMEOUT);
+            sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_IDLE;
+            if (sTlkMdiBtParingCtrl.cb != NULL) {
+                sTlkMdiBtParingCtrl.cb(TLKMDI_BTPAIRING_CB_STATE_TIMEOUT);
             }
             tlkapi_trace(TLKMDI_BTREC_DBG_FLAG, TLKMDI_BTREC_DBG_SIGN, "tlkmdi_btParing_timer timeout over!");
             return;
         }
 
         sTlkMdiBtParingCtrl.timeout--;
-        if (bt_link_count) {
+        if ((bt_link_count && sTlkMdiBtParingCtrl.mode == TLKMDI_BTPAIRING_MODE_CLEAN_LINK) || bt_link_count == TLK_STK_BTACL_NUMB) {
             sTlkMdiBtParingCtrl.timeout = 0;
             tlkapi_trace(TLKMDI_BTREC_DBG_FLAG, TLKMDI_BTREC_DBG_SIGN, "tlkmdi_btParing_timer timeout BT connected!");
             return;
         }
-
     }
     tlksys_timer_reStart(TLKSYS_TASKID_HOST, pTimer);
 }
@@ -145,7 +157,7 @@ static void tlkmdi_btParing_timer(TlkApiTimerHandle_t pTimer, void* userArg)
  */
 void tlkmdi_btPairing_regCB(TlkMdiBtPairingCB cb)
 {
-    sTlkMdiBtParingCB = cb;
+    sTlkMdiBtParingCtrl.cb = cb;
 }
 
 /**
@@ -159,7 +171,7 @@ void tlkmdi_btPairing_regCB(TlkMdiBtPairingCB cb)
  */
 bool tlkmdi_btPairing_isInProgress(void)
 {
-    return sTlkMdiBtParingCtrl.state != TLKMDI_BTPAIRING_MODE_IDLE;
+    return sTlkMdiBtParingCtrl.state != TLKMDI_BTPAIRING_STATE_IDLE;
 }
 
 /**
@@ -174,26 +186,27 @@ bool tlkmdi_btPairing_isInProgress(void)
 int tlkmdi_btParing_start(void)
 {
     tlkapi_trace(TLKMDI_BTREC_DBG_FLAG, TLKMDI_BTREC_DBG_SIGN, "tlkmdi_btParing_start sTlkMdiBtParingCtrl.state %x", sTlkMdiBtParingCtrl.state);
-    if(tlkmdi_bt_isReady() == false){
+    if (tlkmdi_bt_isReady() == false) {
         return -TLK_ENOREADY;
     }
-    if (sTlkMdiBtParingCtrl.state != TLKMDI_BTPAIRING_MODE_ACTIVE && sTlkMdiBtParingCtrl.state != TLKMDI_BTPAIRING_MODE_IDLE) {
+    if (sTlkMdiBtParingCtrl.state != TLKMDI_BTPAIRING_STATE_ACTIVE && sTlkMdiBtParingCtrl.state != TLKMDI_BTPAIRING_STATE_IDLE) {
         tlkapi_trace(TLKMDI_BTREC_DBG_FLAG, TLKMDI_BTREC_DBG_SIGN, "tlkmdi_btParing_start busy");
         return -TLK_EBUSY;
     }
+    if (sTlkMdiBtParingCtrl.mode == TLKMDI_BTPAIRING_MODE_RETAIN_LINK && tlkmdi_btacl_getIdleCount() == 0) {
+        return TLK_ENONE;
+    }
+    tlksys_timer_destroy(TLKSYS_TASKID_HOST, &sTlkMdiBtParingCtrl.timer);
+    sTlkMdiBtParingCtrl.timeout = 0;
 
-    tlksys_timer_stop(TLKSYS_TASKID_HOST, &sTlkMdiBtParingCtrl.timer);
-
-    memset(&sTlkMdiBtParingCtrl, 0, sizeof(sTlkMdiBtParingCtrl));
-
-    tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &sTlkMdiBtParingCtrl.timer, TLKMDI_BTSPAIRING_CHECK_INTERVAL, false, tlkmdi_btParing_timer, &sTlkMdiBtParingCtrl);
-    sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_IDLE;
+    tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &sTlkMdiBtParingCtrl.timer, TLKMDI_BTSPAIRING_CHECK_INTERVAL, false, tlkmdi_btParing_timer, NULL);
+    sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_IDLE;
 
     if (tlkmdi_btGetScan_state() != TLKMDI_BTSCAN_MODE_BOTH_DISABLE) {
         tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_BOTH_DISABLE, 0);
-        sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_WAITING_DISABLE_SCAN;
+        sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_WAITING_DISABLE_SCAN;
     } else {
-        sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_MODE_WAITING_CLEAN_LINK;
+        sTlkMdiBtParingCtrl.state = TLKMDI_BTPAIRING_STATE_WAITING_CLEAN_LINK;
     }
 
 
@@ -213,15 +226,42 @@ int tlkmdi_btParing_start(void)
  */
 int tlkmdi_btParing_stop(void)
 {
-    if(sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_MODE_IDLE){
+    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_STATE_IDLE) {
         return TLK_ENONE;
     }
     tlkapi_trace(TLKMDI_BTREC_DBG_FLAG, TLKMDI_BTREC_DBG_SIGN, "tlkmdi_btParing_stop");
-    tlksys_timer_stop(TLKSYS_TASKID_HOST, &sTlkMdiBtParingCtrl.timer);
-    if(sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_MODE_ACTIVE && sTlkMdiBtParingCB != NULL){  
-        sTlkMdiBtParingCB(TLKMDI_BTPAIRING_CB_STATE_CANCEL);
+    tlksys_timer_destroy(TLKSYS_TASKID_HOST, &sTlkMdiBtParingCtrl.timer);
+    if (sTlkMdiBtParingCtrl.state == TLKMDI_BTPAIRING_STATE_ACTIVE && sTlkMdiBtParingCtrl.cb != NULL) {
+        sTlkMdiBtParingCtrl.cb(TLKMDI_BTPAIRING_CB_STATE_CANCEL);
     }
-    memset(&sTlkMdiBtParingCtrl, 0, sizeof(sTlkMdiBtParingCtrl));
+    sTlkMdiBtParingCtrl.state   = TLKMDI_BTPAIRING_STATE_IDLE;
+    sTlkMdiBtParingCtrl.timeout = 0;
+    return TLK_ENONE;
+}
+
+/**
+ * @brief  Set bt pairing mode.
+ *
+ * @param[in] mode:refer to TLKMDI_BTPAIRING_MODE_ENUM
+ *
+ * @return none.
+ */
+void tlkmdi_btPairing_setMode(uint8_t mode)
+{
+    if (mode >= TLKMDI_BTPAIRING_MODE_NUM) {
+        mode = TLKMDI_BTPAIRING_MODE_DEFAULT;
+    }
+    sTlkMdiBtParingCtrl.mode = mode;
+}
+
+/**
+ * @brief     Provides a hook function to operate connected handles when pairing mode is retain.
+ * @param[in] handle: acl handle
+ * @returns   none.
+ */
+__attribute__((weak)) uint8_t tlkmdi_btPairing_retainLinkHook(uint16_t handle)
+{
+    (void)handle;
     return TLK_ENONE;
 }
 

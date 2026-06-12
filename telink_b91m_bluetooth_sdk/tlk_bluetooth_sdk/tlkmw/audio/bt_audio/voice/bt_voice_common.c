@@ -35,15 +35,24 @@
 #if AUDIO_TWS_MODE
 #include "tlkmw/tpsll/tlkmdi_bt_tpsll_tws/tlkmdi_bt_tpt_state.h"
 #endif
+#if TLKADU_MIDBUF_ENABLE
+#include "vendor/GameSir_Xiaoji/audio_mw/tlkaud_audio_mw.h"
+#endif
 
 #if (TLKBTP_CFG_HFP_ENABLE)
-#define TLKMDI_BT_VOICE_DBG_FLAG      ((TLK_MAJOR_DBGID_MDI_AUDIO << 24) | (TLK_MINOR_DBGID_MDI_AUD_CC_BT_AUDIO << 16) | TLK_DEBUG_DBG_FLAG_ALL)
-#define TLKMDI_BT_VOICE_DBG_SIGN      "[MDI BT_V]"
-
-#define TLKMDI_BT_VOICE_ENC_BUFF_SIZE SPK_ENC_BUFF_SIZE *SPK_ENC_BUFF_NUM + MIC_ENC_BUFF_SIZE *MIC_ENC_BUFF_NUM
+#define TLKMDI_BT_VOICE_DBG_FLAG ((TLK_MAJOR_DBGID_MDI_AUDIO << 24) | (TLK_MINOR_DBGID_MDI_AUD_CC_BT_AUDIO << 16) | TLK_DEBUG_DBG_FLAG_ALL)
+#define TLKMDI_BT_VOICE_DBG_SIGN "[MDI BT_V]"
 
 static uint8_t *s_alg_voice_dec_buff = NULL;
 static uint8_t *s_alg_voice_enc_buff = NULL;
+
+#if BT_VOICE_SPP_TEST
+static uint8_t *s_alg_voice_enc_micbuff = NULL;
+static uint8_t *s_alg_voice_enc_spkbuff = NULL;
+static uint8_t *s_alg_voice_dec_micbuff = NULL;
+static uint8_t *s_alg_voice_dec_spkbuff = NULL;
+#endif
+
 #if TLKALG_AGC_ENABLE
 uint8_t *g_alg_voice_agc_buff = NULL;
 #endif
@@ -54,7 +63,7 @@ uint8_t *g_alg_voice_ans_buff = NULL;
 static uint8_t *s_alg_voice_hybrid_buff = NULL;
 #endif
 
-#if (TLKALG_ASRC_16TO48_16BIT_ENABLE && (TLKSTK_BT_TPS_ENABLE) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
+#if (TLKALG_ASRC_16TO48_16BIT_ENABLE && (TLKSTK_BT_TPS_ENABLE || TLKCFG_MULTI_MIC_EN) && MCU_CORE_TYPE == MCU_CORE_TL751X)
 uint8_t *s_alg_asrc_16to48_buff = NULL;
 #endif
 
@@ -62,34 +71,32 @@ uint8_t *s_alg_asrc_16to48_buff = NULL;
 static uint8_t *s_alg_asrc_48to16_16bit_buff = NULL;
 #endif
 
-#if (TLKALG_ASRC_48TO16_24BIT_ENABLE && (TLKSTK_BT_TPS_ENABLE) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
+#if ((TLKALG_ASRC_48TO16_24BIT_ENABLE && !TLKADU_MIDBUF_ENABLE) && (TLKSTK_BT_TPS_ENABLE) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
 static uint8_t *s_alg_asrc_48to16_24bit_buff = NULL;
 #endif
 
-#if TLKALG_LC3_24BIT_DEC_ENABLE && (PROJ_BTTPSLL_TWS || PROJ_BTTPSLL_HEADSET)
+#if TLKALG_LC3_24BIT_DEC_ENABLE && TLKSTK_BT_TPS_ENABLE
 static uint8_t *s_alg_lc3_24bit_dec_buffer = NULL;
 #endif
 
-#if TLKALG_LC3_PLUS_DEC_ENABLE && (PROJ_BTTPSLL_TWS || PROJ_BTTPSLL_HEADSET)
-static uint8_t *s_alg_lc3_plus_dec_buffer         = NULL;
-static uint8_t *s_alg_lc3_plus_dec_scratch_buffer = NULL;
+#if TLKALG_LC3_PLUS_DEC_ENABLE && TLKSTK_BT_TPS_ENABLE
+static uint8_t *s_alg_lc3_plus_dec_buffer = NULL;
 #endif
 
-#if DONGLE_VOICE_MIC_EN && (PROJ_BTTPSLL_TWS || PROJ_BTTPSLL_HEADSET)
+#if DONGLE_VOICE_MIC_EN && TLKSTK_BT_TPS_ENABLE
 #if TLKALG_LC3_24BIT_ENC_ENABLE
 static uint8_t *s_alg_lc3_24bit_enc_buffer = NULL;
 #endif
 
 #if TLKALG_LC3_PLUS_ENC_ENABLE
-static uint8_t *s_alg_lc3_plus_enc_buffer         = NULL;
-static uint8_t *s_alg_lc3_plus_enc_scratch_buffer = NULL;
+static uint8_t *s_alg_lc3_plus_enc_buffer = NULL;
 #endif
 #endif
 
 extern bt_voice_cfg_t bt_voice_cfg;
 
 #if SCO_ENC_QUEUE_ENABLE
-extern void btif_sco_enc_buff_init(uint8_t *p_sco_buff);
+extern void btif_sco_enc_buff_init(uint8_t queue_id, uint8_t *p_sco_buff);
 #endif
 
 /**
@@ -109,7 +116,7 @@ bool bt_voice_buff_and_alg_init(void)
     void *p_enc_func;
     void *p_dec_func;
 
-    if (btif_get_hfp_codec() == HFP_CODEC_ID_CVSD) {
+    if (btif_get_hfp_codec(SCO_ENC_QUEUE_ID_HF) == HFP_CODEC_ID_CVSD) {
         p_enc_alg_if = audio_alg_get_interface_by_type(ALG_CVSD_ENC);
         p_dec_alg_if = audio_alg_get_interface_by_type(ALG_CVSD_DEC);
 
@@ -129,6 +136,29 @@ bool bt_voice_buff_and_alg_init(void)
         bt_voice_set_buffer(p_bt_voice_enc_buf);
     }
 
+#if BT_VOICE_SPP_TEST
+    if (s_alg_voice_enc_micbuff == NULL) {
+        s_alg_voice_enc_micbuff = (uint8_t *)tlkalg_malloc_func(tlkalg_msbc_enc_get_size(0));
+        tlkalg_msbc_enc_micbuf_init((uint8_t *)s_alg_voice_enc_micbuff, 0);
+    }
+
+    if (s_alg_voice_enc_spkbuff == NULL) {
+        s_alg_voice_enc_spkbuff = (uint8_t *)tlkalg_malloc_func(tlkalg_msbc_enc_get_size(0));
+        tlkalg_msbc_enc_spkbuf_init((uint8_t *)s_alg_voice_enc_spkbuff, 0);
+    }
+
+    if (s_alg_voice_dec_micbuff == NULL) {
+        s_alg_voice_dec_micbuff = (uint8_t *)tlkalg_malloc_func(tlkalg_msbc_dec_get_size(0));
+        tlkalg_msbc_dec_micbuf_init((uint8_t *)s_alg_voice_dec_micbuff, 0);
+    }
+
+    if (s_alg_voice_dec_spkbuff == NULL) {
+        s_alg_voice_dec_spkbuff = (uint8_t *)tlkalg_malloc_func(tlkalg_msbc_dec_get_size(0));
+        tlkalg_msbc_dec_spkbuf_init((uint8_t *)s_alg_voice_dec_spkbuff, 0);
+    }
+#endif
+
+
     /* register bt voice encode callback and decode callback */
     p_enc_func = p_enc_alg_if->audio_alg_process;
     p_dec_func = p_dec_alg_if->audio_alg_process;
@@ -140,7 +170,7 @@ bool bt_voice_buff_and_alg_init(void)
         p_enc_alg_if->audio_alg_init(s_alg_voice_enc_buff, 0);
     }
 
-    /* decode alg init  */
+    /* decode alg init */
     if (s_alg_voice_dec_buff == NULL) {
         s_alg_voice_dec_buff = (uint8_t *)tlkalg_malloc_func(p_dec_alg_if->audio_alg_get_size(0));
         p_dec_alg_if->audio_alg_init(s_alg_voice_dec_buff, 0);
@@ -175,7 +205,7 @@ bool bt_voice_buff_and_alg_init(void)
     }
 #endif
 
-#if (TLKALG_ASRC_16TO48_16BIT_ENABLE && (TLKSTK_BT_TPS_ENABLE) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
+#if (TLKALG_ASRC_16TO48_16BIT_ENABLE && (TLKSTK_BT_TPS_ENABLE || TLKCFG_MULTI_MIC_EN) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
     audio_alg_interface_t *p_16to48_16bit   = audio_alg_get_interface_by_type(ALG_ASRC_16TO48_16BIT);
     uint16_t               asrc_16to48_size = p_16to48_16bit->audio_alg_get_size(ALG_CHANNEL_LEFT);
     s_alg_asrc_16to48_buff                  = (uint8_t *)tlkalg_malloc_func(asrc_16to48_size);
@@ -185,7 +215,7 @@ bool bt_voice_buff_and_alg_init(void)
     p_16to48_16bit->audio_alg_init(s_alg_asrc_16to48_buff, ALG_CHANNEL_LEFT);
 #endif
 
-#if (TLKALG_ASRC_48TO16_24BIT_ENABLE && (TLKSTK_BT_TPS_ENABLE) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
+#if ((TLKALG_ASRC_48TO16_24BIT_ENABLE && !TLKADU_MIDBUF_ENABLE) && (TLKSTK_BT_TPS_ENABLE) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
     audio_alg_interface_t *p_48to16_24bit = audio_alg_get_interface_by_type(ALG_ASRC_48TO16_24BIT);
 #if 0 //(TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)  //0: only nn_ns running in dsp and no other voice processing alg running
     uint16_t asrc_48to16_24bit_size = p_48to16_24bit->audio_alg_get_size(ALG_CHANNEL_STEREO);
@@ -223,7 +253,7 @@ bool bt_voice_buff_and_alg_init(void)
 #endif
 #endif
 
-#if TLKALG_LC3_24BIT_DEC_ENABLE && (PROJ_BTTPSLL_TWS || PROJ_BTTPSLL_HEADSET)
+#if TLKALG_LC3_24BIT_DEC_ENABLE && TLKSTK_BT_TPS_ENABLE
     audio_alg_interface_t *p_lc3_dec_24bit_if = audio_alg_get_interface_by_type(ALG_LC3_24BIT_DEC);
 
     if (s_alg_lc3_24bit_dec_buffer == NULL) {
@@ -238,13 +268,19 @@ bool bt_voice_buff_and_alg_init(void)
     }
 #endif
 
-#if TLKALG_LC3_PLUS_DEC_ENABLE && (PROJ_BTTPSLL_TWS || PROJ_BTTPSLL_HEADSET)
+#if TLKALG_LC3_PLUS_DEC_ENABLE && TLKSTK_BT_TPS_ENABLE
     audio_alg_interface_t *p_lc3_plus_dec_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_DEC);
     if (s_alg_lc3_plus_dec_buffer == NULL) {
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+        p_lc3_plus_dec_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_ULTRA_LOW_LATENCY, NULL);
+#else
         p_lc3_plus_dec_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_NORMAL, NULL);
-
-        //ENCORD BUFF
-        uint8_t  size_param            = (ALG_SIZE_TYPE_ENCODER << 4) | (ALG_CHANNEL_STEREO & 0x0F);
+#endif
+#if TLKSTK_BTTPSLL_TWS_ENABLE
+        uint8_t size_param = ALG_CHANNEL_LEFT;
+#else
+        uint8_t size_param = ALG_CHANNEL_STEREO;
+#endif
         uint16_t lc3_plus_dec_mem_size = p_lc3_plus_dec_if->audio_alg_get_size(size_param);
         s_alg_lc3_plus_dec_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_dec_mem_size);
         if (s_alg_lc3_plus_dec_buffer == NULL) {
@@ -253,20 +289,10 @@ bool bt_voice_buff_and_alg_init(void)
         p_lc3_plus_dec_if->audio_alg_init(s_alg_lc3_plus_dec_buffer, size_param);
 
         tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_dec_mem_size: %d", lc3_plus_dec_mem_size);
-
-        //SCRATCH BUFF
-        size_param                        = (ALG_SIZE_TYPE_SCRATCH << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        lc3_plus_dec_mem_size             = p_lc3_plus_dec_if->audio_alg_get_size(size_param);
-        s_alg_lc3_plus_dec_scratch_buffer = (uint8_t *)tlkalg_malloc_func(lc3_plus_dec_mem_size);
-        if (s_alg_lc3_plus_dec_scratch_buffer == NULL) {
-            tlkapi_printf(APP_AUDIO_LOG_EN, "lc3 plus dec scratch buffer alloc failed");
-        }
-        p_lc3_plus_dec_if->audio_alg_init(s_alg_lc3_plus_dec_scratch_buffer, size_param);
-        tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_dec_mem_size: %d", lc3_plus_dec_mem_size);
     }
 #endif
 
-#if DONGLE_VOICE_MIC_EN && (PROJ_BTTPSLL_TWS || PROJ_BTTPSLL_HEADSET)
+#if DONGLE_VOICE_MIC_EN && TLKSTK_BT_TPS_ENABLE
 #if TLKALG_LC3_24BIT_ENC_ENABLE
     audio_alg_interface_t *p_lc3_24bit = audio_alg_get_interface_by_type(ALG_LC3_24BIT_ENC);
     if (s_alg_lc3_24bit_enc_buffer == NULL) {
@@ -286,26 +312,13 @@ bool bt_voice_buff_and_alg_init(void)
     if (s_alg_lc3_plus_enc_buffer == NULL) {
         p_lc3_plus_enc_if->audio_alg_param_set(LC3_PLUS_TYPE_ENC_NORMAL, NULL);
 
-        //ENCORD BUFF
-        uint8_t  size_param            = (ALG_SIZE_TYPE_ENCODER << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        uint16_t lc3_plus_enc_mem_size = p_lc3_plus_enc_if->audio_alg_get_size(size_param);
+        uint16_t lc3_plus_enc_mem_size = p_lc3_plus_enc_if->audio_alg_get_size(ALG_CHANNEL_LEFT);
         s_alg_lc3_plus_enc_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_enc_mem_size);
 
         if (s_alg_lc3_plus_enc_buffer == NULL) {
             tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus enc buffer alloc failed");
         }
-        p_lc3_plus_enc_if->audio_alg_init(s_alg_lc3_plus_enc_buffer, size_param);
-        tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc_mem_size:: %d", lc3_plus_enc_mem_size);
-
-        //SCRATCH BUFF
-        size_param                        = (ALG_SIZE_TYPE_SCRATCH << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        lc3_plus_enc_mem_size             = p_lc3_plus_enc_if->audio_alg_get_size(size_param);
-        s_alg_lc3_plus_enc_scratch_buffer = (uint8_t *)tlkalg_malloc_func(lc3_plus_enc_mem_size);
-
-        if (s_alg_lc3_plus_enc_scratch_buffer == NULL) {
-            tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc scratch_buffer alloc failed");
-        }
-        p_lc3_plus_enc_if->audio_alg_init(s_alg_lc3_plus_enc_scratch_buffer, size_param);
+        p_lc3_plus_enc_if->audio_alg_init(s_alg_lc3_plus_enc_buffer, ALG_CHANNEL_LEFT);
         tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc_mem_size:: %d", lc3_plus_enc_mem_size);
     }
 #endif
@@ -315,8 +328,6 @@ bool bt_voice_buff_and_alg_init(void)
 #if AUDIO_TWS_MODE
     app_tws_spk_ppm_init(1);
 #endif
-
-    tlkmdi_audmem_print();
 
     return ret;
 }
@@ -335,7 +346,7 @@ bool bt_voice_buff_and_alg_deinit(void)
 #if (TLKALG_AGC_ENABLE || TLK_ALG_HYBRID_ENABLE || TLKALG_ANS_ENABLE)
     audio_alg_interface_t *p_voice_alg_if;
 #endif
-    if (btif_get_hfp_codec() == HFP_CODEC_ID_CVSD) {
+    if (btif_get_hfp_codec(SCO_ENC_QUEUE_ID_HF) == HFP_CODEC_ID_CVSD) {
         p_enc_alg_if = audio_alg_get_interface_by_type(ALG_CVSD_ENC);
         p_dec_alg_if = audio_alg_get_interface_by_type(ALG_CVSD_DEC);
     } else {
@@ -351,6 +362,33 @@ bool bt_voice_buff_and_alg_deinit(void)
 
     bt_voice_register_codec_callback(NULL, NULL);
 
+#if BT_VOICE_SPP_TEST
+    if (s_alg_voice_enc_micbuff != NULL) {
+        tlkalg_free_func(s_alg_voice_enc_micbuff);
+        tlkalg_msbc_enc_micbuf_deinit();
+        s_alg_voice_enc_micbuff = NULL;
+    }
+
+    if (s_alg_voice_enc_spkbuff != NULL) {
+        tlkalg_free_func(s_alg_voice_enc_spkbuff);
+        tlkalg_msbc_enc_spkbuf_deinit();
+        s_alg_voice_enc_spkbuff = NULL;
+    }
+
+    if (s_alg_voice_dec_micbuff != NULL) {
+        tlkalg_free_func(s_alg_voice_dec_micbuff);
+        tlkalg_msbc_dec_micbuf_deinit();
+        s_alg_voice_dec_micbuff = NULL;
+    }
+
+    if (s_alg_voice_dec_spkbuff != NULL) {
+        tlkalg_free_func(s_alg_voice_dec_spkbuff);
+        tlkalg_msbc_dec_spkbuf_deinit();
+        s_alg_voice_dec_spkbuff = NULL;
+    }
+#endif
+
+
     /* encode alg deinit */
     if (s_alg_voice_enc_buff != NULL) {
         tlkalg_free_func(s_alg_voice_enc_buff);
@@ -364,6 +402,7 @@ bool bt_voice_buff_and_alg_deinit(void)
         p_dec_alg_if->audio_alg_deinit();
         s_alg_voice_dec_buff = NULL;
     }
+
 #if TLKMW_INTERPHONE_EN
     if (!tlkmdi_interphone_is_busy())
 #endif
@@ -398,7 +437,7 @@ bool bt_voice_buff_and_alg_deinit(void)
     }
 #endif
 
-#if (TLKALG_ASRC_16TO48_16BIT_ENABLE && (TLKSTK_BT_TPS_ENABLE) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
+#if (TLKALG_ASRC_16TO48_16BIT_ENABLE && (TLKSTK_BT_TPS_ENABLE || TLKCFG_MULTI_MIC_EN) && MCU_CORE_TYPE == MCU_CORE_TL751X)
     // audio_alg_interface_t *p_alg_16to48_if = audio_alg_get_interface_by_type(ALG_ASRC_16TO48);
     audio_alg_interface_t *p_alg_16to48_if = audio_alg_get_interface_by_type(ALG_ASRC_16TO48_16BIT);
     if (s_alg_asrc_16to48_buff != NULL) {
@@ -418,7 +457,7 @@ bool bt_voice_buff_and_alg_deinit(void)
     }
 #endif
 
-#if (TLKALG_ASRC_48TO16_24BIT_ENABLE && (TLKSTK_BT_TPS_ENABLE) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
+#if ((TLKALG_ASRC_48TO16_24BIT_ENABLE && !TLKADU_MIDBUF_ENABLE) && (TLKSTK_BT_TPS_ENABLE) && (MCU_CORE_TYPE == MCU_CORE_TL751X))
     // audio_alg_interface_t *p_alg_48to16_24bit_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16);
     audio_alg_interface_t *p_alg_48to16_24bit_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16_24BIT);
     if (s_alg_asrc_48to16_24bit_buff != NULL) {
@@ -428,7 +467,7 @@ bool bt_voice_buff_and_alg_deinit(void)
     }
 #endif
 
-#if TLKALG_LC3_24BIT_DEC_ENABLE && (PROJ_BTTPSLL_TWS || PROJ_BTTPSLL_HEADSET)
+#if TLKALG_LC3_24BIT_DEC_ENABLE && TLKSTK_BT_TPS_ENABLE
     audio_alg_interface_t *p_lc3_24bit_dec_if = audio_alg_get_interface_by_type(ALG_LC3_24BIT_DEC);
     if (s_alg_lc3_24bit_dec_buffer != NULL) {
         tlkalg_free_func(s_alg_lc3_24bit_dec_buffer);
@@ -437,18 +476,16 @@ bool bt_voice_buff_and_alg_deinit(void)
     }
 #endif
 
-#if TLKALG_LC3_PLUS_DEC_ENABLE && (PROJ_BTTPSLL_TWS || PROJ_BTTPSLL_HEADSET)
+#if TLKALG_LC3_PLUS_DEC_ENABLE && TLKSTK_BT_TPS_ENABLE
     audio_alg_interface_t *p_lc3_plus_dec_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_DEC);
     if (s_alg_lc3_plus_dec_buffer != NULL) {
         tlkalg_free_func(s_alg_lc3_plus_dec_buffer);
-        tlkalg_free_func(s_alg_lc3_plus_dec_scratch_buffer);
         p_lc3_plus_dec_if->audio_alg_deinit();
-        s_alg_lc3_plus_dec_buffer         = NULL;
-        s_alg_lc3_plus_dec_scratch_buffer = NULL;
+        s_alg_lc3_plus_dec_buffer = NULL;
     }
 #endif
 
-#if DONGLE_VOICE_MIC_EN && (PROJ_BTTPSLL_TWS || PROJ_BTTPSLL_HEADSET)
+#if DONGLE_VOICE_MIC_EN && TLKSTK_BT_TPS_ENABLE
 #if TLKALG_LC3_24BIT_ENC_ENABLE
     audio_alg_interface_t *p_lc3_24bit_enc_if = audio_alg_get_interface_by_type(ALG_LC3_24BIT_ENC);
     if (s_alg_lc3_24bit_enc_buffer != NULL) {
@@ -462,10 +499,8 @@ bool bt_voice_buff_and_alg_deinit(void)
     audio_alg_interface_t *p_lc3_plus_enc_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_ENC);
     if (s_alg_lc3_plus_enc_buffer != NULL) {
         tlkalg_free_func(s_alg_lc3_plus_enc_buffer);
-        tlkalg_free_func(s_alg_lc3_plus_enc_scratch_buffer);
         p_lc3_plus_enc_if->audio_alg_deinit();
-        s_alg_lc3_plus_enc_buffer         = NULL;
-        s_alg_lc3_plus_enc_scratch_buffer = NULL;
+        s_alg_lc3_plus_enc_buffer = NULL;
     }
 #endif
 
@@ -491,20 +526,22 @@ bool bt_voice_audio_path_init(void)
 {
     bool ret = true;
 
-    bt_voice_cfg.spk_enc_rptr = 0;
-    bt_voice_cfg.spk_enc_wptr = 0;
+    for (uint8_t i = 0; i < SCO_ENC_QUEUE_NUM; i++) {
+        bt_voice_cfg.spk_enc_wptr[i]      = 0;
+        bt_voice_cfg.spk_enc_rptr[i]      = 0;
+        bt_voice_cfg.mic_enc_rptr[i]      = 0;
+        bt_voice_cfg.mic_enc_wptr[i]      = 0;
+        bt_voice_cfg.sco_forward_state[i] = BT_VOICE_FORWARD_ST_IDLE;
+    }
 
-    bt_voice_cfg.mic_enc_rptr = 0;
-    bt_voice_cfg.mic_enc_wptr = 0;
-
-    bt_voice_cfg.tick      = 0;
-    bt_voice_cfg.status    = BT_VOICE_ST_IDLE;
-    bt_voice_cfg.init      = 0;
-    bt_voice_cfg.sync_init = 0;
+    bt_voice_cfg.sco_rx_tick     = 0;
+    bt_voice_cfg.status          = BT_VOICE_ST_IDLE;
+    bt_voice_cfg.init            = 0;
+    bt_voice_cfg.sync_init       = 0;
+    bt_voice_cfg.codec_sync_init = 0;
 
     bt_voice_cfg.dec_func  = NULL;
     bt_voice_cfg.enc_func  = NULL;
-    bt_voice_cfg.plc_func  = NULL;
     bt_voice_cfg.mic_state = 0;
 
     ret = bt_voice_buff_and_alg_init();
@@ -522,7 +559,9 @@ bool bt_voice_audio_path_init(void)
 #endif
 
 #if SCO_ENC_QUEUE_ENABLE
-    btif_sco_enc_buff_init(g_sco_data_buff);
+    for (uint8_t i = 0; i < SCO_ENC_QUEUE_NUM; i++) {
+        btif_sco_enc_buff_init(i, g_sco_data_buff[i]);
+    }
 #endif
 
 #if (TLKSTK_BT_TPS_ENABLE)
@@ -566,6 +605,9 @@ bool bt_voice_audio_path_deinit(void)
  */
 void bt_voice_open_codec(void)
 {
+#if TLKADU_MIDBUF_ENABLE
+    tlkaud_set_audio_mode(AUDIO_BT_VOICE);
+#else
 #if (MCU_CORE_TYPE == MCU_CORE_B92)
     g_codec_cfg.sample_rate = AUDIO_SAMPLE_RATE_16K;
 #elif (TLKSTK_BT_TPS_ENABLE)
@@ -618,6 +660,7 @@ void bt_voice_open_codec(void)
 #endif
 
 #endif // AUDIO_PATH_24BITS_EN
+#endif
 }
 
 /**
@@ -627,8 +670,12 @@ void bt_voice_open_codec(void)
  */
 void bt_voice_close_codec(void)
 {
+#if TLKADU_MIDBUF_ENABLE
+    tlkaud_clear_audio_mode(AUDIO_BT_VOICE);
+#else
     tlkdrv_codec_close(TLKDRV_CODEC_SUBDEV_MIC);
     tlkdrv_codec_close(TLKDRV_CODEC_SUBDEV_SPK);
+#endif
     bt_voice_cfg.mic_state = 0;
 }
 
@@ -642,6 +689,8 @@ void bt_voice_anc_close_codec(void)
     tlkdrv_codec_close(TLKDRV_CODEC_SUBDEV_MIC);
     bt_voice_cfg.mic_state = 0;
 }
+
+extern uint16_t bt_voice_forward_mode_proc_sco_data(int16_t *p_des0, int16_t *p_des1);
 
 /**
  * @brief   Switch in handler for BT voice
@@ -664,7 +713,7 @@ void tlkmdi_btvoice_switch_in(uint16_t handle)
     if (tlkmdi_bt_tpt_isMaster() || tlkmdi_bt_tpt_isSingle())
 #endif
     {
-#if (TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
+#if (TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE && !TLKMW_RECORDING_CARD_EN)
         tlkmw_dsp_resume();
         bt_voice_clear_dsp_ret_buff_status();
         ipc_msg_register_data_process_done_cb(bt_voice_dsp_msg_process_callback, BT_VOICE, BT_VOICE_ID);
@@ -683,10 +732,36 @@ void tlkmdi_btvoice_switch_in(uint16_t handle)
 
     tlkmw_audio_btif_inform_host_audio_en(handle, false);
     bt_audio_set_voice_vol_percent_by_handle(handle);
-    bt_audio_register_get_pcm_data_callback(bt_voice_get_playback_data);
-    tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, bt_audio_main);
-    tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, bt_audio_main_loop);
+#if (TLKMW_BT_1_TO_2_FORWARD_EN)
+    if (tlkmdi_bt_voice_forward_isBusy()) {
+        bt_audio_register_get_pcm_data_callback(bt_voice_forward_mode_proc_sco_data);
+        bt_voice_set_mode(BT_VOICE_FORWARD_WITH_ALG_MODE);
+    } else
+#endif
+    {
+        bt_audio_register_get_pcm_data_callback(bt_voice_get_playback_data);
+        bt_voice_set_mode(BT_VOICE_PLAYBACK_MODE);
+    }
+#if TLKADU_MIDBUF_ENABLE
+    if (tlkaud_codec_task_if_can_start()) {
+        tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, tlkaud_timer_thread);
+        tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, tlkaud_mainloop_thread);
+        tlkaud_codec_task_init();
+        tlkaud_codec_task_set_mode(PLAYER_MODE_BT);
+        tlkaud_codec_task_set_struct_ver(VER_NEW);
+        tlkaud_midbuf_mute_spk();
+    } else
+#endif
+    {
+        tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, bt_audio_main);
+        tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, bt_audio_main_loop);
+#if TLKADU_MIDBUF_ENABLE
+        tlkaud_codec_task_set_struct_ver(VER_OLD);
+#endif
+    }
+
     bt_audio_task_register_run_cb(NULL, 1);
+    //tlkmdi_audio_stop_timer();
 
 #if DONGLE_VOICE_MIC_EN && (!TLK_CFG_HRA_ENABLE)
     tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_FIFO, ll_mix_fifo0_irq_handler_func);
@@ -720,6 +795,11 @@ void tlkmdi_btvoice_switch_out(uint16_t handle)
     bt_audio_register_get_pcm_data_callback(NULL);
     tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, NULL);
     tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, NULL);
+
+#if TLKADU_MIDBUF_ENABLE
+    tlkaud_codec_task_deinit();
+    tlkaud_codec_task_clear_mode(PLAYER_MODE_BT);
+#endif
 
     bool ret = bt_voice_audio_path_deinit();
     if (!ret) {

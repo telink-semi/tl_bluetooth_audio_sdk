@@ -108,7 +108,7 @@ struct sTlk_fw_info_list_t *tlkmw_get_fw_info_node_by_index(struct sTlk_fw_info_
  * @param[in]  pInterface        - Pointer to NVDS OTA interface
  * @return     none
  */
-static void tlkmw_ota_free_fw_group_list(sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t *pInterface)
+static void tlkmw_ota_free_fw_group_list(sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t pInterface)
 {
     if (pTotalFwDescptors == NULL || pInterface == NULL || pInterface->nvds_ota_free == NULL) {
         return;
@@ -144,7 +144,7 @@ static void tlkmw_ota_free_fw_group_list(sTlk_total_fw_descriptors_t *pTotalFwDe
  * @param[in]  pInterface        - Pointer to NVDS OTA interface
  * @return     int - OTA_NONE if success, error code otherwise
  */
-int tlkmw_parse_fw_group_list(uint8_t *pData, uint32_t dataLen, uint32_t *offset, sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t *pInterface)
+int tlkmw_parse_fw_group_list(uint8_t *pData, uint32_t dataLen, uint32_t *offset, sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t pInterface)
 {
     if (pData == NULL || offset == NULL || pTotalFwDescptors == NULL || pInterface == NULL || pInterface->nvds_ota_malloc == NULL) {
         return -OTA_PARAMERR;
@@ -252,7 +252,7 @@ void tlkmw_print_fw_group_list(sTlk_total_fw_descriptors_t *pTotalFwDescptors)
  * @param[in]  pInterface        - Pointer to NVDS OTA interface
  * @return     none
  */
-static void tlkmw_ota_free_fw_descriptors_list(sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t *pInterface)
+static void tlkmw_ota_free_fw_descriptors_list(sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t pInterface)
 {
     if (pTotalFwDescptors == NULL || pInterface == NULL || pInterface->nvds_ota_free == NULL) {
         return;
@@ -278,7 +278,7 @@ static void tlkmw_ota_free_fw_descriptors_list(sTlk_total_fw_descriptors_t *pTot
  * @param[in]  pInterface        - Pointer to NVDS OTA interface
  * @return     int - OTA_NONE if success, error code otherwise
  */
-int tlkmw_ota_parse_fw_descriptors_list(uint8_t *pData, uint16_t dataLen, sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t *pInterface)
+int tlkmw_ota_parse_fw_descriptors_list(uint8_t *pData, uint16_t dataLen, sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t pInterface)
 {
     if (pData == NULL || dataLen == 0 || pTotalFwDescptors == NULL || pInterface == NULL || pInterface->nvds_ota_malloc == NULL) {
         return -OTA_PARAMERR;
@@ -338,7 +338,7 @@ void tlkmw_ota_print_fw_descriptors_list(sTlk_total_fw_descriptors_t *pTotalFwDe
  * @param[in]  pInterface        - Pointer to NVDS OTA interface
  * @return     int - OTA_NONE if success, error code otherwise
  */
-int tlk_ota_parse_total_fw_descriptors(uint8_t *pData, uint16_t dataLen, sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t *pInterface)
+int tlk_ota_parse_total_fw_descriptors(uint8_t *pData, uint16_t dataLen, sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t pInterface)
 {
     if (pData == NULL || dataLen < 20 || pTotalFwDescptors == NULL || pInterface == NULL || pInterface->nvds_ota_malloc == NULL) {
         return -OTA_PARAMERR;
@@ -394,7 +394,7 @@ int tlk_ota_parse_total_fw_descriptors(uint8_t *pData, uint16_t dataLen, sTlk_to
  * @param[in]  pInterface        - Pointer to NVDS OTA interface
  * @return     none
  */
-void tlkmw_free_total_fw_descptors(sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t *pInterface)
+void tlkmw_free_total_fw_descptors(sTlk_total_fw_descriptors_t *pTotalFwDescptors, nvds_ota_Interface_t pInterface)
 {
     if (pTotalFwDescptors == NULL || pInterface == NULL || pInterface->nvds_ota_free == NULL) {
         return;

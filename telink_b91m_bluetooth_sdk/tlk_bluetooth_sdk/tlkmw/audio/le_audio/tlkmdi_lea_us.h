@@ -34,7 +34,7 @@ uint16_t tlkmdi_lea_us_get_active_conn_handle(void);
  * @brief       Initialize LE Audio unicast server states and callbacks.
  * @return      TLK_ENONE on success.
  */
-int  tlkmdi_lea_us_init(void);
+int tlkmdi_lea_us_init(void);
 
 /**
  * @brief       Query whether music pipeline is currently active.
@@ -48,14 +48,14 @@ bool tlkmdi_lea_us_music_is_busy(void);
  * @param[in]   param   - optional (unused).
  * @return      TLK_ENONE on success.
  */
-int  tlkmdi_lea_us_music_start(uint16_t handle, uint32_t param);
+int tlkmdi_lea_us_music_start(uint16_t handle, uint32_t param);
 
 /**
  * @brief       Issue music pause command to remote server.
  * @param[in]   handle  - BLE ACL handle.
  * @return      TLK_ENONE on success.
  */
-int  tlkmdi_lea_us_music_close(uint16_t handle);
+int tlkmdi_lea_us_music_close(uint16_t handle);
 
 /**
  * @brief       Send next-track command through GMCS.

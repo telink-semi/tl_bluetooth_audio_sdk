@@ -51,6 +51,7 @@ typedef enum
     BTH_EVTID_SCOCONN_COMPLETE,
     BTH_EVTID_ACLDISC_COMPLETE,
     BTH_EVTID_SCODISC_COMPLETE,
+    BTH_EVTID_SIMPLE_PAIRING_COMPLETE,
     BTH_EVTID_AUTHEN_COMPLETE,
     BTH_EVTID_ENCRYPT_COMPLETE,
     BTH_EVTID_SCOCODEC_CHANGED,
@@ -59,7 +60,6 @@ typedef enum
     BTH_EVTID_PINCODE_REQUEST,
     BTH_EVTID_LINKKEY_REQUEST,
     BTH_EVTID_LINKKEY_NOTIFY,
-    BTH_EVTID_ACL_ESTABLISH, // Private Protocol
     BTH_EVTID_EXT_FEATURE_CHANGED,
     BTH_EVTID_ACL_GETNAME_REPORT,
     BTH_EVTID_ACL_GETRSSI_REPORT,
@@ -68,6 +68,10 @@ typedef enum
     BTH_EVTID_SIGNAL_CONNREQ,
     BTH_EVTID_SIGNAL_CONNRSP,
     BTH_EVTID_SET_SCAN_CMD_COMPLETE,
+
+    BTH_EVTID_START_INQUIRY_STATUS,
+    BTH_EVTID_CANCEL_INQUIRY_COMPLETE,
+    BTH_EVTID_CANCEL_GET_NAME_COMPLETE,
 
     BTH_EVTID_CMD_STATUS,
     BTH_EVTID_CMD_COMPLETE,
@@ -153,6 +157,13 @@ typedef struct
 
 typedef struct
 {
+    uint8_t status;
+    uint8_t resv1byte;
+    uint8_t bd_addr[6];
+} bth_simplePairingCompleteEvt_t;
+
+typedef struct
+{
     uint8_t  status;
     uint8_t  resv1byte;
     uint16_t handle;
@@ -221,9 +232,12 @@ typedef struct
     uint8_t  status;
     uint8_t  nameLen;
     uint8_t  btaddr[6];
-    uint16_t resv2byte;
+    uint8_t  isCustomerDev;
     uint16_t handle;
     uint8_t *pName;
+    uint8_t  resume_music;
+    uint8_t  rev2;
+    uint16_t music_handle;
 } bth_aclGetNameReportEvt_t;
 
 typedef struct
@@ -333,6 +347,8 @@ int bth_send_scoConnCompleteEvt(uint16_t aclHandle, uint16_t scoHandle, uint8_t 
  *******************************************************************************/
 int bth_send_scoDiscCompleteEvt(uint16_t aclHandle, uint16_t scoHandle, uint8_t reason, uint8_t linkType, uint8_t btaddr[6]);
 
+int bth_send_simplePairingCompleteEvt(uint8_t status, uint8_t bd_addr[6]);
+
 /******************************************************************************
  * Function: bth_send_authenCompleteEvt
  * Descript: Send the authenticate complete event via callback.
@@ -405,16 +421,6 @@ int bth_send_linkKeyRequestEvt(uint16_t handle, uint8_t btaddr[6]);
  * Return: TLK_ENONE is success, other value if false.
  *******************************************************************************/
 int bth_send_linkKeyNotifyEvt(uint8_t keyType, uint8_t btaddr[6], uint8_t linkKey[16], uint32_t devClass);
-
-/******************************************************************************
- * Function: bth_send_aclEstablishEvt
- * Descript: Send the link key notify event via callback.
- * Params:
- *        @pData[IN]--The event data.
- *        @dataLen[IN]--The data length.
- * Return: TLK_ENONE is success, other value if false.
- *******************************************************************************/
-int bth_send_aclEstablishEvt(uint8_t *pData, uint16_t dataLen);
 
 /******************************************************************************
  * Function: bth_send_extFeatureChangedEvt

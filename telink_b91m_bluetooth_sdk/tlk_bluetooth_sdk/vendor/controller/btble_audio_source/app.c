@@ -33,10 +33,9 @@
 #include "tlkmw/pm/tlkmw_pm.h"
 
 #if (CONTROLLER_MODE == BTBLE_AUDIO_SOURCE)
-    #include "stack/multiCoreComm/service/service_shareMemory.h"
-    #include "stack/multiCoreComm/comm.h"
-    #include "stack/btble.h"
-
+#include "stack/multiCoreComm/service/service_shareMemory.h"
+#include "stack/multiCoreComm/comm.h"
+#include "stack/btble.h"
 
 /**
  * @brief       Initialize user application and hardware modules
@@ -56,14 +55,14 @@ void user_init(void)
 
         core_interrupt_enable();
         /* initialize some basic MCU hardware */
-        tlksdk_init_mcu_hardware();
+        tlk_sys_init_mcu_hardware();
 
-        tlksdk_sch_set_base_interval(PLAN_INTERVAL_10MS);
+        tlk_sch_plan_set_base_interval(PLAN_INTERVAL_10MS);
 
         tlk_multi_core_communication_init();
         /*initialize BR/EDR core*/
         controller_init(BT_BLE, HCI_TR_SOC, NULL, NULL);
-        tlksdk_sch_init();
+        tlk_sch_init();
 #if (CHIP_TYPE != CHIP_TYPE_TL752X)
         rf_set_power_level_index(RF_POWER_P3dBm);
 
@@ -73,7 +72,7 @@ void user_init(void)
 #if (CHIP_TYPE != CHIP_TYPE_TL752X)
     else /* power up by D25F suspend wake up logic */
     {
-        tlksdk_restore_mcu_hardware();
+        tlk_sys_restore_mcu_hardware();
     }
 #endif
 }
@@ -87,7 +86,7 @@ void main_loop(void)
 {
     tlk_multi_core_communication_loop();
 
-    tlksdk_main_loop();
+    tlk_sys_main_loop();
 
     tlkmdi_pm_process();
 }

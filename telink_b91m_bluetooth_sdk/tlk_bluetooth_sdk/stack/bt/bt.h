@@ -37,7 +37,6 @@
 #include "stack/bt/host//bt_hci.h"
 
 
-
 #include "stack/stack.h"
 
 

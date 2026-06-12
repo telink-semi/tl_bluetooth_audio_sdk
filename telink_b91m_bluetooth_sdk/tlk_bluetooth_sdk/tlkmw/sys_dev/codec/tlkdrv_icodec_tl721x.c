@@ -301,11 +301,17 @@ static int tlkdrv_icodec_open(uint8_t subDev)
             return -TLK_EREPEAT;
         }
 
+#if (RECORDING_CARD_EN)
+#if (!TLKMDI_DMIC_POWER_SUSPEND_DIS)
+        if (TLKDRV_ICODEC_POWER_PIN != GPIO_NONE_PIN) {
+            gpio_function_en((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
+            gpio_input_dis((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
+            gpio_set_high_level((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
+            gpio_output_en((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
+        }
+#endif
+#endif
         sTlkDrvIcodecCtrl.codec_mic_cfg.IsEn = true;
-        gpio_function_en((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
-        gpio_input_dis((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
-        gpio_set_high_level((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
-        gpio_output_en((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
         tlkdrv_icodec_mic_enable(true);
         sTlkDrvIcodecCtrl.codec_mic_cfg.IsOpen = true;
     }
@@ -369,19 +375,29 @@ static int tlkdrv_icodec_close(uint8_t subDev)
 
 #elif (CODEC_INPUT_MODE == CODEC_INPUT_DMIC)
         audio_codec_reset_dmic_pin((gpio_func_pin_e)TLKDRV_ICODEC_DMIC_DATA_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK0_PIN, (gpio_func_pin_e)TLKDRV_ICODEC_DMIC_CLK1_PIN);
+#if (RECORDING_CARD_EN)
+#if (!TLKMDI_DMIC_POWER_SUSPEND_DIS)
         if (TLKDRV_ICODEC_POWER_PIN != GPIO_NONE_PIN) {
             gpio_input_dis((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
             gpio_output_dis((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
             gpio_function_en((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
         }
 #endif
-        audio_rx_dma_dis(TLKDRV_CODEC_MIC_DMA);
+#endif
+#endif
+        audio_rx_dma_dis(gTlkdrvCodecMicDmaChn);
     }
 
     if ((subDev & TLKDRV_CODEC_SUBDEV_SPK) != 0) {
         sTlkDrvIcodecCtrl.codec_spk_cfg.IsOpen = false;
         sTlkDrvIcodecCtrl.codec_spk_cfg.IsEn   = false;
-        audio_tx_dma_dis(TLKDRV_CODEC_SPK_DMA);
+        audio_tx_dma_dis(gTlkdrvCodecSpkDmaChn);
+    }
+
+    if (!(sTlkDrvIcodecCtrl.codec_mic_cfg.IsEn || sTlkDrvIcodecCtrl.codec_spk_cfg.IsEn)) {
+#if RECORDING_CARD_EN
+        audio_power_down();
+#endif
     }
 
     return TLK_ENONE;
@@ -664,7 +680,7 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
         inputParam.sample_rate = micSRate;
         inputParam.data_width  = micDWdith;
         inputParam.fifo_chn    = TLKDRV_CODEC_MIC_FIFO;
-        inputParam.dma_num     = TLKDRV_CODEC_MIC_DMA;
+        inputParam.dma_num     = gTlkdrvCodecMicDmaChn;
 
 
         audio_codec_stream0_input_init(&inputParam);
@@ -672,20 +688,19 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
 #if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
         audio_set_adc_pga_gain(CODEC_IN_GAIN_9P0_DB);
 #elif (CODEC_INPUT_MODE == CODEC_INPUT_DMIC)
-        audio_set_stream0_dig_gain(CODEC_IN_D_GAIN_12_DB);
+        audio_set_stream0_dig_gain(CODEC_IN_D_GAIN_18_DB);
 #endif //#if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
 
-
         /* rx dma init. */
-        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, TLKDRV_CODEC_MIC_DMA, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, gTlkdrvCodecMicDmaChn, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
 
-        audio_mic_mute_en();
-        audio_codec_stream0_input_en(TLKDRV_CODEC_MIC_DMA);
+        //	        audio_mic_mute_en();
+        audio_codec_stream0_input_en(gTlkdrvCodecMicDmaChn);
         //	        audio_codec_clr_input_pop(20);
         audio_codec_input_path_en(inputParam.fifo_chn);
-        audio_mic_mute_dis();
+        //	        audio_mic_mute_dis();
 
-        //	        audio_rx_dma_en(TLKDRV_CODEC_MIC_DMA); /* the rx dma enable must precede the adc enable. */
+        //	        audio_rx_dma_en(gTlkdrvCodecMicDmaChn); /* the rx dma enable must precede the adc enable. */
     }
 
     return TLK_ENONE;
@@ -739,7 +754,7 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
         outputParam.output_src  = spkSrc;
         outputParam.sample_rate = spkSRate;
         outputParam.data_width  = spkDWdith;
-        outputParam.dma_num     = TLKDRV_CODEC_SPK_DMA;
+        outputParam.dma_num     = gTlkdrvCodecSpkDmaChn;
 #if (AUDIO_CODEC_LOOPBACK)
         outputParam.data_buf      = gpTlkDrvCodecMicBuffer;
         outputParam.data_buf_size = gTlkDrvCodecMicBuffLen;
@@ -765,27 +780,5 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
 
     return TLK_ENONE;
 }
-
-//static void tlkdrv_icodec_disable(void)
-//{
-//    tlkapi_trace(TLKDRV_CODEC_DBG_FLAG, TLKDRV_CODEC_DBG_SIGN, "tlkdrv_icodec_disable: 001");
-//
-//    audio_codec0_power_down();
-//#if (AUDIO_HD_HAC_MODE == AUDIO_HD_HAC_AND_CODEC)
-//	#if  AUDIO_HD_HAC_SPK_ASRC_EN
-//		audio_tx_dma_dis(TLKDRV_AUDIO_SPK_RCH_DMA);
-//		audio_tx_dma_dis(TLKDRV_AUDIO_SPK_LCH_DMA);
-//	#endif
-//	#if AUDIO_HD_HAC_MIC_ASRC_EN
-//		audio_tx_dma_dis(TLKDRV_AUDIO_MIC_LCH_DMA);
-//		audio_tx_dma_dis(TLKDRV_AUDIO_MIC_RCH_DMA);
-//	#endif
-//#elif(AUDIO_HD_HAC_MODE == AUDIO_HD_HAC_AND_CODEC)
-//#else
-//    audio_rx_dma_dis(TLKDRV_CODEC_MIC_DMA);
-//    audio_tx_dma_dis(TLKDRV_CODEC_SPK_DMA);
-//#endif
-//}
-
 
 #endif // #if (MCU_CORE_TYPE == MCU_CORE_TL721X && TLKDRV_CODEC_ICODEC_ENABLE)

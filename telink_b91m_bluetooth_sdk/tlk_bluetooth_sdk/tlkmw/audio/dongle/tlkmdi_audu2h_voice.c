@@ -297,8 +297,7 @@ bool tlkmdi_audu2h_voice_switch(uint16_t handle, uint8_t status)
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, bt_audio_main);
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, bt_audio_main_loop);
         bt_audio_task_register_run_cb(NULL, 1);
-
-
+        bt_voice_set_mode(BT_VOICE_PLAYBACK_MODE);
     } else {
         tlkmdi_bthfpag_hungupCall();
 

@@ -31,10 +31,6 @@
 #define TLKMDI_BTINQ_DBG_FLAG ((TLK_MAJOR_DBGID_MDI_BT << 24) | (TLK_MINOR_DBGID_MDI_BT_INQ << 16) | TLK_DEBUG_DBG_FLAG_ALL)
 #define TLKMDI_BTINQ_DBG_SIGN "[MDI]"
 
-
-static int  tlkmdi_btinq_resultEvt(uint8_t *pData, uint16_t dataLen);
-static int  tlkmdi_btinq_completeEvt(uint8_t *pData, uint16_t dataLen);
-static int  tlkmdi_btinq_getNameCompleteEvt(uint8_t *pData, uint16_t dataLen);
 static void tlkmdi_btinq_reportDevice(tlkmdi_btinq_item_t *pItem);
 
 
@@ -42,10 +38,6 @@ static TlkMdiBtInqReportCallBack   sTlkmdiBtInqReportCB;
 static TlkMdiBtInqCompleteCallBack sTlkmdiBtInqCompleteCB;
 
 static tlkmdi_btinq_ctrl_t stlk_inq_ctrl;
-
-BTH_EVT_REGISTER(BTH_EVTID_INQUIRY_RESULT, tlkmdi_btinq_resultEvt);
-BTH_EVT_REGISTER(BTH_EVTID_INQUIRY_COMPLETE, tlkmdi_btinq_completeEvt);
-BTH_EVT_REGISTER(BTH_EVTID_GETNAME_COMPLETE, tlkmdi_btinq_getNameCompleteEvt);
 
 /**
  * @brief  Get whether the Inquiry process is busy or not.
@@ -92,17 +84,19 @@ int tlkmdi_btinq_start(uint8_t inqType, uint8_t rssiThd, uint8_t maxNumb, uint8_
         maxNumb = TLKMDI_BTINQ_ITEM_NUMB;
     }
 
-    stlk_inq_ctrl.inqType = inqType;
-    stlk_inq_ctrl.curNumb = 0;
-    stlk_inq_ctrl.nameIdx = 0;
-    stlk_inq_ctrl.inqWind = ((uint32_t)inqWind * 1000) / TLKMDI_BTINQ_TIMEOUT_MS;
-    stlk_inq_ctrl.maxNumb = maxNumb;
-    stlk_inq_ctrl.rssiThd = rssiThd;
+    stlk_inq_ctrl.inqType   = inqType;
+    stlk_inq_ctrl.curNumb   = 0;
+    stlk_inq_ctrl.nameIdx   = 0;
+    stlk_inq_ctrl.inqWind   = ((uint32_t)inqWind * 1000) / TLKMDI_BTINQ_TIMEOUT_MS;
+    stlk_inq_ctrl.maxNumb   = maxNumb;
+    stlk_inq_ctrl.rssiThd   = rssiThd;
+    stlk_inq_ctrl.retry_num = TLKMDI_BTINQ_MAX_RETRY_NUMB;
 
     stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_INQUIRY;
     stlk_inq_ctrl.stage = TLKMDI_BTINQ_INQUIRY_STAGE_START;
 
-    tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_start type[%d]...", stlk_inq_ctrl.inqType);
+    tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_start type[%d], maxNumb[%d], inqWind[%d]...", stlk_inq_ctrl.inqType, stlk_inq_ctrl.maxNumb,
+                 stlk_inq_ctrl.inqWind);
 
     tlksys_timer_reStart(TLKSYS_TASKID_HOST, &stlk_inq_ctrl.timer);
 
@@ -118,26 +112,23 @@ void tlkmdi_btinq_close(void)
 {
     uint8_t stage;
 
-    if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_IDLE) {
-        return;
-    }
-    if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_CLOSING) {
+    if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_IDLE || stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_CLOSING) {
         return;
     }
 
     stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
     if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_INQUIRY) {
-        if (stlk_inq_ctrl.stage != TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CANCEL) {
+        if (stlk_inq_ctrl.stage != TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CLOSE_RSP) {
             stage = TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_INQUIRY;
-        } else {
-            stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
         }
+    } else if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_GETNAME) {
+        stage = TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_GETNAME;
     }
 
     stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
     stlk_inq_ctrl.stage = stage;
 
-    stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_CANCEL_TIMEOUT;
+    stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_TIMEOUT;
 }
 
 /**
@@ -280,12 +271,36 @@ void tlkmdi_btinq_printList(void)
 */
 static void tlkmdi_btinq_inquiryProcs(void)
 {
+    if (stlk_inq_ctrl.state != TLKMDI_BTINQ_STATE_INQUIRY && stlk_inq_ctrl.stage > TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CLOSE_RSP) {
+        return;
+    }
+
     if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_START) {
-        if (bth_hci_sendWriteInquiryModeCmd(0x02) == TLK_ENONE && bth_hci_sendInquiryCmd(INQUIRY_LENGTH_30S72, 100) == TLK_ENONE) {
-            /*Just inquiry once, reached the specified number or timeout.*/
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_INQUIRY_STAGE_DOING;
-            stlk_inq_ctrl.timeout = stlk_inq_ctrl.inqWind;
+        if (stlk_inq_ctrl.retry_num == 0) {
+            stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
+            stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
+            tlk_printf("Inquiry retry numb is [%d], switch to Closing process.", TLKMDI_BTINQ_MAX_RETRY_NUMB);
+            return;
         }
+
+        if (bth_hci_sendWriteInquiryModeCmd(0x02) == TLK_ENONE && bth_hci_sendInquiryCmd(INQUIRY_LENGTH_30S72, 0xFF) == TLK_ENONE) {
+            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_START_RSP;
+            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_TIMEOUT;
+            tlk_printf("tlkmdi_btinq_inquiryProcs stage start, switch to wait start response.");
+        } else {
+            tlk_printf("Start inquiry fail due to hci send fail, switch to IDLE.");
+            stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_IDLE;
+        }
+    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_START_RSP) {
+        if (stlk_inq_ctrl.timeout != 0) {
+            stlk_inq_ctrl.timeout--;
+        }
+        if (stlk_inq_ctrl.timeout != 0) {
+            return;
+        }
+        tlk_printf("Wait start response timeout, switch to Closing process.");
+        stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
+        stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
     } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_DOING) {
         if (stlk_inq_ctrl.timeout != 0) {
             stlk_inq_ctrl.timeout--;
@@ -293,30 +308,29 @@ static void tlkmdi_btinq_inquiryProcs(void)
         if (stlk_inq_ctrl.timeout != 0) {
             return;
         }
-        stlk_inq_ctrl.stage = TLKMDI_BTINQ_INQUIRY_STAGE_CLOSE;
+        tlk_printf("Inquiry timeout, retry_num[%d], curNumb[%d], maxNum[%d]", stlk_inq_ctrl.retry_num, stlk_inq_ctrl.curNumb, stlk_inq_ctrl.maxNumb);
+        if (stlk_inq_ctrl.curNumb > 0 && tlkmdi_btinq_getReadyItemCount() != stlk_inq_ctrl.curNumb) {
+            tlk_printf("This inquiry is over, switch to GetName Process.");
+            stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_GETNAME;
+            stlk_inq_ctrl.stage = TLKMDI_BTINQ_GETNAME_STAGE_START;
+        } else {
+            stlk_inq_ctrl.stage = TLKMDI_BTINQ_INQUIRY_STAGE_CLOSE;
+        }
     } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_CLOSE) {
         if (bth_hci_sendInquiryCancelCmd() == TLK_ENONE) {
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CANCEL;
-            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_CANCEL_TIMEOUT;
+            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CLOSE_RSP;
+            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_TIMEOUT;
         }
-    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CANCEL) {
+    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CLOSE_RSP) {
         if (stlk_inq_ctrl.timeout != 0) {
             stlk_inq_ctrl.timeout--;
         }
         if (stlk_inq_ctrl.timeout != 0) {
             return;
         }
-        if (stlk_inq_ctrl.curNumb != 0 && tlkmdi_btinq_getReadyItemCount() != stlk_inq_ctrl.curNumb) {
-            stlk_inq_ctrl.state   = TLKMDI_BTINQ_STATE_GETNAME;
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_GETNAME_STAGE_START;
-            stlk_inq_ctrl.nameIdx = 0;
-            tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_inquiryProcs: Switch to GetName");
-        } else {
-            stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
-            stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_INQUIRY;
-        }
-    } else {
-        tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_inquiryProcs: Error Stage - %d", stlk_inq_ctrl.stage);
+        stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
+        stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
+        tlk_printf("Wait close inquiry response timeout, switch to Closing process.");
     }
 }
 
@@ -327,15 +341,26 @@ static void tlkmdi_btinq_inquiryProcs(void)
 */
 static void tlkmdi_btinq_getNameProcs(void)
 {
+    if (stlk_inq_ctrl.state != TLKMDI_BTINQ_STATE_GETNAME && stlk_inq_ctrl.stage > TLKMDI_BTINQ_GETNAME_STAGE_WAIT_GET_RSP) {
+        return;
+    }
+
     if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_START) {
-        if (stlk_inq_ctrl.curNumb == 0 || tlkmdi_btinq_getReadyItemCount() == stlk_inq_ctrl.curNumb) {
-            stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
-            stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
+        if (stlk_inq_ctrl.curNumb == 0 || tlkmdi_btinq_getReadyItemCount() == stlk_inq_ctrl.curNumb) { //No device need to get name.
+            if (stlk_inq_ctrl.retry_num && (stlk_inq_ctrl.curNumb < stlk_inq_ctrl.maxNumb)) {
+                /*Start next inquiry.*/
+                stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_INQUIRY;
+                stlk_inq_ctrl.stage = TLKMDI_BTINQ_INQUIRY_STAGE_START;
+            } else {
+                stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
+                stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
+                tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_getNameProcs: Switch to Closing");
+            }
         } else {
             stlk_inq_ctrl.nameIdx = stlk_inq_ctrl.curNumb - 1;
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_GETNAME_STAGE_DOING;
+            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_GETNAME_STAGE_SEND_GET;
         }
-    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_DOING) {
+    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_SEND_GET) {
         int                  index;
         tlkmdi_btinq_item_t *pItem = NULL;
         for (index = stlk_inq_ctrl.nameIdx; index >= 0; index--) {
@@ -346,37 +371,23 @@ static void tlkmdi_btinq_getNameProcs(void)
         if (index < stlk_inq_ctrl.curNumb) {
             pItem = &stlk_inq_ctrl.item[index];
         }
-        if (pItem == NULL) {
-            stlk_inq_ctrl.state   = TLKMDI_BTINQ_STATE_CLOSING;
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
-            stlk_inq_ctrl.nameIdx = stlk_inq_ctrl.curNumb;
-            tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_getNameProcs: Switch to closing.");
+
+        if (pItem == NULL) { //No device need to get name.
+            if (stlk_inq_ctrl.retry_num && (stlk_inq_ctrl.curNumb < stlk_inq_ctrl.maxNumb)) {
+                /*Start next inquiry.*/
+                stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_INQUIRY;
+                stlk_inq_ctrl.stage = TLKMDI_BTINQ_INQUIRY_STAGE_START;
+            } else {
+                stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
+                stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
+                tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_getNameProcs: Switch to Closing");
+            }
         } else if (bth_hci_sendRemoteNameReqCmd(pItem->btaddr, pItem->smode, pItem->clkOff) == TLK_ENONE) {
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_GETNAME_STAGE_WAIT_NAME;
-            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_GETNAME_TIMEOUT;
+            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_GETNAME_STAGE_WAIT_GET_RSP;
+            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_TIMEOUT;
             stlk_inq_ctrl.nameIdx = index;
         }
-    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_WAIT_NAME) {
-        if (stlk_inq_ctrl.timeout != 0) {
-            stlk_inq_ctrl.timeout--;
-        }
-        if (stlk_inq_ctrl.timeout != 0) {
-            return;
-        }
-        stlk_inq_ctrl.stage = TLKMDI_BTINQ_GETNAME_STAGE_CLOSE;
-    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_CLOSE) {
-        tlkmdi_btinq_item_t *pItem = tlkmdi_btinq_getItem(stlk_inq_ctrl.nameIdx);
-        if (pItem == NULL) {
-            stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
-            stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_INQUIRY;
-        } else if (bth_hci_sendRemoteNameReqCancelCmd(pItem->btaddr) == TLK_ENONE) {
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_GETNAME_STAGE_WAIT_CANCEL;
-            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_CANCEL_TIMEOUT;
-            if (stlk_inq_ctrl.nameIdx != 0) {
-                stlk_inq_ctrl.nameIdx--;
-            }
-        }
-    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_WAIT_CANCEL) {
+    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_WAIT_GET_RSP) {
         if (stlk_inq_ctrl.timeout != 0) {
             stlk_inq_ctrl.timeout--;
         }
@@ -384,15 +395,9 @@ static void tlkmdi_btinq_getNameProcs(void)
             return;
         }
 
-        if (stlk_inq_ctrl.nameIdx != 0 && stlk_inq_ctrl.nameIdx < stlk_inq_ctrl.curNumb) {
-            stlk_inq_ctrl.stage = TLKMDI_BTINQ_GETNAME_STAGE_DOING;
-        } else {
-            stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
-            stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
-            tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_getNameProcs: Switch to Closing [Device Get Over]");
-        }
-    } else {
-        tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_getNameProcs: Error Stage - %d", stlk_inq_ctrl.stage);
+        stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
+        stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
+        tlk_printf("Wait get name response timeout, switch to closing process.");
     }
 }
 
@@ -403,28 +408,28 @@ static void tlkmdi_btinq_getNameProcs(void)
 */
 static void tlkmdi_btinq_closingProcs(void)
 {
-    if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_CLOSING_STAGE_WAIT_GETNAME) {
+    if (stlk_inq_ctrl.state != TLKMDI_BTINQ_STATE_CLOSING && stlk_inq_ctrl.stage > TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER) {
+        return;
+    }
+
+    if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_GETNAME) {
         tlkmdi_btinq_item_t *pItem = tlkmdi_btinq_getItem(stlk_inq_ctrl.nameIdx);
         if (pItem == NULL) {
-            stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_INQUIRY;
+            stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
         } else if (bth_hci_sendRemoteNameReqCancelCmd(pItem->btaddr) == TLK_ENONE) {
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_GETNAME;
-            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_CANCEL_TIMEOUT;
+            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_CLOSING_STAGE_WAIT_CANCEL;
+            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_TIMEOUT;
         }
-    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_GETNAME) {
-        if (stlk_inq_ctrl.timeout != 0) {
-            stlk_inq_ctrl.timeout--;
-            return;
-        }
-        stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
     } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_INQUIRY) {
         if (bth_hci_sendInquiryCancelCmd() == TLK_ENONE) {
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_CLOSING_STAGE_WAIT_INQUIRY;
-            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_CANCEL_TIMEOUT;
+            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_CLOSING_STAGE_WAIT_CANCEL;
+            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_TIMEOUT;
         }
-    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_CLOSING_STAGE_WAIT_INQUIRY) {
+    } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_CLOSING_STAGE_WAIT_CANCEL) {
         if (stlk_inq_ctrl.timeout != 0) {
             stlk_inq_ctrl.timeout--;
+        }
+        if (stlk_inq_ctrl.timeout != 0) {
             return;
         }
         stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
@@ -436,8 +441,6 @@ static void tlkmdi_btinq_closingProcs(void)
         }
         stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_IDLE;
         stlk_inq_ctrl.stage = TLKMDI_BTINQ_STAGE_NONE;
-    } else {
-        tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_closingProcs: Error Stage - %d", stlk_inq_ctrl.stage);
     }
 }
 
@@ -493,17 +496,33 @@ static int tlkmdi_btinq_resultEvt(uint8_t *pData, uint16_t dataLen)
         return TLK_ENONE;
     }
 
-    pItem = tlkmdi_btinq_getUsedItem(pEvt->mac);
-    if (pItem != NULL && (pItem->nameLen != 0 || pEvt->nameLen == 0)) {
-        return TLK_ENONE;
-    }
-    if (pItem == NULL && (int8_t)stlk_inq_ctrl.rssiThd > (int8_t)pEvt->rssi) {
+    if ((int8_t)stlk_inq_ctrl.rssiThd > (int8_t)pEvt->rssi) {
         return TLK_ENONE;
     }
 
+    pItem = tlkmdi_btinq_getUsedItem(pEvt->mac);
+
     if (pItem == NULL) {
         pItem = tlkmdi_btinq_getIdleItem();
+    } else {
+        if (pItem->rssi != pEvt->rssi) {
+            pItem->rssi = pEvt->rssi;
+        }
+        if (pItem->nameLen == 0 && pEvt->nameLen != 0) {
+            if (pEvt->nameLen <= TLKMDI_BTINQ_NAME_LENS) {
+                pItem->nameLen = pEvt->nameLen;
+            } else {
+                pItem->nameLen = TLKMDI_BTINQ_NAME_LENS; // Name Length
+            }
+
+            if (pItem->nameLen != 0) {
+                tmemcpy(pItem->btname, pEvt->pName, pItem->nameLen);
+            }
+            pItem->btname[pItem->nameLen] = 0;
+        }
+        return TLK_ENONE;
     }
+
     if (pItem == NULL) {
         tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "Inquiry Device Is Full!");
         return TLK_ENONE;
@@ -538,12 +557,7 @@ static int tlkmdi_btinq_resultEvt(uint8_t *pData, uint16_t dataLen)
         tlkmdi_btinq_reportDevice(pItem);
     }
     if (stlk_inq_ctrl.curNumb >= stlk_inq_ctrl.maxNumb) {
-        if (bth_hci_sendInquiryCancelCmd() == TLK_ENONE) {
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CANCEL;
-            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_CANCEL_TIMEOUT;
-        } else {
-            stlk_inq_ctrl.stage = TLKMDI_BTINQ_INQUIRY_STAGE_CLOSE;
-        }
+        stlk_inq_ctrl.stage = TLKMDI_BTINQ_INQUIRY_STAGE_CLOSE;
     }
 
     return TLK_ENONE;
@@ -559,20 +573,20 @@ static int tlkmdi_btinq_completeEvt(uint8_t *pData, uint16_t dataLen)
 {
     (void)pData;
     (void)dataLen;
+    tlk_printf("tlkmdi_btinq_completeEvt state[%d], stage[%d], retry[%d], cur[%d], max[%d]", stlk_inq_ctrl.state, stlk_inq_ctrl.stage, stlk_inq_ctrl.retry_num,
+               stlk_inq_ctrl.curNumb, stlk_inq_ctrl.maxNumb);
     if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_IDLE) {
         return -TLK_ESTATUS;
     }
 
     if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_INQUIRY) {
-        if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_DOING) {
-            stlk_inq_ctrl.stage = TLKMDI_BTINQ_INQUIRY_STAGE_CLOSE;
-        } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CANCEL) {
-            stlk_inq_ctrl.state   = TLKMDI_BTINQ_STATE_GETNAME;
-            stlk_inq_ctrl.stage   = TLKMDI_BTINQ_GETNAME_STAGE_START;
-            stlk_inq_ctrl.nameIdx = 0;
+        if (stlk_inq_ctrl.curNumb > 0 && tlkmdi_btinq_getReadyItemCount() < stlk_inq_ctrl.curNumb) {
+            stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_GETNAME;
+            stlk_inq_ctrl.stage = TLKMDI_BTINQ_GETNAME_STAGE_START;
+        } else if (stlk_inq_ctrl.retry_num > 0) {
+            stlk_inq_ctrl.stage = TLKMDI_BTINQ_INQUIRY_STAGE_START;
         }
-    } else if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_CLOSING && stlk_inq_ctrl.stage == TLKMDI_BTINQ_CLOSING_STAGE_WAIT_INQUIRY) {
-        stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
+    } else if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_GETNAME) {
     }
 
     return TLK_ENONE;
@@ -591,13 +605,9 @@ static int tlkmdi_btinq_getNameCompleteEvt(uint8_t *pData, uint16_t dataLen)
         pEvt = (bth_getNameCompleteEvt_t *)pData;
     }
 
-    if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_CLOSING && stlk_inq_ctrl.stage == TLKMDI_BTINQ_CLOSING_STAGE_WAIT_GETNAME) {
-        stlk_inq_ctrl.stage   = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
-        stlk_inq_ctrl.timeout = 0;
-    }
-
     if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_GETNAME) {
-        if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_WAIT_NAME) {
+        if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_WAIT_GET_RSP) {
+            stlk_inq_ctrl.timeout = TLKMDI_BTINQ_WAIT_TIMEOUT;
             if (pEvt != NULL && pEvt->status == 0x00) {
                 tlkmdi_btinq_item_t *pItem = tlkmdi_btinq_getUsedItem(pEvt->btaddr);
                 if (pItem != NULL && pItem->nameLen == 0) {
@@ -610,21 +620,55 @@ static int tlkmdi_btinq_getNameCompleteEvt(uint8_t *pData, uint16_t dataLen)
                     }
                     pItem->btname[pItem->nameLen] = 0;
                     tlkmdi_btinq_reportDevice(pItem);
-                    stlk_inq_ctrl.stage = TLKMDI_BTINQ_GETNAME_STAGE_DOING;
+                    stlk_inq_ctrl.stage = TLKMDI_BTINQ_GETNAME_STAGE_START;
                 }
                 if (pItem != NULL && stlk_inq_ctrl.nameIdx != 0) {
                     stlk_inq_ctrl.nameIdx--;
                 }
             }
-        } else if (stlk_inq_ctrl.stage == TLKMDI_BTINQ_GETNAME_STAGE_WAIT_CANCEL) {
-            if (stlk_inq_ctrl.nameIdx != 0 && stlk_inq_ctrl.nameIdx < stlk_inq_ctrl.curNumb) {
-                stlk_inq_ctrl.stage = TLKMDI_BTINQ_GETNAME_STAGE_DOING;
-            } else {
-                stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_CLOSING;
-                stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_CANCEL_INQUIRY;
-                tlkapi_trace(TLKMDI_BTINQ_DBG_FLAG, TLKMDI_BTINQ_DBG_SIGN, "tlkmdi_btinq_getNameCompleteEvt: Switch to Closing [Device Get Over]");
-            }
         }
+    }
+    return TLK_ENONE;
+}
+
+static int tlkmdi_btinq_inquiry_cancel_complete_Evt(uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    /*Cancel Inquiry complete*/
+    if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_INQUIRY && stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_CLOSE_RSP) {
+        stlk_inq_ctrl.state = TLKMDI_BTINQ_STATE_GETNAME;
+        stlk_inq_ctrl.stage = TLKMDI_BTINQ_GETNAME_STAGE_START;
+    } else if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_CLOSING) {
+        stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
+    }
+    return TLK_ENONE;
+}
+
+static int tlkmdi_btinq_getName_cancel_complete_Evt(uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    /*Cancel Inquiry complete*/
+    if (stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_CLOSING) {
+        stlk_inq_ctrl.stage = TLKMDI_BTINQ_CLOSING_STAGE_INQUIRY_OVER;
+    }
+    return TLK_ENONE;
+}
+
+static int tlkmdi_btinq_inquiry_statusEvt(uint8_t *pData, uint16_t dataLen)
+{
+    if (pData == NULL || dataLen < 1) {
+        return -TLK_EPARAM;
+    }
+    uint8_t status = *pData;
+    if (status == BTH_HCI_ERROR_NONE && stlk_inq_ctrl.state == TLKMDI_BTINQ_STATE_INQUIRY && stlk_inq_ctrl.stage == TLKMDI_BTINQ_INQUIRY_STAGE_WAIT_START_RSP) {
+        stlk_inq_ctrl.stage   = TLKMDI_BTINQ_INQUIRY_STAGE_DOING;
+        stlk_inq_ctrl.timeout = 300; //TODO
+        stlk_inq_ctrl.retry_num--;
+        tlk_printf("Received inquiry start response, switch to inquiry doing.");
+    } else {
+        tlk_printf("tlkmdi_btinq_inquiry_statusEvt error stage[%d]", stlk_inq_ctrl.stage);
     }
     return TLK_ENONE;
 }
@@ -647,6 +691,13 @@ static void tlkmdi_btinq_reportDevice(tlkmdi_btinq_item_t *pItem)
     }
 }
 
+BTH_EVT_REGISTER(BTH_EVTID_INQUIRY_RESULT, tlkmdi_btinq_resultEvt);
+BTH_EVT_REGISTER(BTH_EVTID_INQUIRY_COMPLETE, tlkmdi_btinq_completeEvt);
+BTH_EVT_REGISTER(BTH_EVTID_GETNAME_COMPLETE, tlkmdi_btinq_getNameCompleteEvt);
+BTH_EVT_REGISTER(BTH_EVTID_START_INQUIRY_STATUS, tlkmdi_btinq_inquiry_statusEvt);
+BTH_EVT_REGISTER(BTH_EVTID_CANCEL_INQUIRY_COMPLETE, tlkmdi_btinq_inquiry_cancel_complete_Evt);
+BTH_EVT_REGISTER(BTH_EVTID_CANCEL_GET_NAME_COMPLETE, tlkmdi_btinq_getName_cancel_complete_Evt);
+
 /**
  * @brief  The inquiry param initialize function.
  * @param  None.
@@ -660,7 +711,7 @@ int tlkmdi_btinq_init(void)
     sTlkmdiBtInqReportCB   = NULL;
     sTlkmdiBtInqCompleteCB = NULL;
 
-    tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &stlk_inq_ctrl.timer, TLKMDI_BTINQ_TIMEOUT, false, tlkmdi_btinq_timer, NULL);
+    tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &stlk_inq_ctrl.timer, TLKMDI_BTINQ_TIMEOUT, false, tlkmdi_btinq_timer, NULL); //100ms
 
     return TLK_ENONE;
 }

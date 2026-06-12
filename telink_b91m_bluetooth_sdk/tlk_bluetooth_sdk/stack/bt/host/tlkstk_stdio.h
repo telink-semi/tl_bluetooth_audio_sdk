@@ -28,6 +28,6 @@
 #ifndef TLKSTK_STDIO_H
 #define TLKSTK_STDIO_H
 
-extern void   tlkstk_init(void);
+extern void tlkstk_init(void);
 
 #endif // TLKSTK_STDIO_H

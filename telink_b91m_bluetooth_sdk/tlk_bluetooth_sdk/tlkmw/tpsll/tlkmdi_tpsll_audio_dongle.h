@@ -24,16 +24,22 @@
 #ifndef TLKMDI_TPSLL_AUDIO_DONGLE_H
 #define TLKMDI_TPSLL_AUDIO_DONGLE_H
 
-typedef enum 
-{    
+typedef enum
+{
     TLKMDI_TPD_STATE_CHANGE_CB_PAIR,
     TLKMDI_TPD_STATE_CHANGE_CB_CONNECT,
     TLKMDI_TPD_STATE_CHANGE_CB_DISCONNECT,
 } tlkmdi_tpd_state_change_cb_e;
 
+typedef enum
+{
+    TLKMDI_TPD_USB_STATE_ENTER_SUSPEND,
+    TLKMDI_TPD_USB_STATE_EXIT_SUSPEND,
+} tlkmdi_tpd_usb_state_e;
+
 typedef void (*tlkmdi_tpd_state_change_cb)(uint8_t state);
 
-typedef void (*tlkmdi_tpd_hidCmdCB)(uint16_t handle,uint8_t cmd);
+typedef void (*tlkmdi_tpd_hidCmdCB)(uint16_t handle, uint8_t cmd);
 
 typedef enum
 {
@@ -47,17 +53,19 @@ typedef enum
 typedef struct
 {
     //word 0
-    uint32_t         tpsll_ac;
-    uint8_t         tpsll_ch;
-    uint8_t         cur_status;
-    uint16_t         timeout;
+    uint32_t tpsll_ac;
+    uint8_t  tpsll_ch;
+    uint8_t  cur_status;
+    uint16_t timeout;
     //word 3
-    uint8_t         local_addr[6];
-    uint8_t         addr_paired_headset[6];
+    uint8_t local_addr[6];
+    uint8_t addr_paired_headset[6];
     // word 7
-    uint16_t         startPairing;
-    uint16_t         headsetIsConn;
-} tlkmdi_tpsll_audio_dongle_item_t; // 24bytes
+    uint16_t startPairing;
+    uint16_t headsetIsConn;
+    // word 8
+    uint32_t headset_ver;
+} tlkmdi_tpsll_audio_dongle_item_t; // 28bytes
 
 /**
  * @brief       Initialize the tpsll audio dongle control structure and registers necessary handlers.
@@ -67,11 +75,26 @@ typedef struct
 void tlkmdi_tpsll_audio_dongle_init(void);
 
 /**
+ * @brief       This function handles the change of the usb suspend state.
+ * @param[in]   state - usb suspend state.
+ * @return      none.
+ * @note        none.
+ */
+void tlkmdi_tpsll_audio_dongle_usb_suspend_handler(void *pData, uint8_t dataLen);
+
+/**
  * @brief       Power onreconnection of the headset by checking the MAC address and initiating a connection scan.
  * @return      TLK_ENONE - success.
  * @note        none.
  */
 int tlkmdi_tpsll_audio_dongle_powerOnReconHeadset(void);
+
+/**
+ * @brief       Reconnection of the headset from Suspend
+ * @return      none.
+ * @note        none.
+ */
+void tlkmdi_tpsll_audio_dongle_ReconHeadset_fromSuspend(void);
 
 /**
  * @brief       Initialize the pairing process for the tpsll audio dongle.
@@ -97,5 +120,19 @@ void tlkmdi_tpd_regStateChgCB(tlkmdi_tpd_state_change_cb cb);
  * @note        none.
  */
 void tlkmdi_tpd_regGetHidCmdCB(tlkmdi_tpd_hidCmdCB cb);
+
+/**
+ * @brief       Sync version to headset.
+ * @return      None
+ */
+void tlkmdi_tpd_version_sync(void);
+
+/**
+ * @brief       Ready to enter pm.
+ * @param[in]   none.
+ * @return      none.
+ * @note        none.
+ */
+void tlkmdi_tpd_pm_enter_config(void);
 
 #endif

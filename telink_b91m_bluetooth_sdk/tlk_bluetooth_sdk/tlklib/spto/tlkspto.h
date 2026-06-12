@@ -50,21 +50,6 @@ typedef int (*TlkCpcResetCB)(void);
 
 typedef enum
 {
-    TLKSPTO_OPCODE_NONE = 0,
-    TLKSPTO_OPCODE_REG_SENDCB,
-    TLKSPTO_OPCODE_REG_REG_RECEIVE_CB,
-    TLKSPTO_OPCODE_REG_REG_RESET_REQUEST_CB,
-    TLKSPTO_OPCODE_REG_REG_RESET_COMPLETE_CB,
-    TLKSPTO_OPCODE_SET_RECV_BUFFER,
-    TLKSPTO_OPCODE_SET_SEND_BUFFER,
-    TLKSPTO_OPCODE_ENABLE_AUTHEN,
-    TLKSPTO_OPCODE_SET_AUTH_STATUE,
-    TLKSPTO_OPCODE_GET_BUFFER_SIZE,
-    TLKSPTO_OPCODE_GET_DAT_BUFFER_SIZE,
-} TLKSPTO_OPCODE_ENUM;
-
-typedef enum
-{
     TLKSPTO_AUTH_STATUS_NONE    = 0,
     TLKSPTO_AUTH_STATUS_SUCCESS = 1,
     TLKSPTO_AUTH_STATUS_FAILURE = 2,
@@ -73,24 +58,16 @@ typedef enum
 
 typedef struct
 {
-    uint32_t       sendLens;
-    uint32_t       buffLens;
-    uint8_t      *pBuffer;
+    uint32_t     sendLens;
+    uint8_t      pBuffer[160];
     TlkCpcSendCB sendCB;
 } tlkspto_send_ctrl_t;
 
 typedef struct
 {
-    uint8_t       sendNumb;
-    uint8_t       recvNumb;
-    uint8_t       mstate;
-    uint8_t       reserved;
-    uint32_t       busyTimer;
-    uint16_t       makeLens;
-    uint16_t       recvLens;
-    uint16_t       buffLen;
-    uint16_t       rsvd;
-    uint8_t      *pBuffer;
+    uint16_t     mstate;
+    uint16_t     recvLens;
+    uint8_t      pBuffer[432];
     TlkCpcRecvCB recvCB;
 } tlkspto_recv_ctrl_t;
 
@@ -109,19 +86,11 @@ void tlkspto_reset(void);
 void tlkspto_recv_regCB(TlkCpcRecvCB recvCB);
 
 /**
- * @brief       Set receive buffer.
- * @param[in]   pBuffer - Buffer pointer.
- * @param[in]   buffLen - Buffer length.
- * @return      none.
- */
-void tlkspto_recv_setBuffer(uint8_t *pBuffer, uint16_t buffLen);
-
-/**
  * @brief       Get receive buffer size.
  * @param[in]   none.
  * @return      Receive buffer size.
  */
-int  tlkspto_recv_getBufferSize(void);
+int tlkspto_recv_getBufferSize(void);
 
 /**
  * @brief       Process received data.
@@ -130,14 +99,6 @@ int  tlkspto_recv_getBufferSize(void);
  * @return      none.
  */
 void tlkspto_recvProc(uint8_t *pData, uint16_t dataLen);
-
-/**
- * @brief       Set send buffer.
- * @param[in]   pBuffer - Buffer pointer.
- * @param[in]   buffLen - Buffer length.
- * @return      none.
- */
-void tlkspto_send_setBuffer(uint8_t *pBuffer, uint16_t buffLen);
 
 /**
  * @brief       Register send callback function.
@@ -154,7 +115,7 @@ void tlkspto_send_regCB(TlkCpcSendCB sendCB);
  * @param[in]   dataLen - Data length.
  * @return      Operation result. TLK_ENONE means success, others means failure.
  */
-int  tlkspto_sendProc(uint32_t param0, uint32_t param1, uint8_t *pData, uint16_t dataLen);
+int tlkspto_sendProc(uint32_t param0, uint32_t param1, uint8_t *pData, uint16_t dataLen);
 
 
 #endif // TLKSPTO_H

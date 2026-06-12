@@ -40,38 +40,25 @@ typedef enum
 
 typedef struct
 {
-    uint8_t codec;
-    uint8_t status;
-    uint8_t setup_status;
-    uint8_t held_status;
-    uint8_t numbLen;
-    uint8_t reserve;
-    uint16_t handle;
-    uint8_t number[TLKMDI_HFPHF_NUMBER_MAX_LEN];
+    uint8_t       codec;
+    uint8_t       status;
+    uint8_t       setup_status;
+    uint8_t       held_status;
+    uint8_t       numbLen;
+    uint8_t       ring_timer_cnt;
+    uint8_t       call_dir;
+    uint8_t       clcc_status;
+    uint16_t      handle;
+    uint8_t       number[TLKMDI_HFPHF_NUMBER_MAX_LEN];
+    TlkApiTimer_t timer;
 } tlkmdi_hfphf_ctrl_t;
-
-//send inner msg
-typedef struct
-{
-    uint8_t codec;
-    uint16_t handle;
-} tlkmdi_hfphf_codecEvt_t;
-
-typedef struct
-{
-    uint16_t handle;
-    uint8_t callNum; // 0 or 1
-    uint8_t callDir;
-    uint8_t numbLen;
-    uint8_t number[TLKMDI_HFPHF_NUMBER_MAX_LEN];
-} tlkmdi_hfphf_statusEvt_t;
 
 /**
  * @brief       This function initializes the HFP HF module
  * @param[in]   none
  * @return      Return TLK_ENONE is success, other's value is false.
  */
-int  tlkmdi_bthfphf_init(void);
+int tlkmdi_bthfphf_init(void);
 
 /**
  * @brief       This function resets HFP HF module by handle
@@ -85,7 +72,7 @@ void tlkmdi_bthfphf_reset(uint16_t aclHandle);
  * @param[in]   handle   - connection handle
  * @return      TLK_ENONE if success, otherwise error code
  */
-int  tlkmdi_bthfphf_assistant(uint16_t handle);
+int tlkmdi_bthfphf_assistant(uint16_t handle);
 
 /**
  * @brief       This function gets HFP control item by handle
@@ -93,7 +80,7 @@ int  tlkmdi_bthfphf_assistant(uint16_t handle);
  * @return      pointer to HFP control item if found, NULL otherwise
  */
 tlkmdi_hfphf_ctrl_t *tlkmdi_hfphf_getItem(uint16_t handle);
-
+tlkmdi_hfphf_ctrl_t *tlkmdi_hfphf_getItemExt(uint16_t handle);
 /**
  * @brief       This function gets idle HFP control item
  * @param[in]   none
@@ -113,28 +100,28 @@ uint8_t *tlkmdi_bthfphf_getCallNumber(uint16_t aclHandle);
  * @param[in]   aclHandle   - ACL connection handle
  * @return      btp_hfphf_rejectWaitAndKeepActive result
  */
-int     tlkmdi_bthfphf_rejectWaitAndKeepActive(uint16_t aclHandle);
+int tlkmdi_bthfphf_rejectWaitAndKeepActive(uint16_t aclHandle);
 
 /**
  * @brief       This function accepts waiting call and holds active call
  * @param[in]   aclHandle   - ACL connection handle
  * @return      btp_hfphf_acceptWaitAndHoldActive result
  */
-int     tlkmdi_bthfphf_acceptWaitAndHoldActive(uint16_t aclHandle);
+int tlkmdi_bthfphf_acceptWaitAndHoldActive(uint16_t aclHandle);
 
 /**
  * @brief       This function hangs up active call and resumes held call
  * @param[in]   aclHandle   - ACL connection handle
  * @return      btp_hfphf_hungUpActiveAndResumeHold result
  */
-int     tlkmdi_bthfphf_hungupActiveAndResumeHold(uint16_t aclHandle);
+int tlkmdi_bthfphf_hungupActiveAndResumeHold(uint16_t aclHandle);
 
 /**
  * @brief       This function gets handle by index
  * @param[in]   index   - item index
  * @return      handle if success, otherwise error code
  */
-uint16_t  tlkmdi_bthfphf_getHandle(int index);
+uint16_t tlkmdi_bthfphf_getHandle(int index);
 
 /**
  * @brief       This function checks if HF is in active state
@@ -142,4 +129,13 @@ uint16_t  tlkmdi_bthfphf_getHandle(int index);
  * @return      handle if HF is active, otherwise 0
  */
 uint16_t tlkmdi_byhfphf_checkHfIsActive(void);
+
+int tlkmdi_hfphf_recvCmdCB(uint16_t aclHandle, uint8_t *pCmd, uint8_t cmdLen);
+
+int tlkmdi_hfphf_codecChangedEvt(uint8_t *pData, uint16_t dataLen);
+int tlkmdi_hfphf_volumeChangedEvt(uint8_t *pData, uint16_t dataLen);
+int tlkmdi_hfphf_statusChangedEvt(uint8_t *pData, uint16_t dataLen);
+int tlkmdi_hfphf_callStatusChangedEvt(uint8_t *pData, uint16_t dataLen);
+int tlkmdi_hfphf_numberInquiryEvt(uint8_t *pData, uint16_t dataLen);
+
 #endif // TLKMDI_BTHFPHF_H

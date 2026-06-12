@@ -133,7 +133,7 @@ typedef struct
     uint16_t blkNum; //Block Number
     uint8_t  rcvBuff[TLKUSB_MSC_REC_BUFFER_LEN];
     uint8_t  cswBuff[16];
-    uint8_t  buffer[TLKUSB_MSC_BLOCK_SIZE];
+    uint8_t  buffer[TLK_CFG_FS_SECTOR_SIZE];
 } tlkusb_msc_scsi_t;
 
 /**

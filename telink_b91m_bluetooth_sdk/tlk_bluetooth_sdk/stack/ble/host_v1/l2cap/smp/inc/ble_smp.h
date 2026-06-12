@@ -191,6 +191,13 @@ struct ble_host_smp_init_params
 int ble_host_smp_initial(const struct ble_host_smp_init_params *params);
 
 /**
+ *    @brief BLE Host SMP derivation key enable.
+ *
+ *    @param[in] enable Derivation key enable,bt link to le ltk and ltk to link key.
+ */
+void ble_host_smp_derivation_key_enable(uint8_t enable);
+
+/**
  *    @brief BLE Host SMP deinitialization.
  *
  *    @return BLE_HOST_ERR_SUCC deinitialization success.
@@ -355,3 +362,23 @@ void ble_host_smp_set_bd_addr_random(const uint8_t addr[6]);
  *            This function will be called by ble_host_gap_set_resolvable_private_addr api, user should not call it directly.
  */
 void ble_host_smp_generate_resolvable_private_addr(uint8_t addr[6]);
+
+/**
+ *   @brief Derivation of BR/EDR link key from LE LTK.
+ *   @param[in] ltk Pointer to the input LTK.
+ *   @param[in] use_ct2 True if both devices set CT2 = 1, False otherwise.
+ *   @param[out] link_key Pointer to the output link key.
+ *
+ *   @note The BR/EDR link key is derived using the SMP Toolbox function h6 and h7.
+ */
+void ble_host_smp_toolbox_derivation_bt_link_key(const uint8_t ltk[16], bool use_ct2, uint8_t link_key[16]);
+
+/**
+ *   @brief Derivation of LE LTK from BR/EDR link key.
+ *   @param[in] link_key Pointer to the input link key.
+ *   @param[in] use_ct2 True if both devices set CT2 = 1, False otherwise.
+ *   @param[out] ltk Pointer to the output LTK.
+ *
+ *   @note The LTK is derived using the SMP Toolbox function h6 and h7.
+ */
+void ble_host_smp_toolbox_derivation_le_long_term_key(const uint8_t link_key[16], bool use_ct2, uint8_t ltk[16]);

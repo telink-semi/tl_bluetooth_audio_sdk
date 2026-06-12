@@ -33,24 +33,24 @@
 #include "stack/tpsll/host/tpsll_hci_al.h"
 #include "stack/tpsll/host/tpsll_hcicmd.h"
 
-#include "stack/tpsll/tph/tph_host_interface.h"
-#include "stack/tpsll/tph/tph_bt_interface.h"
-#include "stack/tpsll/tph/tph_hcicmd.h"
+#include "stack/tpsll/controller/tph/tph_host_interface.h"
+#include "stack/tpsll/controller/tph/tph_bt_interface.h"
+#include "stack/tpsll/controller/tph/tph_hcicmd.h"
 
-#include "stack/tpsll/tpt/tpt_host_interface.h"
-#include "stack/tpsll/tpt/tpt_bt_interface.h"
-#include "stack/tpsll/tpt/tpt_hcicmd.h"
+#include "stack/tpsll/controller/tpt/tpt_host_interface.h"
+#include "stack/tpsll/controller/tpt/tpt_bt_interface.h"
+#include "stack/tpsll/controller/tpt/tpt_hcicmd.h"
 
-#include "stack/tpsll/tpdt/tpdt_host_interface.h"
-#include "stack/tpsll/tpdt/tpdt_bt_interface.h"
-#include "stack/tpsll/tpdt/tpdt_hcicmd.h"
+#include "stack/tpsll/controller/tpdt/tpdt_host_interface.h"
+#include "stack/tpsll/controller/tpdt/tpdt_bt_interface.h"
+#include "stack/tpsll/controller/tpdt/tpdt_hcicmd.h"
 
-#include "stack/tpsll/tpd/tpd_host_interface.h"
+#include "stack/tpsll/controller/tpd/tpd_host_interface.h"
 
-#include "stack/tpsll/tpmd/tpmd_host_interface.h"
-#include "stack/tpsll/tpmd/tpmd_hcicmd.h"
+#include "stack/tpsll/controller/tpmd/tpmd_host_interface.h"
+#include "stack/tpsll/controller/tpmd/tpmd_hcicmd.h"
 
-
+#include "stack/tpsll/common/tpsll_config.h"
 
 
 #endif /* STACK_TPSLL_TPSLL_H_ */

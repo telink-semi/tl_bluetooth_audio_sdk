@@ -37,9 +37,8 @@
  */
 static __attribute__((__always_inline__)) inline uint32_t tlkos_freertos_msToTick(uint32_t ms)
 {
-    if(ms == TLKOS_WAIT_FOREVER){
+    if (ms == TLKOS_WAIT_FOREVER) {
         return TLKOS_WAIT_FOREVER;
     }
     return ms * 1000 / TLKOS_CFG_OS_TICK_HZ;
 }
-

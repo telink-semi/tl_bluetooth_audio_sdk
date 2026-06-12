@@ -27,36 +27,74 @@
 #if MCU_CORE_TYPE == MCU_CORE_TL752X
 
 #ifndef FLASH_CAP_VALUE_ADDR_64K
-    #define FLASH_CAP_VALUE_ADDR_64K 0xe000
+#define FLASH_CAP_VALUE_ADDR_64K 0xe000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_128K
-    #define FLASH_CAP_VALUE_ADDR_128K 0x1e000
+#define FLASH_CAP_VALUE_ADDR_128K 0x1e000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_512K
-    #define FLASH_CAP_VALUE_ADDR_512K 0x7e000
+#define FLASH_CAP_VALUE_ADDR_512K 0x7e000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_1M
-    #define FLASH_CAP_VALUE_ADDR_1M 0xfe000
+#define FLASH_CAP_VALUE_ADDR_1M 0xfe000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_2M
-    #define FLASH_CAP_VALUE_ADDR_2M 0x1fe000
+#define FLASH_CAP_VALUE_ADDR_2M 0x1fe000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_4M
-    #define FLASH_CAP_VALUE_ADDR_4M 0x3fe000
+#define FLASH_CAP_VALUE_ADDR_4M 0x3fe000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_8M
-    #define FLASH_CAP_VALUE_ADDR_8M 0x7fe000
+#define FLASH_CAP_VALUE_ADDR_8M 0x7fe000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_16M
-    #define FLASH_CAP_VALUE_ADDR_16M 0xffe000
+#define FLASH_CAP_VALUE_ADDR_16M 0xffe000
 #endif
+/********************IEEE ADDRESS IN FLASH***********************/
+#ifndef FLASH_IEEE_ADDR_LOCATION_64K
+#define FLASH_IEEE_ADDR_LOCATION_64K 0xf000
+#endif
+
+#ifndef FLASH_IEEE_ADDR_LOCATION_128K
+#define FLASH_IEEE_ADDR_LOCATION_128K 0x1f000
+#endif
+
+#ifndef FLASH_IEEE_ADDR_LOCATION_512K
+#define FLASH_IEEE_ADDR_LOCATION_512K 0x7f000
+#endif
+
+#ifndef FLASH_IEEE_ADDR_LOCATION_1M
+#define FLASH_IEEE_ADDR_LOCATION_1M 0xff000
+#endif
+
+#ifndef FLASH_IEEE_ADDR_LOCATION_2M
+#define FLASH_IEEE_ADDR_LOCATION_2M 0x1ff000
+#endif
+
+#ifndef FLASH_IEEE_ADDR_LOCATION_4M
+#define FLASH_IEEE_ADDR_LOCATION_4M 0x3ff000
+#endif
+
+#ifndef FLASH_IEEE_ADDR_LOCATION_8M
+#define FLASH_IEEE_ADDR_LOCATION_8M 0x7ff000
+#endif
+
+#ifndef FLASH_IEEE_ADDR_LOCATION_16M
+#define FLASH_IEEE_ADDR_LOCATION_16M 0xfff000
+#endif
+typedef enum
+{
+    IEEE_ADDR_NOT_EXIST,
+    IEEE_ADDR_FROM_FLASH,
+    IEEE_ADDR_FROM_EFUSE,
+} ieee_addr_source_e;
 
 /**
  * @brief       This function is used to calibrate the user's parameters.
@@ -76,8 +114,13 @@ void calibration_func(void);
 unsigned char user_calib_freq_offset(unsigned int addr);
 
 
-
-
+/**
+ * @brief      This function serves to read IEEE address from FLASH or EFUSE.
+ * @param[in]  addr - the IEEE address of flash.
+ * @param[out] buf  - Pointer to IEEE address buffer
+ * @return     ieee_addr_source_e
+ */
+ieee_addr_source_e user_get_ieee_addr(unsigned int addr, unsigned char *mac_addr_buf);
 
 /**
  * @brief      This function serves to update rf frequency offset.
@@ -88,7 +131,7 @@ unsigned char user_calib_freq_offset(unsigned int addr);
 unsigned char user_calib_freq_offset(unsigned int addr)
 {
     (void)addr;
-    #if 0
+#if 0
     unsigned char frequency_offset_value = 0xff;
 
     flash_read_page(addr, 1, &frequency_offset_value);
@@ -109,7 +152,7 @@ unsigned char user_calib_freq_offset(unsigned int addr)
 unsigned char flash_calib_ldo_dcdc_voltage(unsigned int addr)
 {
     (void)addr;
-    #if 0
+#if 0
     unsigned char voltage_buff[16] = {0};
 
     if(g_pm_status_info.mcu_status != MCU_DEEPRET_BACK)
@@ -189,7 +232,7 @@ unsigned char flash_calib_ldo_dcdc_voltage(unsigned int addr)
             pm_set_io1v8_io3v3_voltage(pm_voltage_cal.vddo1v8, pm_voltage_cal.vddo3v3);
         }
     }
-    #endif
+#endif
 
     return 1;
 }
@@ -201,63 +244,135 @@ unsigned char flash_calib_ldo_dcdc_voltage(unsigned int addr)
  *              (reduce adc measurement error, reduce frequency offset, etc.)
  * @return      none.
  */
+volatile uint8_t AAA_FLASH = 0;
+
 void calibration_func(void)
 {
-    #if 0
+#if 1
+#if !defined(MCU_CORE_TL752X_N22)
+    flash_init(CPU_DMAC_CH5);
+#else
+    flash_init_n22_dsp(CPU_DMAC_CH5);
+#endif
     unsigned char flash_mid[4];
-    unsigned char flash_uid[16];
-    unsigned char flash_mid_sure = 0;
+    unsigned char ieee_addr[8];
+    unsigned int  ieee_flash_pos = 0;
     unsigned int  cap_value_addr = 0;
 
+    unsigned int mid_result = flash_read_mid();
+
+    flash_mid[0] = (mid_result >> 0) & 0xFF;
+    flash_mid[1] = (mid_result >> 8) & 0xFF;
+    flash_mid[2] = (mid_result >> 16) & 0xFF;
+    flash_mid[3] = 0;
+    AAA_FLASH    = flash_mid[2];
     /******check for flash mid********/
-    flash_mid_sure = flash_read_mid_uid_with_check_with_device_num(0, (unsigned int *)flash_mid, flash_uid);
-
-    if (1 == flash_mid_sure)
-    {
-        switch (flash_mid[2])
-        {
-        case FLASH_SIZE_64K:
-            cap_value_addr = FLASH_CAP_VALUE_ADDR_64K;
-            break;
-        case FLASH_SIZE_128K:
-            cap_value_addr = FLASH_CAP_VALUE_ADDR_128K;
-            break;
-        case FLASH_SIZE_512K:
-            cap_value_addr = FLASH_CAP_VALUE_ADDR_512K;
-            break;
-        case FLASH_SIZE_1M:
-            cap_value_addr = FLASH_CAP_VALUE_ADDR_1M;
-            break;
-        case FLASH_SIZE_2M:
-            cap_value_addr = FLASH_CAP_VALUE_ADDR_2M;
-            break;
-        case FLASH_SIZE_4M:
-            cap_value_addr = FLASH_CAP_VALUE_ADDR_4M;
-            break;
-        case FLASH_SIZE_8M:
-            cap_value_addr = FLASH_CAP_VALUE_ADDR_8M;
-            break;
-        case FLASH_SIZE_16M:
-            cap_value_addr = FLASH_CAP_VALUE_ADDR_16M;
-            break;
-        default:
-            break;
-        }
-
-        if (cap_value_addr)
-        {
-            user_calib_freq_offset(cap_value_addr);
-            /******get adc calibration value from FLASH********/
-            flash_calib_adc_vref(cap_value_addr);
-
-            if(g_chip_version != CHIP_VERSION_A0)
-            {
-                flash_calib_ldo_dcdc_voltage(cap_value_addr);
-            }
-        }
+    switch (flash_mid[2]) {
+    case FLASH_SIZE_64K:
+        cap_value_addr = FLASH_CAP_VALUE_ADDR_64K;
+        ieee_flash_pos = FLASH_IEEE_ADDR_LOCATION_64K;
+        break;
+    case FLASH_SIZE_128K:
+        cap_value_addr = FLASH_CAP_VALUE_ADDR_128K;
+        ieee_flash_pos = FLASH_IEEE_ADDR_LOCATION_128K;
+        break;
+    case FLASH_SIZE_512K:
+        cap_value_addr = FLASH_CAP_VALUE_ADDR_512K;
+        ieee_flash_pos = FLASH_IEEE_ADDR_LOCATION_512K;
+        break;
+    case FLASH_SIZE_1M:
+        cap_value_addr = FLASH_CAP_VALUE_ADDR_1M;
+        ieee_flash_pos = FLASH_IEEE_ADDR_LOCATION_1M;
+        break;
+    case FLASH_SIZE_2M:
+        cap_value_addr = FLASH_CAP_VALUE_ADDR_2M;
+        ieee_flash_pos = FLASH_IEEE_ADDR_LOCATION_2M;
+        break;
+    case FLASH_SIZE_4M:
+        cap_value_addr = FLASH_CAP_VALUE_ADDR_4M;
+        ieee_flash_pos = FLASH_IEEE_ADDR_LOCATION_4M;
+        break;
+    case FLASH_SIZE_8M:
+        cap_value_addr = FLASH_CAP_VALUE_ADDR_8M;
+        ieee_flash_pos = FLASH_IEEE_ADDR_LOCATION_8M;
+        break;
+    case FLASH_SIZE_16M:
+        cap_value_addr = FLASH_CAP_VALUE_ADDR_16M;
+        ieee_flash_pos = FLASH_IEEE_ADDR_LOCATION_16M;
+        break;
+    default:
+        break;
     }
-    #endif
+
+    if (cap_value_addr) {
+        user_calib_freq_offset(cap_value_addr);
+    }
+    if (ieee_flash_pos) {
+        user_get_ieee_addr(ieee_flash_pos, ieee_addr);
+    } else {
+        user_get_ieee_addr(0, ieee_addr);
+    }
+
+    efuse_calib_adc_vref();
+    efuse_calib_charger_vref_rs();
+#endif
 }
 
+/**
+ * @brief      This function serves to check if IEEE address is legal.
+ * @param[in]  value  - Pointer to value address buffer
+ * @return     0: value address is illegal, 1:value address is legal
+ */
+unsigned char user_check_ieee_addr(unsigned char *value)
+{
+    //IEEE address is legal if it is not all 0x00 or all 0xFF.
+    for (int i = 1; i < 8; i++) {
+        if (value[i] != value[0]) {
+            return 1;
+        }
+    }
+    //If all elements are the same, check if it is all 0x00 or all 0xFF
+    return (value[0] == 0x00 || value[0] == 0xFF) ? 0 : 1;
+}
+
+/**
+ * @brief      This function serves to read IEEE address from EFUSE.
+ * @param[out] buf  - Pointer to IEEE address buffer
+ * @return     ieee_addr_source_e
+ */
+ieee_addr_source_e user_get_efuse_ieee_addr(unsigned char *buf)
+{
+    //Read IEEE address priority: FLASH > EFUSE
+    efuse_get_ieee_addr(buf);
+    if (user_check_ieee_addr(buf)) {
+        return IEEE_ADDR_FROM_EFUSE;
+    } else {
+        return IEEE_ADDR_NOT_EXIST;
+    }
+}
+
+/**
+ * @brief      This function serves to read IEEE address from FLASH or EFUSE.
+ * @param[in]  addr - the IEEE address of flash
+ *                    0:     Read the IEEE address from EFUSE.
+ *                    other: first read the IEEE address from the flash memory.
+ *                           If it is not a valid value, then read it from EFUSE.
+ * @param[out] buf  - Pointer to IEEE address buffer(IEEE address is 8bytes)
+ * @return     ieee_addr_source_e
+ */
+ieee_addr_source_e user_get_ieee_addr(unsigned int addr, unsigned char *buf)
+{
+    if (addr == 0) {
+        return user_get_efuse_ieee_addr(buf);
+    } else {
+        //Read IEEE address priority: FLASH > EFUSE
+        flash_read_page(addr, 8, buf);
+        if (user_check_ieee_addr(buf)) {
+            return IEEE_ADDR_FROM_FLASH;
+        } else {
+            return user_get_efuse_ieee_addr(buf);
+        }
+    }
+}
 
 #endif

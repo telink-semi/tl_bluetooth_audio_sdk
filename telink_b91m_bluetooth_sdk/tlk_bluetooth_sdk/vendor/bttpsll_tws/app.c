@@ -24,7 +24,7 @@
 #include "tl_common.h"
 #include "drivers.h"
 #include "stack/tpsll/host/tpsll_hcicmd.h"
-#include "stack/tpsll/tph/tph_hcicmd.h"
+#include "stack/tpsll/controller/tph/tph_hcicmd.h"
 #include "tlkmw/tlkmw.h"
 
 /**
@@ -52,10 +52,6 @@ void tlkapp_sys_taskInitCompletedHook(void)
 #if TLK_DEV_KEY_ENABLE
     tlkdrv_key_registerVendorConfig1Callback(app_sql_info_force_save);
 #endif
-
-#if TLK_CFG_SUSPEND_ENABLE
-    tlksdk_pm_setDeepsleepRetentionEarlyWakeupTiming(2850);
-#endif
 }
 
 /**
@@ -63,7 +59,7 @@ void tlkapp_sys_taskInitCompletedHook(void)
  * @param[in]   pData   - pointer to the data received from USB.
  * @param[in]   dataLen - length of the data received.
  * @return      none.
- * @note    
+ * @note
  */
 __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t dataLen)
 {
@@ -72,7 +68,6 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
     if (pData[0] != 0x11 && pData[1] != 0x03) {
         return;
     }
-    app_sql_info_force_save(); //any 11 03 xx usb shell will save
     switch (pData[2]) {
     case 0x01:
     {
@@ -145,8 +140,12 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
         tlkmdi_bt_tpt_requestToneSync(6);
         tlkmdi_bt_tpt_requestToneSync(1);
     } break;
-#if TLKALG_ALG_LOOPBACK_TEST_ENABLE
     case 0x10:
+    {
+        app_sql_info_force_save(); //any 11 03 xx usb shell will save
+    } break;
+#if TLKALG_ALG_LOOPBACK_TEST_ENABLE
+    case 0x11:
     {
         audio_alg_set_loopback_enable(pData[3]);
     } break;
@@ -159,7 +158,7 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
     {
         if (pData[3] == TPSLL_HCI_START_HEADSET_CONNECTION_SETUP_OPCODE) {
             tlkapi_send_string_data(APP_LOG_EN, "tpsll_hci_sendCreateConnectCmd", &pData[2], 1);
-            tpsll_hci_sendWriteHeadsetAccessCodeAndChnIDCmd(TPH_HOST_HEADSET_SETUP_COMMON_ACCESSCODE, TPH_HOST_HEADSET_SETUP_COMMON_CHN);
+            tpsll_hci_sendWriteHeadsetAccessCodeAndChnIDCmd(TPT_HOST_HEADSET_SETUP_COMMON_ACCESSCODE, TPT_HOST_HEADSET_SETUP_COMMON_CHN);
             tpsll_hci_sendHeadsetConnectSetupCmd(TPT_HOST_HEADSET_SETUP_MODE_3S, 500 * 1000);
         } else if (pData[3] == TPSLL_HCI_DISCONN_CMD_OPCODE) {
             tpsll_hci_sendDisconnCmd(0 /*TPT_HOST_DISCONNECT_REASON_NONE*/);
@@ -251,10 +250,10 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
     case 0x60:
     {
         if (pData[3] == 0x01) {
-            g_sys_work_mode = 0x80; //attention : not thread safe
+            tlkdrv_codec_test_mode_en(1);
             tlkapi_trace(0xffffffff, "****Audio Test Mode****", "Audio Test Stat:Open");
         } else if (pData[3] == 0x00) {
-            g_sys_work_mode = 0x00; //attention : not thread safe
+            tlkdrv_codec_test_mode_en(0);
             tlkapi_trace(0xffffffff, "****Audio Test Mode****", "Audio Test Stat:Close");
         }
     } break;

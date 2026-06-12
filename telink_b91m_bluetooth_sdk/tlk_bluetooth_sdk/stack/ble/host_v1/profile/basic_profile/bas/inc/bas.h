@@ -29,7 +29,7 @@
 // BAS: Battery Service.
 
 /***** BAS common defines *****/
-#define BATTERY_MIN_LEVEL        0
-#define BATTERY_MAX_LEVEL        100
+#define BATTERY_MIN_LEVEL            0
+#define BATTERY_MAX_LEVEL            100
 
 #define BATTERY_LEVEL_CHECK_VAL(val) ((val) > BATTERY_MIN_LEVEL && (val) < BATTERY_MAX_LEVEL)

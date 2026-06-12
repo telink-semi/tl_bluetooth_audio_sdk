@@ -28,9 +28,11 @@
 #ifndef BTH_HCI_EVT_H
 #define BTH_HCI_EVT_H
 
+#define HCI_OPCODE_GET_OGF(opcode) ((opcode >> 10) & 0x3F)
+#define HCI_OPCODE_GET_OCF(opcode) (opcode & 0x3FF)
 
-#define BTH_HCI_EIR_DT_NAME_PART 0x08 /* Shortened local name */
-#define BTH_HCI_EIR_DT_NAME      0x09 /* Complete local name */
+#define BTH_HCI_EIR_DT_NAME_PART   0x08 /* Shortened local name */
+#define BTH_HCI_EIR_DT_NAME        0x09 /* Complete local name */
 
 
 /******************************************************************************

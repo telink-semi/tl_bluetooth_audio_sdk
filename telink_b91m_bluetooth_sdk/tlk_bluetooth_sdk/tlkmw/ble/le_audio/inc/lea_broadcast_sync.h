@@ -25,7 +25,7 @@
 
 #if (SINK_VERSION == SINK_ONLY_VERSION)
 
-#define BIS_SOURCE_BROADCAST_NAME           "btble-Broadcast"
+#define BIS_SOURCE_BROADCAST_NAME "btble-Broadcast"
 #define BIS_SOURCE_MS_STR         "A2DP Source"
 
 typedef void (*ble_bis_source_operate_callback)(void);

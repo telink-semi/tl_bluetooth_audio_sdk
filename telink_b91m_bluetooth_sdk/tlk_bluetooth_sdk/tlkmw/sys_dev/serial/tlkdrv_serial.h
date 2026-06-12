@@ -24,11 +24,11 @@
 #pragma once
 
 #if (MCU_CORE_TL752X_TEMP)
-#define TLKDRV_SERIAL_MAX_NUMB         2    // tl752x support 5 hw uart.
-#define TLKDRV_SERIAL_MAX_TIMEOUT      0xFFFFFFFFU
-#define TLKDRV_SERIAL_DMA_RX_SIZE      256
+#define TLKDRV_SERIAL_MAX_NUMB    2 // tl752x support 5 hw uart.
+#define TLKDRV_SERIAL_MAX_TIMEOUT 0xFFFFFFFFU
+#define TLKDRV_SERIAL_DMA_RX_SIZE 256
 #else
-#define TLKDRV_SERIAL_MAX_NUMB         2
+#define TLKDRV_SERIAL_MAX_NUMB 2
 #endif
 
 

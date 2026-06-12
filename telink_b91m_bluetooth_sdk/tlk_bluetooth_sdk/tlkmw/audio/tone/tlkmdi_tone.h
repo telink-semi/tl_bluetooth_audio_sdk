@@ -30,7 +30,7 @@
  * @brief       Initializes the tone module.
  * @return      int - Status of initialization (0 for success, non-zero for failure).
  */
-int  tlkmdi_tone_init(void);
+int tlkmdi_tone_init(void);
 
 /**
  * @brief       Switches the tone state.
@@ -52,7 +52,7 @@ bool tlkmdi_tone_is_busy(void);
  * @param[in]   param - Parameters for starting the tone.
  * @return      int - Status of the operation (0 for success, non-zero for failure).
  */
-int  tlkmdi_tone_start(uint16_t handle, uint32_t param);
+int tlkmdi_tone_start(uint16_t handle, uint32_t param);
 
 /**
  * @brief       Performs an operation on the tone.

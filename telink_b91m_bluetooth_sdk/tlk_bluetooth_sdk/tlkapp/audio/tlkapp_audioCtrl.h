@@ -66,7 +66,7 @@ bool tlkapp_audio_playPrev(void);
  * @param[in]   isActive  - whether to play immediately.
  * @return      true if success, false if failure.
  */
-bool tlkapp_audio_startTone(uint8_t fileIndex,uint8_t isActive);
+bool tlkapp_audio_startTone(uint8_t fileIndex, uint8_t isActive);
 
 /**
  * @brief       This function stops playing a tone.

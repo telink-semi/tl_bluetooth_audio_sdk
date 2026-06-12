@@ -44,28 +44,13 @@ void tlkspto_send_regCB(TlkCpcSendCB sendCB)
 }
 
 /**
- * @brief       Set send buffer.
- * @param[in]   pBuffer - Buffer pointer.
- * @param[in]   buffLen - Buffer length.
- * @return      none.
- */
-void tlkspto_send_setBuffer(uint8_t *pBuffer, uint16_t buffLen)
-{
-    spTlkSptoSendCtrl.buffLens = buffLen;
-    spTlkSptoSendCtrl.pBuffer  = pBuffer;
-}
-
-/**
  * @brief       Get buffer size.
  * @param[in]   none.
  * @return      Buffer size.
  */
 int tlkspto_send_getBufferSize(void)
 {
-    if (spTlkSptoSendCtrl.buffLens < 15) {
-        return 0;
-    }
-    return (spTlkSptoSendCtrl.buffLens - 11 - 4);
+    return (sizeof(spTlkSptoSendCtrl.pBuffer) - 11 - 4);
 }
 
 /**
@@ -240,7 +225,7 @@ static int tlkspto_send_makeFrame(uint8_t pktType, uint8_t *pHead, uint16_t head
     if (headLen + bodyLen == 0) {
         return -TLK_EPARAM;
     }
-    if ((uint32_t)(headLen + bodyLen + 6) > spTlkSptoSendCtrl.buffLens) {
+    if ((uint32_t)(headLen + bodyLen + 6) > sizeof(spTlkSptoSendCtrl.pBuffer)) {
         return -TLK_EOVERFLOW;
     }
 
@@ -270,7 +255,7 @@ static int tlkspto_send_makeFrame(uint8_t pktType, uint8_t *pHead, uint16_t head
         }
     }
     if (count != 0) {
-        if (frmLen + count + 1 > spTlkSptoSendCtrl.buffLens) {
+        if (frmLen + count + 1 > sizeof(spTlkSptoSendCtrl.pBuffer)) {
             return -TLK_EOVERFLOW;
         }
         int offset = frmLen + count;

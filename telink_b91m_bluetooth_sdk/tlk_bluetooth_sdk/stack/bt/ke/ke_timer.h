@@ -67,7 +67,7 @@
  *
  ****************************************************************************************
  */
-void ke_timer_flush(void);
+void tlk_bt_ctrl_ke_timer_flush(void);
 
 /**
  ****************************************************************************************
@@ -86,7 +86,7 @@ void ke_timer_flush(void);
  * @param[in] delay         Delay in time milliseconds.
  ****************************************************************************************
  */
-void ke_timer_set(ke_msg_id_t const timer_id, ke_task_id_t const task, uint32_t delay_ms);
+void tlk_bt_ctrl_ke_timer_set(ke_msg_id_t const timer_id, ke_task_id_t const task, uint32_t delay_ms);
 
 /**
  ****************************************************************************************
@@ -99,7 +99,7 @@ void ke_timer_set(ke_msg_id_t const timer_id, ke_task_id_t const task, uint32_t 
  * @param[in] task      Task identifier.
  ****************************************************************************************
  */
-void ke_timer_clear(ke_msg_id_t const timerid, ke_task_id_t const task);
+void tlk_bt_ctrl_ke_timer_clear(ke_msg_id_t const timerid, ke_task_id_t const task);
 
 /**
  ****************************************************************************************
@@ -111,8 +111,7 @@ void ke_timer_clear(ke_msg_id_t const timerid, ke_task_id_t const task);
  * and process them if they have expired or are about to expire.
  ****************************************************************************************
  */
-bool ke_timer_active(ke_msg_id_t const timer_id, ke_task_id_t const task_id);
-
+bool tlk_bt_ctrl_ke_timer_active(ke_msg_id_t const timer_id, ke_task_id_t const task_id);
 
 
 /**
@@ -120,7 +119,7 @@ bool ke_timer_active(ke_msg_id_t const timer_id, ke_task_id_t const task_id);
  * @brief Initialize Kernel timer module.
  ****************************************************************************************
  */
-void ke_timer_init(void);
+void tlk_bt_ctrl_ke_timer_init(void);
 
 #else
 /*
@@ -166,7 +165,7 @@ typedef enum
  * @brief Initialize Kernel timer module.
  ****************************************************************************************
  */
-void ke_timer_init(void);
+void tlk_bt_ctrl_ke_timer_init(void);
 
 /**
  ****************************************************************************************
@@ -175,7 +174,7 @@ void ke_timer_init(void);
  * @return time value (in Kernel time (10 ms))
  ****************************************************************************************
  */
-uint32_t ke_time_get(void);
+uint32_t tlk_bt_ctrl_ke_time_get(void);
 
 /**
  ****************************************************************************************
@@ -195,7 +194,7 @@ uint32_t ke_time_get(void);
  * @param[in] delay         Delay in time units in 10ms.
  ****************************************************************************************
  */
-void ke_timer_set(ke_msg_id_t const timer_id, ke_task_id_t const task, uint32_t delay);
+void tlk_bt_ctrl_ke_timer_set(ke_msg_id_t const timer_id, ke_task_id_t const task, uint32_t delay);
 
 /**
  ****************************************************************************************
@@ -208,7 +207,7 @@ void ke_timer_set(ke_msg_id_t const timer_id, ke_task_id_t const task, uint32_t 
  * @param[in] task      Task identifier.
  ****************************************************************************************
  */
-void ke_timer_clear(ke_msg_id_t const timerid, ke_task_id_t const task);
+void tlk_bt_ctrl_ke_timer_clear(ke_msg_id_t const timerid, ke_task_id_t const task);
 
 /**
  ****************************************************************************************
@@ -220,7 +219,7 @@ void ke_timer_clear(ke_msg_id_t const timerid, ke_task_id_t const task);
  * and process them if they have expired or are about to expire.
  ****************************************************************************************
  */
-bool ke_timer_active(ke_msg_id_t const timer_id, ke_task_id_t const task_id);
+bool tlk_bt_ctrl_ke_timer_active(ke_msg_id_t const timer_id, ke_task_id_t const task_id);
 
 /**
  ****************************************************************************************
@@ -229,7 +228,7 @@ bool ke_timer_active(ke_msg_id_t const timer_id, ke_task_id_t const task_id);
  * This function updates all timers to align to a new SCLK after a system clock adjust.
  ****************************************************************************************
  */
-void ke_timer_adjust_all(uint32_t delay);
+void tlk_bt_ctrl_ke_timer_adjust_all(uint32_t delay);
 
 /**
  ****************************************************************************************

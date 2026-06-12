@@ -58,8 +58,9 @@ typedef struct BTTPSLL_TWS_A2DPAVRCP_INFO
     uint8_t avrcp_is_supp_set_volume : 1;
     uint8_t avrcp_res                : 7;
     /* A2DP */
-    uint8_t a2dp_snk_state;
-    uint8_t a2dp_resv;
+    uint8_t  a2dp_snk_state;
+    uint8_t  a2dp_resv;
+    uint32_t a2dp_frequency;
 } bttpsll_tws_a2dpavrcp_info_t; // 5 words
 
 typedef struct BTTPSLL_TWS_HFP_INFO

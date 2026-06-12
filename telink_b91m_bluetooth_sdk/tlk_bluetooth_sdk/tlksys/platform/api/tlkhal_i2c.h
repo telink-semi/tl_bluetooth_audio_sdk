@@ -23,17 +23,17 @@
  *******************************************************************************************************/
 #pragma once
 
-typedef struct 
+typedef struct
 {
     uint8_t  chn;
-    uint8_t resv[3];
+    uint8_t  resv[3];
     uint16_t sda_pin;
     uint16_t scl_pin;
-}tlkhal_i2c_cfg_t;
+} tlkhal_i2c_cfg_t;
 
 /**
  * @brief  Set I2C pin configuration
  * @param[in] pCfg : Pointer to I2C configuration structure
  * @returns  None.
  */
-void tlkhal_i2c_set_pin(const tlkhal_i2c_cfg_t * const pCfg);
+void tlkhal_i2c_set_pin(const tlkhal_i2c_cfg_t *const pCfg);

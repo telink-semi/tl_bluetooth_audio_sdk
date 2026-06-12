@@ -37,8 +37,8 @@ typedef enum
     PLCHFP_ERROR_INVALID_FRAMESIZE,
 } PLCHFP_Error;
 
-#define SBCRT           (72)      /* SBC Reconvergence Time (samples) */
-#define OLAL            (32)      /* OverLap-Add Length (samples) */
+#define SBCRT           (72) /* SBC Reconvergence Time (samples) */
+#define OLAL            (32) /* OverLap-Add Length (samples) */
 
 #define FRAMESIZE_MAX   (240)     /* max framesize */
 #define SEARCH_LEN_MAX  (256 * 3) /* 16ms for 48khz */

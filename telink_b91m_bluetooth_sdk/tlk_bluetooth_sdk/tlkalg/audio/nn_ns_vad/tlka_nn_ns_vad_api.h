@@ -28,21 +28,21 @@
 
 /*! Version number to ensure header and binary are matching. */
 #define NN_NS_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
-#define NN_NS_VERSION NN_NS_VERSION_INT(1, 0, 0)
+#define NN_NS_VERSION                          NN_NS_VERSION_INT(1, 2, 0)
 
 /* error code */
-#define NN_NS_OK                       (0)
-#define NN_NS_INIT_ERR                 (-1)
-#define NN_NS_INIT_FFT_SIZE            (-2)
-#define NN_NS_INIT_TARGET_LEVEL        (-3)
-#define NN_NS_INIT_VAD_LEVEL           (-4)
-#define NN_NS_ERR_ENC1                 (-5)
-#define NN_NS_ERR_INT_BIT              (-6)
-#define NN_NS_ERR_INVALID_PARA         (-7)
-#define NN_NS_ERR_TARGET_LEVEL         (-8)
+#define NN_NS_OK                (0)
+#define NN_NS_INIT_ERR          (-1)
+#define NN_NS_INIT_FFT_SIZE     (-2)
+#define NN_NS_INIT_TARGET_LEVEL (-3)
+#define NN_NS_INIT_VAD_LEVEL    (-4)
+#define NN_NS_ERR_ENC1          (-5)
+#define NN_NS_ERR_INT_BIT       (-6)
+#define NN_NS_ERR_INVALID_PARA  (-7)
+#define NN_NS_ERR_TARGET_LEVEL  (-8)
 
 /* parameters setting */
-#define NN_NS_SET_TARGET_LEVEL         (1000)
+#define NN_NS_SET_TARGET_LEVEL (1000)
 
 typedef struct nn_ns_para
 {
@@ -67,9 +67,9 @@ enum nn_target_level
     target_20dB,
     target_21dB,
     target_22dB,
-	target_25dB,
-	target_30dB,
-	target_unlimited,
+    target_25dB,
+    target_30dB,
+    target_unlimited,
     target_end
 };
 
@@ -80,26 +80,26 @@ enum nn_target_level
  */
 enum nn_vad_level
 {
-//	sensitive,
-//	balanced,
-//	selective,
-	vad_056,
-	vad_058,
-	vad_060,
-	vad_062,
-	vad_064,
-	vad_066,
-	vad_068,
-	vad_070,
-	vad_072,
-	vad_074,
-	vad_076,
-	vad_078,
-	vad_080,
-	vad_082,
-	vad_084,
-	vad_086,
-	vad_level_end
+    //	sensitive,
+    //	balanced,
+    //	selective,
+    vad_056,
+    vad_058,
+    vad_060,
+    vad_062,
+    vad_064,
+    vad_066,
+    vad_068,
+    vad_070,
+    vad_072,
+    vad_074,
+    vad_076,
+    vad_078,
+    vad_080,
+    vad_082,
+    vad_084,
+    vad_086,
+    vad_level_end
 };
 
 typedef struct nn_ns NN_NS_STRU;
@@ -115,6 +115,12 @@ int tlka_nn_ns_get_version(void);
  *
  */
 int tlka_nn_ns_get_size();
+
+/**
+ * @brief return the size of scratch buffer size
+ *
+ * */
+int tlka_nn_ns_get_scratch_buf_size();
 
 /**
  * @brief NN_NS init function
@@ -136,7 +142,7 @@ int tlka_nn_ns_init(NN_NS_STRU *st, NN_NS_PARA_STRU *para);
  * @return int      NN_NS_OK: successful
  *                  others: failed
  */
-int tlka_nn_ns_process_frame(NN_NS_STRU *st, short *buffer, int *vad_out);
+int tlka_nn_ns_process_frame(NN_NS_STRU *st, short *buffer, int *vad_out, void *scratch_buf);
 
 /**
  * @brief process a frame of data for 24bit input
@@ -147,7 +153,7 @@ int tlka_nn_ns_process_frame(NN_NS_STRU *st, short *buffer, int *vad_out);
  * @return int      NN_NS_OK: successful
  *                  others: failed
  */
-int tlka_nn_ns_process_frame_24(NN_NS_STRU *st, int *buffer, int *vad_out);
+int tlka_nn_ns_process_frame_24(NN_NS_STRU *st, int *buffer, int *vad_out, void *scratch_buf);
 
 /**
  * @brief this function is only for debug perpose

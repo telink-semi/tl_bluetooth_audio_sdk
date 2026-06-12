@@ -28,7 +28,7 @@
  * @param[in]   none.
  * @return      Returns a pointer to the system task configuration.
  */
-const tlksys_task_cfg_t * tlkapp_system_getTaskCfg(void);
+const tlksys_task_cfg_t *tlkapp_system_getTaskCfg(void);
 
 /**
  * @brief       Provides a hook function when the system task init is completed.
@@ -36,4 +36,3 @@ const tlksys_task_cfg_t * tlkapp_system_getTaskCfg(void);
  * @return      none.
  */
 void tlkapp_sys_taskInitCompletedHook(void);
-

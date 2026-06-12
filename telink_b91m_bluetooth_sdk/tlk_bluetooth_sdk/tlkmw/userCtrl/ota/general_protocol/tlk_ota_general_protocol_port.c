@@ -131,211 +131,6 @@ __attribute__((weak)) void tlk_ota_general_protocol_reset(void)
 }
 
 /**
- * @brief      Handle OTA version check
- * @param[in]  pData   - pointer to data buffer
- * @param[in]  dataLen - length of data
- * @param[in]  userArg - user argument
- * @param[out] none
- * @return     int - OTA_NONE if success
- */
-__attribute__((weak)) int tlkmw_ota_version_check(uint8_t *pData, uint16_t dataLen, void *userArg)
-{
-    (void)pData;
-    (void)dataLen;
-    (void)userArg;
-
-    uint8_t  pBuffer[4];
-    uint16_t buffLen = 0;
-
-    uint32_t version   = 0xFFFFFFFF;
-    pBuffer[buffLen++] = version & 0xff;
-    pBuffer[buffLen++] = (version >> 8) & 0xff;
-    pBuffer[buffLen++] = (version >> 16) & 0xff;
-    pBuffer[buffLen++] = (version >> 24) & 0xff;
-    tlk_ota_general_protocol_send_data(TLK_OTA_OPC_VERSION_RSP, pBuffer, buffLen, NULL);
-
-    return OTA_NONE;
-}
-
-/**
- * @brief      Handle OTA parameter negotiation
- * @param[in]  pData   - pointer to data buffer
- * @param[in]  dataLen - length of data
- * @param[in]  userArg - user argument
- * @param[out] none
- * @return     int - OTA_NONE if success
- */
-__attribute__((weak)) int tlkmw_ota_param_negotiation(uint8_t *pData, uint16_t dataLen, void *userArg)
-{
-    (void)dataLen;
-    (void)userArg;
-
-    uint16_t recvPktSize = 0;
-    OTA_ARRAY_TO_UINT16L(pData, 0, recvPktSize);
-
-    uint8_t  pBuffer[4];
-    uint16_t buffLen = 0;
-
-    uint16_t value = TLKMW_OTA_TRANS_MTU_SIZE;
-    value          = (recvPktSize > value) ? value : recvPktSize;
-
-    pBuffer[buffLen++] = value & 0xff;
-    pBuffer[buffLen++] = (value >> 8) & 0xff;
-
-    value              = TLKMW_OTA_SHAKE_WIRELESS_INTV;
-    pBuffer[buffLen++] = value & 0xff;
-    pBuffer[buffLen++] = (value >> 8) & 0xff;
-
-    tlk_ota_general_protocol_send_data(TLK_OTA_OPC_PARAM_NEGO_RSP, pBuffer, buffLen, NULL);
-
-    return OTA_NONE;
-}
-
-/**
- * @brief      Handle OTA break point request
- * @param[in]  pData   - pointer to data buffer
- * @param[in]  dataLen - length of data
- * @param[in]  userArg - user argument
- * @param[out] none
- * @return     int - OTA_NONE if success
- */
-__attribute__((weak)) int tlkmw_ota_break_point_request(uint8_t *pData, uint16_t dataLen, void *userArg)
-{
-    (void)pData;
-    (void)dataLen;
-    (void)userArg;
-
-    uint8_t  pBuffer[8];
-    uint16_t buffLen = 0;
-
-    /*Break point - last bin index, 0xFF means no break point.*/
-    pBuffer[buffLen++] = 0xFF;
-    /*Break point - last bin receive size, 0xFFFFFFFF means no break point.*/
-    pBuffer[buffLen++] = 0xFF;
-    pBuffer[buffLen++] = 0xFF;
-    pBuffer[buffLen++] = 0xFF;
-    pBuffer[buffLen++] = 0xFF;
-
-    tlk_ota_general_protocol_send_data(TLK_OTA_OPC_BREAK_INFO_RSP, pBuffer, buffLen, NULL);
-
-    return OTA_NONE;
-}
-
-/**
- * @brief      Handle OTA total firmware descriptors check
- * @param[in]  pData   - pointer to data buffer
- * @param[in]  dataLen - length of data
- * @param[in]  userArg - user argument
- * @param[out] none
- * @return     int - OTA_NONE if success
- */
-__attribute__((weak)) int tlkmw_ota_total_fw_descriptors_check(uint8_t *pData, uint16_t dataLen, void *userArg)
-{
-    (void)pData;
-    (void)dataLen;
-    (void)userArg;
-
-    uint8_t ret = TLK_OTA_RESULT_SUCCESS; //means verify success
-
-    tlk_ota_general_protocol_send_data(TLK_OTA_OPC_TOTAL_FW_DESCRRIPTOR_RSP, &ret, 1, NULL);
-
-    return OTA_NONE;
-}
-
-/**
- * @brief      Handle OTA start request
- * @param[in]  pData   - pointer to data buffer
- * @param[in]  dataLen - length of data
- * @param[in]  userArg - user argument
- * @param[out] none
- * @return     int - OTA_NONE if success
- */
-__attribute__((weak)) int tlkmw_ota_start_ota_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
-{
-    (void)pData;
-    (void)dataLen;
-    (void)userArg;
-
-    uint8_t ret = TLK_OTA_RESULT_SUCCESS; //means ready
-
-    tlk_ota_general_protocol_send_data(TLK_OTA_OPC_START_OTA_RSP, &ret, 1, NULL);
-
-    return OTA_NONE;
-}
-
-/**
- * @brief      Handle OTA current firmware descriptor check
- * @param[in]  pData   - pointer to data buffer
- * @param[in]  dataLen - length of data
- * @param[in]  userArg - user argument
- * @param[out] none
- * @return     int - OTA_NONE if success
- */
-__attribute__((weak)) int tlkmw_ota_cur_fw_descriptor_check(uint8_t *pData, uint16_t dataLen, void *userArg)
-{
-    (void)pData;
-    (void)dataLen;
-    (void)userArg;
-
-    uint8_t ret = TLK_OTA_RESULT_SUCCESS; //means verify success
-
-    tlk_ota_general_protocol_send_data(TLK_OTA_OPC_CUR_FW_DESCRRIPTOR_REQ, &ret, 1, NULL);
-
-    return OTA_NONE;
-}
-
-/**
- * @brief      Handle OTA current data deal
- * @param[in]  pData   - pointer to data buffer
- * @param[in]  dataLen - length of data
- * @param[in]  userArg - user argument
- * @param[out] none
- * @return     int - OTA_NONE if success
- */
-__attribute__((weak)) int tlkmw_ota_cur_data_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
-{
-    (void)pData;
-    (void)dataLen;
-    (void)userArg;
-
-    return OTA_NONE;
-}
-
-/**
- * @brief      Handle OTA end deal
- * @param[in]  pData   - pointer to data buffer
- * @param[in]  dataLen - length of data
- * @param[in]  userArg - user argument
- * @param[out] none
- * @return     int - OTA_NONE if success
- */
-__attribute__((weak)) int tlkmw_ota_end_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
-{
-    (void)pData;
-    (void)dataLen;
-    (void)userArg;
-
-    return OTA_NONE;
-}
-
-/**
- * @brief      Handle OTA end acknowledgment deal
- * @param[in]  pData   - pointer to data buffer
- * @param[in]  dataLen - length of data
- * @param[in]  userArg - user argument
- * @param[out] none
- * @return     int - OTA_NONE if success
- */
-__attribute__((weak)) int tlkmw_ota_end_ack_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
-{
-    (void)pData;
-    (void)dataLen;
-    (void)userArg;
-
-    return OTA_NONE;
-}
-
-/**
  * @brief      Send OTA transfer end
  * @param[in]  result  - result code
  * @param[in]  userArg - user argument
@@ -428,6 +223,9 @@ int tlk_ota_general_protocol_recv_data(uint32_t taskID, uint8_t *pData, uint16_t
         return -OTA_PARAMERR;
     }
 
+    pData += 1;
+    dataLen -= 1; //OTA Packet Type.
+
     uint16_t offset  = 0;
     uint8_t  channel = pData[0];
     offset += 1;
@@ -483,7 +281,8 @@ int tlk_ota_general_protocol_recv_data(uint32_t taskID, uint8_t *pData, uint16_t
         if (pack_flag == TLK_OTA_PACK_TYPE_END) {
             OTA_MEMCPY(ota_general_ptotocol_ctrl.p_recv_cache_buff + ota_general_ptotocol_ctrl.recv_cache_len, pData + offset, dataLen - offset);
             ota_general_ptotocol_ctrl.recv_cache_len += (dataLen - offset);
-            tlk_ota_general_protocol_deal(opcode, opcode, pData + offset, dataLen - offset, UserArg);
+            tlk_ota_general_protocol_deal(ota_general_ptotocol_ctrl.channel, opcode, ota_general_ptotocol_ctrl.p_recv_cache_buff, ota_general_ptotocol_ctrl.recv_cache_len,
+                                          UserArg);
             tlk_ota_general_protocol_clear_recv_cache();
         } else {
             ota_general_ptotocol_ctrl.recv_cache_opcode = opcode;
@@ -504,7 +303,7 @@ int tlk_ota_general_protocol_recv_data(uint32_t taskID, uint8_t *pData, uint16_t
  * @param[out] none
  * @return     int - OTA_NONE if success, error code otherwise
  */
-int tlk_ota_general_protocol_init(nvds_ota_Interface_t *pInterface)
+int tlk_ota_general_protocol_init(nvds_ota_Interface_t pInterface)
 {
     OTA_MEMSET(&ota_general_ptotocol_ctrl, 0, sizeof(tlk_ota_general_protocol_t));
 
@@ -518,11 +317,6 @@ int tlk_ota_general_protocol_init(nvds_ota_Interface_t *pInterface)
     if (tlk_ota_general_protocol_detail_init(pInterface) != OTA_NONE) {
         return -OTA_INITERR;
     }
-
-    tlkmw_ota_register_chn_recv_interface(TLKMW_OTA_TRANS_CHN_UART, tlk_ota_general_protocol_recv_data);
-    tlkmw_ota_register_chn_recv_interface(TLKMW_OTA_TRANS_CHN_BT_SPP, tlk_ota_general_protocol_recv_data);
-    tlkmw_ota_register_chn_recv_interface(TLKMW_OTA_TRANS_CHN_BT_ATT, tlk_ota_general_protocol_recv_data);
-    tlkmw_ota_register_chn_recv_interface(TLKMW_OTA_TRANS_CHN_BLE_GENERAL_MODE, tlk_ota_general_protocol_recv_data);
 
     return OTA_NONE;
 }

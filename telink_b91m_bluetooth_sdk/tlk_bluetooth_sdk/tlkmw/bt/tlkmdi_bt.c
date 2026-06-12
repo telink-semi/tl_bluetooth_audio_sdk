@@ -30,10 +30,10 @@
 #include "stack/bt/host/tlkstk_stdio.h"
 #include "stack/bt/common/co_hci.h"
 #include "tlkmw/tlkmw.h"
-static uint8_t hci_env_tag[8] = {
+static const uint8_t hci_env_tag[8] = {
     0xff, 0xff, 0xfb, 0xff, 0xff, 0xff, 0xff, 0xff,
 }; // default set num of packets complete as 0
-static uint8_t hci_env_tag_page2[8] = {
+static const uint8_t hci_env_tag_page2[8] = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 };
 
@@ -52,10 +52,13 @@ static int tlkmdi_bt_mgrCtrl_HCICompleteEvt(uint8_t *pData, uint16_t dataLen)
 
     if (opcode == (HCI_WR_EXT_INQ_RSP_CMD_OPCODE & 0xFF)) {
         bth_hci_sendReadBufferSizeCmd();
-        bth_hci_sendSetEvtMaskCmd(hci_env_tag);
-        bth_hci_sendSetEvtMaskPage2Cmd(hci_env_tag_page2);
+        bth_hci_sendSetEvtMaskCmd((uint8_t *)hci_env_tag);
+        bth_hci_sendSetEvtMaskPage2Cmd((uint8_t *)hci_env_tag_page2);
     } else if (opcode == (HCI_SET_EVT_MASK_PAGE_2_CMD_OPCODE & 0xFF)) {
         bth_hci_sendWriteSimplePairingModeCmd(1); // enable simple pairing mode
+        bth_hci_sendWriteDefaultLinkPolicy(0x00);
+        bth_hci_sendWriteInquiryScanTypeCmd(1);
+        bth_hci_sendWritePageScanTypeCmd(1);
     }
     return TLK_ENONE;
 }
@@ -71,12 +74,13 @@ void tlkmdi_bt_mgr_ctrlInit(void)
 {
     uint8_t nameLen = 0;
     uint8_t bttemp[TINYSQL_BT_NAME_LENS + 3];
-    uint8_t nameBuffer[TINYSQL_BT_NAME_LENS];
+    uint8_t nameBuffer[TINYSQL_BT_NAME_LENS + 1] = {0};
     uint8_t addr[6];
 
     tlkmdi_tinySql_getBtName(nameBuffer);
+    tlkapi_printf(1, "[BT]<TRACE> Bt name:%s", (char *)nameBuffer);
     tlkmdi_tinySql_getBtMacAddress(addr);
-    bth_hci_sendSetLinkMaxNbCmd(TLK_STK_BTACL_NUMB);
+    bth_hci_sendSetLinkMaxNbCmd((TLK_STK_BTACL_NUMB & 0xF) | ((TLK_STK_BTSCO_NUMB & 0xF) << 4));
     bth_hci_sendSetBtAddrCmd(addr);
     bth_hci_sendWriteLocalNameCmd(nameBuffer);
 
@@ -89,6 +93,9 @@ void tlkmdi_bt_mgr_ctrlInit(void)
     //Central device 0x5a020c for temp test
     bth_hci_sendWriteClassOfDeviceCmd(TLKCFG_BT_MGR_DEVICE_CLASS);
     bth_hci_sendWritePageScanActivityCmd(64, 48);
+#if (MCU_CORE_TYPE != MCU_CORE_TL751X && !PROJ_BTTPSLL_TWS)
+    bth_hci_sendWriteSecureConnHostSupportCmd(1);
+#endif
     bth_hci_sendWriteExtendedInquiryRspCmd(0, bttemp, nameLen + 2);
 }
 
@@ -136,7 +143,7 @@ int tlkmdi_bt_mgr_setName(uint8_t *pName, uint8_t nameLen)
  */
 int tlkmdi_bt_mgr_setAddr(uint8_t *pAddr)
 {
-    int ret = tlkmdi_tinySql_SetBtMacAddress(pAddr);
+    int ret = tlkmdi_tinySql_setBtMacAddress(pAddr);
     if (ret == TLK_ENONE) {
         uint8_t addr[6];
         tlkmdi_tinySql_getBtMacAddress(addr);
@@ -187,6 +194,8 @@ void tlkmdi_bt_init(void)
 #if (TLKBTP_CFG_SPP_ENABLE)
     tlkmdi_btspp_init();
 #endif
+
+    bth_acl_setWaitTimeout(30000);
 }
 
 

@@ -308,7 +308,7 @@ typedef struct
     unsigned char is_pad_wakeup;
     unsigned char wakeup_src; //The pad pin occasionally wakes up abnormally in A0. The core wakeup flag will be incorrectly set in A0.
     unsigned char mcu_status;
-    unsigned char rsvd;
+    unsigned char power_mode;
 } pm_status_info_s;
 
 extern _attribute_aligned_(4) pm_status_info_s g_pm_status_info;
@@ -539,6 +539,12 @@ _attribute_ram_code_sec_noinline_ void pm_update_status_info(unsigned char clr_e
  */
 _attribute_ram_code_sec_noinline_ void pm_set_power_mode(power_mode_e power_mode);
 
+/**
+ * @brief      This function serves to do voltage calibration
+ * @param[in]  addr - the frequency offset value address of flash.
+ * @return     1 - voltage calibration update, 0 - voltage calibration is not update.
+ */
+unsigned char flash_calib_ldo_dcdc_voltage(unsigned int addr);
 /********************************************************************************************************
  *                                          internal
  *******************************************************************************************************/

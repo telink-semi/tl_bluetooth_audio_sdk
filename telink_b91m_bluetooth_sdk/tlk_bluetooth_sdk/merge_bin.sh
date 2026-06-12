@@ -37,6 +37,10 @@ if [ "$input_str" != "controller" ]; then
         controller_mode="MESH_AUDIO_DONGLE"
     elif [ "$prj_name" = "ble_example" ]; then
         controller_mode="BLE_CONTROLLER"
+    elif [ "$prj_name" = "ruimo_btble_dongle" ]; then
+        controller_mode="RUIMO_BTBLE_DONGLE"
+    elif [ "$prj_name" = "GameSir_Xiaoji" ]; then
+        controller_mode="GAMESIR_XIAOJI"
     fi
     file3="../controller/${controller_mode}/${prj_name}_controller.bin"
     output_file="./${prj_name}&n22_controller_120.bin"
@@ -64,6 +68,10 @@ else
         prj_name="mesh_audio_dongle"
     elif [ "$controller_mode" = "BLE_CONTROLLER" ]; then
         prj_name="ble_example"
+    elif [ "$controller_mode" = "RUIMO_BTBLE_DONGLE" ]; then
+        prj_name="ruimo_btble_dongle"
+    elif [ "$controller_mode" = "GAMESIR_XIAOJI" ]; then
+        prj_name="GameSir_Xiaoji"
     fi
     file3="../controller/${controller_mode}/${prj_name}_controller.bin"
     mkdir "../controller/${controller_mode}"

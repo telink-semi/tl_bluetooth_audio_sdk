@@ -150,71 +150,71 @@ _attribute_ble_data_retention_ static uint16_t tbsCallFriendlyNameValueLen;
  * @brief the structure for default TBS service List.
  */
 static const struct atts_attribute tbsList[] = {
-    ATTS_PRIMARY_SERVICE(serviceTelephoneBearerUuid),
+    ATTS_PRIMARY_SERVICE(serviceTelephoneBearerAttUuid),
 
     //Bearer Provider Name
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicBearerProviderNameUuid, tbsBearerProviderNameValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicBearerProviderNameAttUuid, tbsBearerProviderNameValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Bearer Uniform Caller Identifier(UCI)
-    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicBearerUciUuid, tbsBearerUCIValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicBearerUciAttUuid, tbsBearerUCIValue),
 
     //Bearer Technology
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicBearerTechnologyUuid, tbsBearerTechnologyValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicBearerTechnologyAttUuid, tbsBearerTechnologyValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Bearer URI Schemes Supported List
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropRead, characteristicBearerUriSchemesSuppListUuid, tbsBearerURISchemesSupportedListValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropRead, characteristicBearerUriSchemesSupportedListAttUuid, tbsBearerURISchemesSupportedListValue),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_TBS_BEARER_SIGNAL_STRENGTH
     //Bearer Signal Strength
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicBearerSsUuid, tbsBearerSignalStrengthValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicBearerSsAttUuid, tbsBearerSignalStrengthValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Bearer Signal Strength Reporting Interval
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteWriteWithout, characteristicBearerSsReportingIntervalUuid, tbsBearerSignalStrengthReportingIntervalValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteWriteWithout, characteristicBearerSsReportingIntervalAttUuid, tbsBearerSignalStrengthReportingIntervalValue),
 #endif
 
     //Bearer List Current Calls
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicBearerListCurrentCallsUuid, tbsBearerListCurrentCallsValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicBearerListCurrentCallsAttUuid, tbsBearerListCurrentCallsValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Content Control ID (CCID)
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicContentControlIdUuid, tbsCCIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicContentControlIdAttUuid, tbsCCIDValue),
 
     //Status Flags
-    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropReadNotify, characteristicStatusFlagsUuid, tbsStatusFlagsValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropReadNotify, characteristicStatusFlagsAttUuid, tbsStatusFlagsValue),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_TBS_INCOMING_CALL_TARGET_BEARER_URI
     //Incoming Call Target Bearer URI
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicIncomingCallTargetBearerUriUuid, tbsIncomingCallTargetBearerURIValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicIncomingCallTargetBearerUriAttUuid, tbsIncomingCallTargetBearerURIValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
     //Call State
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicCallStateUuid, tbsCallStateValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicCallStateAttUuid, tbsCallStateValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Call Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_POINT_CB(charPropWriteWriteWithoutNotify, characteristicCallCtrlPointUuid, tbsCallControlPointValue),
+    ATTS_CHAR_UUID_ENCR_WRITE_POINT_CB(charPropWriteWriteWithoutNotify, characteristicCallCtrlPointAttUuid, tbsCallControlPointValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Call Control Point Optional Opcodes
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicCallCtrlPointOptionalOpcodesUuid, tbsCallControlPointOptionalOpcodesValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicCallCtrlPointOptionalOpcodesAttUuid, tbsCallControlPointOptionalOpcodesValue),
 
     //Termination Reason
-    ATTS_CHAR_UUID_NOTIF_ONLY(characteristicTerminationReasonUuid),
+    ATTS_CHAR_UUID_NOTIF_ONLY(characteristicTerminationReasonAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Incoming Call
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicIncomingCallUuid, tbsIncomingCallValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicIncomingCallAttUuid, tbsIncomingCallValue),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_TBS_CALL_FRIENDLY_NAME
     //Call Friendly Name
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicCallFriendlyNameUuid, tbsCallFriendlyNameValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicCallFriendlyNameAttUuid, tbsCallFriendlyNameValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 };

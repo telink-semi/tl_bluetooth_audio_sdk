@@ -53,168 +53,77 @@
 #define LE_AUDIO_GTBS_CALL_FRIENDLY_NAME 1
 #endif
 
-#ifndef LE_AUDIO_GTBS_BEARER_PROVIDER_NAME_MAX_SIZE
-#define LE_AUDIO_GTBS_BEARER_PROVIDER_NAME_MAX_SIZE 64
-#endif
-
-#ifndef LE_AUDIO_GTBS_BEARER_UCI_MAX_SIZE
-#define LE_AUDIO_GTBS_BEARER_UCI_MAX_SIZE 16
-#endif
-
-#ifndef LE_AUDIO_GTBS_BEARER_URI_SCHEMES_SUPPORTED_LIST_MAX_SIZE
-#define LE_AUDIO_GTBS_BEARER_URI_SCHEMES_SUPPORTED_LIST_MAX_SIZE 64
-#endif
-
-#ifndef LE_AUDIO_GTBS_INCOMING_CALL_TARGET_BEARER_URI_MAX_SIZE
-#define LE_AUDIO_GTBS_INCOMING_CALL_TARGET_BEARER_URI_MAX_SIZE 64
-#endif
-
-#ifndef LE_AUDIO_GTBS_INCOMING_CALL_MAX_SIZE
-#define LE_AUDIO_GTBS_INCOMING_CALL_MAX_SIZE 64
-#endif
-
-#ifndef LE_AUDIO_GTBS_FRIENDLY_NAME_MAX_SIZE
-#define LE_AUDIO_GTBS_FRIENDLY_NAME_MAX_SIZE 64
-#endif
-
-#ifndef LE_AUDIO_GTBS_BEARER_LIST_CURRENT_CALLS_MAX_SIZE
-#define LE_AUDIO_GTBS_BEARER_LIST_CURRENT_CALLS_MAX_SIZE 256
-#endif
-
-#ifndef LE_AUDIO_GTBS_CALL_STATE_MAX_SIZE
-#define LE_AUDIO_GTBS_CALL_STATE_MAX_SIZE 64
-#endif
-
 #define GTBS_START_HDL SERVICE_GENERIC_TELEPHONE_BEARER_HDL
-
-_attribute_ble_data_retention_ static uint8_t  gtbsBearerProviderNameValue[LE_AUDIO_GTBS_BEARER_PROVIDER_NAME_MAX_SIZE];
-_attribute_ble_data_retention_ static uint16_t gtbsBearerProviderNameValueLen;
-const uint16_t                                 gtbsBearerProviderNameMaxSize = sizeof(gtbsBearerProviderNameValue);
-
-_attribute_ble_data_retention_ static uint8_t  gtbsBearerUCIValue[LE_AUDIO_GTBS_BEARER_UCI_MAX_SIZE];
-_attribute_ble_data_retention_ static uint16_t gtbsBearerUCIValueLen;
-const uint16_t                                 gtbsBearerUCIMaxSize = sizeof(gtbsBearerUCIValue);
-
-_attribute_ble_data_retention_ static uint8_t gtbsBearerTechnologyValue    = 0x01;
-static const uint16_t                         gtbsBearerTechnologyValueLen = sizeof(gtbsBearerTechnologyValue);
-
-_attribute_ble_data_retention_ static uint8_t  gtbsBearerURISchemesSupportedListValue[LE_AUDIO_GTBS_BEARER_URI_SCHEMES_SUPPORTED_LIST_MAX_SIZE];
-_attribute_ble_data_retention_ static uint16_t gtbsBearerURISchemesSupportedListValueLen;
-const uint16_t                                 gtbsBearerURISchemesSupportedListMaxSize = sizeof(gtbsBearerURISchemesSupportedListValue);
-
-#if LE_AUDIO_GTBS_BEARER_SIGNAL_STRENGTH
-_attribute_ble_data_retention_ static uint8_t gtbsBearerSignalStrengthValue;
-static const uint16_t                         gtbsBearerSignalStrengthValueLen = sizeof(gtbsBearerSignalStrengthValue);
-
-_attribute_ble_data_retention_ static uint8_t gtbsBearerSignalStrengthReportingIntervalValue;
-static const uint16_t                         gtbsBearerSignalStrengthReportingIntervalValueLen = sizeof(gtbsBearerSignalStrengthReportingIntervalValue);
-#endif
-
-_attribute_ble_data_retention_ static uint8_t  gtbsBearerListCurrentCallsValue[LE_AUDIO_GTBS_BEARER_LIST_CURRENT_CALLS_MAX_SIZE];
-_attribute_ble_data_retention_ static uint16_t gtbsBearerListCurrentCallsValueLen;
-const uint16_t                                 gtbsBearerListCurrentCallsMaxSize = sizeof(gtbsBearerListCurrentCallsValue);
-
-_attribute_ble_data_retention_ static uint8_t gtbsCCIDValue;
-static const uint16_t                         gtbsCCIDValueLen = sizeof(gtbsCCIDValue);
-
-_attribute_ble_data_retention_ static uint8_t gtbsStatusFlagsValue[2];
-static const uint16_t                         gtbsStatusFlagsValueLen                = sizeof(gtbsStatusFlagsValue);
-const uint16_t                                gtbsIncomingCallTargetBearerURIMaxSize = LE_AUDIO_GTBS_INCOMING_CALL_TARGET_BEARER_URI_MAX_SIZE;
-
-#if LE_AUDIO_GTBS_INCOMING_CALL_TARGET_BEARER_URI
-_attribute_ble_data_retention_ static uint8_t  gtbsIncomingCallTargetBearerURIValue[LE_AUDIO_GTBS_INCOMING_CALL_TARGET_BEARER_URI_MAX_SIZE];
-_attribute_ble_data_retention_ static uint16_t gtbsIncomingCallTargetBearerURIValueLen;
-#endif
-
-_attribute_ble_data_retention_ static uint8_t  gtbsCallStateValue[LE_AUDIO_GTBS_CALL_STATE_MAX_SIZE];
-_attribute_ble_data_retention_ static uint16_t gtbsCallStateValueLen;
-const uint16_t                                 gtbsCallStateMaxSize = sizeof(gtbsCallStateValue);
-
-_attribute_ble_data_retention_ static uint8_t gtbsCallControlPointValue[3];
-static const uint16_t                         gtbsCallControlPointValueLen = sizeof(gtbsCallControlPointValue);
-
-_attribute_ble_data_retention_ static uint16_t gtbsCallControlPointOptionalOpcodesValue;
-static const uint16_t                          gtbsCallControlPointOptionalOpcodesValueLen = sizeof(gtbsCallControlPointOptionalOpcodesValue);
-
-const uint16_t                                 gtbsIncomingCallMaxSize = LE_AUDIO_GTBS_INCOMING_CALL_MAX_SIZE;
-_attribute_ble_data_retention_ static uint8_t  gtbsIncomingCallValue[LE_AUDIO_GTBS_INCOMING_CALL_MAX_SIZE];
-_attribute_ble_data_retention_ static uint16_t gtbsIncomingCallValueLen;
-
-const uint16_t gtbsFriendlyNameMaxSize = LE_AUDIO_GTBS_FRIENDLY_NAME_MAX_SIZE;
-#if LE_AUDIO_GTBS_CALL_FRIENDLY_NAME
-_attribute_ble_data_retention_ static uint8_t  gtbsCallFriendlyNameValue[LE_AUDIO_GTBS_FRIENDLY_NAME_MAX_SIZE];
-_attribute_ble_data_retention_ static uint16_t gtbsCallFriendlyNameValueLen;
-#endif
 
 /*
  * @brief the structure for default GTBS service List.
  */
 static const struct atts_attribute gtbsList[] = {
-    ATTS_PRIMARY_SERVICE(serviceGenericTelephoneBearerUuid),
+    ATTS_PRIMARY_SERVICE(serviceGenericTelephoneBearerAttUuid),
 
     //Bearer Provider Name
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicBearerProviderNameUuid, gtbsBearerProviderNameValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicBearerProviderNameAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Bearer Uniform Caller Identifier(UCI)
-    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicBearerUciUuid, gtbsBearerUCIValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropRead, characteristicBearerUciAttUuid),
 
     //Bearer Technology
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicBearerTechnologyUuid, gtbsBearerTechnologyValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicBearerTechnologyAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Bearer URI Schemes Supported List
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropRead, characteristicBearerUriSchemesSuppListUuid, gtbsBearerURISchemesSupportedListValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropRead, characteristicBearerUriSchemesSupportedListAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_GTBS_BEARER_SIGNAL_STRENGTH
     //Bearer Signal Strength
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicBearerSsUuid, gtbsBearerSignalStrengthValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicBearerSsAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Bearer Signal Strength Reporting Interval
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteWriteWithout, characteristicBearerSsReportingIntervalUuid, gtbsBearerSignalStrengthReportingIntervalValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_NULL(charPropReadWriteWriteWithout, characteristicBearerSsReportingIntervalAttUuid),
 #endif
 
     //Bearer List Current Calls
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicBearerListCurrentCallsUuid, gtbsBearerListCurrentCallsValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicBearerListCurrentCallsAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Content Control ID (CCID)
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicContentControlIdUuid, gtbsCCIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropRead, characteristicContentControlIdAttUuid),
 
     //Status Flags
-    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropReadNotify, characteristicStatusFlagsUuid, gtbsStatusFlagsValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicStatusFlagsAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_GTBS_INCOMING_CALL_TARGET_BEARER_URI
     //Incoming Call Target Bearer URI
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicIncomingCallTargetBearerUriUuid, gtbsIncomingCallTargetBearerURIValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicIncomingCallTargetBearerUriAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
     //Call State
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicCallStateUuid, gtbsCallStateValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicCallStateAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Call Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_POINT_CB(charPropWriteWriteWithoutNotify, characteristicCallCtrlPointUuid, gtbsCallControlPointValue),
+    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteWriteWithoutNotify, characteristicCallCtrlPointAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Call Control Point Optional Opcodes
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicCallCtrlPointOptionalOpcodesUuid, gtbsCallControlPointOptionalOpcodesValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropRead, characteristicCallCtrlPointOptionalOpcodesAttUuid),
 
     //Termination Reason
-    ATTS_CHAR_UUID_NOTIF_ONLY(characteristicTerminationReasonUuid),
+    ATTS_CHAR_UUID_NOTIF_ONLY(characteristicTerminationReasonAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Incoming Call
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicIncomingCallUuid, gtbsIncomingCallValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicIncomingCallAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_GTBS_CALL_FRIENDLY_NAME
     //Call Friendly Name
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicCallFriendlyNameUuid, gtbsCallFriendlyNameValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicCallFriendlyNameAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 };

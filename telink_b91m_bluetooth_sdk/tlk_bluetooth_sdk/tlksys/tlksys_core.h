@@ -30,24 +30,26 @@
 
 typedef enum
 {
-    TLKSYS_TASKID_SYSTEM = 0, 
+    TLKSYS_TASKID_SYSTEM = 0,
     TLKSYS_TASKID_AUDIO,
     TLKSYS_TASKID_HOST,
+#if TLKAPP_LEMGR_ENABLE
     TLKSYS_TASKID_LEMGR,
+#endif
     TLKSYS_TASKID_USER,
     TLKSYS_TASKID_MAXNUM,
 } TLKSYS_TASKID_ENUM;
 
 typedef enum
 {
-    TLKSYS_TASK_IDLE_PRIORITY             = 0,
-    TLKSYS_TASK_USER_PRIORITY             = 2,
-    TLKSYS_TASK_SYSTEM_PRIORITY           = 2, 
-    TLKSYS_TASK_HOST_PRIORITY             = 4,
-    TLKSYS_TASK_CONTROLLER_PRIORITY       = 4,
-    TLKSYS_TASK_AUDIO_PRIORITY            = 6,
-    TLKSYS_TASK_AUDIO_IRQ_PRIORITY        = 7,
-    TLKSYS_TASK_AUDIO_HIGH_TASK_PRIORITY  = 8,
+    TLKSYS_TASK_IDLE_PRIORITY            = 0,
+    TLKSYS_TASK_USER_PRIORITY            = 2,
+    TLKSYS_TASK_SYSTEM_PRIORITY          = 2,
+    TLKSYS_TASK_HOST_PRIORITY            = 4,
+    TLKSYS_TASK_CONTROLLER_PRIORITY      = 4,
+    TLKSYS_TASK_AUDIO_PRIORITY           = 6,
+    TLKSYS_TASK_AUDIO_IRQ_PRIORITY       = 7,
+    TLKSYS_TASK_AUDIO_HIGH_TASK_PRIORITY = 8,
 } TLKSYS_TASK_PRIORITY_ENUM;
 
 typedef enum
@@ -57,6 +59,7 @@ typedef enum
     TLKSYS_MUTEX_UI,
     TLKSYS_MUTEX_TINYSQL,
     TLKSYS_MUTEX_USERCTRL,
+    TLKSYS_MUTEX_AUDIO,
     TLKSYS_MUTEX_NUM,
 } TLKSYS_MUTEX_ENUM;
 
@@ -69,7 +72,7 @@ typedef enum
 } TLKSYS_REQ_HANDLE_SYNC_ENUM;
 
 typedef void (*TlksysTmrSyncCB)(uint32_t syncTick);
-typedef void (*TlksysHandleSyncDataCB)(void* pData, uint16_t dataLen);
+typedef void (*TlksysHandleSyncDataCB)(void *pData, uint16_t dataLen);
 
 /**
  * @brief  Initialize the tlksys module

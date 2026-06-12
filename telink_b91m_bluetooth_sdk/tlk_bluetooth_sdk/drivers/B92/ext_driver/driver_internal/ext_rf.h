@@ -558,12 +558,12 @@ __INLINE void zb_rt_irq_enable(void)
  */
 #define AD_CONVERT_DLY_1M    19 //before:20. Jaguar T_IFS need 32M + AD_Convert=19, tested by kai.jia at 2022-11-17
 #define AD_CONVERT_DLY_2M    13
-#define AD_CONVERT_DLY_CODED 14
+#define AD_CONVERT_DLY_CODED 16
 
 #if !RF_RX_SEC_FLT_CONFIG
 #define OTHER_SWITCH_DELAY_1M    2 //after enable DCOC, ADV T_IFS is about 152.5us, add 2 us delay by lihaojie at 2024-05-07
 #define OTHER_SWITCH_DELAY_2M    0
-#define OTHER_SWITCH_DELAY_CODED 4 //after enable DCOC, ADV T_IFS is about 154.5us, add 4 us delay by lihaojie at 2024-05-07
+#define OTHER_SWITCH_DELAY_CODED 2 //after enable DCOC, ADV T_IFS is about 154.5us, add 4 us delay by lihaojie at 2024-05-07
 
 #else
 

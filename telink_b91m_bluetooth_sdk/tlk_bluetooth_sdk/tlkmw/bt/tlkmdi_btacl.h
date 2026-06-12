@@ -33,7 +33,7 @@
 #define TLKMDI_BTACL_DISC_MIN_TIMEOUT     (5000000 / TLKMDI_BTACL_TIMEOUT)
 #define TLKMDI_BTACL_DISC_MAX_TIMEOUT     (30000000 / TLKMDI_BTACL_TIMEOUT)
 
-#define TLKMDI_BTACL_IDLE_DEF_TIMEOUT     (10000000 / TLKMDI_BTACL_TIMEOUT)
+#define TLKMDI_BTACL_IDLE_DEF_TIMEOUT     (30000000 / TLKMDI_BTACL_TIMEOUT)
 #define TLKMDI_BTACL_IDLE_DEF_TIMEOUT1    (3000000 / TLKMDI_BTACL_TIMEOUT) // 3s
 
 #define TLKMDI_BTACL_PROFILE_CONN_TIMEOUT (15000000 / TLKMDI_BTACL_TIMEOUT)
@@ -45,6 +45,13 @@
 
 #define TLKMDI_BTACL_PEER_ANDROID_DEV     0
 #define TLKMDI_BTACL_PEER_IOS_DEV         1
+
+
+#define TLKMW_BT_EVT_REGISTER(evtID, func)             \
+    int evtID##_FUNC(uint8_t *pData, uint16_t dataLen) \
+    {                                                  \
+        return func(pData, dataLen);                   \
+    }
 
 typedef enum
 {
@@ -99,14 +106,21 @@ typedef enum
     TLKMDI_BT_AVRCP_ArtPsm     = 6,
 } TLKMDI_BT_RFC_CH_PSM_ID_ENUM;
 
-typedef int (*TlkMdiBtAclConnRequsetCallback)(uint32_t devClass, uint8_t *pBtAddr);
-typedef void (*TlkMdiBtAclConnCallback)(uint16_t handle, uint8_t status, uint8_t *pBtAddr, uint8_t dtype, uint8_t hfp_ChId);
-typedef void (*TlkMdiBtAclDiscCallback)(uint16_t handle, uint8_t reason, uint8_t *pBtAddr);
-typedef void (*TlkMdiBtAclCrypCallback)(uint16_t handle, uint8_t status, uint8_t *pBtAddr, uint8_t dtype, uint8_t hfp_ChId);
-typedef void (*TlkMdiBtAclProfConnCallback)(uint16_t handle, uint8_t status, uint8_t ptype, uint8_t usrID, uint8_t *pBtAddr, uint8_t isFirstProf);
-typedef void (*TlkMdiBtAclProfDiscCallback)(uint16_t handle, uint8_t reason, uint8_t ptype, uint8_t usrID, uint8_t *pBtAddr);
-typedef int (*TlkMdiBtAclAfhCallback)(uint16_t handle, uint8_t *pData, uint16_t dataLen);
-typedef int (*TlkMdiBtAclSetConnRoleCallback)(uint8_t btaddr[6], uint32_t devClass, uint32_t timeout, void *param);
+enum
+{
+    TLKMW_BT_CONNECT_REQUEST = 0,
+    TLKMW_BT_CONNECT_COMPLETE,
+    TLKMW_BT_DISCONNECT_COMPLETE,
+    TLKMW_BT_ENCRYPTION_COMPLETE,
+    TLKMW_BT_PROFILE_CONNECT,
+    TLKMW_BT_PROFILE_DISCONNECT,
+    TLKMW_BT_AFH_NOTIFY,
+    TLKMW_BT_SET_LOCAL_ROLE,
+
+    TLKMW_BT_EVENT_ID_MAX,
+};
+
+typedef int (*tlkmw_bt_event_func)(uint8_t *pData, uint16_t dataLen);
 
 typedef struct
 {
@@ -156,6 +170,77 @@ typedef struct
     tlkmdi_btacl_item_t item[TLKMDI_BTACL_ITEM_NUMB];
 } tlkmdi_btacl_ctrl_t;
 
+typedef struct
+{
+    uint32_t dev_class;
+    uint8_t *pBtAddr;
+} tlkmdi_bt_conn_request_evt_format;
+
+typedef struct
+{
+    uint8_t  status;
+    uint8_t  dtype;
+    uint8_t  hfp_channel;
+    uint8_t  resv[3];
+    uint16_t aclHandle;
+    uint8_t *pBtAddr;
+} tlkmdi_bt_connect_evt_format;
+
+typedef struct
+{
+    uint8_t  reason;
+    uint8_t  dtype;
+    uint16_t aclHandle;
+    uint8_t *pBtAddr;
+} tlkmdi_bt_disconnect_evt_format;
+
+typedef struct
+{
+    uint8_t  status;
+    uint8_t  dtype;
+    uint8_t  hfp_channel;
+    uint8_t  enable;
+    uint8_t  resv[2];
+    uint16_t aclHandle;
+    uint8_t *pBtAddr;
+} tlkmdi_bt_encryption_evt_format;
+
+typedef struct
+{
+    uint8_t  status;
+    uint8_t  ptype;
+    uint8_t  usrID;
+    uint8_t  is_first_prof;
+    uint16_t aclHandle;
+    uint16_t resv;
+    uint8_t *pBtAddr;
+} tlkmdi_bt_profile_connect_evt_format;
+
+typedef struct
+{
+    uint8_t  reason;
+    uint8_t  ptype;
+    uint8_t  usrID;
+    uint8_t  resv[3];
+    uint16_t aclHandle;
+    uint8_t *pBtAddr;
+} tlkmdi_bt_profile_disconnect_evt_format;
+
+typedef struct
+{
+    uint16_t aclHandle;
+    uint16_t dataLen;
+    uint8_t *pData;
+} tlkmdi_bt_afh_notify_evt_format;
+
+typedef struct
+{
+    uint32_t devClass;
+    uint32_t timeout;
+    uint8_t *pBtAddr;
+    void    *param;
+} tlkmdi_bt_set_local_role_format;
+
 /**
  * @brief       This function initializes the ACL control block and register the callback
  * @param[in]   none.
@@ -204,6 +289,13 @@ bool tlkmdi_btacl_isFindPbap(uint16_t handle);
  * @return      Return true is used, false is unused
  */
 bool tlkmdi_btacl_isFindIap(uint16_t handle);
+
+/**
+ * @brief       This function checks bip whether used or not
+ * @param[in]   handle    - The acl handle
+ * @return      Return true is used, false is unused
+ */
+bool tlkmdi_btacl_isFindBip(uint16_t handle);
 
 /**
  * @brief       This function cancels the acl link setup procedure
@@ -269,62 +361,6 @@ int tlkmdi_btacl_removeProf(uint16_t handle, uint8_t ptype, uint8_t usrID);
  * @return      Return TLK_ENONE is success, other value is failure
  */
 int tlkmdi_btacl_getRole(uint32_t devClass);
-
-/**
- * @brief       This function registers acl link connection request callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regConnectRequsetCB(TlkMdiBtAclConnRequsetCallback callback);
-
-/**
- * @brief       This function registers acl link connection callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regConnectCB(TlkMdiBtAclConnCallback callback);
-
-/**
- * @brief       This function registers acl link encryption callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regEncryptCB(TlkMdiBtAclCrypCallback callback);
-
-/**
- * @brief       This function registers acl link disconnection callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regDisconnCB(TlkMdiBtAclDiscCallback callback);
-
-/**
- * @brief       This function registers acl link profile connection callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regProfileConnectCB(TlkMdiBtAclProfConnCallback callback);
-
-/**
- * @brief       This function registers acl link profile disconnection callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regProfileDisconnCB(TlkMdiBtAclProfDiscCallback callback);
-
-/**
- * @brief       This function registers afh channel map callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regAfhChnMapCB(TlkMdiBtAclAfhCallback callback);
-
-/**
- * @brief       This function registers acl link connection role callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regConnectRoleCB(TlkMdiBtAclSetConnRoleCallback callback);
 
 /**
  * @brief       This function gets the idle acl link count
@@ -433,4 +469,15 @@ void tlkmdi_btacl_clsSniffBusy(uint16_t handle, uint8_t audioBusy);
  * @return      true if device is IOS, false otherwise
  */
 bool tlkmdi_btacl_isIOS_device(uint16_t handle);
+
+/**
+ * @brief     Provides a hook function to customer deal remote device info.
+ * @param[in] None.
+ * @returns   None
+ */
+void  tlkmdi_btacl_getRemoteNameChange(uint8_t *pData);
+void  tlkmdi_btacl_set_remote_dev(uint8_t *pData, uint8_t isTrue);
+void *tlkmdi_btacl_get_remote_dev(void);
+
+
 #endif // TLKMDI_BTACL_H

@@ -28,22 +28,22 @@
 #include "core/mcu_type.h"
 #if (MCU_CORE_N22 == 1)
 
-    //use dlm exchange memory,repalce boot link file,qipeng
-    #define EM_DLM_EN 1
+//use dlm exchange memory,repalce boot link file,qipeng
+#define EM_DLM_EN 1
 
-    #if EM_DLM_EN
-        #define EM_BASE_DRAM_OFFSET 0x00000
-        #define DRAM_ADDR           0x50080000
-    #else
-        #define EM_BASE_IRAM_OFFSET 0x00400
-        #define IRAM_ADDR           0x50020000
+#if EM_DLM_EN
+#define EM_BASE_DRAM_OFFSET 0x00000
+#define DRAM_ADDR           0x50080000
+#else
+#define EM_BASE_IRAM_OFFSET 0x00400
+#define IRAM_ADDR           0x50020000
 
-    #endif
+#endif
 
 
 #else
-    #define EM_BASE_IRAM_OFFSET 0x200
-    #define IRAM_ADDR           0x00020000
+#define EM_BASE_IRAM_OFFSET 0x200
+#define IRAM_ADDR           0x00020000
 #endif
 
 
@@ -70,8 +70,8 @@
 #define RADIOCNTL30      (0xd416007c)
 #define TIMGENCNTL0      (0xd41600e0)
 
-#define TXMICVAL0      (0xd41600c8)
-#define RXMICVAL0      (0xd41600cc)
+#define TXMICVAL0        (0xd41600c8)
+#define RXMICVAL0        (0xd41600cc)
 
 #define TL_MODEM         (0xd4170400)
 //#define MODEM_TX_CTRL_0                    	(0xd4170480)

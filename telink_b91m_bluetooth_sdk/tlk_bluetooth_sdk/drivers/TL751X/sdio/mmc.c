@@ -249,6 +249,9 @@ void mmc_cmd_info_table_init(sdmmc_send_cmd_info_t **cmd_info)
 
     for (i = 0x00; i < CMD_NUM; i++)
     {
+        if(mmc_cmd_array[i] == NULL) {
+            continue;
+        }
         index = mmc_cmd_array[i]->cmd_index;
         cmd_info[index] = mmc_cmd_array[i];
     }
@@ -258,6 +261,9 @@ void mmc_get_cid_reg_info(mmc_cmd_config_t *config, unsigned char *buf)
 {
     if ((config == NULL) || (buf == NULL))
     {
+        return;
+    }
+    if(config->info == NULL) {
         return;
     }
     config->info->sd_cid.mid = buf[15];
@@ -285,7 +291,9 @@ void mmc_get_csd_reg_info(mmc_cmd_config_t *config, unsigned char *buf)
     {
         return;
     }
-
+    if(config->info == NULL) {
+        return;
+    }
     config->info->sd_csd.csdstruct = (buf[15] >> 0x06) & 0x03;
     config->info->sd_csd.sysspecversion = (buf[15] >> 0x02) & 0x0f;
     config->info->sd_csd.taac = buf[14];

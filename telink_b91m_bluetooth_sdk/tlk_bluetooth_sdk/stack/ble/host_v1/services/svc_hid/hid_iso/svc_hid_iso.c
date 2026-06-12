@@ -51,13 +51,13 @@ _attribute_ble_data_retention_ static uint16_t ullhidPropertiesLen = 0;
  * @brief the structure for default ULL-HID service List.
  */
 static const struct atts_attribute ullhidList[] = {
-    ATTS_PRIMARY_SERVICE(serviceUllhidUuid),
+    ATTS_PRIMARY_SERVICE(serviceHidOverIsoAttUuid),
 
     //ULL HID Properties
-    ATTS_CHAR_UUID_READ_POINT_CB(charPropRead, characteristicUllHidPropertiesUuid, ullhidProperties),
+    ATTS_CHAR_UUID_READ_POINT_CB(charPropRead, characteristicUllHidPropertiesAttUuid, ullhidProperties),
 
     //LE HID Operation
-    ATTS_CHAR_UUID_WRITE_NULL(charPropWriteIndicate, characteristicLeHidOperationModeUuid),
+    ATTS_CHAR_UUID_WRITE_NULL(charPropWriteIndicate, characteristicLeHidOperationModeAttUuid),
     ATTS_COMMON_CCC_DEFINE_CB,
 };
 

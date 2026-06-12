@@ -46,7 +46,7 @@ void tone_sbc_init(void);
  * @param[in] sample_num Number of samples to read.
  * @return Number of samples read.
  */
-int sbc_pcm_sample_read(int16_t* buf, int sample_num);
+int sbc_pcm_sample_read(int16_t *buf, int sample_num);
 
 /**
  * @brief   Convert sbc parameter from a2dp form to common form and given to struct
@@ -62,7 +62,7 @@ uint8_t bt_music_parse_sbc_param(uint8_t *data);
  * @param[out] pd Pointer to the destination buffer.
  * @return The length of decoded data.
  */
-int tone_sbc_dec (unsigned char *ps, int len, unsigned char *pd);
+int tone_sbc_dec(unsigned char *ps, int len, unsigned char *pd);
 
 /**
  * @brief Converts 8-bit SBC samples to 16-bit PCM samples.

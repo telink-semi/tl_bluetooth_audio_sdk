@@ -24,6 +24,8 @@
 #ifndef VENDOR_APP_BLE_BIS_H_
 #define VENDOR_APP_BLE_BIS_H_
 
+#define SOURCE_PRESENTATION_DELAY 20000 //20ms    presentation delay, unit is 1us.
+
 #define BIS_SOURCE_BROADCAST_NAME "btble-Broadcast"
 #define BIS_SOURCE_MS_STR         "A2DP Source"
 

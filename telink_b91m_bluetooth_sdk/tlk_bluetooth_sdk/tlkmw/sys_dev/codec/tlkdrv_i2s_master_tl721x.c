@@ -375,7 +375,7 @@ static int tlkdrv_iismst_enable(uint8_t bitDepth, uint8_t channel, uint32_t samp
     hal_i2s_input.data_width    = dataWdith;
     hal_i2s_input.i2s_ch_sel    = drvChannel;
     hal_i2s_input.fifo_chn      = TLKDRV_CODEC_MIC_FIFO;
-    hal_i2s_input.dma_num       = TLKDRV_CODEC_MIC_DMA;
+    hal_i2s_input.dma_num       = gTlkdrvCodecMicDmaChn;
     hal_i2s_input.data_buf      = gpTlkDrvCodecMicBuffer;
     hal_i2s_input.data_buf_size = gTlkDrvCodecMicBuffLen;
 
@@ -384,7 +384,7 @@ static int tlkdrv_iismst_enable(uint8_t bitDepth, uint8_t channel, uint32_t samp
     hal_i2s_output.data_width = dataWdith;
     hal_i2s_output.i2s_ch_sel = drvChannel;
     hal_i2s_output.fifo_chn   = TLKDRV_CODEC_SPK_FIFO;
-    hal_i2s_output.dma_num    = TLKDRV_CODEC_SPK_DMA;
+    hal_i2s_output.dma_num    = gTlkdrvCodecSpkDmaChn;
 #if AUDIO_CODEC_LOOPBACK
     hal_i2s_output.data_buf      = gpTlkDrvCodecMicBuffer;
     hal_i2s_output.data_buf_size = gTlkDrvCodecMicBuffLen;
@@ -424,8 +424,8 @@ static void tlkdrv_iismst_disable(void)
 
     audio_power_down();
 
-    audio_rx_dma_dis(TLKDRV_CODEC_MIC_DMA);
-    audio_tx_dma_dis(TLKDRV_CODEC_SPK_DMA);
+    audio_rx_dma_dis(gTlkdrvCodecMicDmaChn);
+    audio_tx_dma_dis(gTlkdrvCodecSpkDmaChn);
 
     //    tmemset(gpTlkDrvCodecMicBuffer, 0, gTlkDrvCodecMicBuffLen);
     //    tmemset(gpTlkDrvCodecSpkBuffer, 0, gTlkDrvCodecSpkBuffLen);

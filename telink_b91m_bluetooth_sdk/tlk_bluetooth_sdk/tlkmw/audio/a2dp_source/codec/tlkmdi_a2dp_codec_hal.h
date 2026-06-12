@@ -114,4 +114,4 @@ void tlkmdi_a2dp_out_user_notify(bool enable);
 */
 void tlkmdi_a2dp_out_user_switch(bool enable);
 
-#endif//TLKMDI_A2DP_CODEC_HAL_H
+#endif //TLKMDI_A2DP_CODEC_HAL_H

@@ -47,8 +47,8 @@
  */
 #include "rwip_config.h" // stack configuration
 
-#include <stdint.h>      // standard integer definitions
-#include <stdbool.h>     // standard boolean definitions
+#include <stdint.h>  // standard integer definitions
+#include <stdbool.h> // standard boolean definitions
 
 /*
  * DEFINES
@@ -64,39 +64,39 @@
 #if (CHIP_TYPE == CHIP_TYPE_TL752X)
 struct rwip_env_tag
 {
-    #if (BLE_EMB_PRESENT && BLE_ISO_PRESENT)
+#if (BLE_EMB_PRESENT && BLE_ISO_PRESENT)
     rwip_iso_timer_t iso_timer;
-    #endif // (BLE_EMB_PRESENT && BLE_ISO_PRESENT)
+#endif // (BLE_EMB_PRESENT && BLE_ISO_PRESENT)
 
-    #if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
+#if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
     /// Arbiter target timer  (integer part, in half slots)
-    uint32_t          timer_arb_target;
+    uint32_t timer_arb_target;
     /// Alarm target timer (integer part, in half slots)
-    uint32_t          timer_alarm_target;
-    #endif // (BLE_EMB_PRESENT || BT_EMB_PRESENT)
+    uint32_t timer_alarm_target;
+#endif // (BLE_EMB_PRESENT || BT_EMB_PRESENT)
     /// Common target timer (in half slots)
-    uint32_t          timer_co_target;
+    uint32_t timer_co_target;
     /// Last Sampled time (used for time conversion)
-    rwip_time_t       last_samp_time;
+    rwip_time_t last_samp_time;
 
-    #if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
+#if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
     /// Contains sleep duration accumulated timing error (32kHz: 1/2 half us | 32.768kHz: 1/256 half-us)
-    uint32_t          sleep_acc_error;
+    uint32_t sleep_acc_error;
     /// Power_up delay (in LP clock cycle unit, depends on Low power clock frequency)
-    uint32_t          lp_cycle_wakeup_delay;
+    uint32_t lp_cycle_wakeup_delay;
     /// Duration of sleep and wake-up algorithm (depends on CPU speed) expressed in half us.
-    uint16_t          sleep_algo_dur;
-    #endif // (BLE_EMB_PRESENT || BT_EMB_PRESENT)
+    uint16_t sleep_algo_dur;
+#endif // (BLE_EMB_PRESENT || BT_EMB_PRESENT)
     /// Prevent sleep bit field
-    uint16_t          prevent_sleep;
-    #if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
+    uint16_t prevent_sleep;
+#if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
     /// External wake-up support
-    bool              ext_wakeup_enable;
-    #if (!BLE_EMB_PRESENT)
+    bool ext_wakeup_enable;
+#if (!BLE_EMB_PRESENT)
     /// BTS sampling clock half microseconds residual (0 or 1)
-    uint8_t           samp_hus_residual;
-    #endif // (!BLE_EMB_PRESENT)
-    #endif // (BLE_EMB_PRESENT || BT_EMB_PRESENT)
+    uint8_t samp_hus_residual;
+#endif // (!BLE_EMB_PRESENT)
+#endif // (BLE_EMB_PRESENT || BT_EMB_PRESENT)
 };
 #else
 /// RWIP Environment structure
@@ -120,7 +120,7 @@ struct rwip_env_tag
 #endif // (BLE_EMB_PRESENT || BT_EMB_PRESENT)
     /// Prevent sleep bit field
     uint16_t prevent_sleep;
-    uint8_t resv0[2];
+    uint8_t  resv0[2];
 #if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
     /// External wake-up support
     bool ext_wakeup_enable;
@@ -136,7 +136,7 @@ struct rwip_env_tag
  */
 
 /// RW SW environment
-extern struct rwip_env_tag rwip_env;
+extern struct rwip_env_tag tlk_bt_ctrl_g_rwip_env;
 
 
 /*

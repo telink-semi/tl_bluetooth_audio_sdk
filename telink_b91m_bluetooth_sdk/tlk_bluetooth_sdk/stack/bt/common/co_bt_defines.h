@@ -72,8 +72,8 @@
 #define LE_PASSKEY_LEN       0x04
 #define BD_NAME_SIZE         0xF8 // Was 0x20 for BLE HL
 #define ADV_DATA_LEN         0x1F
-#define EXT_ADV_DATA_MAX_LEN 229  // HCI:7.7.65.13
-#define PER_ADV_DATA_MAX_LEN 247  // 248 // HCI:7.7.65.16
+#define EXT_ADV_DATA_MAX_LEN 229 // HCI:7.7.65.13
+#define PER_ADV_DATA_MAX_LEN 247 // 248 // HCI:7.7.65.16
 #define BLE_DATA_LEN         0x1B
 #define SCAN_RSP_DATA_LEN    0x1F
 #define CONNECT_REQ_DATA_LEN 0x16
@@ -805,7 +805,7 @@ enum ble_feature
 #define DM5_PACKET_SIZE     224
 #define DH5_PACKET_SIZE     339
 #define DH5_2_PACKET_SIZE   679
-#define DH5_3_PACKET_SIZE   800
+#define DH5_3_PACKET_SIZE   700
 #define AUX1_PACKET_SIZE    29
 
 #define HV1_PACKET_SIZE     10
@@ -1002,26 +1002,13 @@ enum ble_feature
 #define PAGE_SCAN_INTV_MAX 0x1000
 
 /// PageScanWindow HCI:6.9
-#if !EBQ_BT_CTRLER_ONLY_TEST_MODE
-#define INQ_SCAN_INTV_MIN 	0x0024
-#define PAGE_SCAN_WIN_MIN 	0x0024
-#define INQ_SCAN_INTV_DFT  	0x1000
-#define INQ_SCAN_WIN_DFT    0x0024//0x0012
-#define PAGE_SCAN_INTV_DFT  0x0800
-#define PAGE_SCAN_WIN_DFT   0x0024 //0x0012
-#else
-#define INQ_SCAN_INTV_MIN 	0x0012
-#define PAGE_SCAN_WIN_MIN 	0x0012
-#define INQ_SCAN_INTV_DFT  	0x100
-#define INQ_SCAN_WIN_DFT    0x60
-#define PAGE_SCAN_INTV_DFT  0x100
-#define PAGE_SCAN_WIN_DFT   0x60
-
-#define EBQ_INQ_SCAN_INTV_MAX	0X78
-#define EBQ_INQ_SCAN_WIN_MIN	0X24
-#define EBQ_INQ_SCAN_WIN_MAX	0X76
-#endif
-#define PAGE_SCAN_WIN_MAX 0x1000
+#define INQ_SCAN_INTV_MIN  0x0024
+#define PAGE_SCAN_WIN_MIN  0x0024
+#define INQ_SCAN_INTV_DFT  0x1000
+#define INQ_SCAN_WIN_DFT   0x0024 //0x0012
+#define PAGE_SCAN_INTV_DFT 0x0800
+#define PAGE_SCAN_WIN_DFT  0x0024 //0x0012
+#define PAGE_SCAN_WIN_MAX  0x1000
 
 /// InquiryScanInterval HCI:6.2
 #define INQ_SCAN_INTV_MAX 0x1000
@@ -1079,14 +1066,10 @@ enum ble_feature
 #define AUTO_FLUSH_TIMEOUT_DFT AUTO_FLUSH_TIMEOUT_OFF // Default (no automatic flush timeout)
 
 /// Link Supervision Time Out (in slots) HCI:6.21
-#define LSTO_OFF 0x0000
-#define LSTO_MIN 0x0001
+#define LSTO_OFF        0x0000
+#define LSTO_MIN        0x0001
 
-#if !EBQ_BT_CTRLER_ONLY_TEST_MODE
-    #define LSTO_DFT 0x3E80    // Default is 10 s
-#else
-    #define LSTO_DFT 0x7D00    // Default is 20 s
-#endif
+#define LSTO_DFT        0x3E80 // Default is 10 s
 #define LSTO_TRANSITION 0x0640 // transition parameter used during baseband page procedure from unconnectted to connected
 #define LSTO_MAX        0xFFFF
 
@@ -1316,12 +1299,12 @@ enum ble_feature
 #define JITTER_DFT          10
 #define DRIFT_BT_ACTIVE_MAX 20 // BB:2.2.5
 
-#define DRIFT_BT_PM 800 //800 pmm if low power mode
-#define DRIFT_SYS_PM 200//200 US if low power mode
+#define DRIFT_BT_PM         800 //800 pmm if low power mode
+#define DRIFT_SYS_PM        200 //200 US if low power mode
 
 
-#define SNIFF_HID_INTV_MIN  8 //5ms
-#define SNIFF_MAX_INTV     0x320 // 500ms
+#define SNIFF_HID_INTV_MIN  8     //5ms
+#define SNIFF_MAX_INTV      0x320 // 500ms
 /// MAX LP Clock Jitter allowed by the specification (in us) (Core 4.2 - vol 6, -B - 4.2.2)
 #define BLE_MAX_JITTER (16)
 
@@ -1577,7 +1560,7 @@ enum le_evt_mask
     LE_EVT_MASK_CH_SEL_ALGO_EVT_BIT             = 19,         //!<LE_EVT_MASK_CH_SEL_ALGO_EVT_BIT
     LE_EVT_MASK_CH_SEL_ALGO_EVT_MSK             = 0x00080000, //!<LE_EVT_MASK_CH_SEL_ALGO_EVT_MSK
 
-    LE_EVT_MASK_DFT = 0x0000001F,                             //!< LE_EVT_MASK_DFT
+    LE_EVT_MASK_DFT = 0x0000001F, //!< LE_EVT_MASK_DFT
 };
 
 /// Enhanced Synchronous Connection HCI:7.1.41 & 7.1.42
@@ -2515,7 +2498,7 @@ struct bd_name
     uint8_t namelen;
     ///array of bytes for name
     uint8_t name[BD_NAME_SIZE];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Structure device name
 /*@TRACE*/
@@ -2523,14 +2506,14 @@ struct device_name
 {
     ///array of bytes for name
     uint8_t name[BD_NAME_SIZE];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Structure name vector
 /*@TRACE*/
 struct name_vect
 {
     uint8_t vect[NAME_VECT_SIZE];
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// lap structure
 /*@TRACE*/
@@ -2538,7 +2521,7 @@ struct lap
 {
     /// LAP
     uint8_t A[BD_ADDR_LAP_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// class structure
 /*@TRACE*/
@@ -2546,7 +2529,7 @@ struct devclass
 {
     /// class
     uint8_t A[DEV_CLASS_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Extended inquiry response structure
 /*@TRACE*/
@@ -2554,7 +2537,7 @@ struct eir
 {
     /// eir data
     uint8_t data[EIR_DATA_SIZE];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Event mask structure
 /*@TRACE*/
@@ -2562,7 +2545,7 @@ struct evt_mask
 {
     ///8-byte array for mask value
     uint8_t mask[EVT_MASK_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Host number of completed packets structure, for 1 connection handle
 struct host_cmpl_pkts
@@ -2571,7 +2554,7 @@ struct host_cmpl_pkts
     uint16_t con_hdl;
     ///Number of completed packets
     uint16_t nb_cmpl_pkts;
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///BD Address structure
 /*@TRACE*/
@@ -2579,7 +2562,14 @@ struct bd_addr
 {
     ///6-byte array address value
     uint8_t addr[BD_ADDR_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
+
+struct tcf_info
+{
+    u32 tick; //tick of free running system timer
+    u32 clkn; //28-bit BT Clock, CLKN counter counts between 0 and 2^28-1 with a 312.5us precision
+    u32 fcnt; //Fine Counter counts between 624 and 0 and has a 0.5us precision, note that it counts DOWNWARD
+} __attribute__((packed));
 
 ///Access Address structure
 /*@TRACE*/
@@ -2587,7 +2577,7 @@ struct access_addr
 {
     ///4-byte array access address
     uint8_t addr[ACCESS_ADDR_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Advertising data structure
 /*@TRACE*/
@@ -2595,7 +2585,7 @@ struct adv_data
 {
     ///Maximum length data bytes array
     uint8_t data[ADV_DATA_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Scan response data structure
 /*@TRACE*/
@@ -2603,7 +2593,7 @@ struct scan_rsp_data
 {
     ///Maximum length data bytes array
     uint8_t data[SCAN_RSP_DATA_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Channel map structure
 /*@TRACE*/
@@ -2611,7 +2601,7 @@ struct chnl_map
 {
     ///10-bytes channel map array
     uint8_t map[CHNL_MAP_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Channel map structure
 /*@TRACE*/
@@ -2619,7 +2609,7 @@ struct le_chnl_map
 {
     ///5-byte channel map array
     uint8_t map[LE_CHNL_MAP_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// External frame period (duration & type) structure
 struct ext_fr_period
@@ -2628,7 +2618,7 @@ struct ext_fr_period
     uint16_t duration;
     /// Period_Type
     uint8_t type;
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// MWS scan frequency (low & high) structure
 struct mws_scan_freq
@@ -2637,7 +2627,7 @@ struct mws_scan_freq
     uint16_t low;
     ///Scan_Frequency_High
     uint16_t high;
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// MWS pattern interval (duration & type) structure
 struct mws_pattern_intv
@@ -2646,7 +2636,7 @@ struct mws_pattern_intv
     uint16_t duration;
     ///MWS_PATTERN_IntervalType
     uint8_t type;
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// MWS transport rates structure
 struct mws_trans_rate
@@ -2655,7 +2645,7 @@ struct mws_trans_rate
     uint32_t to_mws_baud_rate;
     ///From_MWS_Baud_Rate
     uint32_t from_mws_baud_rate;
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// MWS transports structure
 struct mws_transport
@@ -2666,7 +2656,7 @@ struct mws_transport
     uint8_t num_baud_rates;
     ///To/From_MWS_Baud_Rates
     struct mws_trans_rate *rates;
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// SAM submaps structure
 struct sam_submaps
@@ -2678,7 +2668,7 @@ struct sam_submaps
     // - SAM_SLOTS_UNAVAILABLE: All slots are unavailable for transmission and reception.
     // - Other: Reserved for future use.
     uint8_t map[SAM_SUBMAPS_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// SAM type0 submap structure
 struct sam_type0_submap
@@ -2690,7 +2680,7 @@ struct sam_type0_submap
     // - SAM_SLOT_RX_AVAILABLE: The slot is available for reception but not transmission.
     // - SAM_SLOT_TX_RX_AVAILABLE: The slot is available for both transmission and reception.
     uint8_t map[SAM_TYPE0_SUBMAP_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Long Term Key structure
 /*@TRACE*/
@@ -2698,7 +2688,7 @@ struct ltk
 {
     ///16-byte array for LTK value
     uint8_t ltk[KEY_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Identity Resolving Key structure
 /*@TRACE*/
@@ -2706,7 +2696,7 @@ struct irk
 {
     ///16-byte array for IRK value
     uint8_t key[KEY_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// Initialization vector (for AES-CCM encryption)
 /*@TRACE*/
@@ -2714,7 +2704,7 @@ struct initialization_vector
 {
     ///8-byte array
     uint8_t vect[IV_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// Bluetooth address with link key
 struct bd_addr_plus_key
@@ -2723,7 +2713,7 @@ struct bd_addr_plus_key
     struct bd_addr bd_addr;
     /// Link Key
     struct ltk link_key;
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Random number structure
 /*@TRACE*/
@@ -2731,7 +2721,7 @@ struct rand_nb
 {
     ///8-byte array for random number
     uint8_t nb[RAND_NB_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Advertising report structure
 /*@TRACE*/
@@ -2753,7 +2743,7 @@ struct adv_report
     uint8_t data[ADV_DATA_LEN];
     ///RSSI value for advertising packet (in dBm, between -127 and +20 dBm)
     int8_t rssi;
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Direct Advertising report structure
 /*@TRACE*/
@@ -2772,7 +2762,7 @@ struct dir_adv_report
     struct bd_addr dir_addr;
     ///RSSI value for advertising packet (in dBm, between -127 and +20 dBm)
     int8_t rssi;
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Extended Advertising report structure
 /*@TRACE*/
@@ -2804,7 +2794,7 @@ struct ext_adv_report
     uint8_t data_len;
     ///Data of advertising packet
     uint8_t data[EXT_ADV_DATA_MAX_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Supported LE Features structure
 /*@TRACE*/
@@ -2812,7 +2802,7 @@ struct le_features
 {
     ///8-byte array for LE features
     uint8_t feats[LE_FEATS_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Simple pairing hash structure
 /*@TRACE*/
@@ -2820,7 +2810,7 @@ struct hash
 {
     ///16-byte array for LTK value
     uint8_t C[KEY_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Simple pairing randomizer structure
 /*@TRACE*/
@@ -2828,7 +2818,7 @@ struct randomizer
 {
     ///16-byte array for LTK value
     uint8_t R[KEY_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Pin code structure
 /*@TRACE*/
@@ -2836,7 +2826,7 @@ struct pin_code
 {
     ///16-byte array for PIN value
     uint8_t pin[PIN_CODE_MAX_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Sres structure
 /*@TRACE*/
@@ -2844,7 +2834,7 @@ struct sres_nb
 {
     ///8-byte array for random number
     uint8_t nb[SRES_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///aco structure
 /*@TRACE*/
@@ -2852,14 +2842,14 @@ struct aco
 {
     ///8-byte array for random number
     uint8_t a[ACO_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///struct byte 16 to stay align with the sdl version
 /*@TRACE*/
 struct byte16
 {
     uint8_t A[16];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Controller number of completed packets structure
 /*@TRACE*/
@@ -2869,7 +2859,7 @@ struct nb_cmpl_pk
     uint16_t con_hdl;
     ///Controller number of data packets that have been completed since last time
     uint16_t nb_hc_cmpl_pkts;
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Supported Features  structure
 /*@TRACE*/
@@ -2877,7 +2867,7 @@ struct features
 {
     ///8-byte array for features
     uint8_t feats[FEATS_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Supported commands structure
 /*@TRACE*/
@@ -2885,14 +2875,14 @@ struct supp_cmds
 {
     ///64-byte array for supported commands
     uint8_t cmds[SUPP_CMDS_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Supported LMP features structure
 struct lmp_features
 {
     ///8-byte array for LMp features
     uint8_t feats[FEATS_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Simple pairing IO capabilities
 struct io_capability
@@ -2905,19 +2895,19 @@ struct io_capability
     uint8_t aut_req;
 
     uint8_t resv0;
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Public key
 struct pub_key_192
 {
     uint8_t p_key[PUB_KEY_192_LEN / 2];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Public key
 struct pub_key_256
 {
     uint8_t p_key[PUB_KEY_256_LEN / 2];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Simple pairing public keys 192
 struct sp_pub_key_192
@@ -2926,7 +2916,7 @@ struct sp_pub_key_192
     struct pub_key_192 X;
     ///Public key Y
     struct pub_key_192 Y;
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Simple pairing public keys 256
 struct sp_pub_key_256
@@ -2935,7 +2925,7 @@ struct sp_pub_key_256
     struct pub_key_256 X;
     ///Public key Y
     struct pub_key_256 Y;
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Supported LE states structure
 /*@TRACE*/
@@ -2943,7 +2933,7 @@ struct le_states
 {
     ///8-byte array for LE states
     uint8_t supp_states[LE_STATES_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///White List element structure
 struct white_list
@@ -2952,7 +2942,7 @@ struct white_list
     struct bd_addr wl_bdaddr;
     ///BD address type of device entry
     uint8_t wl_bdaddr_type;
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///CRC initial value structure
 /*@TRACE*/
@@ -2960,7 +2950,7 @@ struct crc_init
 {
     ///3-byte array CRC initial value
     uint8_t crc[CRC_INIT_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Session key diversifier master or slave structure
 /*@TRACE*/
@@ -2968,14 +2958,14 @@ struct sess_k_div_x
 {
     ///8-byte array for diversifier value
     uint8_t skdiv[SESS_KEY_DIV_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Session key diversifier structure
 struct sess_k_div
 {
     ///16-byte array for session key diversifier.
     uint8_t skd[2 * SESS_KEY_DIV_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 ///Initiator vector
 /*@TRACE*/
@@ -2983,7 +2973,7 @@ struct init_vect
 {
     ///4-byte array for vector
     uint8_t iv[INIT_VECT_LEN];
-}__attribute__((packed));
+} __attribute__((packed));
 
 /*@TRACE*/
 typedef struct t_public_key
@@ -3022,7 +3012,7 @@ struct pdu_con_req_lldata
 
     /// Hopping
     uint8_t hop_sca;
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// structure connection request
 struct pdu_con_req
@@ -3035,7 +3025,7 @@ struct pdu_con_req
 
     /// LLData
     struct pdu_con_req_lldata lldata;
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// structure advertising syncinfo field
 /*@TRACE*/
@@ -3064,7 +3054,7 @@ struct sync_info
 
     /// event counter
     uint16_t evt_counter;
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// Device specific link preferences
 typedef struct
@@ -3156,7 +3146,7 @@ struct big_info
     /// Payload Counter field contains 39bits payload counter of the BIS channel Data PDU.
     /// MSB of the Payload Counter field shall be set to 0.
     uint8_t bis_pkt_cnt[BLE_PLD_CNT_SIZE];
-}__attribute__((packed));
+} __attribute__((packed));
 
 /// @} CO_BT_DEFINES
 #endif // CO_BT_DEFINES_H_

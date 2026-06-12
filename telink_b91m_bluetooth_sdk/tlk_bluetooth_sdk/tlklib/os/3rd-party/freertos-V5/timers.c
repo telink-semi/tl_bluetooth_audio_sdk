@@ -1124,7 +1124,7 @@
 /*-----------------------------------------------------------*/
 
     #if ( configUSE_TRACE_FACILITY == 1 )
-        _attribute_os_core_code_ram_sec_
+        _attribute_os_core_code_flash_sec_
         UBaseType_t uxTimerGetTimerNumber( TimerHandle_t xTimer )
         {
             return ( ( Timer_t * ) xTimer )->uxTimerNumber;
@@ -1134,7 +1134,7 @@
 /*-----------------------------------------------------------*/
 
     #if ( configUSE_TRACE_FACILITY == 1 )
-    _attribute_os_core_code_ram_sec_
+    _attribute_os_core_code_flash_sec_
         void vTimerSetTimerNumber( TimerHandle_t xTimer,
                                    UBaseType_t uxTimerNumber )
         {

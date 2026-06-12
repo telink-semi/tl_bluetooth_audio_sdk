@@ -55,4 +55,6 @@ void tlkmdi_bta2dp_connectEvt(uint16_t aclHandle, uint8_t usrID);
  */
 void tlkmdi_bta2dp_sendHostMusicStateChgEvt(uint16_t handle, uint8_t state);
 
+int tlkmdi_btavrcp_volumeChangeEvt(uint8_t *pData, uint16_t dataLen);
+
 #endif // TLKMDI_BT_A2DP_H

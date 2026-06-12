@@ -32,6 +32,8 @@
 #include "tlkdrv_icodec_tl751x.h"
 #elif (CHIP_TYPE == CHIP_TYPE_TL752X)
 #include "tlkdrv_icodec_tl752x.h"
+#elif (CHIP_TYPE == CHIP_TYPE_TL753X)
+#include "tlkdrv_i2s_master_tl753x.h"
 #endif
 
 #if (TLK_DEV_CODEC_ENABLE)
@@ -39,7 +41,11 @@
 #if DEC_PCM_DATA_TO_DSP
 #include "tlkmw/audio/anc/tlkmdi_anc.h"
 #endif
-
+uint8_t gTlkdrvCodecSpkDmaChn = 0;
+uint8_t gTlkdrvCodecMicDmaChn = 0;
+#if (PROJ_RECORDING_CARD && TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN)
+uint8_t gTlkdrvCodecMic1DmaChn = 0;
+#endif
 static const tlkdrv_codec_modinf_t *tlkdrv_codec_getDev(uint8_t dev);
 
 #if ((TLKHW_TYPE == BOARD_721X_EVK_C1T315A20_V2 || TLKHW_TYPE == BOARD_721X_EVK_C1TXA104_V1_1) && (PROJ_TPSLL_AUDIO_DONGLE))
@@ -73,6 +79,8 @@ extern const tlkdrv_codec_modinf_t gcTlkDrvIcodecInf;
 #if (TLKDRV_CODEC_I2S_MASTER_ENABLE)
 #if (MCU_CORE_TYPE == MCU_CORE_TL721X)
 extern const tlkdrv_codec_modinf_t gcTlkDrvIisMstInf_tl721x;
+#elif (MCU_CORE_TYPE == MCU_CORE_TL753X)
+extern const tlkdrv_codec_modinf_t gcTlkDrvIisMstInf_tl753x;
 #endif
 #endif
 
@@ -103,9 +111,25 @@ static const tlkdrv_codec_modinf_t *spTlkDrvCodecModinf[TLKDRV_CODEC_DEV_MAX] = 
 #endif
 };
 
+static uint8_t sTlkDrvCodecIsInTestMode = 0;
 
-volatile int g_sys_power_on_codec_dis = 0;
-volatile int g_sys_work_mode          = 0;
+void tlkdrv_codec_test_mode_en(uint8_t en)
+{
+    (void)sTlkDrvCodecIsInTestMode;
+    (void)en;
+#if CODEC_CFG_TEST_MODE_EN
+    sTlkDrvCodecIsInTestMode = en;
+#endif
+}
+
+uint8_t tlkdrv_codec_is_in_test_mode(void)
+{
+#if CODEC_CFG_TEST_MODE_EN
+    return sTlkDrvCodecIsInTestMode;
+#else
+    return 0;
+#endif
+}
 
 #if TLKALG_ANC_ENABLE
 volatile int audio_hd_anc_enable = 1;
@@ -125,12 +149,10 @@ __attribute__((section(".dsp_share_mem_d25f"))) codec_int g_codec_spk_buff[CODEC
 // uint8_t ava_buff[0x26e0] __attribute__((section(".dsp_share_mem_d25f1")));
 // uint8_t ava_scr_buff[0x380] __attribute__((section(".dsp_share_mem_d25f2")));
 #else
-#if (!PROJ_RECORDING_CARD)
 #if (!TLK_CFG_TEMP_DRAM_OPTM_TPSLL)
 codec_int g_codec_spk_buff[CODEC_SPK_FIFO_SAMPLES];
 #else
 _attribute_iram_data_ codec_int g_codec_spk_buff[CODEC_SPK_FIFO_SAMPLES];
-#endif
 #endif
 #endif
 #endif
@@ -143,7 +165,17 @@ adc_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
 _attribute_iram_data_ adc_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
 #endif
 #else
-adc_mono_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+#if (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN)
+
+_attribute_iram_data_ adc_4ch_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+_attribute_iram_data_ adc_int     g_codec_mic2_buff[CODEC_MIC_FIFO_SAMPLES];
+#elif (TLKALG_BBF_ENABLE == TLKALG_BBF_4CH_EN)
+_attribute_iram_data_ adc_4ch_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+#elif (TLKALG_BBF_ENABLE == TLKALG_BBF_2CH_EN)
+_attribute_iram_data_ adc_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+#else
+_attribute_iram_data_ adc_mono_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+#endif
 #endif
 #endif
 
@@ -154,12 +186,22 @@ static tlkdrv_codec_ctrl_t sTlkDrvCodecCtrl = {
     .majorDev       = 0XFF,
     .micOffset      = 0,
     .spkOffset      = 0,
+#if ((TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN) && (PROJ_RECORDING_CARD))
+    .spkOffset_1 = 0,
+    .micOffset_1 = 0,
+#endif
 };
+
 uint16_t gTlkDrvCodecSpkBuffLen = 0;
 uint16_t gTlkDrvCodecMicBuffLen = 0;
 
 uint8_t *gpTlkDrvCodecSpkBuffer = NULL;
 uint8_t *gpTlkDrvCodecMicBuffer = NULL;
+
+#if ((TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN) && (PROJ_RECORDING_CARD))
+uint16_t gTlkDrvCodecMicBuffLen_1 = 0;
+uint8_t *gpTlkDrvCodecMicBuffer_1 = NULL;
+#endif
 
 static uint8_t s_anc_mode_enable = 0;
 
@@ -273,11 +315,30 @@ _attribute_ram_code_sec_ static void tlkdrv_codec_fade_in_process(uint8_t *pData
  */
 void tlkdrv_codec_power_on(void)
 {
-    if (!g_sys_power_on_codec_dis) {
+#if TLK_DEV_CODEC_MIC_ENABLE
+    gTlkdrvCodecMicDmaChn = tlkhal_dma_malloc();
+#endif
+#if TLK_DEV_CODEC_SPK_ENABLE
+    gTlkdrvCodecSpkDmaChn = tlkhal_dma_malloc();
+#endif
+#if (PROJ_RECORDING_CARD && TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN)
+    gTlkdrvCodecMic1DmaChn = tlkhal_dma_malloc();
+#endif
+#if (TLKMDI_DMIC_POWER_SUSPEND_DIS & RECORDING_CARD_EN)
+    if (TLKDRV_ICODEC_POWER_PIN != GPIO_NONE_PIN) {
+        gpio_function_en((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
+        gpio_input_dis((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
+        gpio_set_high_level((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
+        gpio_output_en((gpio_pin_e)TLKDRV_ICODEC_POWER_PIN);
+    }
+#endif
+    if (!TLKDRV_CODEC_COLD_START_ENABLE) {
 #if (MCU_CORE_TYPE == MCU_CORE_B92)
         audio_codec_init();
 #elif (MCU_CORE_TYPE == MCU_CORE_TL751X && TLKDRV_CODEC_ICODEC_ENABLE)
         tlkdrv_tl751x_codec_hd_init();
+#elif (MCU_CORE_TYPE == MCU_CORE_TL753X)
+        audio_init(PLL_AUDIO_CLK_86P016M);
 #endif
     }
 }
@@ -531,7 +592,16 @@ void tlkdrv_codec_setMicBuffer(uint8_t *pBuffer, uint16_t buffLen)
     gTlkDrvCodecMicBuffLen = buffLen;
     gpTlkDrvCodecMicBuffer = pBuffer;
 }
-
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN))
+void tlkdrv_codec_setMicBuffer_1(uint8_t *pBuffer, uint16_t buffLen)
+{
+    if (buffLen != 0 && buffLen < 256) {
+        return;
+    }
+    gTlkDrvCodecMicBuffLen_1 = buffLen;
+    gpTlkDrvCodecMicBuffer_1 = pBuffer;
+}
+#endif
 /**
  * @brief Get speaker buffer offset
  * @param None
@@ -623,7 +693,11 @@ uint tlkdrv_codec_getSpkIdleLen(void)
     } else
 #endif
     {
-        rptr = (audio_get_tx_dma_rptr(TLKDRV_CODEC_SPK_DMA)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#if (MCU_CORE_TL752X_TEMP && AUDIO_DAC_DMA_LLP_EN)
+        rptr = (audio_get_tx_dma_rptr(&audio_dac_dmac_handle)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#else
+        rptr = (audio_get_tx_dma_rptr(gTlkdrvCodecSpkDmaChn)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#endif
     }
 
     if (rptr > wptr) {
@@ -672,7 +746,11 @@ _attribute_ram_code_sec_ uint tlkdrv_codec_getSpkDataLen(void)
     } else
 #endif
     {
-        rptr = (audio_get_tx_dma_rptr(TLKDRV_CODEC_SPK_DMA)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#if (MCU_CORE_TL752X_TEMP && AUDIO_DAC_DMA_LLP_EN)
+        rptr = (audio_get_tx_dma_rptr(&audio_dac_dmac_handle)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#else
+        rptr = (audio_get_tx_dma_rptr(gTlkdrvCodecSpkDmaChn)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#endif
     }
 
     if (wptr > rptr) {
@@ -714,7 +792,12 @@ uint tlkdrv_codec_getMicDataLen(void)
     }
 
     rptr = sTlkDrvCodecCtrl.micOffset;
-    wptr = (audio_get_rx_dma_wptr(TLKDRV_CODEC_MIC_DMA)) - ((uint32_t)gpTlkDrvCodecMicBuffer);
+
+#if (MCU_CORE_TL752X_TEMP && AUDIO_ADC_DMA_LLP_EN)
+    wptr = (audio_get_rx_dma_wptr(&audio_adc_dmac_handle)) - ((uint32_t)gpTlkDrvCodecMicBuffer);
+#else
+    wptr = (audio_get_rx_dma_wptr(gTlkdrvCodecMicDmaChn)) - ((uint32_t)gpTlkDrvCodecMicBuffer);
+#endif
 
     if (wptr > rptr) {
         used = wptr - rptr;
@@ -724,6 +807,29 @@ uint tlkdrv_codec_getMicDataLen(void)
 
     return used;
 }
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN))
+uint tlkdrv_codec_getMicDataLen_1(void)
+{
+    uint16_t used;
+    uint32_t wptr;
+    uint32_t rptr;
+
+    if (gTlkDrvCodecMicBuffLen_1 == 0 || !tlkdrv_codec_isOpen(TLKDRV_CODEC_SUBDEV_MIC)) {
+        return 0;
+    }
+
+    rptr = sTlkDrvCodecCtrl.micOffset_1;
+    wptr = (audio_get_rx_dma_wptr(gTlkdrvCodecMic1DmaChn)) - ((uint32_t)gpTlkDrvCodecMicBuffer_1);
+
+    if (wptr > rptr) {
+        used = wptr - rptr;
+    } else {
+        used = gTlkDrvCodecMicBuffLen_1 + wptr - rptr;
+    }
+
+    return used;
+}
+#endif
 
 /**
  * @brief Get microphone available samples count
@@ -791,6 +897,69 @@ bool tlkdrv_codec_readMicData(uint8_t *pBuffer, uint16_t buffLen, uint16_t *pOff
 
     return true;
 }
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN))
+void tlkdrv_codec_between_sync(int frame_len, int codec0_chn, int codec1_chn)
+{
+    uint32_t wptr0  = ((audio_get_rx_dma_wptr(gTlkdrvCodecMicDmaChn)) - ((uint32_t)gpTlkDrvCodecMicBuffer)) / codec0_chn;
+    uint32_t wptr1  = ((audio_get_rx_dma_wptr(gTlkdrvCodecMic1DmaChn)) - ((uint32_t)gpTlkDrvCodecMicBuffer_1)) / codec1_chn;
+    uint32_t length = frame_len * sizeof(adc_mono_int);
+
+    uint32_t dif0 = wptr0 - length;
+    uint32_t dif1 = wptr1 - length;
+
+    if (dif0 < dif1) {
+        sTlkDrvCodecCtrl.micOffset_1 = (dif1 - dif0) * codec1_chn;
+    } else {
+        sTlkDrvCodecCtrl.micOffset_1 = 0;
+    }
+}
+
+bool tlkdrv_codec_readMicData_1(uint8_t *pBuffer, uint16_t buffLen, uint16_t *pOffset)
+{
+    //uint32_t wptr;
+    uint32_t rptr;
+    uint16_t dataLen;
+    uint16_t tempLen;
+
+    if (gTlkDrvCodecMicBuffLen_1 == 0 || !tlkdrv_codec_isOpen(TLKDRV_CODEC_SUBDEV_MIC)) {
+        return false;
+    }
+
+    dataLen = tlkdrv_codec_getMicDataLen_1();
+    if (dataLen < buffLen) {
+        return false;
+    }
+
+    rptr = sTlkDrvCodecCtrl.micOffset_1;
+
+    if (rptr + buffLen <= gTlkDrvCodecMicBuffLen_1) {
+        tempLen = buffLen;
+    } else {
+        tempLen = gTlkDrvCodecMicBuffLen_1 - rptr;
+    }
+
+    if (tempLen != 0) {
+        tmemcpy(pBuffer, ((uint8_t *)gpTlkDrvCodecMicBuffer_1) + rptr, tempLen);
+    }
+
+    if (tempLen == buffLen) {
+        rptr += tempLen;
+    } else {
+        rptr = buffLen - tempLen;
+        tmemcpy(pBuffer + tempLen, ((uint8_t *)gpTlkDrvCodecMicBuffer_1), rptr);
+    }
+
+    rptr &= (gTlkDrvCodecMicBuffLen_1 - 1);
+
+    if (pOffset != NULL) {
+        *pOffset = dataLen;
+    }
+
+    sTlkDrvCodecCtrl.micOffset_1 = rptr;
+
+    return true;
+}
+#endif
 
 /**
  * @brief Mute speaker buffer
@@ -865,7 +1034,11 @@ bool tlkdrv_codec_fillSpkBuff(uint8_t *pData, uint16_t dataLen)
     } else
 #endif
     {
-        rptr = (audio_get_tx_dma_rptr(TLKDRV_CODEC_SPK_DMA)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#if (MCU_CORE_TL752X_TEMP && AUDIO_DAC_DMA_LLP_EN)
+        rptr = (audio_get_tx_dma_rptr(&audio_dac_dmac_handle)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#else
+        rptr = (audio_get_tx_dma_rptr(gTlkdrvCodecSpkDmaChn)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#endif
     }
 
     if (rptr > wptr) {
@@ -945,7 +1118,13 @@ bool tlkdrv_codec_backReadSpkData(uint8_t *pBuffer, uint16_t buffLen, uint16_t o
         tlkapi_error(TLKDRV_CODEC_DBG_FLAG, TLKDRV_CODEC_DBG_SIGN, "tlkdrv_codec_backReadSpkData: fault", 0, 0);
         return false;
     }
-    rptr = (uint32_t)((audio_get_tx_dma_rptr(TLKDRV_CODEC_SPK_DMA)) - ((uint32_t)gpTlkDrvCodecSpkBuffer));
+
+#if (MCU_CORE_TL752X_TEMP && AUDIO_DAC_DMA_LLP_EN)
+    rptr = (uint32_t)((audio_get_tx_dma_rptr(&audio_dac_dmac_handle)) - ((uint32_t)gpTlkDrvCodecSpkBuffer));
+#else
+    rptr = (uint32_t)((audio_get_tx_dma_rptr(gTlkdrvCodecSpkDmaChn)) - ((uint32_t)gpTlkDrvCodecSpkBuffer));
+#endif
+
     if (offset != 0) {
         if (!isBack) {
             rptr += offset;
@@ -1001,14 +1180,22 @@ void tlkdrv_codec_sync_play_samples(uint16_t samples)
     } else
 #endif
     {
-        dma_rptr = (audio_get_tx_dma_rptr(TLKDRV_CODEC_SPK_DMA)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#if (MCU_CORE_TL752X_TEMP && AUDIO_DAC_DMA_LLP_EN)
+        dma_rptr = (audio_get_tx_dma_rptr(&audio_dac_dmac_handle)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#else
+        dma_rptr = (audio_get_tx_dma_rptr(gTlkdrvCodecSpkDmaChn)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#endif
     }
 
     if (samples <= 32) {
         tlkapi_trace(TLKDRV_CODEC_DBG_FLAG, TLKDRV_CODEC_DBG_SIGN, "<play-mute sample too low> %d %d", sTlkDrvCodecCtrl.spkOffset, samples);
     } else {
+#if TLK_CFG_A2DP_TO_BIS_ENABLE
+        samples_in_fifo = samples % CODEC_SPK_FIFO_SAMPLES;
+#else
         samples_in_fifo = samples <= CODEC_SPK_FIFO_SAMPLES / 2 ? samples : CODEC_SPK_FIFO_SAMPLES / 2;
-        bytes           = samples_in_fifo * sizeof(codec_int);
+#endif
+        bytes = samples_in_fifo * sizeof(codec_int);
 
         sTlkDrvCodecCtrl.spkOffset = ((dma_rptr + bytes) & (gTlkDrvCodecSpkBuffLen - 1)) / type_size * type_size;
 
@@ -1036,7 +1223,11 @@ _attribute_ram_code_sec_ uint32_t tlkdrv_codec_get_speaker_rptr(void)
     } else
 #endif
     {
-        return ((audio_get_tx_dma_rptr(TLKDRV_CODEC_SPK_DMA) - (uint32_t)gpTlkDrvCodecSpkBuffer) / sizeof(codec_int));
+#if (MCU_CORE_TL752X_TEMP && AUDIO_DAC_DMA_LLP_EN)
+        return ((audio_get_tx_dma_rptr(&audio_dac_dmac_handle) - (uint32_t)gpTlkDrvCodecSpkBuffer) / sizeof(codec_int));
+#else
+        return ((audio_get_tx_dma_rptr(gTlkdrvCodecSpkDmaChn) - (uint32_t)gpTlkDrvCodecSpkBuffer) / sizeof(codec_int));
+#endif
     }
 }
 
@@ -1048,7 +1239,7 @@ _attribute_ram_code_sec_ uint32_t tlkdrv_codec_get_speaker_rptr(void)
 uint32_t tlkdrv_codec_get_mic_wptr(void)
 {
 #if !MCU_CORE_TL752X_TEMP
-    return ((audio_get_rx_dma_wptr(TLKDRV_CODEC_MIC_DMA) - (uint32_t)gpTlkDrvCodecMicBuffer) / sizeof(adc_int));
+    return ((audio_get_rx_dma_wptr(gTlkdrvCodecMicDmaChn) - (uint32_t)gpTlkDrvCodecMicBuffer) / sizeof(adc_int));
 #else
     return 0;
 #endif
@@ -1062,7 +1253,11 @@ uint32_t tlkdrv_codec_get_mic_wptr(void)
 uint32_t tlkdrv_codec_sync_mic_samples(uint16_t samples)
 {
     uint16_t wptr;
-    wptr = (audio_get_rx_dma_wptr(TLKDRV_CODEC_MIC_DMA)) - ((uint32_t)gpTlkDrvCodecMicBuffer);
+#if (MCU_CORE_TL752X_TEMP && AUDIO_ADC_DMA_LLP_EN)
+    wptr = (audio_get_rx_dma_wptr(&audio_adc_dmac_handle)) - ((uint32_t)gpTlkDrvCodecMicBuffer);
+#else
+    wptr = (audio_get_rx_dma_wptr(gTlkdrvCodecMicDmaChn)) - ((uint32_t)gpTlkDrvCodecMicBuffer);
+#endif
 
     wptr = wptr / sizeof(adc_int) * sizeof(adc_int); //align ptr by sample
 
@@ -1090,7 +1285,7 @@ _attribute_ram_code_sec_ void tlkdrv_codec_sync_speaker_samples(uint16_t samples
     } else
 #endif
     {
-        dma_rptr = (audio_get_tx_dma_rptr(TLKDRV_CODEC_SPK_DMA)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+        dma_rptr = (audio_get_tx_dma_rptr(gTlkdrvCodecSpkDmaChn)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
     }
 
     bytes = samples * sizeof(codec_int);
@@ -1111,17 +1306,34 @@ _attribute_ram_code_sec_ void tlkdrv_codec_sync_speaker_samples(uint16_t samples
  */
 int tlkdrv_codec_init_env(void)
 {
-#if (!PROJ_RECORDING_CARD)
 #if TLK_DEV_CODEC_SPK_ENABLE
     tlkdrv_codec_setSpkBuffer((uint8_t *)g_codec_spk_buff, CODEC_SPK_FIFO_SAMPLES * sizeof(codec_int));
     tmemset((uint8_t *)g_codec_spk_buff, 0, CODEC_SPK_FIFO_SAMPLES * sizeof(codec_int));
 #endif
+
 #if TLK_DEV_CODEC_MIC_ENABLE
+#if (!PROJ_RECORDING_CARD)
     tlkdrv_codec_setMicBuffer((uint8_t *)g_codec_mic_buff, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_int));
     tmemset((uint8_t *)g_codec_mic_buff, 0, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_int));
-#endif
+#else
+#if (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN)
+    tlkdrv_codec_setMicBuffer((uint8_t *)g_codec_mic_buff, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_4ch_int));
+    tmemset((uint8_t *)g_codec_mic_buff, 0, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_4ch_int));
+
+    tlkdrv_codec_setMicBuffer_1((uint8_t *)g_codec_mic2_buff, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_int));
+    tmemset((uint8_t *)g_codec_mic2_buff, 0, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_int));
+
+#elif (TLKALG_BBF_ENABLE == TLKALG_BBF_4CH_EN)
+    tlkdrv_codec_setMicBuffer((uint8_t *)g_codec_mic_buff, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_4ch_int));
+    tmemset((uint8_t *)g_codec_mic_buff, 0, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_4ch_int));
+#elif (TLKALG_BBF_ENABLE == TLKALG_BBF_2CH_EN)
+    tlkdrv_codec_setMicBuffer((uint8_t *)g_codec_mic_buff, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_int));
+    tmemset((uint8_t *)g_codec_mic_buff, 0, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_int));
 #else
     tlkdrv_codec_setMicBuffer((uint8_t *)g_codec_mic_buff, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_mono_int));
+    tmemset((uint8_t *)g_codec_mic_buff, 0, CODEC_MIC_FIFO_SAMPLES * sizeof(adc_mono_int));
+#endif
+#endif
 #endif
 
 
@@ -1170,7 +1382,8 @@ int tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_ENUM subDev, uint8_t channel, uint8_t 
     }
 
     if ((subDev & TLKDRV_CODEC_SUBDEV_SPK) != 0) {
-        tlkdrv_codec_fade_in_init(fadeInTimeMs);
+        (void)fadeInTimeMs;
+        tlkdrv_codec_fade_in_init(0);
     }
 
     uint32_t used_time = clock_time() - begin_time;

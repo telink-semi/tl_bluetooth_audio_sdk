@@ -117,10 +117,8 @@ static inline void tlkdrv_dsp_power_down(void)
 static void tlkdrv_dsp_boot_protect(uint8_t en)
 {
     if (en) {
-        tlkmdi_tinySql_suspendSave();
         tlksys_pm_setChn(TLKSYS_PM_CHN_DSP, 0, 1);
     } else {
-        tlkmdi_tinySql_resumeSave();
         tlksys_pm_setChn(TLKSYS_PM_CHN_DSP, 0, 0);
     }
 }
@@ -182,7 +180,9 @@ void tlkdrv_dsp_resume(void)
     switch (sTlkdrvDspNowState) {
     case TLKDRV_DSP_STATE_NOINIT:
         tlkdrv_dsp_boot_protect(1);
+        tlkos_task_suspendAll();
         tlkdrv_dsp_core_boot();
+        tlkos_task_resumeAll();
         sTlkdrvDspNowState = TLKDRV_DSP_STATE_BOOTING;
         tlksys_timer_start(TLKSYS_TASKID_AUDIO, &sTlkdrvDspTmr);
         break;

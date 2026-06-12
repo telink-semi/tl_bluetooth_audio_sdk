@@ -234,13 +234,13 @@ static int tlkdrv_icodec_close(uint8_t subDev)
 {
     if ((subDev & TLKDRV_CODEC_SUBDEV_MIC) != 0) {
         sTlkDrvIcodecCtrl.codec_mic_cfg.IsOpen = false;
-        audio_rx_dma_dis(TLKDRV_CODEC_MIC_DMA);
+        audio_rx_dma_dis(gTlkdrvCodecMicDmaChn);
     }
 
     if ((subDev & TLKDRV_CODEC_SUBDEV_SPK) != 0) {
         sTlkDrvIcodecCtrl.codec_spk_cfg.IsOpen = false;
         audio_dac_mute();
-        audio_tx_dma_dis(TLKDRV_CODEC_SPK_DMA);
+        audio_tx_dma_dis(gTlkdrvCodecSpkDmaChn);
     }
 
 #if (CODEC_INPUT_MODE == CODEC_INPUT_DMIC)
@@ -489,7 +489,7 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
     inputParam.sample_rate   = micSRate;
     inputParam.fifo_num      = TLKDRV_CODEC_MIC_FIFO;
     inputParam.data_width    = micDWdith;
-    inputParam.dma_num       = TLKDRV_CODEC_MIC_DMA;
+    inputParam.dma_num       = gTlkdrvCodecMicDmaChn;
     inputParam.data_buf      = gpTlkDrvCodecMicBuffer;
     inputParam.data_buf_size = gTlkDrvCodecMicBuffLen;
     audio_codec_stream0_input_init(&inputParam);
@@ -505,7 +505,7 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
 #endif
 
     audio_rx_dma_chain_init(inputParam.fifo_num, inputParam.dma_num, (unsigned short *)inputParam.data_buf, inputParam.data_buf_size);
-    audio_rx_dma_en(TLKDRV_CODEC_MIC_DMA);
+    audio_rx_dma_en(gTlkdrvCodecMicDmaChn);
 
     return TLK_ENONE;
 }
@@ -551,7 +551,7 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
     outputParam.sample_rate = spkSRate;
     outputParam.fifo_num    = TLKDRV_CODEC_SPK_FIFO;
     outputParam.data_width  = spkDWdith;
-    outputParam.dma_num     = TLKDRV_CODEC_SPK_DMA;
+    outputParam.dma_num     = gTlkdrvCodecSpkDmaChn;
     outputParam.mode        = HP_MODE;
 #if (AUDIO_CODEC_LOOPBACK)
     outputParam.data_buf      = gpTlkDrvCodecMicBuffer;
@@ -562,7 +562,7 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
 #endif
     audio_codec_stream_output_init(&outputParam);
     audio_tx_dma_chain_init(outputParam.fifo_num, outputParam.dma_num, (unsigned short *)outputParam.data_buf, outputParam.data_buf_size);
-    audio_tx_dma_en(TLKDRV_CODEC_SPK_DMA);
+    audio_tx_dma_en(gTlkdrvCodecSpkDmaChn);
     audio_dac_unmute();
 
     return TLK_ENONE;

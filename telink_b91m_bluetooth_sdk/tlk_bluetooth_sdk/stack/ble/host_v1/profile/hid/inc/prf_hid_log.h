@@ -29,19 +29,19 @@ extern const uint8_t g_ble_hid_prf_log_enable;
 extern const uint8_t g_ble_hid_log_enable;
 extern const uint8_t g_ble_hid_iso_log_enable;
 
-#define BLE_HID_PRF_LOG(log, en, str, ...)  \
-    do {                                         \
-        if (en && g_ble_hid_prf_log_enable) { \
-            log("[B-PRF]" str, ##__VA_ARGS__);   \
-        }                                        \
+#define BLE_HID_PRF_LOG(log, en, str, ...)     \
+    do {                                       \
+        if (en && g_ble_hid_prf_log_enable) {  \
+            log("[B-PRF]" str, ##__VA_ARGS__); \
+        }                                      \
     } while (0)
 
-#define BLE_HID_ERROR(str, ...)    BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_ERROR, g_ble_hid_log_enable, "[HID]"str, ##__VA_ARGS__)
-#define BLE_HID_WARN(str, ...)     BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_WARN, g_ble_hid_log_enable, "[HID]"str, ##__VA_ARGS__)
-#define BLE_HID_INFO(str, ...)     BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_INFO, g_ble_hid_log_enable, "[HID]"str, ##__VA_ARGS__)
-#define BLE_HID_DEBUG(str, ...)    BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_DEBUG, g_ble_hid_log_enable, "[HID]"str, ##__VA_ARGS__)
+#define BLE_HID_ERROR(str, ...)     BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_ERROR, g_ble_hid_log_enable, "[HID]" str, ##__VA_ARGS__)
+#define BLE_HID_WARN(str, ...)      BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_WARN, g_ble_hid_log_enable, "[HID]" str, ##__VA_ARGS__)
+#define BLE_HID_INFO(str, ...)      BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_INFO, g_ble_hid_log_enable, "[HID]" str, ##__VA_ARGS__)
+#define BLE_HID_DEBUG(str, ...)     BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_DEBUG, g_ble_hid_log_enable, "[HID]" str, ##__VA_ARGS__)
 
-#define BLE_HID_ISO_ERROR(str, ...)    BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_ERROR, g_ble_hid_iso_log_enable, "[HID_ISOS]"str, ##__VA_ARGS__)
-#define BLE_HID_ISO_WARN(str, ...)     BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_WARN, g_ble_hid_iso_log_enable, "[HID_ISOS]"str, ##__VA_ARGS__)
-#define BLE_HID_ISO_INFO(str, ...)     BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_INFO, g_ble_hid_iso_log_enable, "[HID_ISOS]"str, ##__VA_ARGS__)
-#define BLE_HID_ISO_DEBUG(str, ...)    BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_DEBUG, g_ble_hid_iso_log_enable, "[HID_ISOS]"str, ##__VA_ARGS__)
+#define BLE_HID_ISO_ERROR(str, ...) BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_ERROR, g_ble_hid_iso_log_enable, "[HID_ISOS]" str, ##__VA_ARGS__)
+#define BLE_HID_ISO_WARN(str, ...)  BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_WARN, g_ble_hid_iso_log_enable, "[HID_ISOS]" str, ##__VA_ARGS__)
+#define BLE_HID_ISO_INFO(str, ...)  BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_INFO, g_ble_hid_iso_log_enable, "[HID_ISOS]" str, ##__VA_ARGS__)
+#define BLE_HID_ISO_DEBUG(str, ...) BLE_HID_PRF_LOG(BLE_HOST_SAL_LOG_DEBUG, g_ble_hid_iso_log_enable, "[HID_ISOS]" str, ##__VA_ARGS__)

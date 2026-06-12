@@ -35,7 +35,7 @@ int tlkmdi_tinySql_getBtMacAddress(uint8_t *recBuffer);
  * @param[in] inBuffer The buffer containing the new MAC address for the Classic Bluetooth device.
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
-int tlkmdi_tinySql_SetBtMacAddress(uint8_t *inBuffer);
+int tlkmdi_tinySql_setBtMacAddress(uint8_t *inBuffer);
 
 /**
  * @brief   Retrieves the MAC address of the Low Energy Bluetooth (BLE) device.

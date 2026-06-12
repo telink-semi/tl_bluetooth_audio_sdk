@@ -27,10 +27,10 @@
 #include "tlklib/os/tlkos_config.h"
 
 #if TLKOS_CFG_FREERTOS_ENABLE
-    #include "tlklib/os/tlkos_api/tlkos_define.h"
-    #include "tlklib/os/3rd-party/freertos-V5/include/FreeRTOS.h"
-    #include "tlklib/os/3rd-party/freertos-V5/portable/GCC/RISC-V/portmacro.h"
-    #include "tlklib/os/3rd-party/freertos-V5/include/semphr.h"
+#include "tlklib/os/tlkos_api/tlkos_define.h"
+#include "tlklib/os/3rd-party/freertos-V5/include/FreeRTOS.h"
+#include "tlklib/os/3rd-party/freertos-V5/portable/GCC/RISC-V/portmacro.h"
+#include "tlklib/os/3rd-party/freertos-V5/include/semphr.h"
 
 /**
  * @brief     Creates a mutex.
@@ -39,10 +39,41 @@
  */
 int tlkos_mutex_create(TlkOsMutexHandle_t *mutexHandle)
 {
-    if (mutexHandle == NULL) {
-        return -TLK_EPARAM;
-    }
+    TLKOS_ASSERT(mutexHandle != NULL);
     *mutexHandle = xSemaphoreCreateMutex();
+    return TLK_ENONE;
+}
+
+/**
+ * @brief     Creates multiple mutexes in one memory block.
+ * @param[out] mutexHandles Array to store created mutex handles.
+ * @param[in]  count        Number of mutexes to create.
+ * @returns   0 indicates success, other values indicate error codes.
+ * @note      Must use tlkos_mutex_destroyMultiple to destory all.
+ */
+int tlkos_mutex_createMultiple(TlkOsMutexHandle_t *mutexHandles, uint32_t count)
+{
+    TLKOS_ASSERT(mutexHandles != NULL);
+    TLKOS_ASSERT(count != 0);
+
+    uint32_t totalSize = count * sizeof(StaticSemaphore_t);
+
+    StaticSemaphore_t *pBuffer = (StaticSemaphore_t *)tlkos_malloc(totalSize);
+    if (pBuffer == NULL) {
+        return -TLK_ENOMEM;
+    }
+
+    for (uint32_t i = 0; i < count; i++) {
+        mutexHandles[i] = xSemaphoreCreateMutexStatic(&pBuffer[i]);
+        if (mutexHandles[i] == NULL) {
+            for (uint16_t j = 0; j < i; j++) {
+                vSemaphoreDelete((QueueHandle_t)mutexHandles[j]);
+            }
+            tlkos_free(pBuffer);
+            return -TLK_EFAIL;
+        }
+    }
+
     return TLK_ENONE;
 }
 
@@ -61,6 +92,28 @@ int tlkos_mutex_destroy(TlkOsMutexHandle_t mutexHandle)
 }
 
 /**
+ * @brief     Destroys multiple mutexes created by createMultiple.
+ * @param[in]  mutexHandles Array of mutex handles to destroy.
+ * @param[in]  count        Number of mutexes to destroy.
+ * @returns   0 indicates success, other values indicate error codes.
+ */
+int tlkos_mutex_destroyMultiple(TlkOsMutexHandle_t *mutexHandles, uint32_t count)
+{
+    TLKOS_ASSERT(mutexHandles != NULL);
+    TLKOS_ASSERT(count != 0);
+
+    void *pBase = (void *)mutexHandles[0];
+
+    for (uint32_t i = 0; i < count; i++) {
+        vSemaphoreDelete(mutexHandles[i]);
+        mutexHandles[i] = NULL;
+    }
+
+    tlkos_free(pBase);
+    return TLK_ENONE;
+}
+
+/**
  * @brief     Locks a mutex.
  * @param[in] mutexHandle Handle of the mutex to lock.
  * @returns   0 indicates success, other values indicate corresponding error codes.
@@ -70,7 +123,12 @@ int tlkos_mutex_lock(TlkOsMutexHandle_t mutexHandle)
     if (mutexHandle == NULL) {
         return -TLK_EPARAM;
     }
-    BaseType_t ret = xSemaphoreTake((QueueHandle_t)(mutexHandle), portMAX_DELAY);
+    BaseType_t waitTick = portMAX_DELAY;
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED) {
+        waitTick = 0;
+    }
+    BaseType_t ret = xSemaphoreTake((QueueHandle_t)(mutexHandle), waitTick);
+    configASSERT(ret == pdTRUE);
     return ret == pdTRUE ? TLK_ENONE : -TLK_EFAIL;
 }
 
@@ -95,10 +153,41 @@ int tlkos_mutex_unlock(TlkOsMutexHandle_t mutexHandle)
  */
 int tlkos_recursiveMutex_create(TlkOsMutexHandle_t *recursiveMutexHandle)
 {
-    if (recursiveMutexHandle == NULL) {
-        return -TLK_EPARAM;
-    }
+    TLKOS_ASSERT(recursiveMutexHandle != NULL);
     *recursiveMutexHandle = xSemaphoreCreateRecursiveMutex();
+    return TLK_ENONE;
+}
+
+/**
+ * @brief     Creates multiple recursive mutexes in one memory block.
+ * @param[out] mutexHandles Array to store created mutex handles.
+ * @param[in]  count        Number of mutexes to create.
+ * @returns   0 indicates success, other values indicate error codes.
+ * @note      Must use tlkos_mutex_destroyMultiple to destory all.
+ */
+int tlkos_recursiveMutex_createMultiple(TlkOsMutexHandle_t *mutexHandles, uint32_t count)
+{
+    TLKOS_ASSERT(mutexHandles != NULL);
+    TLKOS_ASSERT(count != 0);
+
+    uint32_t totalSize = count * sizeof(StaticSemaphore_t);
+
+    StaticSemaphore_t *pBuffer = (StaticSemaphore_t *)tlkos_malloc(totalSize);
+    if (pBuffer == NULL) {
+        return -TLK_ENOMEM;
+    }
+
+    for (uint32_t i = 0; i < count; i++) {
+        mutexHandles[i] = xSemaphoreCreateRecursiveMutexStatic(&pBuffer[i]);
+        if (mutexHandles[i] == NULL) {
+            for (uint16_t j = 0; j < i; j++) {
+                vSemaphoreDelete((QueueHandle_t)mutexHandles[j]);
+            }
+            tlkos_free(pBuffer);
+            return -TLK_EFAIL;
+        }
+    }
+
     return TLK_ENONE;
 }
 
@@ -112,7 +201,12 @@ int tlkos_recursiveMutex_lock(TlkOsMutexHandle_t recursiveMutexHandle)
     if (recursiveMutexHandle == NULL) {
         return -TLK_EPARAM;
     }
-    BaseType_t ret = xSemaphoreTakeRecursive((QueueHandle_t)(recursiveMutexHandle), portMAX_DELAY);
+    BaseType_t waitTick = portMAX_DELAY;
+    if (xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED) {
+        waitTick = 0;
+    }
+    BaseType_t ret = xSemaphoreTakeRecursive((QueueHandle_t)(recursiveMutexHandle), waitTick);
+    configASSERT(ret == pdTRUE);
     return ret == pdTRUE ? TLK_ENONE : -TLK_EFAIL;
 }
 

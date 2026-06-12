@@ -24,13 +24,13 @@
 #ifndef TLKMDI_A2DP_OUT_H
 #define TLKMDI_A2DP_OUT_H
 
-#define TLKMDI_A2DP_OUT_TYPE_NONE                0x00
-#define TLKMDI_A2DP_OUT_TYPE_LINEIN              0x01//TODO: Rework complex sounds.
-#define TLKMDI_A2DP_OUT_TYPE_USB_AUDIO           0x02
-#define TLKMDI_A2DP_OUT_TYPE_SINE_WAVE           0x03
+#define TLKMDI_A2DP_OUT_TYPE_NONE            0x00
+#define TLKMDI_A2DP_OUT_TYPE_LINEIN          0x01 //TODO: Rework complex sounds.
+#define TLKMDI_A2DP_OUT_TYPE_USB_AUDIO       0x02
+#define TLKMDI_A2DP_OUT_TYPE_SINE_WAVE       0x03
 
 
-#define TLKMDI_A2DP_OUT_FRAME_SIZE           84      //85 //For 32bitPool
+#define TLKMDI_A2DP_OUT_FRAME_SIZE           84 //85 //For 32bitPool
 #define TLKMDI_A2DP_OUT_PKT_BUFF_SIZE        680
 #define TLKMDI_A2DP_OUT_SBC_ENC_BUFF_SIZE    3368
 #define TLKMDI_A2DP_OUT_FRAME_MAX_NUMB       7       //(TLKMDI_SRC_PKT_BUFF_SIZE-13)/TLKMDI_SRC_FRAME_SIZE
@@ -39,28 +39,25 @@
 
 typedef struct
 {
-    uint8_t startflag :1;
-    uint8_t isNeedAsrc:1;
-    uint8_t running   :1;
-    uint8_t enable    :1;
-    uint16_t resv12bit:12;
+    uint8_t  startflag  : 1;
+    uint8_t  isNeedAsrc : 1;
+    uint8_t  running    : 1;
+    uint8_t  enable     : 1;
+    uint16_t resv12bit  : 12;
     uint16_t handle;
 
-    uint8_t sendFail;
     uint8_t cacheFrm; //Cache Frames
     uint8_t waitFlag;
     uint8_t waitStart;
 
     uint8_t sndFrame;
-    uint8_t isSuppSet;
     uint8_t pktNumb; //Frame number in one media packet
     uint8_t frmSize; //85
 
-
     uint16_t seqNumber;
-    uint16_t pktTime; //128*pktNumb
-    uint16_t samples_per_frame;
-    uint16_t playtimePerFrame;
+    uint16_t pktTime;           //128*pktNumb
+    uint16_t samples_per_frame; //The playback time of one frame of SBC(tick)
+    uint16_t playtimePerFrame;  //The playback time of one frame of SBC(us)
 
     uint32_t refTime;
     uint32_t lagTime;
@@ -71,7 +68,9 @@ typedef struct
 
     uint8_t *pA2dpFramesBuff;
     uint8_t *pA2dpEncBuff;
+#if (TLK_ALG_PPM_ENABLE && TLKALG_PPM_SPK_ENABLE)
     uint8_t *pA2dpPPMBuff;
+#endif
 } tlkmdi_a2dp_out_ctrl_t;
 
 typedef enum
@@ -162,4 +161,4 @@ void tlkmdi_a2dp_out_timer(void);
  */
 int tlkmdi_a2dp_out_init(void);
 
-#endif//TLKMDI_A2DP_OUT_H
+#endif //TLKMDI_A2DP_OUT_H

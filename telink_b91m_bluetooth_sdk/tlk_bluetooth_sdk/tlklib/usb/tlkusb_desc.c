@@ -137,6 +137,16 @@ uint8_t *tlkusb_getSerialDesc(uint8_t mode)
     return pDesc;
 }
 
+uint8_t *tlkusb_getSerial1Desc(uint8_t mode)
+{
+    uint8_t *pDesc;
+    pDesc = tlkusb_module_getStringDesc(mode, TLKUSB_STRING_INDEX_SERIAL1);
+    if (pDesc == NULL) {
+        pDesc = (uint8_t *)(&sMmiUsbSerialDesc);
+    }
+    return pDesc;
+}
+
 /**
  * @brief       This function gets the language descriptor length based on the mode.
  * @param[in]   mode    - the USB mode.
@@ -191,6 +201,16 @@ uint16_t tlkusb_getSerialLens(uint8_t mode)
 {
     uint16_t descLen;
     descLen = tlkusb_module_getStringLens(mode, TLKUSB_STRING_INDEX_SERIAL);
+    if (descLen == 0) {
+        descLen = sizeof(TLKUSB_STRING_SERIAL);
+    }
+    return descLen;
+}
+
+uint16_t tlkusb_getSerial1Lens(uint8_t mode)
+{
+    uint16_t descLen;
+    descLen = tlkusb_module_getStringLens(mode, TLKUSB_STRING_INDEX_SERIAL1);
     if (descLen == 0) {
         descLen = sizeof(TLKUSB_STRING_SERIAL);
     }

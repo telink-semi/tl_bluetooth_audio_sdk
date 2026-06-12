@@ -51,6 +51,16 @@ typedef struct
 
 static Linkmgr_t sTlkmdiInterPhoneLinkmgr = {0};
 
+uint8_t tlkmdi_interphone_linkmgr_isenable(void)
+{
+    return sTlkmdiInterPhoneLinkmgr.enable;
+}
+
+void tlkmdi_linkmgr_callback(uint16_t handle, bool isTrue)
+{
+    sTlkmdiInterPhoneLinkmgr.cb(handle, isTrue);
+}
+
 //Arrangement must be made in the following order:
 //opened -> paused -> idle -> closed
 
@@ -86,11 +96,11 @@ static inline bool prv_link_state2open(uint8_t index)
         return false;
     }
     uint8_t newPos = 0;
-    for (; newPos < MAX_LINK_NUM; newPos++) {
-        if (link[newPos].state != TLK_STATE_OPENED) {
-            break;
-        }
-    }
+    // for(; newPos < MAX_LINK_NUM; newPos++){
+    //     if(link[newPos].state != TLK_STATE_OPENED){
+    //         break;
+    //     }
+    // }
     uint16_t handle = link[index].handle;
     memmove(&link[newPos + 1], &link[newPos], (index - newPos) * sizeof(Linkinfo_t));
     link[newPos].handle = handle;
@@ -112,7 +122,12 @@ static inline bool prv_link_state2paused(uint8_t index)
     uint8_t  newPos = index + 1;
     uint16_t handle = link[index].handle;
     if (index == 0 && sTlkmdiInterPhoneLinkmgr.enable) {
-        sTlkmdiInterPhoneLinkmgr.cb(handle, false);
+#if TLK_CHECK_REMOTE_DEV
+        if (!(tlkmdi_interphone_get_mode() & INTERPHONE_MODE_AG))
+#endif
+        {
+            sTlkmdiInterPhoneLinkmgr.cb(handle, false);
+        }
     }
     for (; newPos < MAX_LINK_NUM; newPos++) {
         if (link[newPos].state != TLK_STATE_OPENED) {
@@ -220,13 +235,34 @@ static void tlkmdi_interphone_music_state_chg_cb(uint16_t handle, uint8_t state)
     if (index == MAX_LINK_NUM) {
         return;
     }
+#if TLK_CHECK_REMOTE_DEV
+    bth_aclGetNameReportEvt_t *info_t = (bth_aclGetNameReportEvt_t *)tlkmdi_btacl_get_remote_dev();
+#endif
     bool needSch      = false;
     bool isNeedRefuse = false;
     switch (state) {
     case TLK_STATE_OPENED:
+        if (tlkmdi_interphone_get_mode() & INTERPHONE_MODE_AG) {
+#if TLK_CHECK_REMOTE_DEV
+            info_t->resume_music = 1;
+            info_t->music_handle = handle;
+#endif
+        }
+        if (sTlkmdiInterPhoneLinkmgr.enable) {
+            uint16_t handle_old = tlkmdi_interphone_linkmgr_getRunningHandle();
+            if ((handle_old != handle) && (!(tlkmdi_interphone_get_mode() & INTERPHONE_MODE_AG))) {
+                tlkmdi_interphone_clear_mode(INTERPHONE_MODE_MUSIC);
+                sTlkmdiInterPhoneLinkmgr.cb(handle_old, false);
+            }
+        }
         needSch = prv_link_state2open(index);
         break;
     case TLK_STATE_PAUSED:
+#if TLK_CHECK_REMOTE_DEV
+        if (tlkmdi_interphone_get_mode() & INTERPHONE_MODE_AG) {
+            info_t->resume_music = 0;
+        }
+#endif
         needSch      = prv_link_state2paused(index);
         isNeedRefuse = true;
         break;
@@ -242,6 +278,11 @@ static void tlkmdi_interphone_music_state_chg_cb(uint16_t handle, uint8_t state)
         tlkmdi_interphone_linkmgr_debug();
         return; // no need sch
     }
+#if TLK_CHECK_REMOTE_DEV
+    if (tlkmdi_interphone_get_mode() & INTERPHONE_MODE_AG) {
+        return;
+    }
+#endif
     handle = tlkmdi_interphone_linkmgr_getRunningHandle();
     if (handle == 0) {
         tlkmdi_interphone_clear_mode(INTERPHONE_MODE_MUSIC);
@@ -251,6 +292,7 @@ static void tlkmdi_interphone_music_state_chg_cb(uint16_t handle, uint8_t state)
     uint8_t isRunning = sTlkmdiInterPhoneLinkmgr.enable;
     tlkmdi_interphone_set_mode(INTERPHONE_MODE_MUSIC);
     if (isRunning) {
+        // tlkmdi_interphone_set_mode(INTERPHONE_MODE_MUSIC);
         sTlkmdiInterPhoneLinkmgr.cb(handle, true);
     }
     if (isNeedRefuse) {

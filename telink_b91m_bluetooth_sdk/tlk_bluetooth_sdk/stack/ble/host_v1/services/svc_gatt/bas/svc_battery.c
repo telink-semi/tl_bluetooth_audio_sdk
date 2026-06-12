@@ -61,15 +61,15 @@ static const uint16_t                         basBatteryPowerStateValueLen = siz
  * @brief the structure for default BAS service List.
  */
 static const struct atts_attribute basList[] = {
-    ATTS_PRIMARY_SERVICE(serviceBatteryUuid),
+    ATTS_PRIMARY_SERVICE(serviceBatteryAttUuid),
 
     //Battery level
-    ATTS_CHAR_UUID_READ_ENTITY_CB(charPropReadNotify, characteristicBatteryLevelUuid, basBatteryLevelValue),
+    ATTS_CHAR_UUID_READ_ENTITY_CB(charPropReadNotify, characteristicBatteryLevelAttUuid, basBatteryLevelValue),
     ATTS_COMMON_CCC_DEFINE,
 
 #if BAS_BATTERY_POWER_STATE
     //Battery Power State
-    ATTS_CHAR_UUID_READ_ENTITY_CB(charPropReadNotify, characteristicBatteryPowerStateUuid, basBatteryPowerStateValue),
+    ATTS_CHAR_UUID_READ_ENTITY_CB(charPropReadNotify, characteristicBatteryPowerStateAttUuid, basBatteryPowerStateValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 };

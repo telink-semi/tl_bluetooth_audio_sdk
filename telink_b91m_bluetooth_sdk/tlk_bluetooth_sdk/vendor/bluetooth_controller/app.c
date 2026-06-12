@@ -34,11 +34,11 @@
 #include "app_config.h"
 #if (BLUETOOTH_CONTROLLER_752X_TEMP && MCU_CORE_TYPE == MCU_CORE_TL752X)
 #include "drv_cpr.h"
-#include "drv_gpio.h"
+//#include "drv_gpio.h"
 #include "drv_uart.h"
 #include <stdio.h>
 #include <string.h>
-#include "drv_pmu_ex.h"
+//#include "drv_pmu_ex.h"
 #include "stack/multiCoreComm/service/service_shareMemory.h"
 #include "stack/bt/host/bth/bth_hcicmd.h"
 /*************************** macro definition ********************************/
@@ -64,6 +64,8 @@ void tlkapp_sys_taskInitCompletedHook(void)
 {
     tlkos_task_create((TlkOsTaskEnterCB)bqb_scan_test, "bqb_scan_test", 4096, 1, NULL, NULL, NULL);
 }
+#elif (BT_EMI_D25F_TEST == 1)
+
 
 #else
 #define MAX_UART_RX_BUF (100)
@@ -235,7 +237,7 @@ static void tlk_controller_init(void)
 
     trng_init();
     /* initialize some basic MCU hardware */
-    tlksdk_init_mcu_hardware();
+    tlk_sys_init_mcu_hardware();
 
 #if BLUETOOTH_CONTROLLER_MODE == BT_BLE_CONTROLLER_MODE
     controller_init(BT_BLE, HCI_TR_H4, &hci_tr_uart, NULL);
@@ -246,9 +248,9 @@ static void tlk_controller_init(void)
 #endif
     //////////////////////////// basic hardware Initialization  End /////////////////////////////////
 
-    tlksdk_sch_init();
+    tlk_sch_init();
 
-    tlksdk_sch_set_base_interval(PLAN_INTERVAL_10MS);
+    tlk_sch_plan_set_base_interval(PLAN_INTERVAL_10MS);
 
     tlkapi_printf(APP_LOG_EN, "[APP][INI] bluetooth controller init");
 #endif

@@ -31,7 +31,7 @@
  * @brief   software PA enable
  */
 #ifndef PA_ENABLE
-    #define PA_ENABLE 0
+#define PA_ENABLE 0
 #endif
 
 
@@ -39,14 +39,14 @@
  * @brief   GPIO to control PA TX EN, user should set it in app_config.h
  */
 #ifndef PA_TXEN_PIN
-    #define PA_TXEN_PIN GPIO_PB2
+#define PA_TXEN_PIN GPIO_PB2
 #endif
 
 /**
  * @brief   GPIO to control PA RX EN, user should set it in app_config.h
  */
 #ifndef PA_RXEN_PIN
-    #define PA_RXEN_PIN GPIO_PB3
+#define PA_RXEN_PIN GPIO_PB3
 #endif
 
 

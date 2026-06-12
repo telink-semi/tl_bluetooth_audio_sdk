@@ -66,7 +66,7 @@ int bth_hci_sendInquiryCmd(uint8_t period, uint8_t numRsp)
     tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendInquiryCmd");
 
     buffLen           = 0;
-    buffer[buffLen++] = 0x33; // LAP
+    buffer[buffLen++] = 0x33; // LAP - 0x9E8B33:General Inquiry Access Code
     buffer[buffLen++] = 0x8b;
     buffer[buffLen++] = 0x9e;
     buffer[buffLen++] = period; // Inquiry_Length: Maximum amount of time specified before the Inquiry is halted.
@@ -302,7 +302,7 @@ int bth_hci_sendPinCodeReqReplyCmd(uint8_t mac[6], uint8_t *pPinCode, uint8_t pi
     uint8_t buffLen;
     uint8_t buffer[32] = {0};
 
-    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendPinCodeReqReplyCmd");
+    tlkapi_array(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendPinCodeReqReplyCmd", pPinCode, pinlen);
 
     buffLen = 0;
     tmemcpy(&buffer[buffLen], mac, 6); // BD_ADDR
@@ -758,6 +758,19 @@ int bth_hci_sendSwitchRoleReqCmd(uint8_t mac[6], uint8_t role)
     return tlkbt_hci_sendH2cCmd(HCI_SWITCH_ROLE_CMD_OPCODE, buffer, buffLen);
 }
 
+int bth_hci_sendWriteDefaultLinkPolicy(uint16_t default_policy_settings)
+{
+    uint8_t buffLen;
+    uint8_t buffer[4];
+
+    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendWriteDefaultLinkPolicy, default_policy_settings = %d", default_policy_settings);
+
+    buffLen           = 0;
+    buffer[buffLen++] = (default_policy_settings & 0x00FF); // Connection_Handle
+    buffer[buffLen++] = (default_policy_settings & 0xFF00) >> 8;
+    return tlkbt_hci_sendH2cCmd(HCI_WR_DFT_LINK_POL_STG_CMD_OPCODE, buffer, buffLen);
+}
+
 /******************************************************************************
  * Function: bth_hci_sendWriteLinkPolicy
  * Descript: Set the link governor policy.
@@ -771,7 +784,7 @@ int bth_hci_sendWriteLinkPolicy(uint16_t connHandle, uint16_t policySettings)
     uint8_t buffLen;
     uint8_t buffer[16];
 
-    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendWriteLinkPolicy");
+    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendWriteLinkPolicy, connHandle = %d, policySettings = %x", connHandle, policySettings);
 
     buffLen           = 0;
     buffer[buffLen++] = (connHandle & 0x00FF); // Connection_Handle
@@ -870,7 +883,7 @@ int bth_hci_sendWritePageTimeoutCmd(uint16_t timeout)
     uint8_t buffLen;
     uint8_t buffer[16];
 
-    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendWritePageTimeoutCmd");
+    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendWritePageTimeoutCmd timeout[%d]", timeout);
 
     buffLen           = 0;
     buffer[buffLen++] = (timeout & 0x00FF); // Page_Timeout
@@ -1117,6 +1130,25 @@ int bth_hci_sendReadSecureConnHostSupportCmd(void)
 }
 
 /******************************************************************************
+ * Function: bth_hci_sendReadTcfInfoCmd
+ * Descript: Run the HCI command to enable the low-level security connection function.
+ * Params: None.
+ * Return: TLK_ENONE is success, other value is failure.
+ *******************************************************************************/
+int bth_hci_sendReadTcfInfoCmd(uint16_t aclHandle)
+{
+    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendReadTcfInfoCmd");
+    uint8_t buffLen;
+    uint8_t buffer[16];
+
+
+    buffLen           = 0;
+    buffer[buffLen++] = (aclHandle & 0x00FF); // Handle
+    buffer[buffLen++] = (aclHandle & 0xFF00) >> 8;
+    return tlkbt_hci_sendH2cCmd(HCI_RD_TCF_INFO_CMD_OPCODE, buffer, buffLen);
+}
+
+/******************************************************************************
  * Function: bth_hci_sendWriteSecureConnHostSupportCmd
  * Descript: Run the HCI command to control whether the underlying security
  *           connection function is enabled.
@@ -1138,6 +1170,18 @@ int bth_hci_sendWriteSecureConnHostSupportCmd(uint8_t isSupport)
         buffer[buffLen++] = 0;
     }
     return tlkbt_hci_sendH2cCmd(HCI_WR_SEC_CON_HOST_SUPP_CMD_OPCODE, buffer, buffLen);
+}
+
+int bth_hci_sendWriteLeHostSupportCmd(uint8_t isSupport)
+{
+    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendWriteLeHostSupportCmd");
+
+    /*  0x00 LE Supported (Host) disabled (default)
+        0x01 LE Supported (Host) enabled
+        All other values Reserved for future use  */
+    uint16_t param = isSupport & 0xFF; //LE Supported (Host)
+    param |= (isSupport & 0xFF) << 8;  //simultaneous_le_host(Reserved for future use)
+    return tlkbt_hci_sendH2cCmd(HCI_WR_LE_HOST_SUPP_CMD_OPCODE, (uint8_t *)&param, sizeof(uint16_t));
 }
 
 /******************************************************************************
@@ -1271,7 +1315,7 @@ int bth_hci_sendSetIncPeerPwrMaxCmd(uint16_t conn_handle, uint8_t inc_peer_pwr_e
 /******************************************************************************
  * Function: bth_hci_sendSetLinkMaxNbCmd
  * Descript: bt link max number
- *        @ link_max_nb
+ *        @ link_max_nb bit0-bit3: acl number, bit4-bit7: sco number
  * Return: TLK_ENONE is success, other value is failure.
 *******************************************************************************/
 int bth_hci_sendSetLinkMaxNbCmd(uint8_t link_max_nb)
@@ -1279,11 +1323,29 @@ int bth_hci_sendSetLinkMaxNbCmd(uint8_t link_max_nb)
     uint8_t buffLen;
     uint8_t buffer[8];
 
-    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendSetLinkMaxNbCmd");
+    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendSetLinkMaxNbCmd link_max_nb[%x]", link_max_nb);
 
     buffLen           = 0;
     buffer[buffLen++] = link_max_nb;
     return tlkbt_hci_sendH2cCmd(HCI_SET_LINK_MAX_NB_CMD_OPCODE, buffer, buffLen);
+}
+
+/******************************************************************************
+ * Function: bth_hci_sendSetLeFeatSuppCmd
+ * Descript: set controller LE supported feature reporting.
+ *        @ le_feat_supp[IN]--0:disable, 1:enable.
+ * Return: TLK_ENONE is success, other value is failure.
+ *******************************************************************************/
+int bth_hci_sendSetLeFeatSuppCmd(uint8_t le_feat_supp)
+{
+    uint8_t buffLen;
+    uint8_t buffer[8];
+
+    tlkapi_trace(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendSetLeFeatSuppCmd le_feat_supp[%d]", le_feat_supp);
+
+    buffLen           = 0;
+    buffer[buffLen++] = le_feat_supp;
+    return tlkbt_hci_sendH2cCmd(HCI_SET_LE_FEAT_SUPP_CMD_OPCODE, buffer, buffLen);
 }
 
 /******************************************************************************
@@ -1426,4 +1488,32 @@ int bth_hci_sendSetAfhHostChnClassiFicationCmd(uint8_t *pAfhChn, uint8_t dataLen
     }
     tlkapi_array(BTH_HCICMD_DBG_FLAG, BTH_HCICMD_DBG_SIGN, "bth_hci_sendSetAfhHostChnClassiFicationCmd:", pAfhChn, dataLen);
     return tlkbt_hci_sendH2cCmd(HCI_SET_AFH_HOST_CH_CLASS_CMD_OPCODE, pAfhChn, dataLen);
+}
+
+/******************************************************************************
+ * Function: bth_hci_sendWriteInquiryScanTypeCmd
+ * Descript: send Write Inquiry Scan Type command.
+ * Params: none.
+ * Return: TLK_ENONE is success, other value is failure.
+*******************************************************************************/
+int bth_hci_sendWriteInquiryScanTypeCmd(uint8_t type)
+{
+    uint8_t buffLen = 0;
+    uint8_t buffer[16];
+    buffer[buffLen++] = type; // Scan_Enable
+    return tlkbt_hci_sendH2cCmd(HCI_WR_INQ_SCAN_TYPE_CMD_OPCODE, buffer, buffLen);
+}
+
+/******************************************************************************
+ * Function: int bth_hci_sendWritePageScanTypeCmd
+ * Descript: send Write Page Scan Type command.
+ * Params: none.
+ * Return: TLK_ENONE is success, other value is failure.
+*******************************************************************************/
+int bth_hci_sendWritePageScanTypeCmd(uint8_t type)
+{
+    uint8_t buffLen = 0;
+    uint8_t buffer[16];
+    buffer[buffLen++] = type; // Scan_Enable
+    return tlkbt_hci_sendH2cCmd(HCI_WR_PAGE_SCAN_TYPE_CMD_OPCODE, buffer, buffLen);
 }

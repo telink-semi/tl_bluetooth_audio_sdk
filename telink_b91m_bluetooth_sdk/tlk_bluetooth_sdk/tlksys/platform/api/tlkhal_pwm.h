@@ -23,19 +23,19 @@
  *******************************************************************************************************/
 #pragma once
 
-typedef struct 
+typedef struct
 {
     uint8_t  chn;
     uint8_t  futureUse;
     uint16_t pin;
-}tlkhal_pwm_chn_cfg_t;
+} tlkhal_pwm_chn_cfg_t;
 
 /**
  * @brief  Initialize PWM channel
  * @param[in] pCfg : Pointer to PWM channel configuration structure
  * @returns  None.
  */
-void tlkhal_pwm_chnInit(const tlkhal_pwm_chn_cfg_t * const pCfg);
+void tlkhal_pwm_chnInit(const tlkhal_pwm_chn_cfg_t *const pCfg);
 
 /**
  * @brief  Start PWM channel

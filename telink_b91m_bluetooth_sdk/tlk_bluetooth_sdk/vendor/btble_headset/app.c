@@ -43,17 +43,14 @@ static void tlk_controller_init(void)
      * When deepSleep retention wakeUp, no need initialize again */
     trng_init();
 
-    /* read flash and configure parameter automatically*/
-    tlk_readFlashSize_autoConfigCustomFlashSector();
-
     /* initialize some basic MCU hardware */
-    tlksdk_init_mcu_hardware();
+    tlk_sys_init_mcu_hardware();
 
     /*initialize BR/EDR core*/
     controller_init(BT_BLE, HCI_TR_SOC, NULL, NULL);
     //////////////////////////// basic hardware Initialization  End /////////////////////////////////
 
-    tlksdk_sch_init();
+    tlk_sch_init();
 #endif
 }
 
@@ -97,6 +94,14 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
     if (pData[1] == 0x05) {
         //extern void bt_audio_print_task_stack_info(void);
         //bt_audio_print_task_stack_info();
+
+
+        bt_rd_tcf_info_t cur_time;
+        extern int       bth_hci_sendReadTcfInfoCmd(uint16_t aclHandle);
+        bth_hci_sendReadTcfInfoCmd(0x0008);
+        tlksdk_host_get_clkn_fcnt_from_tick(&cur_time, clock_time());
+
+        //    	tlkbt_hci_sendH2cCmd(HCI_RD_SEC_CON_HOST_SUPP_CMD_OPCODE, NULL, 0);
     }
 
     if (pData[1] == 0x06) {
@@ -105,10 +110,10 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
     }
     if (pData[1] == 0x60) {
         if (pData[2] == 0x01) {
-            g_sys_work_mode = 0x80;
+            tlkdrv_codec_test_mode_en(1);
             tlkapi_trace(0xffffffff, "****Audio Test Mode****", "Audio Test Stat:Open");
         } else if (pData[2] == 0x00) {
-            g_sys_work_mode = 0x00;
+            tlkdrv_codec_test_mode_en(0);
             tlkapi_trace(0xffffffff, "****Audio Test Mode****", "Audio Test Stat:Close");
         }
     }

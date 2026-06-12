@@ -80,6 +80,9 @@ struct ble_ascss_register_param
     struct ble_ascs_config_param config_param;
 };
 
+#define BLE_ASCSS_INITIAL_PARAMS(trans_num, latency, min_delay, max_delay) \
+    (&(const struct ble_ascss_register_param){.config_param = BLE_ASCS_SERVER_CONFIG(trans_num, latency, min_delay, max_delay)})
+
 /**
  *   @brief Register the Audio Stream Control Service server control.
  *

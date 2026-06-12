@@ -74,6 +74,7 @@ static void tlkmdi_audio_btif_getVoiceStateChgDeal(tlksys_msg_hostEvt_btAudState
  */
 static void tlkmdi_audio_btif_getAudStateChgDeal(tlksys_msg_hostEvt_btAudStateChg_t *evt)
 {
+    tlk_printf("tlkmdi_audio_btif_getAudStateChgDeal evt isMusic:%d, handle[%d]", evt->isMusic, evt->handle);
     if (evt->isMusic == 0) {
         tlkmdi_audio_btif_getVoiceStateChgDeal(evt);
         return;

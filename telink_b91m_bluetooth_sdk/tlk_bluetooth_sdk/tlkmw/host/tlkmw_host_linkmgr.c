@@ -119,6 +119,11 @@ static inline void tlkmw_host_linkmgr_delItem(host_link_item_t *item)
     uint8_t           pos   = item - array;
     memcpy(item, item + 1, (sTlkmwHostLinkMgr.itemNum - 1 - pos) * sizeof(host_link_item_t));
     sTlkmwHostLinkMgr.itemNum--;
+    if (sTlkmwHostLinkMgr.itemNum == 0) {
+        tlkos_free(sTlkmwHostLinkMgr.itemArray);
+        sTlkmwHostLinkMgr.itemArray = NULL;
+        sTlkmwHostLinkMgr.capacity  = 0;
+    }
 }
 
 /**
@@ -133,7 +138,7 @@ static inline void tlkmw_host_linkSetTickLess(uint8_t type, uint16_t handle, boo
     (void)handle;
     (void)en;
     if (type == TLKMDI_HOST_LINK_TYPE_BT) {
-#if (TLK_STK_BT_ENABLE)
+#if (TLK_STK_BT_ENABLE && DEBUG_BT_SNIFF_ENABLE)
         if (!en) {
             tlkmdi_btacl_setSniffBusy(handle, true);
         } else {

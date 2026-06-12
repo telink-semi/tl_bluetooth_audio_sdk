@@ -25,7 +25,7 @@
 
 #include "../app_example.h"
 
-int INIT(APP_BLE_ACL_PERIPHERAL)(void);
+int  INIT(APP_BLE_ACL_PERIPHERAL)(void);
 void START(APP_BLE_ACL_PERIPHERAL)(void);
 
 int INIT(APP_BLE_OTA_BLE)(void)

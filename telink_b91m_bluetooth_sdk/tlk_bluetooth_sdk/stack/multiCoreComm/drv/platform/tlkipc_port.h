@@ -35,7 +35,7 @@ void *tlkipc_memset(void *dest, int val, unsigned int len);
 
 uint8_t tlkipc_mailbox_first_receive_check_hook(uint32_t data);
 
-void tlkipc_mailbox_receive_hook(uint8_t* pData);
+void tlkipc_mailbox_receive_hook(uint8_t *pData);
 
 void tlkipc_hal_mailbox_send_by_ram(void *data, uint32_t dataLen);
 

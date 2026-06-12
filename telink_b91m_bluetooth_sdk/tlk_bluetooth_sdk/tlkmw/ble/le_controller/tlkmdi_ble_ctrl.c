@@ -42,36 +42,18 @@
 
 #if (TLK_CFG_RTOS_ENABLE && !MCU_DUAL_CORE_ENABLE)
 
-#define LE_OS_LOG_EN 0
-
-_attribute_data_retention_ TlkOsTaskHandle_t   btTaskHandle             = NULL;
-_attribute_data_retention_ TlkOsSemphrHandle_t btSemphrHandle           = NULL;
-_attribute_data_retention_ TlkOsMutexHandle_t  btSendDataMutex          = NULL;
-_attribute_data_retention_ TlkOsSemphrHandle_t hciCmdSyncSemaphore      = NULL;
-static uint32_t                                bleThreadLoopOnceTimerMs = TLKOS_WAIT_FOREVER;
-
-void tlkmdi_ble_set_thread_loop_once_period(uint32_t ms)
-{
-    bleThreadLoopOnceTimerMs = ms;
-    if (btTaskHandle == NULL) {
-        return;
-    }
-    tlkos_semphr_give(btSemphrHandle);
-}
+_attribute_data_retention_ TlkOsSemphrHandle_t btSemphrHandle      = NULL;
+_attribute_data_retention_ TlkOsMutexHandle_t  btSendDataMutex     = NULL;
+_attribute_data_retention_ TlkOsSemphrHandle_t hciCmdSyncSemaphore = NULL;
 
 /**
  * @brief        This function is used to send a semaphore and can be called inside an interrupt.
  * @param[in]    none.
  * @return        none.
  */
-_attribute_ram_code_ static void app_os_give_sem_from_isr(void)
+_attribute_ram_code_sec_ static void app_os_give_sem_from_isr(void)
 {
-    if (btTaskHandle == NULL) {
-        return;
-    }
-    if (tlkos_semphr_giveFromISR(btSemphrHandle) != TLK_ENONE) {
-        tlkapi_printf(LE_OS_LOG_EN, "BLE CTRL Semaphore give in IRQ FALSE\r\n");
-    }
+    tlkos_semphr_giveFromISR(btSemphrHandle);
 }
 
 /**
@@ -79,14 +61,9 @@ _attribute_ram_code_ static void app_os_give_sem_from_isr(void)
  * @param[in]    none.
  * @return        none.
  */
-_attribute_ram_code_ static void app_os_give_sem(void)
+static void app_os_give_sem(void)
 {
-    if (btTaskHandle == NULL) {
-        return;
-    }
-    if (tlkos_semphr_give(btSemphrHandle) != TLK_ENONE) {
-        tlkapi_printf(LE_OS_LOG_EN, "BLE CTRL Semaphore give FALSE\r\n");
-    }
+    tlkos_semphr_give(btSemphrHandle);
 }
 
 /**
@@ -94,11 +71,9 @@ _attribute_ram_code_ static void app_os_give_sem(void)
  * @param[in]    none
  * @return      none
  */
-_attribute_ram_code_ static void app_os_take_mutex(void)
+static void app_os_take_mutex(void)
 {
-    if (tlkos_mutex_lock(btSendDataMutex) != TLK_ENONE) {
-        tlkapi_printf(LE_OS_LOG_EN, "Mutex Lock FALSE\r\n");
-    }
+    tlkos_mutex_lock(btSendDataMutex);
 }
 
 /**
@@ -106,40 +81,30 @@ _attribute_ram_code_ static void app_os_take_mutex(void)
  * @param[in]    none
  * @return      none
  */
-_attribute_ram_code_ static void app_os_give_mutex(void)
+static void app_os_give_mutex(void)
 {
-    if (tlkos_mutex_unlock(btSendDataMutex) != TLK_ENONE) {
-        tlkapi_printf(LE_OS_LOG_EN, "Mutex unlock FALSE\r\n");
-    }
+    tlkos_mutex_unlock(btSendDataMutex);
 }
 
 static void tlk_ble_controller_thread(void *pUsrArg)
 {
     (void)pUsrArg;
     while (1) {
-        tlkos_semphr_take(btSemphrHandle, bleThreadLoopOnceTimerMs);
+        tlkos_semphr_take(btSemphrHandle, TLKOS_WAIT_FOREVER);
 #if (BLE_CONTROLLER_INITIAL_EN)
-        tlksdk_main_loop();
+        tlk_sys_main_loop();
 #endif
     }
 }
 
 void ble_host_sal_hci_wait_ack(uint16_t timeout_ms)
 {
-    /* Block for ack, loop until timeout or ack received */
-    if (tlkos_semphr_take(hciCmdSyncSemaphore, timeout_ms) == TLK_ENONE) {
-        tlkapi_printf(LE_OS_LOG_EN, "HCI CMD SYNC Semaphore take SUCC");
-    } else {
-        tlkapi_printf(LE_OS_LOG_EN, "ERROR: HCI CMD opcode timeout");
-    }
+    tlkos_semphr_take(hciCmdSyncSemaphore, timeout_ms);
 }
 
 void ble_host_sal_hci_receive_complete(void)
 {
-    /* If the command was synchronous wake up ble_host_hci_cmd_tx() */
-    if (tlkos_semphr_give(hciCmdSyncSemaphore) == TLK_ENONE) {
-        tlkapi_printf(LE_OS_LOG_EN, "HCI CMD SYNC Semaphore give\r\n");
-    }
+    tlkos_semphr_give(hciCmdSyncSemaphore);
 }
 
 #else //bare metal
@@ -260,12 +225,12 @@ void user_ble_controller_init(uint8_t mac_public[6])
 #if TLKMDI_ACL_CENTRAL_EN
     blc_ll_initAclCentralRole_module();
     /* ACL Central TX FIFO */
-    blc_ll_initAclCentralTxFifo(app_acl_cen_tx_fifo, ACL_CENTRAL_TX_FIFO_SIZE, ACL_CENTRAL_TX_FIFO_NUM, TLKMW_ACL_CENTRAL_MAX_NUM);
+    blc_ll_initAclCentralTxFifo(g_tlk_ble_app_acl_cen_tx_fifo, ACL_CENTRAL_TX_FIFO_SIZE, ACL_CENTRAL_TX_FIFO_NUM, TLKMW_ACL_CENTRAL_MAX_NUM);
 #endif
 #if TLKMDI_ACL_PERIPHR_EN
     blc_ll_initAclPeriphrRole_module();
     /* ACL Peripheral TX FIFO */
-    blc_ll_initAclPeriphrTxFifo(app_acl_per_tx_fifo, ACL_PERIPHR_TX_FIFO_SIZE, ACL_PERIPHR_TX_FIFO_NUM, TLKMW_ACL_PERIPHR_MAX_NUM);
+    blc_ll_initAclPeriphrTxFifo(g_tlk_ble_app_acl_per_tx_fifo, ACL_PERIPHR_TX_FIFO_SIZE, ACL_PERIPHR_TX_FIFO_NUM, TLKMW_ACL_PERIPHR_MAX_NUM);
 #endif
 
     blc_ll_setMaxConnectionNumber(TLKMW_ACL_CENTRAL_MAX_NUM, TLKMW_ACL_PERIPHR_MAX_NUM);
@@ -273,13 +238,13 @@ void user_ble_controller_init(uint8_t mac_public[6])
     blc_ll_setAclConnMaxOctetsNumber(ACL_CONN_MAX_RX_OCTETS, ACL_CENTRAL_MAX_TX_OCTETS, ACL_PERIPHR_MAX_TX_OCTETS);
 
     /* all ACL connection share same RX FIFO */
-    blc_ll_initAclConnRxFifo(app_acl_rx_fifo, ACL_RX_FIFO_SIZE, ACL_RX_FIFO_NUM);
+    blc_ll_initAclConnRxFifo(g_tlk_ble_app_acl_rx_fifo, ACL_RX_FIFO_SIZE, ACL_RX_FIFO_NUM);
 
     //blc_ll_setAclCentralBaseConnectionInterval(CONN_INTERVAL_31P25MS);
-    tlksdk_sch_set_base_interval(PLAN_INTERVAL_20MS);
+    tlk_sch_plan_set_base_interval(PLAN_INTERVAL_20MS);
 
     /* HCI RX ACL FIFO (host to controller)*/
-    if (blc_ll_initHciAclDataFifo(tlkmdi_app_hci_rxAclfifo, HCI_RX_ACL_FIFO_SIZE, HCI_RX_ACL_FIFO_NUM) != BLE_SUCCESS) {
+    if (blc_ll_initHciAclDataFifo(g_tlk_ble_app_hci_rxAclfifo, HCI_RX_ACL_FIFO_SIZE, HCI_RX_ACL_FIFO_NUM) != BLE_SUCCESS) {
         while (1);
     }
 #endif
@@ -312,17 +277,17 @@ void user_ble_controller_init(uint8_t mac_public[6])
 
 #if TLKMDI_LE_EXTENDED_ADV_EN
     /* Extended ADV module and ADV Set Parameters buffer initialization */
-    blc_ll_initExtendedAdvModule_initExtendedAdvSetParamBuffer(app_extAdvSetParam_buf, EXT_ADV_SETS_NUMBER);
-    blc_ll_initExtendedAdvDataBuffer(app_extAdvData_buf, EXT_ADV_DATA_LENGTH);
+    blc_ll_initExtendedAdvModule_initExtendedAdvSetParamBuffer(g_tlk_ble_app_ext_adv_set_param_buf, EXT_ADV_SETS_NUMBER);
+    blc_ll_initExtendedAdvDataBuffer(g_tlk_ble_app_ext_adv_data_buf, EXT_ADV_DATA_LENGTH);
 #if TLKMDI_LE_EXTENDED_SCAN_RSP_EN
-    blc_ll_initExtendedScanRspDataBuffer(app_extScanRspData_buf, EXT_SCANRSP_DATA_LENGTH);
+    blc_ll_initExtendedScanRspDataBuffer(g_tlk_ble_app_extScanRspData_buf, EXT_SCANRSP_DATA_LENGTH);
 #endif
     blc_ll_setMaxAdvDelay_for_AdvEvent(MAX_DELAY_10MS); //must use 10ms delay
 #endif
 
 #if TLKMDI_LE_PERIODIC_ADV_EN
-    blc_ll_initPeriodicAdvModule_initPeriodicdAdvSetParamBuffer(app_peridAdvSet_buffer, APP_PERID_ADV_SETS_NUMBER);
-    blc_ll_initPeriodicAdvDataBuffer(app_peridAdvData_buffer, APP_PERID_ADV_DATA_LENGTH);
+    blc_ll_initPeriodicAdvModule_initPeriodicdAdvSetParamBuffer(g_tlk_ble_app_perid_adv_set_buffer, APP_PERID_ADV_SETS_NUMBER);
+    blc_ll_initPeriodicAdvDataBuffer(g_tlk_ble_app_perid_adv_data_buffer, APP_PERID_ADV_DATA_LENGTH);
 #if (PDA_SCH_CALLBACK_EN)
     blc_ll_periodic_adv_start_cb(tlk_periodic_adv_start_cb);
     blc_ll_periodic_adv_end_cb(tlk_periodic_adv_end_cb);
@@ -359,43 +324,43 @@ void user_ble_controller_init(uint8_t mac_public[6])
 #endif
 
 #if (TLKMDI_ISOCHRONOUS_BROADCASTER_EN || TLKMDI_ISOCHRONOUS_BROADCASTER_SYNC_EN)
-    blc_ll_InitBisParametersBuffer(app_bisToatlParam, BIS_NUM_IN_ALL_BIG_BCST, BIS_NUM_IN_ALL_BIG_SYNC);
+    blc_ll_InitBisParametersBuffer(g_tlk_ble_app_bis_toatl_param, BIS_NUM_IN_ALL_BIG_BCST, BIS_NUM_IN_ALL_BIG_SYNC);
 #endif
 
 #if (TLKMDI_ISOCHRONOUS_BROADCASTER_EN)
-    blc_ll_initBigBcstModule_initBigBcstParametersBuffer(app_bigBcstParam, BIG_BCST_NUM);
+    blc_ll_initBigBcstModule_initBigBcstParametersBuffer(g_tlk_ble_app_big_bcst_param, BIG_BCST_NUM);
     /* BIS TX buffer init */
-    if (blc_ll_initBisTxFifo(app_bisBcstTxfifo, BIS_TX_PDU_FIFO_SIZE, BIS_TX_PDU_FIFO_NUM) != BLE_SUCCESS) {
+    if (blc_ll_initBisTxFifo(g_tlk_ble_app_bis_bcst_txfifo, BIS_TX_PDU_FIFO_SIZE, BIS_TX_PDU_FIFO_NUM) != BLE_SUCCESS) {
         while (1);
     }
-    blc_ll_initBisBcstSduInBuffer(app_bis_sdu_in_fifo, BIS_SDU_IN_FIFO_SIZE, BIS_SDU_IN_FIFO_NUM);
+    blc_ll_initBisBcstSduInBuffer(g_tlk_ble_app_bis_sdu_in_fifo, BIS_SDU_IN_FIFO_SIZE, BIS_SDU_IN_FIFO_NUM);
 #endif
 
 #if (TLKMDI_ISOCHRONOUS_BROADCASTER_SYNC_EN)
-    blc_ll_initBigSyncModule_initBigSyncParametersBuffer(app_bigSyncParam, BIG_SYNC_NUM);
+    blc_ll_initBigSyncModule_initBigSyncParametersBuffer(g_tlk_ble_app_big_sync_param, BIG_SYNC_NUM);
     /* BIS RX buffer init */
-    blc_ll_initBisRxFifo(app_bisSyncRxfifo, BIS_RX_PDU_FIFO_SIZE, BIS_RX_PDU_FIFO_NUM, BIS_NUM_IN_ALL_BIG_SYNC);
-    blc_ll_initBisSyncSduOutBuffer(app_bis_sdu_out_fifo, BIS_SDU_OUT_FIFO_SIZE, BIS_SDU_OUT_FIFO_NUM);
+    blc_ll_initBisRxFifo(g_tlk_ble_app_bis_sync_rxfifo, BIS_RX_PDU_FIFO_SIZE, BIS_RX_PDU_FIFO_NUM, BIS_NUM_IN_ALL_BIG_SYNC);
+    blc_ll_initBisSyncSduOutBuffer(g_tlk_ble_app_bis_sdu_out_fifo, BIS_SDU_OUT_FIFO_SIZE, BIS_SDU_OUT_FIFO_NUM);
 #endif
 
 
 #if (TLKMDI_LE_CIS_CENTRAL_EN || TLKMDI_LE_CIS_PERIPHR_EN)
 
 #if (TLKMDI_LE_CIS_CENTRAL_EN)
-    blc_ll_initCisCentralModule_initCigParametersBuffer(app_cig_param, CIG_NUMBER);
+    blc_ll_initCisCentralModule_initCigParametersBuffer(g_tlk_ble_app_cig_param, CIG_NUMBER);
 #endif
 #if (TLKMDI_LE_CIS_PERIPHR_EN)
-    blc_ll_initCisPeriphrModule_initCisPeriphrParametersBuffer(app_cis_per_param, CIS_PERIPHR_NUMBER);
+    blc_ll_initCisPeriphrModule_initCisPeriphrParametersBuffer(g_tlk_ble_app_cis_per_param, CIS_PERIPHR_NUMBER);
 #endif
-    blc_ll_initCisConnModule_initCisConnParametersBuffer(app_cis_conn_param, CIS_CENTRAL_NUMBER, CIS_PERIPHR_NUMBER);
+    blc_ll_initCisConnModule_initCisConnParametersBuffer(g_tlk_ble_app_cis_conn_param, CIS_CENTRAL_NUMBER, CIS_PERIPHR_NUMBER);
 
     /* CIS RX PDU buffer initialization */
-    blc_ll_initCisRxFifo(app_cis_rxPduFifo, CIS_RX_PDU_FIFO_SIZE, CIS_RX_PDU_FIFO_NUM);
+    blc_ll_initCisRxFifo(g_tlk_ble_app_cis_rx_pdu_fifo, CIS_RX_PDU_FIFO_SIZE, CIS_RX_PDU_FIFO_NUM);
     /* CIS TX PDU buffer initialization */
-    blc_ll_initCisTxFifo(app_cis_txPduFifo, CIS_TX_PDU_FIFO_SIZE, CIS_TX_PDU_FIFO_NUM);
+    blc_ll_initCisTxFifo(g_tlk_ble_app_cis_tx_pdu_fifo, CIS_TX_PDU_FIFO_SIZE, CIS_TX_PDU_FIFO_NUM);
 
     /* CIS SDU in & out buffer initialization */
-    blc_ll_initCisSduBuffer(app_cis_sdu_in_fifo, CIS_SDU_IN_FIFO_SIZE, app_cis_sdu_out_fifo, CIS_SDU_OUT_FIFO_SIZE);
+    blc_ll_initCisSduBuffer(g_tlk_ble_app_cis_sdu_in_fifo, CIS_SDU_IN_FIFO_SIZE, g_tlk_ble_app_cis_sdu_out_fifo, CIS_SDU_OUT_FIFO_SIZE);
 
 #endif
 
@@ -406,34 +371,24 @@ void user_ble_controller_init(uint8_t mac_public[6])
 
 #if (BLUETOOTH_CONTROLLER_MODE == BLE_CONTROLLER_ONLY_MODE || BLUETOOTH_CONTROLLER_MODE == BT_BLE_CONTROLLER_MODE)
 #if SDK_RELEASE
-    extern void btc_hci_regBleCmdCallback(le_hci_cmd_callback_t cb);
+    extern void tlk_bt_ctrl_btc_hci_regBleCmdCallback(le_hci_cmd_callback_t cb);
     extern int  blc_hci_cmd_handler_cb(u8 * cmdPara, uint16_t opcode);
 #endif
-    btc_hci_regBleCmdCallback(blc_hci_cmd_handler_cb);
+    tlk_bt_ctrl_btc_hci_regBleCmdCallback(blc_hci_cmd_handler_cb);
 #endif
 #endif
     //////////// LinkLayer Initialization  End /////////////////////////
 
 #if (TLK_CFG_RTOS_ENABLE && !MCU_DUAL_CORE_ENABLE)
-    int stuats = tlkos_task_create(tlk_ble_controller_thread, "bt_task", 4 * 1024, TLKSYS_TASK_CONTROLLER_PRIORITY, NULL, NULL, &btTaskHandle);
-    if (stuats != TLK_ENONE) {
-        tlkapi_printf(APP_LOG_EN, "OS BLE CTRL THREAD create FALSE\r\n");
-        TLKSTK_ERROR_DEBUG(LE_OS_LOG_EN, 0xdeaddead);
-    }
-    stuats = tlkos_semphr_createCounting(&btSemphrHandle, 50, 1); //init semaphore value: 1
-    if (stuats != TLK_ENONE) {
-        tlkapi_printf(APP_LOG_EN, "OS BLE CTRL TASK semaphore create FALSE\r\n");
-        TLKSTK_ERROR_DEBUG(LE_OS_LOG_EN, 0xdeaddead);
-    }
-    stuats = tlkos_mutex_create(&btSendDataMutex);
-    if (stuats != TLK_ENONE) {
-        tlkapi_printf(APP_LOG_EN, "OS BLE Send Data mutex create FALSE\r\n");
-        TLKSTK_ERROR_DEBUG(LE_OS_LOG_EN, 0xdeaddead);
-    }
-    if (tlkos_semphr_createCounting(&hciCmdSyncSemaphore, 1, 0) != TLK_ENONE) {
-        tlkapi_printf(APP_LOG_EN, "OS HCI CMD SYNC semaphore create FALSE\r\n");
-        TLKSTK_ERROR_DEBUG(LE_OS_LOG_EN, 0xdeaddead);
-    }
+    _attribute_os_heap_sec_ static uint8_t tlk_ble_controller_thread_stack_buffer[4 * 1024 + 128];
+    TlkosTaskExtCfg_t                      cfg = {
+                             .pStaticBuffer    = tlk_ble_controller_thread_stack_buffer,
+                             .staticBufferSize = sizeof(tlk_ble_controller_thread_stack_buffer),
+    };
+    tlkos_task_create(tlk_ble_controller_thread, "bt_task", sizeof(tlk_ble_controller_thread_stack_buffer), TLKSYS_TASK_CONTROLLER_PRIORITY, NULL, &cfg, NULL);
+    tlkos_semphr_createCounting(&btSemphrHandle, 50, 1); //init semaphore value: 1
+    tlkos_mutex_create(&btSendDataMutex);
+    tlkos_semphr_createCounting(&hciCmdSyncSemaphore, 1, 0);
     tlksdk_os_registerGiveSemCb(app_os_give_sem_from_isr, app_os_give_sem);
     tlksdk_os_registerMutexSemCb(app_os_take_mutex, app_os_give_mutex);
     tlksdk_os_setOsSupEnable(1);
@@ -451,6 +406,7 @@ enum BLE_HCI_VENDOR_SUB_CMD
 {
     BLE_HCI_SUB_CMD_SET_BD_ADDR = 0x01,
     BLE_HCI_SUB_CMD_SET_ACL_LATENCY,
+    BLE_HCI_SUB_CMD_SET_TX_PWR,
 };
 
 /* Get the OGF and OCF from the opcode in the command */
@@ -474,6 +430,9 @@ uint8_t blc_hci_vendor_command_handler_hook(uint8_t *p, uint8_t *returnPara)
         } else if (cmd->sub_cmd == BLE_HCI_SUB_CMD_SET_ACL_LATENCY) {
             u16 latency = cmd->data[0] | cmd->data[1] << 8;
             tlksdk_pm_setManualLatency(latency);
+        } else if (cmd->sub_cmd == BLE_HCI_SUB_CMD_SET_TX_PWR) {
+            u8 tx_pwr = cmd->data[0];
+            rf_set_power_level_index(tx_pwr);
         }
     }
 
@@ -498,10 +457,7 @@ void ble_host_sal_hci_send_packet(const uint8_t *data, uint16_t len)
 #elif (LE_HOST_SEND_HCI_MODE == LE_HOST_SEND_HCI_MODE_VHCI)
     blc_hci_handler((uint8_t *)data, len);
 #if (TLK_CFG_RTOS_ENABLE)
-    tlkapi_printf(LE_OS_LOG_EN, "BLE CTRL TASK semaphore give:%d\n", __LINE__);
-    if (tlkos_semphr_give(btSemphrHandle) != TLK_ENONE) {
-        tlkapi_printf(LE_OS_LOG_EN, "BLE CTRL TASK Semaphore give FALSE\r\n");
-    }
+    tlkos_semphr_give(btSemphrHandle);
 #endif
 #else
     (void)data;

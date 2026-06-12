@@ -140,7 +140,7 @@ static tlkapp_audioScheduler_node_t *tlkapp_audioScheduler_findNode(uint32_t tas
         }
     }
     tlkapp_audioScheduler_node_t *node = tlkapp_audioScheduler.runningTask;
-    if (node->taskId == taskId) {
+    if (node == NULL || node->taskId == taskId) {
         return node;
     }
     return NULL;
@@ -417,7 +417,7 @@ static void tlkapp_audioScheduler_coreSch(bool isRoundRobin, bool isAutoOpenNewT
     for (int i = TLKAPP_AUDIO_SCHEDULER_PRIORITY_HIGHEST; i >= pThreshold; i--) {
         node         = tlkapp_audioScheduler.readyTaskList[i];
         bool ischeck = true;
-        if (i == nowRunningTask->info.priority && (TLKAPP_AUDIO_SCHEDULER_CFG_SCH_RESUME_AUTO2READY & tlkapp_audioScheduler.cfg)) {
+        if (nowRunningTask != NULL && i == nowRunningTask->info.priority && (TLKAPP_AUDIO_SCHEDULER_CFG_SCH_RESUME_AUTO2READY & tlkapp_audioScheduler.cfg)) {
             ischeck = false;
         }
         while (node != NULL) {
@@ -1044,10 +1044,28 @@ int tlkapp_audioScheduler_runningTaskSwitchType(uint8_t audioType)
 uint8_t tlkapp_audioScheduler_getDefaultPriority(uint8_t optype)
 {
     static const uint8_t tlkapp_audioScheduler_priorityTab[TLKAUD_TYPE_MAX] = {
-        [TLKAUD_TYPE_TONE] = 7,         [TLKAUD_TYPE_CC_BT_VOICE] = 5,  [TLKAUD_TYPE_CC_BT_MUSIC] = 2,  [TLKAUD_TYPE_TPH_AUDIO] = 1,    [TLKAUD_TYPE_A2DP_OUT] = 2,
-        [TLKAUD_TYPE_LEA_UC_MUSIC] = 2, [TLKAUD_TYPE_LEA_UC_VOICE] = 5, [TLKAUD_TYPE_LEA_US_MUSIC] = 2, [TLKAUD_TYPE_LEA_US_VOICE] = 5, [TLKAUD_TYPE_LEA_BMS] = 2,
-        [TLKAUD_TYPE_LEA_BMR] = 2,      [TLKAUD_TYPE_U2H_VOICE] = 5,    [TLKAUD_TYPE_A2DP_TO_BIS] = 2,  [TLKAUD_TYPE_SIDETONE] = 4,     [TLKAUD_TYPE_INTRTPHONE] = 3,
-        [TLKAUD_TYPE_HRA] = 1,          [TLKAUD_TYPE_UAC_AUD] = 1,      [TLKAUD_TYPE_TPD_AUDIO] = 1,    [TLKAUD_TYPE_ANC] = 6,
+        [TLKAUD_TYPE_TONE]             = 7,
+        [TLKAUD_TYPE_CC_BT_VOICE]      = 5,
+        [TLKAUD_TYPE_CC_BT_MUSIC]      = 2,
+        [TLKAUD_TYPE_TPH_AUDIO]        = 1,
+        [TLKAUD_TYPE_A2DP_OUT]         = 2,
+        [TLKAUD_TYPE_LEA_UC_MUSIC]     = 2,
+        [TLKAUD_TYPE_LEA_UC_VOICE]     = 5,
+        [TLKAUD_TYPE_LEA_US_MUSIC]     = 2,
+        [TLKAUD_TYPE_LEA_US_VOICE]     = 5,
+        [TLKAUD_TYPE_LEA_BMS]          = 2,
+        [TLKAUD_TYPE_LEA_BMR]          = 2,
+        [TLKAUD_TYPE_U2H_VOICE]        = 5,
+        [TLKAUD_TYPE_A2DP_TO_BIS]      = 2,
+        [TLKAUD_TYPE_SIDETONE]         = 4,
+        [TLKAUD_TYPE_INTRTPHONE]       = 3,
+        [TLKAUD_TYPE_HRA]              = 1,
+        [TLKAUD_TYPE_UAC_AUD]          = 1,
+        [TLKAUD_TYPE_TPD_AUDIO]        = 1,
+        [TLKAUD_TYPE_ANC]              = 6,
+        [TLKAUD_TYPE_UAC_LOCAL_AUDIO]  = 1,
+        [TLKAUD_TYPE_BT_VOICE_FORWARD] = 6,
+        [TLKAUD_TYPE_BT_MUSIC_FORWARD] = 3,
     };
     if (optype >= TLKAUD_TYPE_MAX) {
         return 0;

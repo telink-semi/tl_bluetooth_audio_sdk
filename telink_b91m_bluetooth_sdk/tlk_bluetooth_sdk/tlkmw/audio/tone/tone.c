@@ -33,8 +33,11 @@
 
 #define TONE_DBG_SIGN NULL
 
-tone_cfg_t g_tone_cfg = {.addr   = 0x20180000,
-                         .volume = 512,
+#ifndef CONFIG_TLK_AUDIO_TONE_DOWNLOAD_ADDR
+#define CONFIG_TLK_AUDIO_TONE_DOWNLOAD_ADDR (FLASH_R_BASE_ADDR + 0X1A0000)
+#endif
+
+tone_cfg_t g_tone_cfg = {.volume = 512,
 #if TONE_SBC_EN
                          .type = TONE_TYPE_SBC,
 #else
@@ -53,7 +56,7 @@ void tone_play(uint8_t id)
 {
     uint8_t *p     = NULL;
     uint8_t *p_des = NULL;
-    uint16_t len;
+    int32_t  len;
 
     if (g_tone_cfg.busy) {
         if ((g_tone_cfg.play_fifo_wptr + 1) % 4 != g_tone_cfg.play_fifo_rptr) {
@@ -68,14 +71,14 @@ void tone_play(uint8_t id)
 #endif
 
     g_tone_cfg.cur_id = id;
-    p                 = (uint8_t *)g_tone_cfg.addr + id * 12;
+    p                 = (uint8_t *)(CONFIG_TLK_AUDIO_TONE_DOWNLOAD_ADDR) + id * 12;
     len               = p[8] + (p[9] << 8) + (p[10] << 16);
 
     if (p[7] == 0xff || p[11] == 0xff || p[1] > 0x1F) {
         g_tone_cfg.busy = 0;
         adpcm_init(0, 0, 0, 0);
     } else {
-        p_des = (uint8_t *)g_tone_cfg.addr + (p[4] + (p[5] << 8) + (p[6] << 16) + (p[7] << 24));
+        p_des = (uint8_t *)(CONFIG_TLK_AUDIO_TONE_DOWNLOAD_ADDR) + (p[4] + (p[5] << 8) + (p[6] << 16) + (p[7] << 24));
         if ((g_tone_cfg.type == TONE_TYPE_SBC) && (p[0] - 1 == id) && p[2] == 0x00 && p[3] == 0x00) {
             g_tone_cfg.frame_size = get_source_sbc_framesize(p_des);
             sbc_init(p_des, len / g_tone_cfg.frame_size * 128, 0, 0);

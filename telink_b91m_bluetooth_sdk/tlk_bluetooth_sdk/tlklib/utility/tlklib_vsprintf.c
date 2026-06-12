@@ -509,6 +509,12 @@ int tlklib_vsnprintf(char *buf, size_t size, const char *fmt, va_list ap)
             tlklib_snprintf_utoa(v, 8, 0, width, prec, alt, left, zero, &p, e);
             break;
         }
+        case 'p':
+        {
+            uintptr_t ptr_val = (uintptr_t)va_arg(ap, void *);
+            tlklib_snprintf_utoa((uint32_t)ptr_val, 16, 0, width, prec, 1, left, zero, &p, e);
+            break;
+        }
         case 'f':
         case 'F':
         { // Floating point

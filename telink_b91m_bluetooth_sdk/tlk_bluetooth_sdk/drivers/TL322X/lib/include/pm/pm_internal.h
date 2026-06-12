@@ -345,7 +345,6 @@ _attribute_ram_code_sec_optimize_o2_noinline_ void pm_wait_xtal_ready(unsigned c
  */
 _attribute_ram_code_sec_optimize_o2_noinline_ unsigned char pm_clr_all_irq_status(void);
 
-
 /**
  * @brief       This function serves to recover system timer.
  *              The code is placed in the ram code section, in order to shorten the time.

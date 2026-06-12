@@ -25,27 +25,27 @@
 
 #include "../app_example.h"
 
-#define APP_BLE_SCAN_MODE_LEGACY        1
-#define APP_BLE_SCAN_MODE_EXTENDED      2
+#define APP_BLE_SCAN_MODE_LEGACY       1
+#define APP_BLE_SCAN_MODE_EXTENDED     2
 
-#define APP_BLE_SCAN_FUNC_ACTIVE_SCAN   1
-#define APP_BLE_SCAN_FUNC_PASSIVE_SCAN  2
+#define APP_BLE_SCAN_FUNC_ACTIVE_SCAN  1
+#define APP_BLE_SCAN_FUNC_PASSIVE_SCAN 2
 
 
-#define APP_BLE_SCAN_MODE_DEFAULT       APP_BLE_SCAN_MODE_LEGACY
-#define APP_BLE_SCAN_FUNC_DEFAULT       APP_BLE_SCAN_FUNC_PASSIVE_SCAN
+#define APP_BLE_SCAN_MODE_DEFAULT      APP_BLE_SCAN_MODE_LEGACY
+#define APP_BLE_SCAN_FUNC_DEFAULT      APP_BLE_SCAN_FUNC_PASSIVE_SCAN
 
 
 static void app_scan_report_evt_handler(uint32_t event_id, const void *data, void *user_data);
 
 static const struct ble_host_gap_evt_subscribe_param s_scan_evt_param = {
     .gap_le_scan_mask = 1,
-    .handler = app_scan_report_evt_handler,
+    .handler          = app_scan_report_evt_handler,
 };
 
 static struct ble_host_gap_evt_subscribe s_scan_evt = {
     .next_handler = NULL,
-    .param = &s_scan_evt_param,
+    .param        = &s_scan_evt_param,
 };
 
 int INIT(APP_BLE_SCAN)(void)
@@ -87,11 +87,10 @@ void START(APP_BLE_SCAN)(void)
 
 static void app_scan_report_evt_handler(uint32_t event_id, const void *data, void *user_data)
 {
-    (void) user_data;
+    (void)user_data;
     if (event_id == BLE_HOST_GAP_EVT_LE_SCAN_REPORT_UNDIRECTED) {
         const struct ble_host_gap_evt_scan_adv_report_undirected *report = data;
         tlk_printf("[APP] scan report (undirected), MAC is %s", addr_to_str(report->addr));
     } else if (event_id == BLE_HOST_GAP_EVT_LE_SCAN_REPORT_DIRECTED) {
-
     }
 }

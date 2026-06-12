@@ -27,10 +27,32 @@
 #include "tlkmw/tlkmw.h"
 #include "stack/tpsll/tpsll.h"
 #include "tlkmdi_bt_tph_inner.h"
+#include "core/sdk_version.h"
 
 
 #define TLKMDI_BT_TPSLL_HEADSET_DBG_FLAG ((TLK_MAJOR_DBGID_MW << 24) | (TLK_MINOR_DBGID_MDI_TPSLL_CCHEADSET << 16) | TLK_DEBUG_DBG_FLAG_ALL)
 #define TLKMDI_BTACL_DBG_SIGN            "[TPSLL_PAIR]"
+
+/**
+ * @brief       Sync version to dongle.
+ * @return      None
+ */
+__attribute__((weak)) void tlkmdi_tph_version_sync(void)
+{
+    uint8_t  pData[8]    = {0};
+    uint16_t dataLen     = 0;
+    uint32_t sdk_version = 0;
+    sdk_version |= MINOR_VERSION & 0xFF;
+    sdk_version |= (MAJOR_VERSION & 0xFF) << 8;
+    sdk_version |= (SOFT_STRUCTURE & 0xFF) << 16;
+    sdk_version |= (CERTIFICATION_MARK & 0xFF) << 24;
+
+    pData[dataLen++] = TLK_MDI_APP_VERSION_SYNC;
+    UINT32L_TO_ARRAY(sdk_version, pData, dataLen); //version
+    dataLen += 4;
+
+    tph_host_hal_send_pdu_msg(TPH_HOST_MSG_PDU_ACL_CMD_APP, pData, dataLen, NULL);
+}
 
 /**
  * @brief       Disconnects the Bluetooth ACL connection.
@@ -103,6 +125,10 @@ static void tlkmdi_bt_tph_timer(TlkApiTimerHandle_t pTimer, void *userArg)
     if (gTlkMdiHeadsetCtrl.cur_status == TLKMDI_TPSLL_NO_INIT) {
         gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_CRASH;
     }
+
+    if (gTlkMdiHeadsetCtrl.cur_status == TLKMDI_TPSLL_WAIT_VERSION_SYNC) {
+        gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_CRASH;
+    }
 }
 
 /**
@@ -156,6 +182,16 @@ static bool tlkmdi_bt_tph_nowPSM_btDiscon(void)
     tlkapi_trace(TLKMDI_BT_TPSLL_HEADSET_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_bt_tph_nowPSM_btDiscon: no acl, start tpsll paring 0x%x cur_status %d",
                  gTlkMdiHeadsetCtrl.startPairing, gTlkMdiHeadsetCtrl.cur_status);
 
+    if (gTlkMdiHeadsetCtrl.disReason == TPH_HOST_DISCONNECT_REASON_HEADSET_ENTER_ULTRA_LOW_LATENCY) {
+        gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_IDLE;
+        tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_BOTH_DISABLE, 0);
+        tph_host_hal_get_ac_chn_from_mac(gTlkMdiHeadsetCtrl.local_addr, (uint8_t *)&gTlkMdiHeadsetCtrl.tpsll_ac, (uint8_t *)&gTlkMdiHeadsetCtrl.tpsll_ch);
+        tph_host_hal_set_setup_ac_chn(gTlkMdiHeadsetCtrl.tpsll_ac, gTlkMdiHeadsetCtrl.tpsll_ch);
+        tph_host_hal_start_connection_setup(TPH_HOST_DONGLE_SETUP_MODE_ULTRA_LOW_LATENCY);
+        return false;
+    }
+
+    /* normal -> low latency mode not play paring tone. */
     if (gTlkMdiHeadsetCtrl.startPairing && gInnerTlkMdiBtTphStateChgCB != NULL) {
         gInnerTlkMdiBtTphStateChgCB(TLKMDI_TPSLL_STATE_CHANGE_CB_PAIR);
     }
@@ -185,9 +221,11 @@ static bool tlkmdi_bt_tph_nowPSM_waitCon(void)
     if (gTlkMdiHeadsetCtrl.dongleIsConn) {
         tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_BOTH_SCAN, TLK_MDI_TPSLL_TPH_PAIRING_TIMEOUT);
 
-        gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_CONNECTED;
-        gTlkMdiHeadsetCtrl.timeout    = 0;
-        ret                           = true;
+        tlkmdi_tph_version_sync();
+        gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_WAIT_VERSION_SYNC;
+        gTlkMdiHeadsetCtrl.timeout    = (TLK_MDI_TPSLL_TPH_PAIRING_TIMEOUT * 1000 * 1000) / TLK_MDI_TPSLL_TIMEOUT;
+
+        ret = true;
         tlkapi_trace(TLKMDI_BT_TPSLL_HEADSET_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_bt_tph_nowPSM_waitCon: dongle connect");
     }
     if (bt_link_count > 0) {
@@ -248,8 +286,10 @@ static bool tlkmdi_bt_tph_pairing_state_machine(void)
         return tlkmdi_bt_tph_nowPSM_btDiscon();
     case TLKMDI_TPSLL_PAIRING_CONNECT_WAITING:
         return tlkmdi_bt_tph_nowPSM_waitCon();
-    case TLKMDI_TPSLL_IDLE:
+    case TLKMDI_TPSLL_RECONNECTING:
         return tlkmdi_bt_tph_nowPSM_powerOnReconDongle();
+    case TLKMDI_TPSLL_WAIT_VERSION_SYNC:
+        return false;
     }
     return false;
 }

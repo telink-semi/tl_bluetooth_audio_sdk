@@ -31,14 +31,14 @@
 #if (TLKBTP_CFG_ATT_ENABLE)
 
 
-    #include "stack/bt/host/btp/att/btp_attStdio.h"
+#include "stack/bt/host/btp/att/btp_attStdio.h"
 
 typedef struct
 {
     uint8_t  attNum;
     uint8_t  permit;
     uint8_t  uuidLen;
-    uint16_t  attrLen;
+    uint16_t attrLen;
     uint8_t *pUUID;
     uint8_t *pAttr;
     uint8_t (*Read)(uint16_t handle, uint16_t chnID, uint8_t *pData, uint16_t dataLen);

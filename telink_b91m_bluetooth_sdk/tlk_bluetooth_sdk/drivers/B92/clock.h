@@ -47,17 +47,36 @@
 /**********************************************************************************************************************
  *                                           global macro                                                             *
  *********************************************************************************************************************/
+
 /**
- *  @note   If it is an external flash, the maximum speed of mspi needs to be based on the board test.
- *          Because the maximum speed is related to the wiring of the board, and is also affected by temperature and GPIO voltage,
- *          the maximum speed needs to be tested at the highest and lowest voltage of the board,
- *          and the high and low temperature long-term stability test speed is no problem.
+ * The following chart lists the maximum operating frequency that each clock source can operate at different voltage levels.
+ * (But if it is related to peripherals, this frequency will be related to the whole system, such as MSPI-->
+ *  If it is built-in flash, the maximum speed of mspi is 64M,If it is an external flash, the maximum speed
+ *  of mspi needs to be based on the board test.)
+ *
+ * :-------------------------------- Voltage versus frequency table --------------------------------------------------------------------------
+ * |  core |  sram |  zb  |  pll  | cclk  | hclk | pclk | clkzbmst | mspi | lspi | gspi| sspi | xtl | usb   | osc | i2s | audio | sar | ro  | dpr |
+ * |  1.2V |  1.2V | 1.0V |  264  |  96   |  48  |  48  |  32      | 64   |  48  | 48  | 60   | 24  | 48    |  60 | 24  | 12    |  24 | 200  | 180  |
+ * |  1.0V |  1.2V | 1.0V |  192  |  48   |  24  |  24  |  24      | 24   |  24  | 24  | 60   | 24  | 48    |  60 | 24  | 12    |  24 | 200  | 140  |
+ * |  0.9V |  1.2V | 1.0V |  96   |  24   |  12  |  12  |  12      | 12   |  12  | 12  | 48   | 24  | 48    |  36 | 12  | 12    |  24 | 200  | 120  |
+ *
+ * -# Currently, all code runs at 1.2V; voltage adjustment is not supported at this time.
+ *
+ * -# If it is an external flash, the maximum speed of mspi needs to be based on the board test.
+ *    Because the maximum speed is related to the wiring of the board, and is also affected by temperature and GPIO voltage,
+ *    the maximum speed needs to be tested at the highest and lowest voltage of the board,
+ *    and the high and low temperature long-term stability test speed is no problem.
  */
+
 #define CCLK_16M_HCLK_16M_PCLK_16M clock_init(PLL_CLK_192M, PAD_PLL_DIV, PLL_DIV12_TO_CCLK, CCLK_DIV1_TO_HCLK, HCLK_DIV1_TO_PCLK, PLL_DIV4_TO_MSPI_CLK)
 #define CCLK_24M_HCLK_24M_PCLK_24M clock_init(PLL_CLK_192M, PAD_PLL_DIV, PLL_DIV8_TO_CCLK, CCLK_DIV1_TO_HCLK, HCLK_DIV1_TO_PCLK, PLL_DIV4_TO_MSPI_CLK)
 #define CCLK_32M_HCLK_32M_PCLK_16M clock_init(PLL_CLK_192M, PAD_PLL_DIV, PLL_DIV6_TO_CCLK, CCLK_DIV1_TO_HCLK, HCLK_DIV2_TO_PCLK, PLL_DIV4_TO_MSPI_CLK)
 #define CCLK_48M_HCLK_48M_PCLK_24M clock_init(PLL_CLK_192M, PAD_PLL_DIV, PLL_DIV4_TO_CCLK, CCLK_DIV1_TO_HCLK, HCLK_DIV2_TO_PCLK, PLL_DIV4_TO_MSPI_CLK)
 #define CCLK_96M_HCLK_48M_PCLK_24M clock_init(PLL_CLK_192M, PAD_PLL_DIV, PLL_DIV2_TO_CCLK, CCLK_DIV2_TO_HCLK, HCLK_DIV2_TO_PCLK, PLL_DIV4_TO_MSPI_CLK)
+
+/**
+ * -# If it is built-in flash, the maximum speed of mspi is 64M.
+ */
 
 /**********************************************************************************************************************
  *                                         global data type                                                           *
@@ -284,25 +303,29 @@ void clock_32k_init(clk_32k_type_e src);
 unsigned char clock_kick_32k_xtal(unsigned char xtal_times);
 
 /**
- * @brief       This function performs to select 24M as the system clock source.
- * @return      none.
+ * @brief     This function serves to calibrate 24M RC.
+ *            24M RC is inaccurate, and it is greatly affected by temperature, if need use it so real-time calibration is required
+ *            The 24M RC needs to be calibrated before the pm_sleep_wakeup function,
+ *            because this clock will be used to kick 24m xtal start after wake up,
+ *            The more accurate this time, the faster the crystal will start.Calibration cycle depends on usage
+ * @return    none.
  */
 _attribute_ram_code_sec_noinline_ void clock_cal_24m_rc(void);
 
 /**
- * @brief     This function performs to select 32K as the system clock source.
+ * @brief     This function serves to calibrate 32K RC.
  * @return    none.
  */
 void clock_cal_32k_rc(void);
 
 /**
- * @brief  This function serves to get the 32k tick.
- * @return none.
+ * @brief  This function serves to get the 32k tick currently.
+ * @return the current 32k tick.
  */
 _attribute_ram_code_sec_optimize_o2_ unsigned int clock_get_32k_tick(void);
 
 /**
- * @brief  This function serves to set the 32k tick.
+ * @brief  This function serves to set the 32k tick for sleep.
  * @param  tick - the value of to be set to 32k.
  * @return none.
  */

@@ -130,30 +130,25 @@ void user_init(void)
         core_interrupt_enable();
 
         /* 1. initialize some basic MCU hardware */
-        tlksdk_init_mcu_hardware();
+        tlk_sys_init_mcu_hardware();
 
         /* 4. initialize scheduler and tph controller. */
-        tlksdk_sch_init();
+        tlk_sch_init();
 
-        tlksdk_sch_set_base_interval(PLAN_INTERVAL_10MS);
+        tlk_sch_plan_set_base_interval(PLAN_INTERVAL_10MS);
 
         /* initialize mailbox irq */
         tlk_multi_core_communication_init();
 
         /*initialize TPSLL / BR/EDR / BLE core*/
 #if (OS_LEVEL_ENABLE == 1 && CHIP_TYPE != CHIP_TYPE_TL752X)
-        controller_init(BT_TPH, HCI_TR_SOC, NULL, NULL);
+        controller_init(BT_BLE_TPH, HCI_TR_SOC, NULL, NULL);
 #else
         controller_init(BT_TPH, HCI_TR_SOC, NULL, NULL);
 #endif
-
-/* Notice: unRegister this module can avoided TPSLL funcation abnormal.
-        1. In SRC code, this project unRegister BLE task default. 
-        2. In SDK code, when the SDK_is release, RELEASE_CHECK_EN will enable. Because Controller use this project build library. 
-        3. When SDK is ready, open here manually. */
-#if (1)
-        extern void tlk_pm_unRegisterCheckSleepReadyCallback(u32 taskTypeRdyChk);
-        tlk_pm_unRegisterCheckSleepReadyCallback(2); // PM_BLE_CTRL_SCH_TASKS
+#if (!SDK_RELEASE_CHECK_EN) && (BLMS_PM_ENABLE)
+        extern void tlk_pm_unRegisterCheckSleepReadyCallback(u32 taskTypeRdychk);
+        tlk_pm_unRegisterCheckSleepReadyCallback(2);
 #endif
 
 #if (CHIP_TYPE != CHIP_TYPE_TL752X)
@@ -165,12 +160,16 @@ void user_init(void)
         gpio_function_en(GPIO_PB4); //LED_RED
         gpio_output_en(GPIO_PB4);   //LED_RED
 #endif
+
+#if (TLK_CFG_UART2USBVCD_ENABLE)
+        uart2usb_vcd_init();
+#endif
 #else
         gpio_debug_init();
 #endif
     } else /* power up by D25F suspend wake up logic */
     {
-        tlksdk_restore_mcu_hardware();
+        tlk_sys_restore_mcu_hardware();
     }
 }
 
@@ -181,7 +180,7 @@ void user_init(void)
  */
 void main_loop(void)
 {
-    tlksdk_main_loop();
+    tlk_sys_main_loop();
 
     tlk_multi_core_communication_loop();
 

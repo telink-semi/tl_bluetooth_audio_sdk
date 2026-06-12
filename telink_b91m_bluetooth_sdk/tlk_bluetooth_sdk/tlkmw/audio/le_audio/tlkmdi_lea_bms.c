@@ -35,11 +35,9 @@
 #include "codec/lea_codec.h"
 #include "tlklib/usb/uac/tlkusb_uacctr.h"
 #include "tlklib/usb/uac/tlkusb_uac.h"
-#if (TLK_MW_LEA_BMS_ENABLE)
+#if (TLK_MW_LE_AUDIO_ENABLE && TLK_MW_LEA_BMS_ENABLE)
 #define TLKMDI_LEA_BMS_DBG_FLAG 0xFFFFFFFF
 #define TLKMDI_LEA_BMS_DBG_SIGN "[BMS]"
-
-
 
 struct lea_bms_audio_state
 {
@@ -48,13 +46,15 @@ struct lea_bms_audio_state
 };
 
 static struct lea_bms_audio_state s_lea_bms_state = {
-        .busy = false,
+    .busy = false,
 };
 uint32_t cig_start_time = 0;
+
 static _attribute_ram_code_ void tlkmdi_le_cig_start_time(void)
 {
     cig_start_time = clock_time();
 }
+
 /**
  * @brief       Initialize BMS state, callbacks, and open 48 kHz codec.
  * @return      TLK_ENONE on success.
@@ -63,8 +63,11 @@ int tlkmdi_lea_bms_init(void)
 {
     tlkapi_trace(TLKMDI_LEA_BMS_DBG_FLAG, TLKMDI_LEA_BMS_DBG_SIGN, __func__);
     lea_input_config_initial();
+    (void)tlkmdi_le_cig_start_time;
+#if !MCU_DUAL_CORE_ENABLE
     blt_ll_cis_central_event_start_cb(tlkmdi_le_cig_start_time);
-    tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_BOTH, TLKDRV_CODEC_CHANNEL_STEREO, TLKDRV_CODEC_BITDEPTH_16, 48000,0);
+#endif
+    tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_BOTH, TLKDRV_CODEC_CHANNEL_STEREO, TLKDRV_CODEC_BITDEPTH_16, 48000, 0);
     return TLK_ENONE;
 }
 
@@ -115,24 +118,24 @@ bool tlkmdi_lea_bms_switch(uint16_t handle, uint8_t status)
 void tlkmdi_lea_bms_start(struct tlkmdi_lea_bms_config *p_config)
 {
     tlk_printf("tlkmdi_lea_bms_start");
-    s_lea_bms_state.stream.frequency = p_config->samplingFrequency;
-    s_lea_bms_state.stream.location = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT;
-    s_lea_bms_state.stream.num = 2;
+    s_lea_bms_state.stream.frequency                       = p_config->samplingFrequency;
+    s_lea_bms_state.stream.location                        = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT;
+    s_lea_bms_state.stream.num                             = 2;
     s_lea_bms_state.stream.bms_config[0].samplingFrequency = p_config->samplingFrequency;
-    s_lea_bms_state.stream.bms_config[0].frameDuration = p_config->frameDuration;
-    s_lea_bms_state.stream.bms_config[0].frameOctets = p_config->frameOctets;
-    s_lea_bms_state.stream.bms_config[0].iso_handle = p_config->iso_handle[0];
+    s_lea_bms_state.stream.bms_config[0].frameDuration     = p_config->frameDuration;
+    s_lea_bms_state.stream.bms_config[0].frameOctets       = p_config->frameOctets;
+    s_lea_bms_state.stream.bms_config[0].iso_handle        = p_config->iso_handle[0];
 
     s_lea_bms_state.stream.bms_config[1].samplingFrequency = p_config->samplingFrequency;
-    s_lea_bms_state.stream.bms_config[1].frameDuration = p_config->frameDuration;
-    s_lea_bms_state.stream.bms_config[1].frameOctets = p_config->frameOctets;
-    s_lea_bms_state.stream.bms_config[1].iso_handle = p_config->iso_handle[1];
+    s_lea_bms_state.stream.bms_config[1].frameDuration     = p_config->frameDuration;
+    s_lea_bms_state.stream.bms_config[1].frameOctets       = p_config->frameOctets;
+    s_lea_bms_state.stream.bms_config[1].iso_handle        = p_config->iso_handle[1];
 
     struct lea_codec_config codec_config = {
-            .is_input_stream_init  = true,
-            .input_sample_rate     = p_config->samplingFrequency,
-            .input_location       = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT,
-            .is_output_stream_init = false,
+        .is_input_stream_init  = true,
+        .input_sample_rate     = p_config->samplingFrequency,
+        .input_location        = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT,
+        .is_output_stream_init = false,
     };
     lea_codec_stream_init(&codec_config);
 
@@ -141,13 +144,13 @@ void tlkmdi_lea_bms_start(struct tlkmdi_lea_bms_config *p_config)
     lea_set_input_all_location(LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT);
     lea_set_input_sample_config_bap(p_config->samplingFrequency, p_config->frameDuration);
     struct lea_config s_lea_config = {
-            .blocks = 1,
-            // .location = LEA_LOCATION_FRONT_LEFT,
-            .samplingFrequency = p_config->samplingFrequency,
-            .frameDuration     = p_config->frameDuration,
-            .frameOctets       = p_config->frameOctets,
-            // .iso_handle = 0x10,
-            // .presentationDelay = 40000,
+        .blocks = 1,
+        // .location = LEA_LOCATION_FRONT_LEFT,
+        .samplingFrequency = p_config->samplingFrequency,
+        .frameDuration     = p_config->frameDuration,
+        .frameOctets       = p_config->frameOctets,
+        // .iso_handle = 0x10,
+        // .presentationDelay = 40000,
     };
     s_lea_config.location   = LEA_LOCATION_FRONT_LEFT;
     s_lea_config.iso_handle = p_config->iso_handle[0];
@@ -155,14 +158,15 @@ void tlkmdi_lea_bms_start(struct tlkmdi_lea_bms_config *p_config)
     s_lea_config.location   = LEA_LOCATION_FRONT_RIGHT;
     s_lea_config.iso_handle = p_config->iso_handle[1];
     lea_set_input_config(&s_lea_config);
-#if (MCU_CORE_TYPE == MCU_CORE_TL721X||MCU_CORE_TYPE == MCU_CORE_TL322X)
-        timer_set_irq_mask(FLD_TMR0_MODE_IRQ);
+#if (MCU_CORE_TYPE == MCU_CORE_TL721X || MCU_CORE_TYPE == MCU_CORE_TL322X)
+    timer_set_irq_mask(FLD_TMR0_MODE_IRQ);
 #endif
     plic_interrupt_enable(IRQ_TIMER0);
     plic_set_priority(IRQ_TIMER0, 1);
 
-    tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN,le_audio_main_loop);
+    tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, le_audio_main_loop);
 }
+
 /**
  * @brief       Cache stream parameters and set ISO data path host->controller.
  * @param[in]   param   - stream parameter descriptor.
@@ -174,13 +178,13 @@ void tlkmdi_lea_bms_start_stream(struct lea_bms_stream_param *param)
     tlkmdi_audio_sendStartEvt(TLKAUD_TYPE_LEA_BMS, 0);
     for (int i = 0; i < param->num; i++) {
         struct ble_hci_le_setup_iso_data_path_full_cp p_cig_params = {
-        .conn_handle = param->bms_config[i].iso_handle,
-        .data_path_dir = Data_Dir_Output,
-         .data_path_id = Data_Path_HCI,
-    };
+            .conn_handle   = param->bms_config[i].iso_handle,
+            .data_path_dir = Data_Dir_Output,
+            .data_path_id  = Data_Path_HCI,
+        };
 
-    struct ble_hci_le_setup_iso_data_path_rp  p_cig_params_rp;
-    ble_host_hci_le_setup_iso_data_path(&p_cig_params,&p_cig_params_rp);
+        struct ble_hci_le_setup_iso_data_path_rp p_cig_params_rp;
+        ble_host_hci_le_setup_iso_data_path(&p_cig_params, &p_cig_params_rp);
     }
 }
 

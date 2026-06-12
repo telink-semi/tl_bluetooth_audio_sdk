@@ -45,14 +45,6 @@ void *tlkmdi_audmem_malloc(uint32_t size);
 void *tlkmdi_audmem_calloc(uint32_t size);
 
 /**
- * @brief       This function reallocates a segment of memory to store the contents of existing memory
- * @param[in]   ptr - The first memory address that needs to be reallocated
- * @param[in]   size - The size to allocate
- * @return      The first address of memory allocated, NULL means failure
- */
-void *tlkmdi_audmem_realloc(void *ptr, uint32_t size);
-
-/**
  * @brief       This function returns the occupied memory to the audio memory manager
  * @param[in]   ptr - The first memory address that needs to be freed
  * @return      None.
@@ -65,4 +57,3 @@ void tlkmdi_audmem_free(void *ptr);
  * @return      None.
  */
 void tlkmdi_audmem_print(void);
-

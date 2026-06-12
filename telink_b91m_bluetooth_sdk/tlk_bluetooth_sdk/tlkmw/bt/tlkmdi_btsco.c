@@ -30,6 +30,7 @@
 #include "stack/bt/host/bth/bth_handle.h"
 #include "stack/bt/host/bth/bth_sco.h"
 #include "stack/bt/host/bth/bth.h"
+#include "stack/bt/host/bth/bth_stdio.h"
 #include "stack/bt/host/btp/hfp/btp_hfp.h"
 #include "stack/stack.h"
 
@@ -39,15 +40,14 @@
 
 extern int btp_hfp_getCodec(uint16_t aclHandle, uint8_t *pCodec);
 
-static int                    tlkmdi_btsco_connReqEvt(uint8_t *pData, uint16_t dataLen);
-static int                    tlkmdi_btsco_connectEvt(uint8_t *pData, uint16_t dataLen);
-static int                    tlkmdi_btsco_disconnEvt(uint8_t *pData, uint16_t dataLen);
-tlkmdi_btsco_handle_t        *tlkmdi_btsco_getIdleItem(void);
-static void                   tlkmdi_btsco_resetItemByAclHandle(uint16_t aclHandle);
-static tlkmdi_btsco_handle_t *tlkmdi_btsco_getOtherUsedItem(uint16_t aclHandle);
+#if TLK_INTERPHONE_ENABLE
+#include "tlkmw/tlkmw.h"
+#endif
+static int tlkmdi_btsco_connReqEvt(uint8_t *pData, uint16_t dataLen);
+static int tlkmdi_btsco_connectEvt(uint8_t *pData, uint16_t dataLen);
+static int tlkmdi_btsco_disconnEvt(uint8_t *pData, uint16_t dataLen);
 
-static TlkMdiBtScoConnCB   sTlkMdiBtScoConnCB = NULL;
-static tlkmdi_btsco_ctrl_t sTlkMdiBtScoCtrl;
+static TlkMdiBtScoConnCB sTlkMdiBtScoConnCB = NULL;
 
 BTH_EVT_REGISTER(BTH_EVTID_SCOCONN_REQUEST, tlkmdi_btsco_connReqEvt);
 BTH_EVT_REGISTER(BTH_EVTID_SCOCONN_COMPLETE, tlkmdi_btsco_connectEvt);
@@ -85,8 +85,6 @@ static void tlkmdi_btsco_sendHostVoiceStateChgEvt(uint16_t aclHandle, uint16_t s
  */
 int tlkmdi_btsco_init(void)
 {
-    tmemset(&sTlkMdiBtScoCtrl, 0, sizeof(tlkmdi_btsco_ctrl_t));
-
     return TLK_ENONE;
 }
 
@@ -116,6 +114,49 @@ static int tlkmdi_btsco_connReqEvt(uint8_t *pData, uint16_t dataLen)
     uint8_t codec = 0;
 
     pEvt = (bth_scoConnRequestEvt_t *)pData;
+
+    tlkmdi_btacl_item_t *pItem;
+#if TLK_CHECK_REMOTE_DEV
+    bth_aclGetNameReportEvt_t *info = (bth_aclGetNameReportEvt_t *)tlkmdi_btacl_get_remote_dev();
+    if (info->isCustomerDev) {
+        pAclItem = bth_handle_searchConnAcl(pEvt->peerMac);
+        if (pAclItem != NULL && pAclItem->aclHandle != info->handle) {
+            uint16_t scoHandle = bth_handle_getConnScoHandle(info->handle);
+            tlk_printf("tlkmdi_btsco_connReqEvt************scohandle: %x ,info->handle = %x ", scoHandle, info->handle);
+            bth_sco_disconn(scoHandle, 0x13);
+        }
+
+        if (tlkmdi_interphone_get_mode() & INTERPHONE_MODE_MUSIC) {
+            extern uint8_t  tlkmdi_interphone_linkmgr_isenable(void);
+            extern uint16_t tlkmdi_interphone_linkmgr_getRunningHandle(void);
+            extern void     tlkmdi_linkmgr_callback(uint16_t handle, bool isTrue);
+            if (tlkmdi_interphone_linkmgr_isenable()) {
+                tlk_printf("tlkmdi_btsco_connReqEvt************tlkmdi_interphone_linkmgr_isenable");
+                uint16_t handleAcl = tlkmdi_interphone_linkmgr_getRunningHandle();
+                tlkmdi_interphone_clear_mode(INTERPHONE_MODE_MUSIC);
+                tlkmdi_linkmgr_callback(handleAcl, false);
+                info->resume_music = 1;
+                info->music_handle = handleAcl;
+            }
+        }
+
+    }
+
+    else
+#endif
+    {
+        if (bth_devClassToDevType(pEvt->devClass) == BTH_REMOTE_DTYPE_PHONE) {
+            pItem = tlkmdi_btacl_searchConnItem(pEvt->peerMac);
+            if (pItem == NULL) {
+                return -TLK_EFAIL;
+            }
+            if (bth_handle_searchConnSco(pItem->handle) == NULL && bth_handle_getConnScoCount() > 0) {
+                return -TLK_EFAIL;
+            }
+        }
+    }
+
+
     tlkapi_array(TLKMDI_BTSCO_DBG_FLAG, TLKMDI_BTSCO_DBG_SIGN, "tlkmdi_btsco_connReqEvt:", pEvt->peerMac, 6);
     pAclItem = bth_handle_searchConnAcl(pEvt->peerMac);
     if (pAclItem == NULL) {
@@ -146,7 +187,6 @@ static int tlkmdi_btsco_connectEvt(uint8_t *pData, uint16_t dataLen)
 {
     (void)dataLen;
     bth_scoConnCompleteEvt_t *pEvt;
-    tlkmdi_btsco_handle_t    *pItem;
 
     pEvt = (bth_scoConnCompleteEvt_t *)pData;
     if (pEvt->status != 0) {
@@ -155,14 +195,6 @@ static int tlkmdi_btsco_connectEvt(uint8_t *pData, uint16_t dataLen)
     }
     tlkapi_trace(TLKMDI_BTSCO_DBG_FLAG, TLKMDI_BTSCO_DBG_SIGN, "tlkmdi_btsco_connectEvt: {status-%d,handle-0x%x,scoHandle-0x%x,linkType-%d}", pEvt->status, pEvt->aclHandle,
                  pEvt->scoHandle, pEvt->linkType);
-    sTlkMdiBtScoCtrl.scoCnt++;
-    pItem = tlkmdi_btsco_getIdleItem();
-    if (pItem == NULL) {
-        tlkapi_error(TLKMDI_BTSCO_DBG_FLAG, TLKMDI_BTSCO_DBG_SIGN, "tlkmdi_btsco_connectEvt - no enough item:%d", pEvt->aclHandle);
-        return -TLK_ENOITEM;
-    }
-    pItem->aclHandle = pEvt->aclHandle;
-    pItem->scoHandle = pEvt->scoHandle;
 
 #if (TLK_USB_UAC_ENABLE && TLKBTP_CFG_HFPAG_ENABLE)
     if (sTlkUsbUacEvt2StatusCB != NULL) {
@@ -172,14 +204,10 @@ static int tlkmdi_btsco_connectEvt(uint8_t *pData, uint16_t dataLen)
 
     bth_handle_set_all_acl_max_slot(0x01);
 
-    if (bth_handle_getConnScoCount() < TLKMDI_BTSCO_MAX_NUM) {
-        uint8_t codecType = TLKMDI_BTSCO_CODEC_ID_CVSD;
-        if (!btp_hfp_getCodec(pEvt->aclHandle, &pItem->codec)) {
-            codecType = pItem->codec;
-        }
-        tlkmdi_btsco_sendHostVoiceStateChgEvt(pItem->aclHandle, pItem->scoHandle, true, codecType);
-    } else if (bth_handle_getConnScoCount() == TLKMDI_BTSCO_MAX_NUM && btp_hfp_getHfHandle() && btp_hfp_getAgHandle()) { // enable esco - only hf+ag
-    }
+    uint8_t codecType = TLKMDI_BTSCO_CODEC_ID_CVSD;
+    btp_hfp_getCodec(pEvt->aclHandle, &codecType);
+
+    tlkmdi_btsco_sendHostVoiceStateChgEvt(pEvt->aclHandle, pEvt->scoHandle, true, codecType);
 
     if (sTlkMdiBtScoConnCB != NULL) {
         sTlkMdiBtScoConnCB(pEvt->aclHandle, pEvt->scoHandle, true);
@@ -201,8 +229,6 @@ static int tlkmdi_btsco_disconnEvt(uint8_t *pData, uint16_t dataLen)
     bth_scoDiscCompleteEvt_t *pEvt = (bth_scoDiscCompleteEvt_t *)pData;
     tlkapi_trace(TLKMDI_BTSCO_DBG_FLAG, TLKMDI_BTSCO_DBG_SIGN, "tlkmdi_btsco_disconnEvt: {status-%d,handle-%d,scoHandle-%d,linkType-%d}", pEvt->reason, pEvt->aclHandle,
                  pEvt->scoHandle, pEvt->linkType);
-    sTlkMdiBtScoCtrl.scoCnt--;
-    tlkmdi_btsco_resetItemByAclHandle(pEvt->aclHandle);
 
 #if (TLK_USB_UAC_ENABLE && TLKBTP_CFG_HFPAG_ENABLE)
     if (sTlkUsbUacEvt2StatusCB != NULL) {
@@ -221,25 +247,24 @@ static int tlkmdi_btsco_disconnEvt(uint8_t *pData, uint16_t dataLen)
 
     bth_handle_set_all_acl_max_slot(0x05);
 
-    if (sTlkMdiBtScoCtrl.scoCnt < TLKMDI_BTSCO_MAX_NUM) {
-        tlkmdi_btsco_handle_t *pItem = tlkmdi_btsco_getOtherUsedItem(pEvt->aclHandle);
-        if (pItem != NULL) {
-            uint8_t codecType = TLKMDI_BTSCO_CODEC_ID_CVSD;
-            if (!btp_hfp_getCodec(pEvt->aclHandle, &pItem->codec)) {
-                codecType = pItem->codec;
-            }
-            tlkmdi_btsco_sendHostVoiceStateChgEvt(pItem->aclHandle, pItem->scoHandle, false, codecType);
-        } else {
 #if (!(TLK_USB_UAC_ENABLE && TLKBTP_CFG_HFPAG_ENABLE))
-            tlkmdi_btsco_sendHostVoiceStateChgEvt(pEvt->aclHandle, pEvt->scoHandle, false, TLKMDI_BTSCO_CODEC_ID_CVSD);
+    tlkmdi_btsco_sendHostVoiceStateChgEvt(pEvt->aclHandle, pEvt->scoHandle, false, TLKMDI_BTSCO_CODEC_ID_CVSD);
 #else
-            extern void tlkmdi_u2h_voice_disable(void);
-            tlkmdi_u2h_voice_disable();
+    extern void tlkmdi_u2h_voice_disable(void);
+    tlkmdi_u2h_voice_disable();
 //TODO: ZIYU not thread safe temp code
 #endif
+
+
+#if TLK_CHECK_REMOTE_DEV
+    bth_aclGetNameReportEvt_t *info = (bth_aclGetNameReportEvt_t *)tlkmdi_btacl_get_remote_dev();
+    if (info != NULL && pEvt->aclHandle != info->handle) {
+        if (info->isCustomerDev) {
+            tlk_printf("Remote Device soc reconnexted+[hadle %d]", info->handle);
+            return btp_hfphf_codecConn(info->handle);
         }
     }
-
+#endif
 #if (TLK_BT_MULTIPNT_ENABLE)
     for (uint8_t index = 0; index < TLKMDI_HFPHF_MAX_NUMBER; index++) {
         uint16_t             newHandle = tlkmdi_bthfphf_getHandle(index);
@@ -256,73 +281,4 @@ static int tlkmdi_btsco_disconnEvt(uint8_t *pData, uint16_t dataLen)
     return TLK_ENONE;
 }
 
-/**
- * @brief       This function is used to get idle SCO handle item
- * @param       none.
- * @return      the pointer to the idle SCO handle item.
- */
-tlkmdi_btsco_handle_t *tlkmdi_btsco_getIdleItem(void)
-{
-    uint8_t index;
-    for (index = 0; index < TLKMDI_BTSCO_MAX_NUM; index++) {
-        if (sTlkMdiBtScoCtrl.pItem[index].aclHandle == 0 && sTlkMdiBtScoCtrl.pItem[index].scoHandle == 0) {
-            break;
-        }
-    }
-    if (index == TLKMDI_BTSCO_MAX_NUM) {
-        return NULL;
-    }
-    return &sTlkMdiBtScoCtrl.pItem[index];
-}
-
-/**
- * @brief       This function is used to get used SCO handle item by ACL handle
- * @param[in]   aclHandle - the ACL connection handle
- * @return      the pointer to the used SCO handle item.
- */
-tlkmdi_btsco_handle_t *tlkmdi_btsco_getUsedItemByAclHandle(uint16_t aclHandle)
-{
-    uint8_t index;
-    for (index = 0; index < TLKMDI_BTSCO_MAX_NUM; index++) {
-        if (sTlkMdiBtScoCtrl.pItem[index].aclHandle != 0 && sTlkMdiBtScoCtrl.pItem[index].aclHandle == aclHandle) {
-            break;
-        }
-    }
-    if (index == TLKMDI_BTSCO_MAX_NUM) {
-        return NULL;
-    }
-    return &sTlkMdiBtScoCtrl.pItem[index];
-}
-
-/**
- * @brief       This function is used to reset SCO handle item by ACL handle
- * @param[in]   aclHandle - the ACL connection handle
- * @return      none.
- */
-static void tlkmdi_btsco_resetItemByAclHandle(uint16_t aclHandle)
-{
-    tlkmdi_btsco_handle_t *pItem = tlkmdi_btsco_getUsedItemByAclHandle(aclHandle);
-    if (pItem != NULL) {
-        memset(pItem, 0, sizeof(tlkmdi_btsco_handle_t));
-    }
-}
-
-/**
- * @brief       This function is used to get another used SCO handle item
- * @param[in]   aclHandle - the ACL connection handle
- * @return      the pointer to the used SCO handle item.
- */
-static tlkmdi_btsco_handle_t *tlkmdi_btsco_getOtherUsedItem(uint16_t aclHandle)
-{
-    uint8_t index;
-    for (index = 0; index < TLKMDI_BTSCO_MAX_NUM; index++) {
-        if (sTlkMdiBtScoCtrl.pItem[index].aclHandle != 0 && sTlkMdiBtScoCtrl.pItem[index].aclHandle != aclHandle) {
-            break;
-        }
-    }
-    if (index == TLKMDI_BTSCO_MAX_NUM) {
-        return NULL;
-    }
-    return &sTlkMdiBtScoCtrl.pItem[index];
-}
 #endif // #if (TLKBTP_CFG_HFP_ENABLE)

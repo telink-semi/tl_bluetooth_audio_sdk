@@ -23,6 +23,7 @@
  *******************************************************************************************************/
 #include "tl_common.h"
 #include "tlkapi/tlkapi.h"
+#include "tlkmw/sys_dev/tlkmw_sysdev.h"
 #if (TLK_CFG_UART_TOOL_ENABLE)
 #include "tlklib/spto/tlkspto.h"
 #include "tlkmw/misc/tlkmw_misc.h"
@@ -30,7 +31,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "tlkmw/userCtrl/ota/tlk_ota_protocol_common.h"
-#include "tlkmw/sys_dev/tlkmw_sysdev.h"
+
 
 void           tlkmdi_comm_input(uint8_t *pData, uint16_t dataLen);
 static int     tlkmdi_comm_recvCB(uint32_t param0, uint32_t param1, uint8_t *pData, uint16_t dataLen);
@@ -41,18 +42,12 @@ __attribute__((aligned(4))) static uint8_t sTlkMdiCommSendBuffer[TLKMDI_COMM_SER
 
 typedef struct
 {
-    TlkMdiCommDatCB dataList[TLKMDI_COMM_DATA_CHANNEL_MAX + 1];
+    TlkMdiCommDatCB dataList[TLKPRT_COMM_DAT_PORT_NUM];
 } tlkmdi_comm_ctrl_t;
 
 static tlkmdi_comm_ctrl_t sTlkMdiCommCtrl;
 
-static uint8_t sTlkMdiCommRecvCache[TLKMDI_COMM_RECV_CACHE_SIZE];
-static uint8_t sTlkMdiCommSendCache[TLKMDI_COMM_SEND_CACHE_SIZE];
-#if (TLKDBG_CFG_HPU_LOG_ENABLE)
-static uint8_t sTlkMdiCommHpuInit = 0;
-#endif
-
-#if (TLK_MW_USER_CTRL_ENABLE)
+#if (TLK_MW_OTA_ENABLE)
 #include "tlkmw/userCtrl/tlkmw_user_ctrl.h"
 static void tlkmdi_recv_user_ctrl_data(uint8_t datID, uint32_t number, uint8_t *pData, uint16_t dataLen);
 #endif
@@ -65,13 +60,14 @@ static void tlkmdi_recv_user_ctrl_data(uint8_t datID, uint32_t number, uint8_t *
 int tlkmdi_comm_init(void)
 {
     tlkspto_recv_regCB(tlkmdi_comm_recvCB);
-    tlkspto_recv_setBuffer(sTlkMdiCommRecvCache, TLKMDI_COMM_RECV_CACHE_SIZE);
-    tlkspto_send_setBuffer(sTlkMdiCommSendCache, TLKMDI_COMM_SEND_CACHE_SIZE);
-    STATIC_ASSERT_THIS_FILE(IS_4BYTE_ALIGN(sizeof(tlkmdi_comm_ctrl_t)));
     memset(&sTlkMdiCommCtrl, 0, sizeof(tlkmdi_comm_ctrl_t));
 #if (TLK_DEV_SERIAL_ENABLE)
 
-    tlkdrv_serial_mount(TLKDEV_SERIAL1_PORT, TLKMDI_COMM_SERIAL_BAUDRATE, TLKDEV_SERIAL1_TX_PIN, TLKDEV_SERIAL1_RX_PIN, TLKDEV_SERIAL1_TX_DMA, TLKDEV_SERIAL1_RX_DMA);
+#if (!MCU_CORE_TL752X_TEMP)
+    tlkdrv_serial_mount(TLKDEV_SERIAL1_PORT, TLKMDI_COMM_SERIAL_BAUDRATE, TLKDEV_SERIAL1_TX_PIN, TLKDEV_SERIAL1_RX_PIN, tlkhal_dma_malloc_ex(1), tlkhal_dma_malloc_ex(1));
+#else
+    tlkdrv_serial_mount(TLKDEV_SERIAL1_PORT, TLKMDI_COMM_SERIAL_BAUDRATE, TLKDEV_SERIAL1_TX_PIN, TLKDEV_SERIAL1_RX_PIN, 4, 0);
+#endif
 
     tlkdrv_serial_setTxQFifo(TLKDEV_SERIAL1_PORT, TLKMDI_COMM_SERIAL_SBUFF_NUMB, TLKMDI_COMM_SERIAL_SBUFF_SIZE + 4, sTlkMdiCommSendBuffer,
                              TLKMDI_COMM_SERIAL_SBUFF_NUMB * (TLKMDI_COMM_SERIAL_SBUFF_SIZE + 4));
@@ -87,12 +83,16 @@ int tlkmdi_comm_init(void)
     tlkspto_send_regCB(tlkmdi_comm_send);
 #endif
 
-#if (TLKDBG_CFG_HPU_LOG_ENABLE)
-    sTlkMdiCommHpuInit = 1;
-#endif
+#if (TLK_MW_OTA_ENABLE)
+    uint32_t         tlkmdi_comm_get_ota_param(uint32_t taskID, uint8_t param_type, void *UserArg);
+    sTlkMwUnitIntf_t interface = {
+        .channel       = TLKMW_OTA_TRANS_CHN_UART,
+        .send          = tlkmdi_comm_sendOTADat,
+        .recv          = NULL,
+        .get_ota_param = tlkmdi_comm_get_ota_param,
+    };
 
-#if (TLK_MW_USER_CTRL_ENABLE)
-    tlkmw_ota_register_chn_send_interface(TLKMW_OTA_TRANS_CHN_UART, tlkmdi_comm_sendOTADat);
+    tlkmw_ota_register_chn_interface(&interface);
     tlkmdi_comm_regDatCB(TLKPRT_COMM_OTA_DAT_PORT, tlkmdi_recv_user_ctrl_data, true);
 #endif
 
@@ -109,9 +109,6 @@ int tlkmdi_comm_init(void)
  */
 int32_t tlkdbg_hpulog_send(uint8_t *pData, uint16_t dataLen)
 {
-    if (sTlkMdiCommHpuInit == 0) {
-        return -TLK_ENOSUPPORT;
-    }
     uint16_t maxLen = tlkspto_recv_getBufferSize();
     if (dataLen > maxLen) {
         dataLen = maxLen;
@@ -124,7 +121,29 @@ int32_t tlkdbg_hpulog_send(uint8_t *pData, uint16_t dataLen)
 }
 #endif
 
-#if (TLK_MW_USER_CTRL_ENABLE)
+#if (TLK_MW_OTA_ENABLE)
+
+/**
+ * @brief       This function gets the OTA parameter.
+ * @param[in]   taskID      - task ID.
+ * @param[in]   param_type  - parameter type.
+ * @param[in]   UserArg     - user argument.
+ * @return      The OTA parameter value if successful, otherwise 0.
+ */
+uint32_t tlkmdi_comm_get_ota_param(uint32_t taskID, uint8_t param_type, void *UserArg)
+{
+    (void)taskID;
+    (void)UserArg;
+
+    if (param_type == TLKMW_OTA_PARAM_MTU_SIZE) {
+        return TLKMDI_COMM_SERIAL_OTA_MTU;
+    } else if (param_type == TLKMW_OTA_PARAM_SHAKE_INTV) {
+        return TLKMDI_COMM_SERIAL_OTA_SHAKE_INTV;
+    } else {
+        return 0;
+    }
+}
+
 /**
  * @brief       This function receives user control data and pushes it to the task.
  * @param[in]   datID   - identifier of the data.
@@ -139,7 +158,7 @@ static void tlkmdi_recv_user_ctrl_data(uint8_t datID, uint32_t number, uint8_t *
     (void)datID;
     (void)number;
 
-    tlkmw_userctrl_pushDataToTask(0xFFFFFFFF, pData, dataLen);
+    tlkmw_userctrl_pushDataToTask(0xFFFFFFFF, 0, pData, dataLen);
 }
 #endif
 
@@ -156,23 +175,6 @@ void tlkmdi_comm_reset(void)
     tlkdrv_serial_reset(TLKDEV_SERIAL1_PORT);
 #endif
     tlkspto_reset();
-}
-
-/**
- * @brief       This function handles communication by processing serial handlers if the serial device is enabled.
- * @return      none.
- */
-void tlkmdi_comm_handler(void)
-{
-#if (TLK_DEV_SERIAL_ENABLE)
-#if (!MCU_CORE_TL752X_TEMP)
-    tlkdrv_serial_handler(UART0);
-    tlkdrv_serial_handler(UART1);
-#else
-    tlkdrv_serial_handler(TLKDEV_SERIAL0_PORT);
-    tlkdrv_serial_handler(TLKDEV_SERIAL1_PORT);
-#endif //     #if (!MCU_CORE_TL752X_TEMP)
-#endif
 }
 
 /**
@@ -224,28 +226,6 @@ bool tlkmdi_comm_sfifoIsMore80(uint16_t dataLen)
 }
 
 /**
- * @brief       This function finds the next available data channel ID.
- * @param[out]  pDatID - the pointer to store the available data channel ID.
- * @return      TLK_ENONE if an available ID is found, -TLK_EQUOTA if no ID is available. 
- */
-int tlkmdi_comm_getValidDatID(uint8_t *pDatID)
-{
-    uint8_t index;
-    for (index = 1; index <= TLKMDI_COMM_DATA_CHANNEL_MAX; index++) {
-        if (sTlkMdiCommCtrl.dataList[index] == 0) {
-            break;
-        }
-    }
-    if (index == TLKMDI_COMM_DATA_CHANNEL_MAX + 1) {
-        return -TLK_EQUOTA;
-    }
-    if (pDatID != NULL) {
-        *pDatID = index;
-    }
-    return TLK_ENONE;
-}
-
-/**
  * @brief       This function registers a callback for a specific data channel.
  * @param[in]   datID - the data channel ID.
  * @param[in]   datCB - the callback function to register.
@@ -254,7 +234,7 @@ int tlkmdi_comm_getValidDatID(uint8_t *pDatID)
  */
 int tlkmdi_comm_regDatCB(uint8_t datID, TlkMdiCommDatCB datCB, bool isForce)
 {
-    if (datID > TLKMDI_COMM_DATA_CHANNEL_MAX) {
+    if (datID > TLKPRT_COMM_DAT_PORT_NUM) {
         return -TLK_EQUOTA;
     }
     if (!isForce && datCB != NULL && sTlkMdiCommCtrl.dataList[datID] != NULL) {
@@ -452,7 +432,7 @@ static int tlkmdi_comm_recvCB(uint32_t param0, uint32_t param1, uint8_t *pData, 
     } else if (ptype == TLKPRT_COMM_PTYPE_DAT) {
         uint8_t  dataID = (param0 & 0xFFFF00) >> 8;
         uint32_t number = (param1 & 0x0FFFFF);
-        if (dataID <= TLKMDI_COMM_DATA_CHANNEL_MAX && sTlkMdiCommCtrl.dataList[dataID] != NULL) {
+        if (dataID <= TLKPRT_COMM_DAT_PORT_NUM && sTlkMdiCommCtrl.dataList[dataID] != NULL) {
             sTlkMdiCommCtrl.dataList[dataID](dataID, number, pData, dataLen);
         }
     }
@@ -474,11 +454,31 @@ static uint8_t tlkmdi_comm_mtype2TaskID(uint8_t mtype)
     case TLKPRT_COMM_MTYPE_BT:
     case TLKPRT_COMM_MTYPE_CALL:
         return TLKSYS_TASKID_HOST;
+#if TLKAPP_LEMGR_ENABLE
     case TLKPRT_COMM_MTYPE_LE:
         return TLKSYS_TASKID_LEMGR;
+#endif
     case TLKPRT_COMM_MTYPE_AUDIO:
         return TLKSYS_TASKID_AUDIO;
     }
     return TLKSYS_TASKID_MAXNUM;
 }
 #endif // #if (TLK_CFG_UART_TOOL_ENABLE)
+
+
+/**
+ * @brief       This function handles communication by processing serial handlers if the serial device is enabled.
+ * @return      none.
+ */
+#if (TLK_DEV_SERIAL_ENABLE)
+void tlkmdi_serials_handler(void)
+{
+#if (!MCU_CORE_TL752X_TEMP)
+    tlkdrv_serial_handler(UART0);
+    tlkdrv_serial_handler(UART1);
+#else
+    tlkdrv_serial_handler(TLKDEV_SERIAL0_PORT);
+    tlkdrv_serial_handler(TLKDEV_SERIAL1_PORT);
+#endif //     #if (!MCU_CORE_TL752X_TEMP)
+}
+#endif

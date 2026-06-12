@@ -53,5 +53,4 @@
 #include "stack/ble/debug/ble_debug.h"
 
 
-
 #endif /* BLE_H_ */

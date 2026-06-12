@@ -27,7 +27,8 @@
 
 #define TLKMDI_BTHID_REPORT_ID_KEYBOARD_INPUT 1 //!< Keyboard input report ID, Bond with gcBtpSdpHidReportMap.
 #define TLKMDI_BTHID_REPORT_ID_CONSUMER_INPUT 2 //!< Consumer Control input report ID, Bond with gcBtpSdpHidReportMap.
-#define TLKMDI_BTHID_REPORT_ID_GAMEPAD_INPUT         1 //!< Gamepad  input report ID
+#define TLKMDI_BTHID_REPORT_ID_GAMEPAD_INPUT  1 //!< Gamepad  input report ID
+
 typedef struct
 {
     uint8_t  enChg; // Enable SetReport

@@ -90,7 +90,7 @@ void rf_tp_freq_offset_cal(void);
 //#define DMA_RFRX_OFFSET_FREQ_OFFSET(p)       (p[DMA_RFRX_OFFSET_RFLEN] + 13) //data len:2
 //#define DMA_RFRX_OFFSET_RSSI(p)              (p[DMA_RFRX_OFFSET_RFLEN] + 15) //data len:1, signed
 
-#define FIX_RF_DMA_REWRITE                   0                               /*B91 needs to 1*/
+#define FIX_RF_DMA_REWRITE                   0 /*B91 needs to 1*/
 
 #define TPSLL_RF_BLE_RF_PAYLOAD_LENGTH_OK(p) (p[5] <= (reg_rf_rxtmaxlen0 + (reg_rf_rxtmaxlen1 & FLD_RF_MAX_LEN) * 256))
 #define TPSLL_RF_BLE_RF_PACKET_CRC_OK(p)     ((p[p[5] + 5 + 11] & 0x01) == 0x0)
@@ -98,9 +98,9 @@ void rf_tp_freq_offset_cal(void);
 #define reg_rf_ll_txwait                     REG_ADDR16(REG_BB_LL_BASE_ADDR + 0x0e)
 #define reg_rf_ll_rxwait                     REG_ADDR16(REG_BB_LL_BASE_ADDR + 0x06)
 
-extern u8  *rf_get_chn_from_map(void);
-extern u8  *rf_get_chn_num_from_selected_map(void);
-extern void rf_set_tpsll_chn(u8 chn);
+extern u8         *rf_get_chn_from_map(void);
+extern u8         *rf_get_chn_num_from_selected_map(void);
+extern void        rf_set_tpsll_chn(u8 chn);
 extern signed char rf_tpsll_get_rssi(unsigned char raw_rssi);
 
 
@@ -141,8 +141,8 @@ typedef struct
 #if RF_RX_SEC_FLT_CONFIG
     rf_dcoc_cal_t dcoc_cal;
 #endif
-    u8            tx_en;
-    u8            rx_en;
+    u8 tx_en;
+    u8 rx_en;
 } rf_fastsettle_t;
 
 extern rf_fastsettle_t rf_fastsettle;

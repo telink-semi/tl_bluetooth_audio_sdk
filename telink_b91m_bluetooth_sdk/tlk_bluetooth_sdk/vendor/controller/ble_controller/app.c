@@ -38,7 +38,7 @@
 #include "stack/btble.h"
 #include "stack/controller.h"
 
-#if (CONTROLLER_MODE == BLE_CONTROLLER)
+#if (CHECK_BLE_CONTROLLER)
 
 
 /**
@@ -61,13 +61,13 @@ void user_init(void)
 
         core_interrupt_enable();
 
-        tlksdk_init_mcu_hardware();
+        tlk_sys_init_mcu_hardware();
 
         tlk_multi_core_communication_init();
 
         controller_init(BLE_only, HCI_TR_SOC, NULL, NULL);
 
-        tlksdk_sch_init();
+        tlk_sch_init();
 
         // rf_set_ble_bb_debugport();
 #if (CHIP_TYPE != CHIP_TYPE_TL752X)
@@ -79,7 +79,7 @@ void user_init(void)
 #if (CHIP_TYPE != CHIP_TYPE_TL752X)
     else /* power up by D25F suspend wake up logic */
     {
-        tlksdk_restore_mcu_hardware();
+        tlk_sys_restore_mcu_hardware();
     }
 #endif
 }
@@ -93,7 +93,7 @@ void main_loop(void)
 {
     tlk_multi_core_communication_loop();
 
-    tlksdk_main_loop();
+    tlk_sys_main_loop();
 
     tlkmdi_pm_process();
 }

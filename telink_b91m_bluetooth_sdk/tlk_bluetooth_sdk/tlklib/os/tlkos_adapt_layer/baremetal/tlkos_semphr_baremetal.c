@@ -27,7 +27,7 @@
 #include "tlklib/os/tlkos_config.h"
 
 #if TLKOS_CFG_BAREMETAL_ENABLE
-    #include "tlklib/os/tlkos_api/tlkos_define.h"
+#include "tlklib/os/tlkos_api/tlkos_define.h"
 
 /**
  * @brief     Creates a binary semaphore.

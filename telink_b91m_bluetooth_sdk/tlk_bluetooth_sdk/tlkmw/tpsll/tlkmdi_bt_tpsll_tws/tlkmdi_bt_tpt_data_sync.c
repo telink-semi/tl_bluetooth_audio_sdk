@@ -233,7 +233,7 @@ static void tlkmdi_bt_tpt_data_sync_sendVolCtrl(void *data, uint16_t dataLen)
         evtDat->volume                        = msg->vol;
         tlksys_sendMsg(TLKSYS_TASKID_AUDIO, TLKSYS_AUD_MSGID_HOST_EVT_COME, buffer, bufferLen);
     } else {
-        btp_hfphf_setSpkVolume(msg->vol);
+        btp_hfphf_setSpkVolumeByHandle(msg->handle, msg->vol);
         const uint8_t         bufferLen = sizeof(tlksys_msg_hostEvt_t) + sizeof(tlksys_msg_hostEvt_btVolChg_t);
         uint8_t               buffer[bufferLen];
         tlksys_msg_hostEvt_t *evt             = (tlksys_msg_hostEvt_t *)buffer;
@@ -259,9 +259,9 @@ static void tlkmdi_bt_tpt_data_sync_sendTpsHid(void *data, uint16_t dataLen)
 {
     typedef int (*tphKeyFunc)(void);
     static const tphKeyFunc sTphKeyFuncs[AUD_TPSIF_KEYID_NUM] = {
-        [AUD_TPSIF_KEYID_VOL_UP] = tlkmdi_bt_tph_keyFuncAudioVolumeUp,        [AUD_TPSIF_KEYID_VOL_DOWN] = tlkmdi_bt_tph_keyFuncAudioVolumeDown,
-        [AUD_TPSIF_KEYID_PLAY_PAUSE] = tlkmdi_bt_tph_keyFuncMusicPlayPause,   [AUD_TPSIF_KEYID_PLAY_FORWARD] = tlkmdi_bt_tph_keyFuncMusicForward,
-        [AUD_TPSIF_KEYID_PLAY_BACKWARD] = tlkmdi_bt_tph_keyFuncMusicBackward,
+        [AUD_TPSIF_KEYID_VOL_UP] = tlkmdi_bt_tpsll_keyFuncAudioVolumeUp,        [AUD_TPSIF_KEYID_VOL_DOWN] = tlkmdi_bt_tpsll_keyFuncAudioVolumeDown,
+        [AUD_TPSIF_KEYID_PLAY_PAUSE] = tlkmdi_bt_tpsll_keyFuncMusicPlayPause,   [AUD_TPSIF_KEYID_PLAY_FORWARD] = tlkmdi_bt_tpsll_keyFuncMusicForward,
+        [AUD_TPSIF_KEYID_PLAY_BACKWARD] = tlkmdi_bt_tpsll_keyFuncMusicBackward,
     };
     if (dataLen != sizeof(dataSync_tps_hid_t)) {
         return;

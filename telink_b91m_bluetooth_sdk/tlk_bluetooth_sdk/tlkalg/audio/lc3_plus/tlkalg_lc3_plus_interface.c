@@ -28,6 +28,7 @@
 
 #if TLKALG_LC3_PLUS_ENC_ENABLE || TLKALG_LC3_PLUS_DEC_ENABLE
 
+
 #if (MCU_CORE_TYPE == MCU_CORE_TL721X)
 LC3P_ENC_CFG_Param lc3p_enc_param = {
     .samplerate   = LC3P_SR_48K,
@@ -104,8 +105,8 @@ LC3PLUS_ErrorCode err_enc[2] = {LC3PLUS_OK, LC3PLUS_OK};
 LC3PLUS_ErrorCode err_dec[2] = {LC3PLUS_OK, LC3PLUS_OK};
 LC3PLUS_ErrorCode err[2]     = {LC3PLUS_OK, LC3PLUS_OK};
 
-int32_t lc3plus_sample_buf[960 * 2] = {0};
-int32_t lc3plus_buf_24[960 * 2]     = {0};
+int32_t lc3plus_sample_buf[480 * 2] = {0};
+int32_t lc3plus_buf_24[480 + 48]    = {0};
 
 int32_t *input_int24_or_int32[LC3PLUS_MAX_CHANNELS];
 int32_t *output_int24_or_int32[LC3PLUS_MAX_CHANNELS];
@@ -139,7 +140,7 @@ uint8_t tlkalg_lc3_plus_enc_set_param(uint8_t type, void *param)
     {
         lc3p_enc_param.frame_dms = LC3_FRAME_DURATION_5MS;
 #if (MCU_CORE_TYPE == MCU_CORE_TL721X)
-        lc3p_enc_param.bitrate = LC3P_BITRATE_80k;
+        lc3p_enc_param.bitrate = LC3P_BITRATE_72k;
 #else
         lc3p_enc_param.bitrate = LC3P_BITRATE_32k;
 #endif
@@ -195,6 +196,7 @@ uint8_t tlkalg_lc3_plus_enc_channel_change(uint8_t channel_in)
 {
     int8_t chnl_out;
     switch (channel_in) {
+    case 0:
     case 1:
     case 2:
         chnl_out = 1;
@@ -246,39 +248,38 @@ uint8_t tlkalg_lc3_plus_dec_channel_change(uint8_t channel_in)
  */
 int8_t tlkalg_lc3_plus_enc_init(uint8_t *p_buff, uint8_t channel)
 {
-    uint8_t chnl_in      = channel & 0x0F;
-    uint8_t size_type_in = (channel >> 4) & 0x0F;
+    uint8_t chnl_out = tlkalg_lc3_plus_enc_channel_change(channel);
 
-    uint8_t chnl_out = tlkalg_lc3_plus_enc_channel_change(chnl_in);
+    if (p_buff == NULL) {
+        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "lc3 plus init buff null");
+        return -1;
+    }
 
-    if (size_type_in == 1) { //encoder buff init
-        g_encoder[0] = (LC3PLUS_Enc *)p_buff;
-        g_encoder[1] = (LC3PLUS_Enc *)((uint8_t *)p_buff + encoder_size);
+    for (int i = 0; i < chnl_out; i++) {
+        g_encoder[i] = (LC3PLUS_Enc *)((uint8_t *)p_buff + encoder_size * i);
+        err[i]       = tlka_lc3a_enc_init(g_encoder[i], P_lc3p_enc_param);
 
-        for (int i = 0; i < chnl_out; i++) {
-            err[i] = tlka_lc3a_enc_init(g_encoder[i], P_lc3p_enc_param);
-            if (err[i] != LC3PLUS_OK) {
-                tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "err_enc_init[%d]: %d", i, err[i]);
-            }
-
-            nSamples_enc = tlka_lc3a_enc_get_input_samples(g_encoder[i]);
-            tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "nSamples_enc: %d", nSamples_enc);
-
-            real_bitrate = tlka_lc3a_enc_get_real_bitrate(g_encoder[i]);
-            tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "real_bitrate: %d", real_bitrate);
-
-            err[i] = tlka_lc3plus_enc_set_bitrate(g_encoder[i], lc3p_enc_param.bitrate);
-            if (err[i] != LC3PLUS_OK) {
-                tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "err_bitrate: %d", err[i]);
-            }
+        if (err[i] != LC3PLUS_OK) {
+            tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "err_enc_init[%d]: %d", i, err[i]);
         }
 
-        for (int i = 0; i < lc3p_enc_param.channels; i++) {
-            input_int24_or_int32[i] = lc3plus_buf_24 + i * nSamples_enc;
+        nSamples_enc = tlka_lc3a_enc_get_input_samples(g_encoder[i]);
+        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "nSamples_enc: %d", nSamples_enc);
+
+        real_bitrate = tlka_lc3a_enc_get_real_bitrate(g_encoder[i]);
+        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "real_bitrate: %d", real_bitrate);
+
+        err[i] = tlka_lc3plus_enc_set_bitrate(g_encoder[i], lc3p_enc_param.bitrate);
+        if (err[i] != LC3PLUS_OK) {
+            tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "err_bitrate: %d", err[i]);
         }
-    } else if (size_type_in == 2) { //scratch buff init
-        enc_scratch = (void *)p_buff;
-        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "scratch buff init");
+    }
+
+    scratch_size_enc = tlka_lc3a_enc_get_scratch_size(g_encoder[0]); //just apply mono
+    tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "tlkalg_lc3_plus scratch_size_enc: %d", scratch_size_enc);
+
+    for (int i = 0; i < lc3p_enc_param.channels; i++) {
+        input_int24_or_int32[i] = lc3plus_buf_24 + i * nSamples_enc;
     }
 
     return 0;
@@ -292,31 +293,25 @@ int8_t tlkalg_lc3_plus_enc_init(uint8_t *p_buff, uint8_t channel)
  */
 int8_t tlkalg_lc3_plus_dec_init(uint8_t *p_buff, uint8_t channel)
 {
-    uint8_t chnl_in      = channel & 0x0F;
-    uint8_t size_type_in = (channel >> 4) & 0x0F;
+    uint8_t chnl_out = tlkalg_lc3_plus_enc_channel_change(channel);
 
-    uint8_t chnl_out = tlkalg_lc3_plus_enc_channel_change(chnl_in);
+    for (int i = 0; i < chnl_out; i++) {
+        g_decoder[i] = (LC3PLUS_Dec *)((uint8_t *)p_buff + decoder_size * i);
+        err[i]       = tlka_lc3a_dec_init(g_decoder[i], P_lc3p_dec_param);
 
-    if (size_type_in == 1) { //encoder buff init
-        g_decoder[0] = (LC3PLUS_Dec *)p_buff;
-        g_decoder[1] = (LC3PLUS_Dec *)((uint8_t *)p_buff + decoder_size);
-
-        for (int i = 0; i < chnl_out; i++) {
-            err[i] = tlka_lc3a_dec_init(g_decoder[i], P_lc3p_dec_param);
-            if (err[i] != LC3PLUS_OK) {
-                tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "err_dec_init[%d]: %d", i, err[i]);
-            }
-
-            nSamples_dec = tlka_lc3a_dec_get_output_samples(g_decoder[i]);
-            tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "nSamples_dec: %d", nSamples_dec);
+        if (err[i] != LC3PLUS_OK) {
+            tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "err_dec_init[%d]: %d", i, err[i]);
         }
 
-        for (int i = 0; i < lc3p_dec_param.channels; i++) {
-            output_int24_or_int32[i] = lc3plus_buf_24 + i * nSamples_dec;
-        }
-    } else if (size_type_in == 2) { //scratch buff init
-        dec_scratch = (void *)p_buff;
-        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "scratch buff init");
+        nSamples_dec = tlka_lc3a_dec_get_output_samples(g_decoder[i]);
+        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "nSamples_dec: %d", nSamples_dec);
+    }
+
+    scratch_size_dec = tlka_lc3a_dec_get_scratch_size(g_decoder[0]);
+    tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "tlkalg_lc3_plus scratch_size_dec: %d", scratch_size_dec);
+
+    for (int i = 0; i < lc3p_dec_param.channels; i++) {
+        output_int24_or_int32[i] = lc3plus_buf_24 + i * nSamples_dec;
     }
 
     return 0;
@@ -330,7 +325,6 @@ int8_t tlkalg_lc3_plus_enc_deinit(void)
 {
     g_encoder[0] = NULL;
     g_encoder[1] = NULL;
-    enc_scratch  = NULL;
     tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "tlkalg_lc3_plus_enc_deinit");
     return 0;
 }
@@ -343,75 +337,7 @@ int8_t tlkalg_lc3_plus_dec_deinit(void)
 {
     g_decoder[0] = NULL;
     g_decoder[1] = NULL;
-    dec_scratch  = NULL;
     tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "tlkalg_lc3_plus_dec_deinit");
-    return 0;
-}
-
-/**
- * @brief       Get LC3 Plus encoder size by type
- * @param[in]   size_type_in - Size type
- * @param[in]   chnl_in - Channel count
- * @return      Required size in bytes
- */
-uint16_t tlkalg_lc3_plus_enc_get_size_type(uint8_t size_type_in, uint8_t chnl_in)
-{
-    (void)chnl_in;
-    switch (size_type_in) {
-    case 1:
-    {
-        encoder_size = tlka_lc3a_enc_get_size(lc3p_enc_param.samplerate, lc3p_enc_param.channels, lc3p_enc_param.wavFormat_in);
-        encoder_size = encoder_size / 4 * 4;
-        // lc3p_enc_param.channels = chnl_in;
-
-        return encoder_size;
-        break;
-    }
-    case 2:
-    {
-        scratch_size_enc = tlka_lc3a_enc_get_scratch_size(g_encoder[0]);
-
-        return scratch_size_enc;
-        break;
-    }
-    default:
-        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "lc3 plus enc get size error");
-        break;
-    }
-
-    return 0;
-}
-
-/**
- * @brief       Get LC3 Plus decoder size by type
- * @param[in]   size_type_in - Size type
- * @param[in]   chnl_in - Channel count
- * @return      Required size in bytes
- */
-uint16_t tlkalg_lc3_plus_dec_get_size_type(uint8_t size_type_in, uint8_t chnl_in)
-{
-    (void)chnl_in;
-    switch (size_type_in) {
-    case 1:
-    {
-        decoder_size = tlka_lc3a_dec_get_size(lc3p_dec_param.samplerate, lc3p_dec_param.channels, lc3p_dec_param.plc_method, lc3p_dec_param.frame_dms, lc3p_dec_param.hrmode);
-        decoder_size = decoder_size / 4 * 4;
-        // lc3p_dec_param.channels = chnl_in;
-        return decoder_size;
-        break;
-    }
-    case 2:
-    {
-        scratch_size_dec = tlka_lc3a_dec_get_scratch_size(g_decoder[0]);
-
-        return scratch_size_dec;
-        break;
-    }
-    default:
-        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "lc3 plus dec get size error");
-        break;
-    }
-
     return 0;
 }
 
@@ -422,13 +348,12 @@ uint16_t tlkalg_lc3_plus_dec_get_size_type(uint8_t size_type_in, uint8_t chnl_in
  */
 uint16_t tlkalg_lc3_plus_enc_get_size(uint8_t channel)
 {
-    uint8_t chnl_in      = channel & 0x0F;
-    uint8_t size_type_in = (channel >> 4) & 0x0F;
+    uint8_t chnl_out = tlkalg_lc3_plus_enc_channel_change(channel);
 
-    uint8_t  chnl_out     = tlkalg_lc3_plus_enc_channel_change(chnl_in);
-    uint16_t enc_out_size = tlkalg_lc3_plus_enc_get_size_type(size_type_in, chnl_out);
+    encoder_size = tlka_lc3a_enc_get_size(lc3p_enc_param.samplerate, LC3P_CHN_SINGLE, lc3p_enc_param.wavFormat_in);
+    encoder_size = (encoder_size + 3) / 4 * 4;
 
-    return ((chnl_out == 1) ? enc_out_size : (enc_out_size * 2));
+    return ((chnl_out == 1) ? encoder_size : (encoder_size * 2));
 }
 
 /**
@@ -438,13 +363,12 @@ uint16_t tlkalg_lc3_plus_enc_get_size(uint8_t channel)
  */
 uint16_t tlkalg_lc3_plus_dec_get_size(uint8_t channel)
 {
-    uint8_t chnl_in      = channel & 0x0F;
-    uint8_t size_type_in = (channel >> 4) & 0x0F;
+    uint8_t chnl_out = tlkalg_lc3_plus_dec_channel_change(channel);
 
-    uint8_t  chnl_out     = tlkalg_lc3_plus_dec_channel_change(chnl_in);
-    uint16_t dec_out_size = tlkalg_lc3_plus_dec_get_size_type(size_type_in, chnl_out);
+    decoder_size = tlka_lc3a_dec_get_size(lc3p_dec_param.samplerate, LC3P_CHN_SINGLE, lc3p_dec_param.plc_method, lc3p_dec_param.frame_dms, lc3p_dec_param.hrmode);
+    decoder_size = (decoder_size + 3) / 4 * 4;
 
-    return ((chnl_out == 1) ? dec_out_size : (dec_out_size * 2));
+    return ((chnl_out == 1) ? decoder_size : (decoder_size * 2));
 }
 
 /**
@@ -461,24 +385,31 @@ int tlkalg_lc3_plus_enc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t 
     (void)width;
     //    (void)len;
 
-    uint8_t  chnl = 0;
+    uint8_t chnl = tlkalg_lc3_plus_enc_channel_change(channel);
+    ;
     int32_t *psrc = (int32_t *)ps;
+
+    for (int i = 0; i < chnl; i++) {
+        if (g_encoder[i] == NULL) {
+            tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "lc3 plus encoder buff null");
+            return -1;
+        }
+    }
 
     if (nSamples_enc != len) {
         tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "lc3 plus enc datalen error! nSamples_enc:%d, len:%d", nSamples_enc, len);
     }
 
-#if MCU_CORE_TYPE == MCU_CORE_TL721X
-    if (channel == 0 || channel == 1) {
-        chnl = 1;
+    enc_scratch = (void *)tlkalg_malloc_func(scratch_size_enc);
+    if (enc_scratch == NULL) {
+        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "lc3 plus encoder scratch NULL");
+        return -2;
     }
 
+#if MCU_CORE_TYPE == MCU_CORE_TL721X
     deinterleave_int(psrc, input_int24_or_int32, nSamples_enc, chnl);
     err_enc[0] = tlka_lc3a_enc_process_frame(g_encoder[channel], (void **)input_int24_or_int32, pd, &nBytes, enc_scratch);
-
 #else
-    chnl = tlkalg_lc3_plus_enc_channel_change(channel);
-
     if (chnl == 1) {
         for (int k = 0; k < nSamples_enc; k++) {
             lc3plus_sample_buf[k] = psrc[k];
@@ -495,6 +426,11 @@ int tlkalg_lc3_plus_enc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t 
         err_enc[i] = tlka_lc3a_enc_process_frame(g_encoder[i], (void **)input_int24_or_int32, pd + nBytes * i, &nBytes, enc_scratch);
     }
 #endif
+
+    if (enc_scratch != NULL) {
+        tlkalg_free_func(enc_scratch);
+        enc_scratch = NULL;
+    }
 
     if (err_enc[0] != LC3PLUS_OK || err_enc[1] != LC3PLUS_OK) {
         tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "err_enc[0]: %d", err_enc[0]);
@@ -527,49 +463,38 @@ int tlkalg_lc3_plus_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t 
         bfi_ext = 1;
     }
 
-    for (int i = 0; i < chnl; i++) {
-        err_dec[i] = tlka_lc3a_dec_process_frame(g_decoder[i], ps + nBytes * i, nBytes, bfi_ext, (void **)output_int24_or_int32, dec_scratch);
-        interleave_int(output_int24_or_int32, lc3plus_sample_buf + nSamples_dec * i, nSamples_dec, 1);
+    dec_scratch = (void *)tlkalg_malloc_func(scratch_size_dec);
+    if (dec_scratch == NULL) {
+        tlkapi_trace(0xFFFFFFFF, "[LC3 PLUS]", "lc3 plus dec_scratch NULL");
+        return -2;
     }
-
-#if (MCU_CORE_TYPE == MCU_CORE_TL721X)
-
-    int pdes_stereo_lr[160 * 2] = {0};
 
     if (chnl == 1) {
-        for (int k = 0; k < nSamples_dec; k++) {
-            pdes_stereo_lr[k] = lc3plus_sample_buf[k];
-        }
+        err_dec[0] = tlka_lc3a_dec_process_frame(g_decoder[0], ps, nBytes, bfi_ext, (void **)output_int24_or_int32, dec_scratch);
+        interleave_int(output_int24_or_int32, pdes, nSamples_dec, 1);
     } else {
-        for (int k = 0; k < nSamples_dec; k++) {
-            pdes_stereo_lr[2 * k]     = lc3plus_sample_buf[k];
-            pdes_stereo_lr[2 * k + 1] = lc3plus_sample_buf[k + nSamples_dec];
-        }
-    }
-
-    for (int k = 0; k < nSamples_dec * chnl; k++) {
-        pdes[k] = pdes_stereo_lr[k];
-    }
-#else
 #if TLKALG_ALG_LOOPBACK_TEST_ENABLE
-    if (chnl == 1) {
-        for (int k = 0; k < nSamples_dec; k++) {
-            pdes[k] = lc3plus_sample_buf[k];
+        for (int i = 0; i < chnl; i++) {
+            err_dec[i] = tlka_lc3a_dec_process_frame(g_decoder[i], ps + nBytes * i, nBytes, bfi_ext, (void **)output_int24_or_int32, dec_scratch);
+            interleave_int(output_int24_or_int32, lc3plus_sample_buf + nSamples_dec * i, nSamples_dec, 1);
         }
-    } else {
+
         for (int k = 0; k < nSamples_dec; k++) {
             pdes[2 * k]     = lc3plus_sample_buf[k];
             pdes[2 * k + 1] = lc3plus_sample_buf[k + nSamples_dec];
         }
-    }
-
 #else
-    for (int k = 0; k < nSamples_dec * chnl; k++) {
-        pdes[k] = lc3plus_sample_buf[k];
+        for (int i = 0; i < chnl; i++) {
+            err_dec[i] = tlka_lc3a_dec_process_frame(g_decoder[i], ps + nBytes * i, nBytes, bfi_ext, (void **)output_int24_or_int32, dec_scratch);
+            interleave_int(output_int24_or_int32, pdes + nSamples_dec * i, nSamples_dec, 1);
+        }
+#endif
     }
-#endif
 
-#endif
+    if (dec_scratch != NULL) {
+        tlkalg_free_func(dec_scratch);
+        dec_scratch = NULL;
+    }
 
     if (bfi_ext == 1) {
         bfi_ext = 0;

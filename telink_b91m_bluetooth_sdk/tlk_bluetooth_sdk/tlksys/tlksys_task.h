@@ -34,10 +34,11 @@ typedef enum
     TLKSYS_TASK_EVT_SYS_PRINT_LOG,
     TLKSYS_TASK_EVT_SYS_SQL_SAVE,
     TLKSYS_TASK_EVT_SYS_USER_CTRL,
-    TLKSYS_TASK_EVT_SYS_SPI_CTRL,
+    TLKSYS_TASK_EVT_SYS_USB_HS,
+    TLKSYS_TASK_EVT_SYS_USB_SUSPEND,
+    TLKSYS_TASK_EVT_SYS_USB_EXIT_SUSPEND,
     TLKSYS_TASK_EVT_SYS_APP_0,
     TLKSYS_TASK_EVT_SYS_APP_1,
-    TLKSYS_TASK_EVT_SYS_USB_HS,
     TLKSYS_TASK_EVT_SYS_APP_MAX_INDEX = 15,
 
     TLKSYS_TASK_EVT_HOST_CORE = 0,
@@ -47,6 +48,10 @@ typedef enum
     TLKSYS_TASK_EVT_HOST_TPSLL,
     TLKSYS_TASK_EVT_LOW_LATENCY_STATE,
     TLKSYS_TASK_EVT_HOST_MUSIC_STATUS_NOTIFY,
+    TLKSYS_TASK_EVT_HOST_APP0,
+    TLKSYS_TASK_EVT_HOST_APP1,
+    TLKSYS_TASK_EVT_HOST_APP2,
+    TLKSYS_TASK_EVT_HOST_APP3,
 
     TLKSYS_TASK_EVT_AUD_CORE = 0,
     TLKSYS_TASK_EVT_AUD_MAIN,
@@ -132,6 +137,16 @@ TlkApiTimerList_t *tlksys_task_getTimerList(uint16_t taskID);
  * @returns  None.
  */
 void tlksys_task_regEvtCB(uint16_t taskID, uint32_t index, TlkOsEventDealCB cb);
+
+/**
+ * @brief  Register event callback for specified task
+ * @param[in] taskID : Task ID to register callback
+ * @param[in] index : Event index
+ * @param[in] cb : Callback function to register
+ * @param[in] isFirstSet : Is need set event when register.
+ * @returns  None.
+ */
+void tlksys_task_regEvtCBEx(uint16_t taskID, uint32_t index, TlkOsEventDealCB cb, uint8_t isFirstSet);
 
 /**
  * @brief  Set event for specified task

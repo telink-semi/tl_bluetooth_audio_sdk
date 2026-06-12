@@ -177,13 +177,6 @@ void ble_host_sal_log_set_output_level(enum ble_host_log_level level);
 
 /****************** hci sal interface ****************/
 /**
- *   @brief BLE host hci initialization.
- *
- *   @return none.
- */
-void ble_host_sal_hci_init(void);
-
-/**
  *   @brief BLE host hci send value to controller.
  *
  *   @param[in]  data    hci data pointer.
@@ -244,21 +237,16 @@ void ble_host_sal_hci_receive_complete(void);
 typedef void (*ble_host_task)(void);
 
 /**
+ *   @brief BLE host os lock type_id, if bare metal, it is not used.
+ */
+typedef void *ble_host_sal_os_lock_t;
+
+/**
  *   @brief BLE host os/bare metal initialization.
  *
  *   @return none.
  */
 void ble_host_sal_os_init(void);
-
-/**
- *   @brief BLE host os/bare metal register task.
- *
- *   @param[in]  stack_size  task stack size(not used now).
- *   @param[in]  task_entry  task entry function, bare metal enters in loop.
- *
- *   @return none.
- */
-void ble_host_sal_os_register(uint32_t stack_size, void (*task_entry)(void));
 
 /**
  *   @brief BLE host os/bare metal get ble host task.
@@ -298,13 +286,38 @@ void ble_host_sal_os_exit_critical_section(void);
 void ble_host_sal_os_wakeup(void);
 
 /**
- *   @brief BLE host task enter to sleep.
+ *    @brief BLE host os create lock.
  *
- *   @return none.
- *
- *   @note It only used in os, platform need add critical section.
+ *    @return os lock handle.
  */
-void ble_host_sal_os_sleep(void);
+ble_host_sal_os_lock_t ble_host_sal_os_create_lock(void);
+
+/**
+ *    @brief BLE host os delete lock.
+ *
+ *    @param[in]  lock  os lock handle.
+ *
+ *    @return none.
+ */
+void ble_host_sal_os_delete_lock(ble_host_sal_os_lock_t lock);
+
+/**
+ *    @brief BLE host os acquire lock.
+ *
+ *    @param[in]  lock  os lock handle.
+ *
+ *    @return none.
+ */
+void ble_host_sal_os_acquire_lock(ble_host_sal_os_lock_t lock);
+
+/**
+ *    @brief BLE host os release lock.
+ *
+ *    @param[in]  lock  os lock handle.
+ *
+ *    @return none.
+ */
+void ble_host_sal_os_release_lock(ble_host_sal_os_lock_t lock);
 
 /********************* NVS sal interface ****************/
 /**
@@ -433,7 +446,3 @@ int ble_host_sal_nvs_write_blob(ble_host_sal_nvs_handle_t handle, const char *ke
  *   @note If value is null, it will return length of value.
  */
 int ble_host_sal_nvs_read_blob(ble_host_sal_nvs_handle_t handle, const char *key, void *value, uint16_t *length);
-
-// #ifdef __cplusplus
-// }
-// #endif

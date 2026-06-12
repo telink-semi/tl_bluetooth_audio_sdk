@@ -61,9 +61,9 @@ typedef enum
 typedef struct
 {
     uint8_t flashPlicThreshold;
-    uint8_t flashProtectEn; //0 or 1
-    uint8_t flashLineCfg;   //refer to TLKSYS_HAL_INIT_FLASH_LINE_CFG_ENUM
-    uint8_t powerCfg;       //refer to TLKSYS_HAL_INIT_POWER_CFG_ENUM
+    uint8_t flashProtectClose; //0 or 1,default 0 means open
+    uint8_t flashLineCfg;      //refer to TLKSYS_HAL_INIT_FLASH_LINE_CFG_ENUM
+    uint8_t powerCfg;          //refer to TLKSYS_HAL_INIT_POWER_CFG_ENUM
     uint8_t clockLevel;
     uint8_t gpioCfg;        //refer to TLKSYS_HAL_INIT_GPIO_CFG_ENUM
     uint8_t lpTmrCfg;       //refer to TLKSYS_HAL_INIT_LP_TMR_CFG_ENUM

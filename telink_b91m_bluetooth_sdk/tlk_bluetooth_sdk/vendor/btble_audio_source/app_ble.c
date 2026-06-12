@@ -36,9 +36,9 @@
  */
 static void ble_stack_init(void)
 {
-    uint8_t mac[6], mac_random[6];
+    uint8_t mac[6];
 
-    blc_initMacAddress(flash_sector_mac_address, mac, mac_random);
+    tlkhal_get_bluetooth_mac(mac);
 
     ble_host_v1_init();
     ble_host_v1_set_bd_addr(mac);

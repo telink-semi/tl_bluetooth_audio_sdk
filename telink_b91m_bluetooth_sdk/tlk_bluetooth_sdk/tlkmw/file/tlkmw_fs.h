@@ -31,6 +31,13 @@
 void tlkmw_fs_init(void);
 
 /**
+ * @brief       This function used to set fs is allowed to sleep
+ * @param[in]   en    - enable allowed. 
+ * @return      none.
+ */
+void tlkmw_fs_allow_sleep(uint8_t en);
+
+/**
  * @brief  Allocates memory for a file control block.
  * @return Pointer to the allocated FIL structure (NULL if out of memory).
  */

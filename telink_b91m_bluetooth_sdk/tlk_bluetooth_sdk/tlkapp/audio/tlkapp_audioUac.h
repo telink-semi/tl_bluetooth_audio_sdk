@@ -30,24 +30,25 @@ enum
     TLKAPP_AUDIO_UAC_STATE_IDLE = 0,
     TLKAPP_AUDIO_UAC_STATE_MUSIC,
     TLKAPP_AUDIO_UAC_STATE_VOICE,
+    TLKAPP_AUDIO_UAC_STATE_RECORD,
     TLKAPP_AUDIO_UAC_STATE_MAX,
 };
 
-typedef struct 
+typedef struct
 {
     uint32_t newState;
-    bool   isSpkEN;
-    bool   isMicEN;
-}tlkapp_uac_StateChgArg_t;
+    bool     isSpkEN;
+    bool     isMicEN;
+} tlkapp_uac_StateChgArg_t;
 
 typedef struct
 {
-    uint8_t optype;
-    uint8_t resv;
+    uint8_t  optype;
+    uint8_t  resv;
     uint16_t handle;
-    bool   musicAttEN;
-    bool   voiceAttEN;
-}tlkapp_uac_CreateTaskArg_t;
+    bool     musicAttEN;
+    bool     voiceAttEN;
+} tlkapp_uac_CreateTaskArg_t;
 
 /**
  * @brief       This function initializes the audio UAC module.

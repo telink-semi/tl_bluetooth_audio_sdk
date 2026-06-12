@@ -37,6 +37,6 @@ void tlkapp_main_loop(void);
  * @return      The status of the initialization process.
  * @note    
  */
-int  tlkapp_init(void);
+int tlkapp_init(void);
 
 #endif /* VENDOR__PROJ_TEST_SCHE__APP_H_ */

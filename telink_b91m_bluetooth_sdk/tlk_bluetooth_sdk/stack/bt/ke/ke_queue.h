@@ -66,7 +66,7 @@
  */
 __INLINE void ke_queue_push(struct co_list *const queue, struct co_list_hdr *const element)
 {
-    co_list_push_back(queue, element);
+    tlk_bt_ctrl_co_list_push_back(queue, element);
 }
 
 /**
@@ -80,7 +80,7 @@ __INLINE void ke_queue_push(struct co_list *const queue, struct co_list_hdr *con
  */
 __INLINE struct co_list_hdr *ke_queue_pop(struct co_list *const queue)
 {
-    return co_list_pop_front(queue);
+    return tlk_bt_ctrl_co_list_pop_front(queue);
 }
 
 /**
@@ -94,7 +94,7 @@ __INLINE struct co_list_hdr *ke_queue_pop(struct co_list *const queue)
  * @return              Pointer to the element found and removed (NULL otherwise).
  ****************************************************************************************
  */
-struct co_list_hdr *ke_queue_extract(struct co_list *const queue, bool (*func)(struct co_list_hdr const *elmt, uint32_t arg), uint32_t arg);
+struct co_list_hdr *tlk_bt_ctrl_ke_queue_extract(struct co_list *const queue, bool (*func)(struct co_list_hdr const *elmt, uint32_t arg), uint32_t arg);
 
 /**
  ****************************************************************************************
@@ -111,7 +111,8 @@ struct co_list_hdr *ke_queue_extract(struct co_list *const queue, bool (*func)(s
  * @return              Pointer to the element found and removed (NULL otherwise).
  ****************************************************************************************
  */
-void ke_queue_insert(struct co_list *const queue, struct co_list_hdr *const element, bool (*cmp)(struct co_list_hdr const *elementA, struct co_list_hdr const *elementB));
+void tlk_bt_ctrl_ke_queue_insert(struct co_list *const queue, struct co_list_hdr *const element,
+                                 bool (*cmp)(struct co_list_hdr const *elementA, struct co_list_hdr const *elementB));
 
 /// @} QUEUE
 

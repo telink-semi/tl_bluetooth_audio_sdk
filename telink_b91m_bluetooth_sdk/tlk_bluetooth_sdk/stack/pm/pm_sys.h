@@ -31,15 +31,15 @@
 #include "types.h"
 #include "drivers.h"
 
-#define PM_CHK_HCI_TASK_NUM      TSKNUM_MAX
+#define PM_CHK_HCI_TASK_NUM TSKNUM_MAX
 
 /**
  *  @brief
  */
 typedef enum
 {
-    PM_SLEEP_DISABLE      = 0,
-    PM_SLEEP_ENABLE       = 1,
+    PM_SLEEP_DISABLE = 0,
+    PM_SLEEP_ENABLE  = 1,
 } sleep_enable_t;
 
 /**
@@ -97,22 +97,6 @@ void tlksdk_pm_init(void);
 void tlksdk_pm_recoverDeepRetention(void);
 
 /**
- * @brief   for user to bypass N22 core's sleep tick check
- *          Note: if N22 power down, then D25F core will not check N22's sleep tick, 
- *          other MCU type call this API will not effect
- * @param   bypass - TRUE: bypass sleep tick check; FALSE: not bypass sleep tick check
- * @return  none
- */
-void tlksdk_pm_bypassSleepTickCheck(bool bypass);
-
-/**
- * @brief   for user to check if sleep tick check is bypassed
- * @param   none
- * @return  TRUE : bypass sleep tick check; FALSE : not bypass sleep tick check
- */
-bool tlksdk_pm_isSleepTickCheckBypass(void);
-
-/**
  * @brief   for user to enable low power mode
  * @param   enable - TRUE: enable low power mode ; FALSE: disable low power mode
  * @return  none
@@ -149,6 +133,13 @@ void tlksdk_pm_setDeepsleepRetentionEnable(deep_retn_en_t en);
  * @return  none
  */
 void tlksdk_pm_setWakeupSource(pm_sleep_wakeup_src_e wakeup_src);
+
+/**
+ * @brief   for user to remove low power mode wake up source
+ * @param   wakeup_src - low power mode wake_up source
+ * @return  none
+ */
+void tlksdk_pm_removeWakeupSource(pm_sleep_wakeup_src_e wakeup_src);
 
 
 /**
@@ -232,7 +223,7 @@ u32 tlksdk_pm_enterSleep(u32 sleep_mode, u32 nxt_task_wakeup_tick);
  * @param   none
  * @return  true if system PM mode is used, false otherwise.
  */
-bool tlksdk_pm_is_enabled (void);
+bool tlksdk_pm_is_enabled(void);
 
 /**
  * @brief  Function to get the wakeup source of mcu.

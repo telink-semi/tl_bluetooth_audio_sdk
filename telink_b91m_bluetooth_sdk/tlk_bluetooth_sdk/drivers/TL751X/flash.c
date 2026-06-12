@@ -740,7 +740,7 @@ drv_api_status_e flash_calib_adc_vref(unsigned int addr)
 {
     adc_calib_t calib_value;
 
-    flash_read_page(addr+0xc4, 6, (unsigned char *)&calib_value);
+    flash_read_page(addr, 6, (unsigned char *)&calib_value);
 
     if (flash_set_adc_calib_value((signed short)(calib_value.vbat_gain_low_bit | (calib_value.vbat_gain_high_bit << 8)),calib_value.vbat_offset,adc_set_vbat_calib_vref)|| flash_set_adc_calib_value((signed short)(calib_value.gpio_gain_low_bit | (calib_value.gpio_gain_high_bit << 8)),calib_value.gpio_offset,adc_set_gpio_calib_vref))     //vbat_ft and gpio_ft
     {

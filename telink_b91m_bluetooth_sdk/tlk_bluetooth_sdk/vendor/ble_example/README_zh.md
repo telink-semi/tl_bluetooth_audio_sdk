@@ -74,7 +74,7 @@ int main(void)
 #if (!TLK_CFG_RTOS_ENABLE)
     while (1) {
     #if (BLE_CONTROLLER_INITIAL_EN)
-        tlksdk_main_loop();
+        tlk_sys_main_loop();
     #endif
         tlksys_handler();
     }
@@ -354,6 +354,11 @@ void START(APP_BLE_MY_DEMO)(void)
 **BLE iOS ANCS Demo**:
 
 实现了 BLE iOS ANCS(Apple Notification Center Service) 的功能，应用中提供了判断是否为iOS设备的方式，以及可以订阅iOS的通知。具体的demo说明参考[README.md](app_ios_ancs/README.md)
+
+**BLE L2CAP CoC Demo**:
+
+实现了 BLE L2CAP CoC (Connection Oriented Channel) 的功能，可以用来验证 BLE L2CAP CoC 的功能。具体的demo说明参考[README.md](app_l2cap_coc/README.md)
+
 
 **LE Audio Unicast Server Demo**:
 

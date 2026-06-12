@@ -29,20 +29,20 @@
 #if GSC_INOUT_FREQ
 
 #else
-    // typedef float spx_word16_t;
-    // typedef float spx_word32_t;
+// typedef float spx_word16_t;
+// typedef float spx_word32_t;
 
-    // typedef struct complexF_
-    // {
-    // 	spx_word16_t real;
-    // 	spx_word16_t imag;
-    // }complexF;
+// typedef struct complexF_
+// {
+// 	spx_word16_t real;
+// 	spx_word16_t imag;
+// }complexF;
 
-    // typedef struct complexFloat_
-    // {
-    // 	float real;
-    // 	float imag;
-    // }complexFloat;
+// typedef struct complexFloat_
+// {
+// 	float real;
+// 	float imag;
+// }complexFloat;
 
 #endif
 

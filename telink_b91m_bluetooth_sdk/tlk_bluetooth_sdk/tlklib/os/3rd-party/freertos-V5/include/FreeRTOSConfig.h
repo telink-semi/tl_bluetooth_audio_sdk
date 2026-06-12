@@ -68,11 +68,8 @@
 /* Hook function definitions. */
 #define configUSE_IDLE_HOOK                     (1 && !(TLKOS_CFG_TICKLESS_ENABLE))
 #define configUSE_TICK_HOOK                     0
-#if TLKOS_CFG_DEBUG_STACK_OVERFLOW
-#define configCHECK_FOR_STACK_OVERFLOW          2
-#else
 #define configCHECK_FOR_STACK_OVERFLOW          0
-#endif
+
 #if TLKOS_CFG_DEBUG_MALLOC_FAIL
 #define configUSE_MALLOC_FAILED_HOOK            1
 #else
@@ -93,7 +90,7 @@
 /* Software timer definitions. */
 #define configUSE_TIMERS                        1
 #define configTIMER_TASK_PRIORITY               ( configMAX_PRIORITIES - 1 )
-#define configTIMER_QUEUE_LENGTH                25
+#define configTIMER_QUEUE_LENGTH                15
 #define configTIMER_TASK_STACK_DEPTH            ( 128 * 3 )
 
 #define configISR_STACK_SIZE_WORDS              512
@@ -153,7 +150,7 @@ header file. */
 
 /* The following constant describe the hardware */
 
-#if MCU_CORE_TYPE  == MCU_CORE_TL751X || MCU_CORE_TYPE == MCU_CORE_TL721X ||  MCU_CORE_TYPE == MCU_CORE_TL322X
+#if MCU_CORE_TYPE  == MCU_CORE_TL751X || MCU_CORE_TYPE  == MCU_CORE_TL753X || MCU_CORE_TYPE == MCU_CORE_TL721X ||  MCU_CORE_TYPE == MCU_CORE_TL322X
 #define configMTIME_BASE_ADDRESS	( 0xC6000000 )
 #define configMTIMECMP_BASE_ADDRESS	( 0xC6000008 )
 #else
@@ -182,7 +179,7 @@ provided in this demo can be extended to save even more power. */
 #define fabs( x ) __builtin_fabs( x )
 
 /* Enable Hardware Stack Protection and Recording mechanism. */
-#define configHSP_ENABLE            0
+#define configHSP_ENABLE            TLKOS_CFG_DEBUG_STACK_OVERFLOW
 
 /*Hardware stack protection for ISR can't support statically allocated IRQ_STACK*/
 #if(configHSP_ENABLE == 1 && configISR_STACK_SIZE_WORDS == 0)

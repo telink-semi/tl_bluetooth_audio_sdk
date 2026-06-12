@@ -448,9 +448,10 @@ static void tlkmdi_uac_music_spkHandler(void)
 
 #if (TLK_DEV_CODEC_ENABLE)
 
-    tlkusb_ppm_process(sTlkMdiAudUacMusicCtrl.last_tick);
+    // tlkusb_ppm_process(sTlkMdiAudUacMusicCtrl.last_tick);
 
-    uint16_t used_samples = tlkusb_uac_get_ppm_out_used_samples();
+    // uint16_t used_samples = tlkusb_uac_get_ppm_out_used_samples();
+    uint16_t used_samples = tlkusb_uac_get_iso_out_used_samples();
 
     if (used_samples >= (TLKUSB_AUD_SPK_SAMPLES * 15) && !sTlkMdiAudUacMusicCtrl.startflag) {
         sTlkMdiAudUacMusicCtrl.startflag = 1;
@@ -465,7 +466,8 @@ static void tlkmdi_uac_music_spkHandler(void)
     length = 0;
 
     if (tlkdrv_codec_getSpkIdleLen() > (bytes_per_ms * sTlkMdiAudUacMusicCtrl.readFrame)) {
-        length = tlkusb_uac_read_ppm_out_samples(buffer, samples_per_ms * tlkusb_uac_get_iso_out_Channels() * sTlkMdiAudUacMusicCtrl.readFrame);
+        // length = tlkusb_uac_read_ppm_out_samples(buffer, samples_per_ms * tlkusb_uac_get_iso_out_Channels() * sTlkMdiAudUacMusicCtrl.readFrame);
+        length = tlkusb_uac_read_iso_out_samples(buffer, samples_per_ms * tlkusb_uac_get_iso_out_Channels() * sTlkMdiAudUacMusicCtrl.readFrame);
     } else {
         // DBG_YATING_CHN4_HIGH;
         // DBG_YATING_CHN4_LOW;
@@ -584,7 +586,7 @@ static void tlkmdi_uac_music_micHandler(void)
     } else {
     }
 
-    tlkusb_uacmic_ppm_process(sTlkMdiAudUacMusicCtrl.last_tick);
+    // tlkusb_uacmic_ppm_process(sTlkMdiAudUacMusicCtrl.last_tick);
 }
 
 #endif //(TLK_USB_UAC_PLAYBACK_ENABLE)

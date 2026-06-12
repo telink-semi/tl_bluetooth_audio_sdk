@@ -90,7 +90,6 @@ void flash_plic_preempt_config(unsigned char preempt_en, unsigned char threshold
  */
 _attribute_text_sec_ void flash_erase_sector(unsigned long addr)
 {
-    wd_clear(); //BLE SDK use: clear watch dog
     DISABLE_BTB;
     flash_mspi_write_ram(FLASH_SECT_ERASE_CMD, addr, NULL, 0);
     ENABLE_BTB;

@@ -48,8 +48,8 @@ typedef enum
 
 typedef struct
 {
-    uint8_t group;
-    uint8_t state;
+    uint8_t  group;
+    uint8_t  state;
     uint16_t handle;
 } tlkapp_sysUI_handleState_t;
 
@@ -59,13 +59,6 @@ typedef struct
  * @return      Returns TLK_ENONE on success.
  */
 int tlkapp_sys_ctrlInit(void);
-
-/**
- * @brief       Handles flash saving requests.
- * @param[in]   none.
- * @return      none.
- */
-void tlkapp_sys_flashHandler(void);
 
 /**
  * @brief       Updates the handle state with mutex protection.

@@ -84,5 +84,13 @@ ble_sts_t blc_ll_bigTerminateSync(u8 bigHandle);
  */
 sdu_packet_t *blc_ll_popBisSyncRxSduData(u16 bis_connHandle);
 
+/**
+ * @brief	   be used to synchronize to a BIG described in the periodic advertising train specified by the sync_handle.
+ * @param[in]  pCmdParam - command parameters, refer to "[Vol 4] Part E,7.8.106 LE BIG Create Sync command"
+ * @return     status, 0x00:  succeed
+ * 					   other: failed
+ */
+ble_sts_t blc_hci_le_bigCreateSync(hci_le_bigCreateSyncParams_t *pCmdParam);
+
 
 #endif /* BIS_SYNC_H_ */

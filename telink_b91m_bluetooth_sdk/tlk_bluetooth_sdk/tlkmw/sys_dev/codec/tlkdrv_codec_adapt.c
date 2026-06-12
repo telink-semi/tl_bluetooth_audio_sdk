@@ -37,12 +37,12 @@ static TlkOsTimerHandle_t sTlkDrvCodecTimers[TLKDRV_CODEC_ADAPT_TIMER_NUM] = {0}
  * @param[in] userArg - User argument for callback
  * @return Operation result status
  */
-int tlkdrv_codec_startTimerOnce(TLKDRV_CODEC_ADAPT_TIMER_ENUM type, uint32_t periodMs, TlkOsTimerEnterCB CBEnter, void * userArg)
+int tlkdrv_codec_startTimerOnce(TLKDRV_CODEC_ADAPT_TIMER_ENUM type, uint32_t periodMs, TlkOsTimerEnterCB CBEnter, void *userArg)
 {
-    if(sTlkDrvCodecTimers[type] == 0){
-        tlkos_timer_create(NULL,periodMs,false,CBEnter,userArg,&sTlkDrvCodecTimers[type]);
+    if (sTlkDrvCodecTimers[type] == 0) {
+        tlkos_timer_create(NULL, periodMs, false, CBEnter, userArg, &sTlkDrvCodecTimers[type]);
     }
-    tlkos_timer_setPeriod(sTlkDrvCodecTimers[type],periodMs);
+    tlkos_timer_setPeriod(sTlkDrvCodecTimers[type], periodMs);
     tlkos_timer_start(sTlkDrvCodecTimers[type]);
     return TLK_ENONE;
 }
@@ -66,8 +66,8 @@ int tlkdrv_codec_destroyTimer(TLKDRV_CODEC_ADAPT_TIMER_ENUM type)
  */
 TLKDRV_CODEC_ADAPT_TIMER_ENUM tlkdrv_codec_timerHandle2type(TlkOsTimerHandle_t timerHandle)
 {
-    for(int i = 0;i < TLKDRV_CODEC_ADAPT_TIMER_NUM;i++){
-        if(sTlkDrvCodecTimers[i] == timerHandle){
+    for (int i = 0; i < TLKDRV_CODEC_ADAPT_TIMER_NUM; i++) {
+        if (sTlkDrvCodecTimers[i] == timerHandle) {
             return i;
         }
     }

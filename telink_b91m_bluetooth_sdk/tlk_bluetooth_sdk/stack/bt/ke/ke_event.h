@@ -85,7 +85,7 @@ enum KE_EVENT_STATUS
  * @brief Initialize Kernel event module.
  ****************************************************************************************
  */
-void ke_event_init(void);
+void tlk_bt_ctrl_ke_event_init(void);
 
 /**
  ****************************************************************************************
@@ -97,7 +97,7 @@ void ke_event_init(void);
  * @return                      Status
  ****************************************************************************************
  */
-uint8_t ke_event_callback_set(uint8_t event_type, void (*p_callback)(void));
+uint8_t tlk_bt_ctrl_ke_event_callback_set(uint8_t event_type, void (*p_callback)(void));
 
 /**
  ****************************************************************************************
@@ -109,7 +109,7 @@ uint8_t ke_event_callback_set(uint8_t event_type, void (*p_callback)(void));
  * @param[in]  event_type      Event to be set.
  ****************************************************************************************
  */
-void ke_event_set(uint8_t event_type);
+void tlk_bt_ctrl_ke_event_set(uint8_t event_type);
 
 /**
  ****************************************************************************************
@@ -118,7 +118,7 @@ void ke_event_set(uint8_t event_type);
  * @param[in]  event_type      Event to be cleared.
  ****************************************************************************************
  */
-void ke_event_clear(uint8_t event_type);
+void tlk_bt_ctrl_ke_event_clear(uint8_t event_type);
 
 /**
  ****************************************************************************************
@@ -129,7 +129,7 @@ void ke_event_clear(uint8_t event_type);
  * @return                     Event status (0: not set / 1: set)
  ****************************************************************************************
  */
-uint8_t ke_event_get(uint8_t event_type);
+uint8_t tlk_bt_ctrl_ke_event_get(uint8_t event_type);
 
 /**
  ****************************************************************************************
@@ -138,14 +138,14 @@ uint8_t ke_event_get(uint8_t event_type);
  * @return                     Events bit field
  ****************************************************************************************
  */
-uint32_t ke_event_get_all(void);
+uint32_t tlk_bt_ctrl_ke_event_get_all(void);
 
 /**
  ****************************************************************************************
  * @brief Flush all pending events.
  ****************************************************************************************
  */
-void ke_event_flush(void);
+void tlk_bt_ctrl_ke_event_flush(void);
 
 /**
  ****************************************************************************************
@@ -154,7 +154,7 @@ void ke_event_flush(void);
  * This primitive is the entry point of Kernel event scheduling.
  ****************************************************************************************
  */
-void ke_event_schedule(void);
+void tlk_bt_ctrl_ke_event_schedule(void);
 
 
 /// @} EVT

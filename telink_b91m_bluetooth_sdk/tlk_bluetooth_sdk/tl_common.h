@@ -40,7 +40,6 @@
 #include "common/tlk_define.h"
 #include "assert.h"
 
-
 #include "tlkapi/tlkapi_debug.h"
 
 #include "vendor/common/user_config.h"

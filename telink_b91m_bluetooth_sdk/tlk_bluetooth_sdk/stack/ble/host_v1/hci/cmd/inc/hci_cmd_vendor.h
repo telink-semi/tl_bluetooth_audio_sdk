@@ -33,6 +33,7 @@ enum BLE_HCI_VENDOR_SUB_CMD
 {
     BLE_HCI_SUB_CMD_SET_BD_ADDR = 0x01,
     BLE_HCI_SUB_CMD_SET_ACL_LATENCY,
+    BLE_HCI_SUB_CMD_SET_TX_PWR,
 } __attribute__((packed));
 
 /**
@@ -52,3 +53,12 @@ int ble_host_hci_vendor_set_bd_address(const uint8_t *p_bd_addr);
  *   @return int Returns 0 on success, or an error code on failure.
  */
 int ble_host_hci_vendor_set_acl_latency(uint16_t latency);
+
+/**
+ *   @brief Set the TX power level.
+ *
+ *   @param[in] tx_power The TX power level (in dBm).
+ *
+ *   @return int Returns 0 on success, or an error code on failure.
+ */
+int ble_host_hci_vendor_set_tx_power(uint8_t tx_power);

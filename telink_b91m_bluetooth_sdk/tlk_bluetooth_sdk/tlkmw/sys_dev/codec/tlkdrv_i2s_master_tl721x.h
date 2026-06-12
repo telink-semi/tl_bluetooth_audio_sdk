@@ -29,20 +29,21 @@
 #include "drivers.h"
 
 #if (MCU_CORE_TYPE == MCU_CORE_TL721X && TLKDRV_CODEC_I2S_MASTER_ENABLE)
-	#include "tlkdrv_i2s_ex_codec_config.h"
-	typedef struct
-	{
-		uint8_t isInit;
-		uint8_t isOpen;
-		uint8_t isMute;
-		uint8_t micVol;
-		uint8_t micIsEn;
-		uint8_t spkIsEn;
-		uint8_t channel;
-		uint8_t bitDepth;
-		uint32_t sampleRate;
-	} tlkdrv_iismst_t;
+#include "tlkdrv_i2s_ex_codec_config.h"
+
+typedef struct
+{
+    uint8_t  isInit;
+    uint8_t  isOpen;
+    uint8_t  isMute;
+    uint8_t  micVol;
+    uint8_t  micIsEn;
+    uint8_t  spkIsEn;
+    uint8_t  channel;
+    uint8_t  bitDepth;
+    uint32_t sampleRate;
+} tlkdrv_iismst_t;
 
 #endif
 
-#endif     // TLKDRV_IIS_MASTER_H
+#endif // TLKDRV_IIS_MASTER_H

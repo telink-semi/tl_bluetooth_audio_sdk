@@ -27,40 +27,35 @@
 #include "ff/source/diskio.h"
 #include "tlkfs_diskio.h"
 
-__attribute__((weak))
-const struct tm *tlkfs_diskio_getTime(void)
+__attribute__((weak)) const struct tm *tlkfs_diskio_getTime(void)
 {
     static const struct tm time = {
-		.tm_hour= 0,
-		.tm_mday= 1,
-		.tm_mon= 7,
-		.tm_year= 2025-1900,
+        .tm_hour = 0,
+        .tm_mday = 1,
+        .tm_mon  = 7,
+        .tm_year = 2025 - 1900,
     };
     return &time;
 }
 
-__attribute__((weak))
-int tlkfs_diskio_write(uint8_t *buff, uint32_t sector, uint32_t cnt)
+__attribute__((weak)) int tlkfs_diskio_write(uint8_t *buff, uint32_t sector, uint32_t cnt)
 {
-    (void) buff;
-    (void) sector;
-    (void) cnt;
+    (void)buff;
+    (void)sector;
+    (void)cnt;
     return RES_NOTRDY;
 }
 
-__attribute__((weak))
-int tlkfs_diskio_read(uint8_t *buff, uint32_t sector, uint32_t cnt)
+__attribute__((weak)) int tlkfs_diskio_read(uint8_t *buff, uint32_t sector, uint32_t cnt)
 {
-    (void) buff;
-    (void) sector;
-    (void) cnt;
+    (void)buff;
+    (void)sector;
+    (void)cnt;
     return RES_NOTRDY;
 }
 
-__attribute__((weak))
-tlkfs_diskio_info_t tlkfs_diskio_getDiskInfo(void)
+__attribute__((weak)) tlkfs_diskio_info_t tlkfs_diskio_getDiskInfo(void)
 {
     tlkfs_diskio_info_t ret = {0};
     return ret;
 }
-

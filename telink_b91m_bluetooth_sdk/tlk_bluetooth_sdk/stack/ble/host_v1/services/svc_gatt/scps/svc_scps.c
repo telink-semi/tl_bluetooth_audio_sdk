@@ -49,14 +49,14 @@
   * @brief the structure for default ScPS service List.
   */
 static const struct atts_attribute scpsList[] = {
-    ATTS_PRIMARY_SERVICE(serviceScanParametersUuid),
+    ATTS_PRIMARY_SERVICE(serviceScanParametersAttUuid),
 
     //Scan Interval Window
-    ATTS_CHAR_UUID_WRITE_NULL(charPropWriteWithout, characteristicScanIntervalWindowUuid),
+    ATTS_CHAR_UUID_WRITE_NULL(charPropWriteWithout, characteristicScanIntervalWindowAttUuid),
 
 #ifndef SCPS_SCAN_REFRESH_DISABLE
     //Scan Refresh
-    ATTS_CHAR_UUID_NOTIF_ONLY(characteristicScanRefreshUuid),
+    ATTS_CHAR_UUID_NOTIF_ONLY(characteristicScanRefreshAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 };

@@ -26,6 +26,8 @@
  *
  *******************************************************************************************************/
 
+#define BLE_GAP_ISO_INVALID_ISO_HANDLE (0xFFFF)
+
 /**
  *   @brief Initialize the ISO layer.
  *
@@ -77,3 +79,12 @@ int ble_host_gap_iso_remove_data_path_c2h(uint16_t iso_conn_handle);
  *   @return BLE_HOST_ERR_SUCC if the operation is successful, otherwise an error code.
  */
 int ble_host_gap_iso_remove_data_path_both(uint16_t iso_conn_handle);
+
+/**
+ *   @brief Get the transmit time stamp for an ISO connection.
+ *
+ *   @param[in]  iso_conn_handle  The ISO connection handle.
+ *
+ *   @return The transmit time stamp.
+ */
+uint32_t ble_host_gap_iso_get_tx_time_stamp(uint16_t iso_conn_handle);

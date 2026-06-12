@@ -53,7 +53,7 @@ extern const uint16_t csisIncludeValue[3];
  * @brief the structure for default CAS service List.
  */
 static const struct atts_attribute casList[] = {
-    ATTS_PRIMARY_SERVICE(serviceCommonAudioUuid),
+    ATTS_PRIMARY_SERVICE(serviceCommonAudioAttUuid),
     ATTS_INCLUDE_DEFINE(csisIncludeValue),
 };
 

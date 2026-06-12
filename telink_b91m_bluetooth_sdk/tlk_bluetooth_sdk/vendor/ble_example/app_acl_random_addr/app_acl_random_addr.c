@@ -25,21 +25,21 @@
 
 #include "../app_example.h"
 
-#define APP_ADDRESS_TYPE_STATIC_RANDOM                      0x01
-#define APP_ADDRESS_TYPE_NON_RESOLVABLE_PRIVATE_ADDRESS     0x02
-#define APP_ADDRESS_TYPE_RESOLVABLE_PRIVATE_ADDRESS         0x03
+#define APP_ADDRESS_TYPE_STATIC_RANDOM                  0x01
+#define APP_ADDRESS_TYPE_NON_RESOLVABLE_PRIVATE_ADDRESS 0x02
+#define APP_ADDRESS_TYPE_RESOLVABLE_PRIVATE_ADDRESS     0x03
 
-#define APP_ADDRESS_TYPE        APP_ADDRESS_TYPE_RESOLVABLE_PRIVATE_ADDRESS
+#define APP_ADDRESS_TYPE                                APP_ADDRESS_TYPE_RESOLVABLE_PRIVATE_ADDRESS
 
 #if (APP_ADDRESS_TYPE == APP_ADDRESS_TYPE_STATIC_RANDOM)
-static const uint8_t s_random_addr[6] = { 0x7F, 0x84, 0xC3, 0xC3, 0x76, 0xD2 };
+static const uint8_t s_random_addr[6] = {0x7F, 0x84, 0xC3, 0xC3, 0x76, 0xD2};
 #elif (APP_ADDRESS_TYPE == APP_ADDRESS_TYPE_NON_RESOLVABLE_PRIVATE_ADDRESS)
-static const uint8_t s_non_resolvable_private_addr[6] = { 0x2A, 0xEB, 0x95, 0x66, 0x28, 0X26 };
+static const uint8_t s_non_resolvable_private_addr[6] = {0x2A, 0xEB, 0x95, 0x66, 0x28, 0X26};
 #elif (APP_ADDRESS_TYPE == APP_ADDRESS_TYPE_RESOLVABLE_PRIVATE_ADDRESS)
 #endif
 
 
-int INIT(APP_BLE_ACL)(void);
+int  INIT(APP_BLE_ACL)(void);
 void START(APP_BLE_ACL)(void);
 
 int INIT(APP_BLE_ACL_RANDOM_ADDR)(void)

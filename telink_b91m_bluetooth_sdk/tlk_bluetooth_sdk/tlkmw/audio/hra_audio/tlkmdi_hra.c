@@ -29,6 +29,14 @@
 
 #if (TLK_CFG_HRA_ENABLE)
 
+static uint8_t s_tlkmdi_hra_i2s0_tdm_tx_dma = 0;
+static uint8_t s_tlkmdi_hra_i2s0_tdm_rx_dma = 0;
+static uint8_t s_tlkmdi_hra_codec_micb_dma  = 0;
+
+#define I2S0_TDM_TX_DMA s_tlkmdi_hra_i2s0_tdm_tx_dma
+#define I2S0_TDM_RX_DMA s_tlkmdi_hra_i2s0_tdm_rx_dma
+#define CODEC_MICB_DMA  s_tlkmdi_hra_codec_micb_dma
+
 unsigned short audio_tdm_4_chn_48k_config[5] = {1, 3, 1, 128, 128}; /* sampling rate = 36.864MHz * (1 / 2) / (2 * 1) / (128)  = 48KHz */
 unsigned short audio_tdm_4_chn_16k_config[5] = {1, 3, 3, 128, 128}; /* sampling rate = 36.864MHz * (1 / 2) / (2 * 1) / (128)  = 48KHz */
 
@@ -124,6 +132,10 @@ void tlkmdi_hra_timer_init(void)
  */
 int tlkmdi_hra_init(void)
 {
+    I2S0_TDM_TX_DMA = tlkhal_dma_malloc();
+    I2S0_TDM_RX_DMA = tlkhal_dma_malloc();
+    CODEC_MICB_DMA  = tlkhal_dma_malloc();
+
 #if JTAG_DEBUG_ENABLE
     tlkmdi_hra_dsp_jtag_init();
 #endif
@@ -465,8 +477,8 @@ void tlkmdi_hra_open_codec(void)
     audio_matrix_set_rx_fifo_route(TLKDRV_CODEC_MIC_FIFO, FIFO_RX_ROUTE_CODEC0_ADCA, FIFO_RX_CODEC0_ADCA_A1_A2_16BIT);
 #endif /* rx dma init. */
 
-    audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, TLKDRV_CODEC_MIC_DMA, (unsigned short *)g_codec_mic_buff, sizeof(g_codec_mic_buff)); //FIFO0 -> buff_record
-    audio_rx_dma_en(TLKDRV_CODEC_MIC_DMA); /* the rx dma enable must precede the adc enable. */
+    audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, gTlkdrvCodecMicDmaChn, (unsigned short *)g_codec_mic_buff, sizeof(g_codec_mic_buff)); //FIFO0 -> buff_record
+    audio_rx_dma_en(gTlkdrvCodecMicDmaChn); /* the rx dma enable must precede the adc enable. */
     audio_codec0_input_init(&codec0_input_config_stream0);
 
 #if MIC_CHNL_NUM4_EN
@@ -502,8 +514,8 @@ void tlkmdi_hra_open_codec(void)
     audio_codec0_set_output_dgain(codec0_output_config.output_dst, AUDIO_OUT_D_GAIN_0_DB);
 
     /* tx dma init. */
-    audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, TLKDRV_CODEC_SPK_DMA, (unsigned short *)g_codec_spk_buff, sizeof(g_codec_spk_buff));
-    audio_tx_dma_en(TLKDRV_CODEC_SPK_DMA);
+    audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, gTlkdrvCodecSpkDmaChn, (unsigned short *)g_codec_spk_buff, sizeof(g_codec_spk_buff));
+    audio_tx_dma_en(gTlkdrvCodecSpkDmaChn);
     audio_codec0_output_init(&codec0_output_config);
 }
 

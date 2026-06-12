@@ -27,30 +27,24 @@
  *******************************************************************************************************/
 
 // PACSS: Published Audio Capabilities Service Server.
+#define LEA_PAC_PARAM(lc3_id, chn, contexts) LEA_INIT_CODEC_ID_LC3_STREAM, LEA_CODEC_CAP_##lc3_id##_STREAM(chn), LEA_PAC_PARAM_METADATA(contexts)
 
-#define LEA_PAC_PARAM(lc3_id, chn, contexts)               \
-    {                                                      \
-        .codec_id  = LEA_INIT_CODEC_ID_LC3,                \
-        .codec_cap = LEA_CODEC_CAP_##lc3_id(chn),          \
-        .metadata  = LEA_INIT_METADATA_CONTEXTS(contexts), \
-    }
-
-struct lea_pac_param
-{
-    struct lea_codec_id             codec_id; //Codec ID, 06 0000 0000 mean LC3 codec
-    struct lea_codec_spec_cap_param codec_cap;
-    struct lea_metadata_param       metadata;
-};
+// #define X(lc3_id, chn, contexts) lc3_id,
+// COUNT_ARGS(SINK_PAC_CHANNEL_2_LIST) - 1,
+// #undef X
+// #define X(lc3_id, chn, contexts) LEA_PAC_PARAM(lc3_id, chn, contexts),
+// SINK_PAC_CHANNEL_2_LIST
+// #undef X
 
 struct ble_pacss_register_param
 {
-    uint8_t                     sink_pac_num;         // number of Sink PAC records
-    const struct lea_pac_param *sink_pac;             // Sink PAC
-    uint32_t                    sink_audio_locations; // Sink Audio Location, LEA_LOCATION_FRONT_LEFT
+    uint16_t       sink_pac_len; // Sink PAC Length
+    const uint8_t *sink_pac;
+    uint32_t       sink_audio_locations; // Sink Audio Location, LEA_LOCATION_FRONT_LEFT
 
-    uint8_t                     source_pac_num;         // number of Source PAC records
-    const struct lea_pac_param *source_pac;             // Source PAC
-    uint32_t                    source_audio_locations; // Source Audio Location, LEA_LOCATION_FRONT_LEFT
+    uint16_t       source_pac_len;         // Source PAC Length
+    const uint8_t *source_pac;             // Source PAC
+    uint32_t       source_audio_locations; // Source Audio Location, LEA_LOCATION_FRONT_LEFT
 
     uint16_t available_sink_contexts;   // Available Sink Contexts, BLC_AUDIO_CONTEXT_TYPE_UNSPECIFIED
     uint16_t available_source_contexts; // Available Source Contexts, BLC_AUDIO_CONTEXT_TYPE_UNSPECIFIED
@@ -125,3 +119,38 @@ uint16_t ble_pacss_get_available_context(bool sink_pac);
  *   @return True if the Codec ID and Specific Configuration are valid, False otherwise.
  */
 bool ble_pacss_check_codec_configuration(bool sink_pac, struct lea_codec_id *codec_id, struct lea_codec_specific_config_parsed *codec_cfg_param);
+
+#define LEA_CODEC_ID_CODEC_FORMAT(format, company_id, vendor_spec) (format), U16_TO_BYTES(company_id), U16_TO_BYTES(vendor_spec)
+#define LEA_INIT_CODEC_ID_LC3_STREAM                               LEA_CODEC_ID_CODEC_FORMAT(BT_CODING_FORMAT_LC3, 0x0000, 0x0000)
+
+#define LEA_CODEC_CAP_SUPP_SAMPLING_FREQ(freq)                     0x03, LEA_CAP_TYPE_SUPP_SAMPLE_FREQUENCY, U16_TO_BYTES(freq)
+#define LEA_CODEC_CAP_SUPP_FRAME_DURATION(duration)                0x02, LEA_CAP_TYPE_SUPP_FRAME_DURATION, (duration)
+#define LEA_CODEC_CAP_AUDIO_CHANNEL_COUNTS(chn)                    0x02, LEA_CAP_TYPE_SUPP_AUDIO_CHN_COUNTS, chn
+#define LEA_CODEC_CAP_PER_CODEC_FRAME(min_octets, max_octets)      0x05, LEA_CAP_TYPE_SUPP_OCTETS_PER_CODEC_FRAME, U16_TO_BYTES(min_octets), U16_TO_BYTES(max_octets)
+#define LEA_CODEC_CAP_MAX_CODEC_FRAMES_PER_SDU(frames)             0x02, LEA_CAP_TYPE_SUPP_MAX_CODEC_FRAMES_PER_SDU, frames
+
+#define LEA_INIT_CODEC_SPEC_CAP_STREAM(freq, duration, octets, chn, frames)                                                           \
+    19, LEA_CODEC_CAP_SUPP_SAMPLING_FREQ(freq), LEA_CODEC_CAP_SUPP_FRAME_DURATION(duration), LEA_CODEC_CAP_AUDIO_CHANNEL_COUNTS(chn), \
+        LEA_CODEC_CAP_PER_CODEC_FRAME(octets, octets), LEA_CODEC_CAP_MAX_CODEC_FRAMES_PER_SDU(frames)
+
+#define LEA_CODEC_CAP_LC3_8_1_STREAM(chn)         LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_8000_HZ, LEA_SUPP_FRAME_DURATION_7_5, 26, chn, 1)
+#define LEA_CODEC_CAP_LC3_8_2_STREAM(chn)         LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_8000_HZ, LEA_SUPP_FRAME_DURATION_10, 30, chn, 1)
+#define LEA_CODEC_CAP_LC3_16_1_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_16000_HZ, LEA_SUPP_FRAME_DURATION_7_5, 30, chn, 1)
+#define LEA_CODEC_CAP_LC3_16_2_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_16000_HZ, LEA_SUPP_FRAME_DURATION_10, 40, chn, 1)
+#define LEA_CODEC_CAP_LC3_24_1_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_24000_HZ, LEA_SUPP_FRAME_DURATION_7_5, 45, chn, 1)
+#define LEA_CODEC_CAP_LC3_24_2_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_24000_HZ, LEA_SUPP_FRAME_DURATION_10, 60, chn, 1)
+#define LEA_CODEC_CAP_LC3_32_1_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_32000_HZ, LEA_SUPP_FRAME_DURATION_7_5, 60, chn, 1)
+#define LEA_CODEC_CAP_LC3_32_2_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_32000_HZ, LEA_SUPP_FRAME_DURATION_10, 80, chn, 1)
+#define LEA_CODEC_CAP_LC3_441_1_STREAM(chn)       LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_44100_HZ, LEA_SUPP_FRAME_DURATION_7_5, 97, chn, 1)
+#define LEA_CODEC_CAP_LC3_441_2_STREAM(chn)       LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_44100_HZ, LEA_SUPP_FRAME_DURATION_10, 130, chn, 1)
+#define LEA_CODEC_CAP_LC3_48_1_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_48000_HZ, LEA_SUPP_FRAME_DURATION_7_5, 75, chn, 1)
+#define LEA_CODEC_CAP_LC3_48_2_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_48000_HZ, LEA_SUPP_FRAME_DURATION_10, 100, chn, 1)
+#define LEA_CODEC_CAP_LC3_48_3_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_48000_HZ, LEA_SUPP_FRAME_DURATION_7_5, 90, chn, 1)
+#define LEA_CODEC_CAP_LC3_48_4_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_48000_HZ, LEA_SUPP_FRAME_DURATION_10, 120, chn, 1)
+#define LEA_CODEC_CAP_LC3_48_5_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_48000_HZ, LEA_SUPP_FRAME_DURATION_7_5, 117, chn, 1)
+#define LEA_CODEC_CAP_LC3_48_6_STREAM(chn)        LEA_INIT_CODEC_SPEC_CAP_STREAM(LEA_SUPP_FREQ_48000_HZ, LEA_SUPP_FRAME_DURATION_10, 155, chn, 1)
+
+#define LEA_METADATA_PREFERRED_CONTEXTS(contexts) 0x03, LEA_METADATA_TYPE_PREFERRED_CONTEXTS, U16_TO_BYTES(contexts)
+#define LEA_METADATA_STREAMING_CONTEXTS(contexts) 0x03, LEA_METADATA_TYPE_STREAMING_CONTEXTS, U16_TO_BYTES(contexts)
+
+#define LEA_PAC_PARAM_METADATA(contexts)          0x08, LEA_METADATA_PREFERRED_CONTEXTS(contexts), LEA_METADATA_STREAMING_CONTEXTS(contexts)

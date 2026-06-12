@@ -48,6 +48,9 @@ void tlkdbg_sync_stream_write(uint8_t type, void *pData, uint16_t dataLen)
 #if (TLK_SM_LOG_ENABLE) && defined(MCU_CORE_N22)
     tlkdbg_n22core_write(type, pData, dataLen);
 #endif
+#if TLKDBG_CFG_GSU_LOG_ENABLE
+    tlkdbg_gsu_write(type, pData, dataLen);
+#endif
 }
 
 #endif

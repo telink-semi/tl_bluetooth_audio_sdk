@@ -27,6 +27,7 @@
  *******************************************************************************************************/
 #ifndef TLKSTK_SYSTEM_SYSTEM_H_
 #define TLKSTK_SYSTEM_SYSTEM_H_
+#define BIT(n) (1 << (n))
 
 /* Planner Interval, Time = N * 0.625 ms,
  * Notice that these are just part of but not all value */
@@ -63,20 +64,28 @@ typedef enum
     PLAN_INTERVAL_1000MS = 1600,
 } plan_intvl_t;
 
+typedef enum
+{
+    BLE_LOOP_MASK   = BIT(0),
+    BT_LOOP_MASK    = BIT(1),
+    TPSLL_LOOP_MASK = BIT(2),
+
+} ctl_loop_mask;
+
 /**
  * @brief		This function is used to initialize MCU hardware
  * @param[in]	none
  * @return      none
  */
-void tlksdk_init_mcu_hardware(void);
-void tlksdk_restore_mcu_hardware(void);
+void tlk_sys_init_mcu_hardware(void);
+void tlk_sys_restore_mcu_hardware(void);
 
 /**
  * @brief	    IRQ handler for Bluetooth SDK
  * @param[in]	irq_index - Interrupt source index
  * @return	    none
  */
-void tlksdk_irq_handler(int irq_index);
+void tlk_sys_irq_handler(int irq_index);
 
 
 /**
@@ -84,7 +93,7 @@ void tlksdk_irq_handler(int irq_index);
  * @param	none
  * @return	none
  */
-void tlksdk_main_loop(void);
+void tlk_sys_main_loop(void);
 
 
 /**
@@ -92,20 +101,20 @@ void tlksdk_main_loop(void);
  * @param[in]	none
  * @return      none
  */
-void tlksdk_sch_init(void);
+void tlk_sch_init(void);
 
 
-void tlksdk_hci_reset(void);
+void tlk_sys_hci_reset(void);
 
 
-void tlksdk_stack_process_initialization_end(void);
+void tlk_sys_stack_process_initialization_end(void);
 
 /**
  * @brief      This function checks whether the scheduler is RUNNING
  * @param      none
  * @return     1:  scheduler is running; 0: scheduler is idle
  */
-int tlksdk_sch_is_running(void);
+int tlk_sch_is_running(void);
 
 
 /**
@@ -117,5 +126,5 @@ int tlksdk_sch_is_running(void);
  * @return none
  ****************************************************************************************
  */
-void tlksdk_sch_set_base_interval(unsigned short interval);
+void tlk_sch_plan_set_base_interval(unsigned short interval);
 #endif /* TLKSTK_SYSTEM_SYSTEM_H_ */

@@ -42,7 +42,7 @@ void tph_host_hal_get_ac_chn_from_mac(uint8_t *mac, uint8_t *ac, uint8_t *chn);
 
 void tph_host_hal_set_setup_ac_chn(uint32_t setup_ac, uint8_t setup_chn);
 
-void tph_host_hal_set_gen_mac(uint8_t* mac);
+void tph_host_hal_set_gen_mac(uint8_t *mac);
 
 void tph_host_hal_start_connection_setup(uint8_t setup_mode);
 

@@ -23,18 +23,18 @@
  *******************************************************************************************************/
 #pragma once
 
-typedef struct 
+typedef struct
 {
     uint32_t iram_src_addr;
     uint32_t iram_dst_addr;
     uint32_t iram_size;
     uint32_t dram_src_addr;
     uint32_t dram_dst_addr;
-    uint32_t dram_size; 
-    uint32_t no_cache_bit;  
+    uint32_t dram_size;
+    uint32_t no_cache_bit;
     uint8_t  is_iram_no_used;
     uint8_t  is_dram_no_used;
-}tlkmw_dualcore_boot_cfg_t;
+} tlkmw_dualcore_boot_cfg_t;
 
 /**
  * @brief       Boot the dual core system with the provided configuration.

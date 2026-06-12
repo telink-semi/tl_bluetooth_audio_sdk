@@ -31,7 +31,7 @@
  * @param[out] pBuff - Buffer to store the read data.
  * @param[in] buffLen - Number of bytes to read.
  */
-#define sql_flash_read(addr, pBuff, buffLen)  flash_read_page(addr, buffLen, pBuff)
+#define sql_flash_read(addr, pBuff, buffLen) flash_read_page(addr, buffLen, pBuff)
 
 /**
  * @brief   Writes data to flash.
@@ -45,32 +45,28 @@
  * @brief   Erases a sector in flash.
  * @param[in] addr - The flash address within the sector to erase.
  */
-#define sql_flash_eraseSector(addr)           flash_erase_sector(addr)
+#define sql_flash_eraseSector(addr) flash_erase_sector(addr)
 
 /**
  * @brief   TinySQL private enumeration for disk indices and special values.
  */
 typedef enum
 {
-    tinySql_notFind = 0XFFFF,     //!< Value indicating item not found
-    tinySql_full    = 0XFFFF,     //!< Value indicating storage is full
-    tinySql_nullptr = 0XFFFF,     //!< Value representing null pointer
+    tinySql_notFind = 0XFFFF, //!< Value indicating item not found
+    tinySql_full    = 0XFFFF, //!< Value indicating storage is full
+    tinySql_nullptr = 0XFFFF, //!< Value representing null pointer
     //why use 0xFFFF? After erasing flash, the data is 0xFF
 
-    tinySql_disk0SaveIndex = 0,   //!< Index for disk 0
-    tinySql_disk1SaveIndex,       //!< Index for disk 1
-    tinySql_disk2SaveIndex,       //!< Index for disk 2
-    tinySql_disk3SaveIndex,       //!< Index for disk 3
-    tinySql_disk4SaveIndex,       //!< Index for disk 4
-    tinySql_disk5SaveIndex,       //!< Index for disk 5
-    tinySql_maxSaveIndex,         //!< Maximum number of save indices
+    tinySql_disk0SaveIndex = 0, //!< Index for disk 0
+    tinySql_disk1SaveIndex,     //!< Index for disk 1
+    tinySql_disk2SaveIndex,     //!< Index for disk 2
+    tinySql_disk3SaveIndex,     //!< Index for disk 3
+    tinySql_maxSaveIndex,       //!< Maximum number of save indices
 
-    tinySql_macSaveIndex            = tinySql_disk0SaveIndex,        //!< MAC address disk index
-    tinySql_userSettingsSaveIndex   = tinySql_disk1SaveIndex,        //!< User settings disk index
-    tinySql_pairingDevicesSaveIndex = tinySql_disk2SaveIndex,        //!< Pairing devices disk index
-    tinySql_pbapSaveIndex           = tinySql_disk3SaveIndex,        //!< PBAP disk index
-    tinySql_leSaveIndex             = tinySql_disk4SaveIndex,        //!< LE disk index
-    tinySql_audioSaveIndex          = tinySql_disk5SaveIndex,        //!< Audio disk index
+    tinySql_userSettingsSaveIndex   = tinySql_disk0SaveIndex, //!< User settings disk index
+    tinySql_pairingDevicesSaveIndex = tinySql_disk1SaveIndex, //!< Pairing devices disk index
+    tinySql_pbapSaveIndex           = tinySql_disk2SaveIndex, //!< PBAP disk index
+    tinySql_leSaveIndex             = tinySql_disk3SaveIndex, //!< LE disk index
 
 } TinySql_private_e; //only use in this module,equl c++ private code
 
@@ -79,18 +75,16 @@ typedef enum
  */
 typedef struct
 {
-    void (*init)(void);              //!< Initialization function
-    void (*save)(void);              //!< Save function
-    void (*restoreFactory)(void);    //!< Factory reset function
+    void (*init)(void);           //!< Initialization function
+    void (*save)(void);           //!< Save function
+    void (*restoreFactory)(void); //!< Factory reset function
 } tinySqlDisk_t;
 
 // External disk interface declarations
 extern const tinySqlDisk_t tinySql_userSetting_disk;
 extern const tinySqlDisk_t tinySql_pairingDevice_disk;
-extern const tinySqlDisk_t tinySql_mac_disk;
 extern const tinySqlDisk_t tinySql_pbap_disk;
 extern const tinySqlDisk_t tinySql_le_disk;
-extern const tinySqlDisk_t tinySql_audio_disk;
 
 /**
  * @brief   Calculates the actual save address in flash.

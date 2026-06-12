@@ -29,6 +29,10 @@
 
 //AICS: Audio Input Control Service
 
+#ifndef LEA_AICS_SERVICE_COUNT
+#define LEA_AICS_SERVICE_COUNT (0)
+#endif
+
 /**
  * @brief      for user add default AICS service in all GAP server.
  * @param[in]  none.

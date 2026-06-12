@@ -144,7 +144,7 @@ typedef struct __attribute__((packed))
     u8 rf_len;
     u8 opcode;
     u8 phy;
-    u8 limitInfo;          //bit0:min, bit1:max, bit2~7:rfu
+    u8 limitInfo; //bit0:min, bit1:max, bit2~7:rfu
     s8 delta;
     s8 txPwr;
 } rf_pkt_ll_pwr_chg_ind_t; //LL_POWER_CHANGE_IND
@@ -169,7 +169,7 @@ typedef struct
     u8   pc_sendReq;
     u8   pc_delta;
 
-    u8   pc_reqPhy;    //refer to 'pc_phy_t'
+    u8   pc_reqPhy; //refer to 'pc_phy_t'
     u8   peerLimitInfo;
     bool pwrRptLocal;  //current report local power changes
     bool pwrRptRemote; //current report remote power changes
@@ -193,15 +193,15 @@ typedef struct
 
     struct
     {
-        u8 highThreshold;             /*!< Path loss high threshold. */
-        u8 highHysteresis;            /*!< Path loss high hysteresis. */
-        u8 lowThreshold;              /*!< Path loss low threshold. */
-        u8 lowHysteresis;             /*!< Path loss low hysteresis. */
+        u8 highThreshold;  /*!< Path loss high threshold. */
+        u8 highHysteresis; /*!< Path loss high hysteresis. */
+        u8 lowThreshold;   /*!< Path loss low threshold. */
+        u8 lowHysteresis;  /*!< Path loss low hysteresis. */
 
-        u8 minTimeSpent;              /*!< Minimum time spent to trigger an event. */
-        u8 curTimeSpent;              /*!< Current time spent in a new path loss zone. */
-        u8 curZone;                   /*!< Current path loss zone. */
-        u8 newZone;                   /*!< New zone. */
+        u8 minTimeSpent; /*!< Minimum time spent to trigger an event. */
+        u8 curTimeSpent; /*!< Current time spent in a new path loss zone. */
+        u8 curZone;      /*!< Current path loss zone. */
+        u8 newZone;      /*!< New zone. */
 
         u8 curPathLoss;               /*!< Current path loss. */
         u8 sendReq2StartMonitoring;   /*!< A power control request is required to start path loss monitoring. */

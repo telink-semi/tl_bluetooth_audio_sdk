@@ -1723,6 +1723,14 @@ struct ble_hci_le_subrate_req_cp
     uint16_t supervision_tmo;
 } __attribute__((packed));
 
+#define BLE_HCI_OCF_LE_RD_ALL_LOC_SUPP_FEAT (0x0087)
+
+struct ble_hci_le_rd_all_loc_supp_feat_rp
+{
+    uint8_t max_page;
+    uint8_t features[248];
+} __attribute__((packed));
+
 #define BLE_HCI_OCF_LE_CS_RD_LOC_SUPP_CAP (0x0089)
 
 struct ble_hci_le_cs_rd_loc_supp_cap_rp
@@ -1929,7 +1937,15 @@ struct ble_hci_le_cs_test_cp
     uint8_t  override_parameters_data[];
 } __attribute__((packed));
 
-#define BLE_HCI_OCF_LE_CS_TEST_END (0x0096)
+#define BLE_HCI_OCF_LE_CS_TEST_END         (0x0096)
+
+#define BLE_HCI_OCF_LE_SET_HOST_FEATURE_V2 (0x0074)
+
+struct ble_hci_le_set_host_feature_v2_cp
+{
+    uint16_t bit_num;
+    uint8_t  bit_val;
+} __attribute__((packed));
 
 /* --- Vendor specific commands (OGF 0x003F) */
 #if (BLE_HCI_VS_CMD_ENABLE)

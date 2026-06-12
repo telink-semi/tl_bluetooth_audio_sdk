@@ -32,7 +32,7 @@
 #if (TLK_CFG_USB_ENABLE)
 
 #define TLKUSB_CTRL_BUFF_NUMB 32
-#define TLKUSB_CTRL_BUFF_SIZE 12 //sizeof(dcd_event_t)
+#define TLKUSB_CTRL_BUFF_SIZE sizeof(dcd_event_t)
 
 static uint8_t usb_control_packet[TLKUSB_CTRL_BUFF_NUMB * TLKUSB_CTRL_BUFF_SIZE]; //TODO: malloc
 
@@ -95,6 +95,7 @@ _attribute_ram_code_ int tlkusb_fifo_push(uint8_t *pBuffer, uint32_t size)
 
     uint16_t idleLen = 0;
 
+    tlk_usb_enterCritical();
     if (usb_control_fifo.rptr > usb_control_fifo.wptr) {
         idleLen = usb_control_fifo.rptr - usb_control_fifo.wptr;
     } else {
@@ -102,9 +103,10 @@ _attribute_ram_code_ int tlkusb_fifo_push(uint8_t *pBuffer, uint32_t size)
     }
 
     if (idleLen < size) {
+        tlk_usb_leaveCritical();
         return -TLK_ENOSPACE;
     }
-    tlk_usb_enterCritical();
+
     tmemcpy(usb_control_fifo.pBuffer + usb_control_fifo.wptr, pBuffer, size);
     usb_control_fifo.wptr = (usb_control_fifo.wptr + size) % usb_control_fifo.size;
     tlk_usb_leaveCritical();
@@ -123,13 +125,21 @@ static usb_control_request_t sTlkUsbCtrlReq;
  */
 void tlk_usb_fifo_pop_all(void)
 {
-    tlk_usb_enterCritical();
+    dcd_event_t event;
 
-    while (usb_control_fifo.wptr != usb_control_fifo.rptr) {
-        dcd_event_t event;
-        tmemcpy(&event, usb_control_fifo.pBuffer + usb_control_fifo.rptr, sizeof(dcd_event_t));
-        usb_control_fifo.rptr = (usb_control_fifo.rptr + sizeof(dcd_event_t)) % usb_control_fifo.size;
+    while (1) {
+        bool is_have_msg = false;
+        tlk_usb_enterCritical();
+        if (usb_control_fifo.wptr != usb_control_fifo.rptr) {
+            tmemcpy(&event, usb_control_fifo.pBuffer + usb_control_fifo.rptr, sizeof(dcd_event_t));
+            usb_control_fifo.rptr = (usb_control_fifo.rptr + sizeof(dcd_event_t)) % usb_control_fifo.size;
+            is_have_msg           = true;
+        }
+        tlk_usb_leaveCritical();
 
+        if (!is_have_msg) {
+            break;
+        }
         switch (event.event_id) {
         case DCD_EVENT_BUS_RESET:
         {
@@ -195,7 +205,6 @@ void tlk_usb_fifo_pop_all(void)
             break;
         }
     }
-    tlk_usb_leaveCritical();
 }
 
 /**

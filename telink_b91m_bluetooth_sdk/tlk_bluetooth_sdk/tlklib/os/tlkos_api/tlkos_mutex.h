@@ -31,11 +31,37 @@
 int tlkos_mutex_create(TlkOsMutexHandle_t *mutexHandle);
 
 /**
+ * @brief     Creates multiple mutexes in one memory block.
+ * @param[out] mutexHandles Array to store created mutex handles.
+ * @param[in]  count        Number of mutexes to create.
+ * @returns   0 indicates success, other values indicate error codes.
+ * @note      Must use tlkos_mutex_destroyMultiple to destory all.
+ */
+int tlkos_mutex_createMultiple(TlkOsMutexHandle_t *mutexHandles, uint32_t count);
+
+/**
  * @brief     Destroys a mutex.
  * @param[in] mutexHandle Handle of the mutex to be destroyed.
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
 int tlkos_mutex_destroy(TlkOsMutexHandle_t mutexHandle);
+
+/**
+ * @brief     Destroys multiple mutexes created by createMultiple.
+ * @param[in]  mutexHandles Array of mutex handles to destroy.
+ * @param[in]  count        Number of mutexes to destroy.
+ * @returns   0 indicates success, other values indicate error codes.
+ */
+int tlkos_mutex_destroyMultiple(TlkOsMutexHandle_t *mutexHandles, uint32_t count);
+
+/**
+ * @brief     Creates multiple recursive mutexes in one memory block.
+ * @param[out] mutexHandles Array to store created mutex handles.
+ * @param[in]  count        Number of mutexes to create.
+ * @returns   0 indicates success, other values indicate error codes.
+ * @note      Must use tlkos_mutex_destroyMultiple to destory all.
+ */
+int tlkos_recursiveMutex_createMultiple(TlkOsMutexHandle_t *mutexHandles, uint32_t count);
 
 /**
  * @brief     Locks a mutex.

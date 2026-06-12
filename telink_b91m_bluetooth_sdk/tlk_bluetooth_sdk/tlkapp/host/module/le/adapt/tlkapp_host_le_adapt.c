@@ -53,7 +53,7 @@ void ble_host_sal_os_exit_critical_section(void)
  */
 void ble_host_sal_os_wakeup(void)
 {
-    tlksys_task_setEvt(TLKSYS_TASKID_HOST,TLKSYS_TASK_EVT_HOST_LE_EVT);
+    tlksys_task_setEvt(TLKSYS_TASKID_HOST, TLKSYS_TASK_EVT_HOST_LE_EVT);
 }
 
 /**
@@ -76,7 +76,7 @@ void ble_host_sal_os_sleep(void)
  */
 bool ble_host_sal_timer_create(ble_host_sal_timer_callback cb, void *arg, uint32_t timeout_ms, ble_host_sal_timer_handle_t *timer_hdl)
 {
-    int res = tlksys_timer_create(TLKSYS_TASKID_HOST,timer_hdl,timeout_ms * 1000, false, cb, arg);
+    int res = tlksys_timer_create(TLKSYS_TASKID_HOST, timer_hdl, timeout_ms * 1000, false, cb, arg);
     return res == TLK_ENONE;
 }
 
@@ -88,7 +88,7 @@ bool ble_host_sal_timer_create(ble_host_sal_timer_callback cb, void *arg, uint32
  */
 bool ble_host_sal_timer_update_timeout(ble_host_sal_timer_handle_t timer_hdl, uint32_t timeout_ms)
 {
-    int res = tlksys_timer_setPeriod(TLKSYS_TASKID_HOST,timer_hdl,timeout_ms * 1000);
+    int res = tlksys_timer_setPeriod(TLKSYS_TASKID_HOST, timer_hdl, timeout_ms * 1000);
     return res == TLK_ENONE;
 }
 
@@ -99,7 +99,7 @@ bool ble_host_sal_timer_update_timeout(ble_host_sal_timer_handle_t timer_hdl, ui
  */
 bool ble_host_sal_timer_start(ble_host_sal_timer_handle_t timer_hdl)
 {
-    int res = tlksys_timer_start(TLKSYS_TASKID_HOST,timer_hdl);
+    int res = tlksys_timer_start(TLKSYS_TASKID_HOST, timer_hdl);
     return res == TLK_ENONE;
 }
 
@@ -110,7 +110,7 @@ bool ble_host_sal_timer_start(ble_host_sal_timer_handle_t timer_hdl)
  */
 bool ble_host_sal_timer_stop(ble_host_sal_timer_handle_t timer_hdl)
 {
-    int res = tlksys_timer_stop(TLKSYS_TASKID_HOST,timer_hdl);
+    int res = tlksys_timer_stop(TLKSYS_TASKID_HOST, timer_hdl);
     return res == TLK_ENONE;
 }
 
@@ -121,10 +121,8 @@ bool ble_host_sal_timer_stop(ble_host_sal_timer_handle_t timer_hdl)
  */
 bool ble_host_sal_timer_delete(ble_host_sal_timer_handle_t timer_hdl)
 {
-    int res = tlksys_timer_destroy(TLKSYS_TASKID_HOST,timer_hdl);
+    int res = tlksys_timer_destroy(TLKSYS_TASKID_HOST, timer_hdl);
     return res == TLK_ENONE;
 }
 
 #endif
-
-

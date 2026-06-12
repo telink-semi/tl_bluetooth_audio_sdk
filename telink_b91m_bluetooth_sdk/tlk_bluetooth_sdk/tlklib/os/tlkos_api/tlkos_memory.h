@@ -43,3 +43,17 @@ void *tlkos_calloc(uint32_t size);
  * @returns   None.
  */
 void tlkos_free(void *ptr);
+
+/**
+ * @brief     Print previously allocated block of memory.
+ * @param[in] None
+ * @returns   None.
+ */
+void tlkos_mem_print(void);
+
+/**
+ * @brief     Init memory Pool.
+ * @param[in] None
+ * @returns   None.
+ */
+void tlkos_mem_init(void);

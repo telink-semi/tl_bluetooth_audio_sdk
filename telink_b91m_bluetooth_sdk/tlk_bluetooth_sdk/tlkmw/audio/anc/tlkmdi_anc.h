@@ -22,12 +22,18 @@
  *
  *******************************************************************************************************/
 #pragma once
+
 typedef struct
 {
-    bool    bt_music_busy;
-    bool    bt_voice_busy;
-    bool    ll_audio_busy;
+    bool bt_music_busy;
+    bool bt_voice_busy;
+    bool ll_audio_busy;
 } tlkmdi_anc_t;
+
+extern uint8_t g_tlkmdi_anc_spk_dma;
+extern uint8_t g_tlkmdi_anc_mic_dma;
+#define TLKDRV_ANC0_MIC_DMA g_tlkmdi_anc_mic_dma
+#define TLKDRV_ANC0_SPK_DMA g_tlkmdi_anc_spk_dma
 
 /**
  * @brief       Initialize ANC module

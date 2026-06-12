@@ -121,15 +121,6 @@ extern void bth_acl_destroy(uint16_t aclHandle);
  *******************************************************************************/
 extern int bth_acl_connectCancel(uint8_t btaddr[6]);
 
-/******************************************************************************
- * Function: bth_acl_disconnByAddr
- * Descript: This interface be used to disconnect the acl link which
- *           specify by bt address.
- * Params: @btaddr[IN]--The peer device address.
- * Return: TLK_ENONE is set success, others means failure.
- *******************************************************************************/
-extern int bth_acl_disconnByAddr(uint8_t btaddr[6]);
-
 
 /******************************************************************************
  * Function: bth_sco_connect

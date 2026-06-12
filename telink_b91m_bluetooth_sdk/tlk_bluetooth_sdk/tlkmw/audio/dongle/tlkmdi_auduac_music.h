@@ -29,7 +29,7 @@
  * @param  None.
  * @return int - Returns 0 if initialization is successful; otherwise an error code.
  */
-int  tlkmdi_auduac_music_init(void);
+int tlkmdi_auduac_music_init(void);
 
 /**
  * @brief  Checks if the UAC music module is busy.

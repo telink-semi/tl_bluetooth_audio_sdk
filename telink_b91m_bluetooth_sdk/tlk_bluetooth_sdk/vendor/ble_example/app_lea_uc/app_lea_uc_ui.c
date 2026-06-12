@@ -455,7 +455,7 @@ static void app_ui_start_stream_callback(struct ble_uc_stream_config *p_stream_c
         struct ble_host_gap_cis_central_set_cig_params set_cig_params = {
             .cig_id         = 0,
             .worst_case_sca = BLE_HOST_GAP_CIG_SCA_PPM_101_150,
-            .sequential     = true,
+            .sequential     = false,
             .framing        = false,
             .c_to_p =
                 {

@@ -104,7 +104,7 @@ extern uint8_t btp_tws_build_gatt_link_handle(uint16_t acl_handle, bttpsll_tws_s
  *
  * @returns none.
  */
-_attribute_bt_ram_code_ void btp_tws_slave_handover_host_status_sync(uint8_t *pBtAddr, bttpsll_tws_handover_host_status_info_t * bt_host_info);
+_attribute_bt_ram_code_ void btp_tws_slave_handover_host_status_sync(uint8_t *pBtAddr, bttpsll_tws_handover_host_status_info_t *bt_host_info);
 
 /**
  * @brief  Tws master headset extract the handover info for send to slave
@@ -140,12 +140,6 @@ extern void btp_tws_slave_sppgatt_event_handler(bttpsll_tws_sync_info_t *slave_p
  * @returns None.
  */
 extern void btp_tws_handover_set_app_userdata_callback_register(void (*callback)(bttpsll_tws_handover_host_status_info_t));
-
-
-
-
-
-
 
 
 #endif /* BTP_TWS_SLAVE_H_ */

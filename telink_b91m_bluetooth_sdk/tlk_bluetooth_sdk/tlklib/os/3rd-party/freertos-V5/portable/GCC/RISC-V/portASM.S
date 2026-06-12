@@ -120,6 +120,9 @@ at the top of this file. */
 .extern pullNextTime
 .extern uxTimerIncrementsForOneTick /* size_t type so 32-bit on 32-bit core and 64-bits on 64-bit core. */
 .extern xISRStackTop
+#if ( configHSP_ENABLE == 1 )
+.extern xISRStackBase
+#endif
 .extern portasmHANDLE_INTERRUPT
 
 /*-----------------------------------------------------------*/
@@ -254,6 +257,10 @@ vPortTimerInterrupt:
 .align 3			//  2 ^ 3 == 8
 .func
 trap_entry:
+#if ( configHSP_ENABLE == 1 )
+    csrci mhsp_ctl, 3               //because portasmSAVE_REGISTERS may change sp and will cause overflow again
+    csrrw   x0,mscratch,sp          //save old sp to mscratch to be printed in except_handler() when HSP overflow
+#endif
 	portasmSAVE_REGISTERS
 
 	csrr    a0, mcause
@@ -263,6 +270,9 @@ trap_entry:
 
 	load_x  sp, xISRStackTop  /* switch sp to irq stack for call functions. */
 	jal     portasmHANDLE_INTERRUPT
+#if ( configHSP_ENABLE == 1 )
+    csrci mhsp_ctl, 3               //mhsp_ctl should be restore to be turn off.
+#endif
 
 	portasmRESTORE_REGISTERS
 	mret
@@ -303,6 +313,9 @@ xPortStartFirstTask:
     la t0, trap_entry
     csrw mtvec, t0
 #endif /* portasmHAS_CLILNT */
+#if ( configHSP_ENABLE == 1 )
+    csrci mhsp_ctl, 3           // because portasmRESTORE_REGISTERS will change sp to idle task stack
+#endif
     csrci   mstatus, 8          // disable interrupt
     portasmRESTORE_REGISTERS
     mret
@@ -557,12 +570,16 @@ irq_skip_fpu_restore_caller:
 
 .extern g_plic_switch_sp_flag
 .extern tlk_plicISRStackTop
+#if( configHSP_ENABLE == 1 )
+.extern tlk_plicISRStackBase
+#endif
 .extern plic_isr
 .globl entry_irq_all
 
 .align 3            //  2 ^ 3 == 8
 .func
 entry_irq_all:
+#if( configHSP_ENABLE == 0 )
     addi    sp, sp, -2 * REG_BYTES          //change sp
     sw      t0,0(sp)                //save t0
     sw      t1,4(sp)                //save t1
@@ -597,11 +614,82 @@ revert_switch_sp:
     csrr    t0,mscratch         //get old sp from mscratch
     mv      sp,t0           //change sp to _STACK_TOP
 revert_switch_sp_end:
-    lw      t0,0(sp)                //save t0
-    lw      t1,4(sp)                //save t1
+    lw      t0,0(sp)                //restore t0
+    lw      t1,4(sp)                //restore t1
     addi    sp,sp,2 * REG_BYTES     //change sp
 
     ret
 
+#else
+    addi    sp, sp, -5 * REG_BYTES          //change sp
+    sw      t0,0(sp)                //save t0
+    sw      t1,4(sp)                //save t1
+    sw      s0,8(sp)                //save s0: bound
+    sw      s1,12(sp)               //save s1: base
+    sw      s2,16(sp)               //save s2: ctl
+    la      t1,g_plic_switch_sp_flag
+    lw      t0,0(t1)                //read flag to t0
+    bgtz    t0,switch_sp_end        //if t0 != 0, no switch sp
+switch_sp:
+    csrr s2, mhsp_ctl               //backup msp ctl to s2
+    csrci mhsp_ctl, 3               //mhsp_ctl should be turn off
+
+    csrrw   x0,mscratch,sp          //save old sp to mscratch
+    load_x  sp,tlk_plicISRStackTop  //change sp to _STACK_TOP
+
+    csrr s0, msp_bound              //backup msp bound to s0
+    load_x t0, tlk_plicISRStackBase
+    csrw msp_bound, t0
+
+#if( configRECORD_STACK_HIGH_ADDRESS == 1 )
+    csrr s1, msp_base               //backup msp base to s1
+    load_x t0, tlk_plicISRStackTop
+    csrw msp_base, t0
+    li t0, 0x23
+#else
+    li t0, 0x21
+#endif
+    csrw mhsp_ctl, t0
+
+switch_sp_end:
+    IRQ_SAVE_REGISTER               //save register
+
+    la      t1,g_plic_switch_sp_flag
+    lw      t0,0(t1)                //read flag to t0
+    addi    t0, t0, 1               // flag += 1
+    sw      t0, 0(t1)              
+
+    jal     plic_isr
+
+    la      t1,g_plic_switch_sp_flag//read flag addr
+    lw      t0,0(t1)                //read flag to t0
+    addi    t0, t0, -1              // flag -= 1
+    sw      t0, 0(t1)              
+
+    IRQ_RESTORE_REGISTER
+
+    la      t1,g_plic_switch_sp_flag
+    lw      t0,0(t1)                //read flag to t0
+    bgtz    t0,revert_switch_sp_end     //if t0 != 0, no switch sp
+
+revert_switch_sp:
+    csrci mhsp_ctl, 3               //mhsp_ctl should be turn off
+    csrr    t0,mscratch         //get old sp from mscratch
+    mv      sp,t0           //change sp to _STACK_TOP
+    csrw msp_bound, s0
+#if( configRECORD_STACK_HIGH_ADDRESS == 1 )
+    csrw msp_base, s1
+#endif
+    csrw mhsp_ctl, s2
+revert_switch_sp_end:
+    lw      t0,0(sp)                //restore t0
+    lw      t1,4(sp)                //restore t1
+    lw      s0,8(sp)               //restore s0
+    lw      s1,12(sp)               //restore s1
+    lw      s2,16(sp)               //restore s2
+    addi    sp,sp,5 * REG_BYTES     //change sp
+
+    ret
+#endif
 
 #endif //TLKOS_CFG_FREERTOS_ENABLE

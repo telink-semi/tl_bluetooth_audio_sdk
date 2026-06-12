@@ -22,28 +22,27 @@
  *
  *******************************************************************************************************/
 #include "ext_hci_uart.h"
-#include "mcu_config.h"
 #include "lib/include/clock.h"
 #include "tl_common.h"
 #include "lib/include/clic.h"
-
+#if (HCI_UART_EXT_DRIVER_EN || HCI_TR_EN)
 /**
  * @brief  UART Select interface
  */
 #ifndef EXT_HCI_UART_CHANNEL
-    #define EXT_HCI_UART_CHANNEL UART1
+#define EXT_HCI_UART_CHANNEL UART1
 #endif
 
 #ifndef EXT_HCI_UART_IRQ
-    #define EXT_HCI_UART_IRQ IRQ_UART1
+#define EXT_HCI_UART_IRQ IRQ_UART1
 #endif
 
 #ifndef EXT_HCI_UART_DMA_CHN_RX
-    #define EXT_HCI_UART_DMA_CHN_RX DMA2 //uart dma
+#define EXT_HCI_UART_DMA_CHN_RX DMA2 //uart dma
 #endif
 
 #ifndef EXT_HCI_UART_DMA_CHN_TX
-    #define EXT_HCI_UART_DMA_CHN_TX DMA3
+#define EXT_HCI_UART_DMA_CHN_TX DMA3
 #endif
 
 /*** RTS ***/
@@ -90,7 +89,7 @@ ext_hci_StatusTypeDef_e ext_hci_uartInit(ext_hci_InitTypeDef *uart)
     uart_set_irq_mask(EXT_HCI_UART_CHANNEL, UART_TXDONE_MASK);
 
     uart_set_irq_mask(EXT_HCI_UART_CHANNEL, UART_RXDONE_MASK);
-#if(MCU_CORE_N22 == 0)
+#if (MCU_CORE_N22 == 0)
     plic_interrupt_enable(EXT_HCI_UART_IRQ);
 #endif
     //cts function
@@ -113,7 +112,7 @@ ext_hci_StatusTypeDef_e ext_hci_uartInit(ext_hci_InitTypeDef *uart)
 /**
  * @brief  uart interrupt function
  */
-#if (HCI_UART_EXT_DRIVER_EN || HCI_TR_EN)
+
 _attribute_ram_code_sec_ void ext_hci_irq_handler(void)
 {
     //transmit
@@ -146,8 +145,6 @@ _attribute_ram_code_sec_ void ext_hci_irq_handler(void)
     }
 }
 PLIC_ISR_REGISTER(ext_hci_irq_handler, EXT_HCI_UART_IRQ)
-#endif
-
 
 /**
  * @brief  Check whether the transmission is complete
@@ -186,3 +183,4 @@ _attribute_ram_code_sec_ //BLE SDK use:
     ReceAddr = addr;
     core_interrupt_enable();
 }
+#endif

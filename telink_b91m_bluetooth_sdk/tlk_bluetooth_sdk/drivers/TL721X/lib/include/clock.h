@@ -65,7 +65,7 @@ typedef enum
 	//PLL_CLK_288M    = (0x14 | (1 << 5) | (288 << 8)| (0x60<<16)),
 } sys_pll_clk_e;
 
-#if PROJ_TPSLL_AUDIO_DONGLE
+#if PROJ_TPSLL_AUDIO_DONGLE || PROJ_BLE_AUDIO_LL
 #define PLL_CLK PLL_CLK_240M
 #else
 #define PLL_CLK PLL_CLK_192M

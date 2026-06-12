@@ -23,15 +23,15 @@
  *******************************************************************************************************/
 #include "tlkmw/audio/audio_mw_manager.h"
 #if LHDC_CODEC_ENABLE
-    #ifndef __BT_MUSIC_LHDC_H__
-        #define __BT_MUSIC_LHDC_H__
-        #include "tl_common.h"
-        #include "drivers.h"
+#ifndef __BT_MUSIC_LHDC_H__
+#define __BT_MUSIC_LHDC_H__
+#include "tl_common.h"
+#include "drivers.h"
 
-        #include <stdbool.h>
-        #include <stdint.h>
+#include <stdbool.h>
+#include <stdint.h>
 
-        #include "tlkalg/audio_alg/lhdc/tlk_lhdc_v5_dec_interface.h"
+#include "tlkalg/audio_alg/lhdc/tlk_lhdc_v5_dec_interface.h"
 
 typedef struct
 {
@@ -41,33 +41,33 @@ typedef struct
     bool     low_latency;
 } __attribute__((packed)) lhdc_sync_info_t;
 
-        #ifndef LHDC_MIN(a, b)
-            #define LHDC_MIN(a, b) ((a) < (b) ? (a) : (b))
-        #endif
+#ifndef LHDC_MIN(a, b)
+#define LHDC_MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
 
-        #ifndef LHDC_MAX(a, b)
-            #define LHDC_MAX(a, b) ((a) > (b) ? (a) : (b))
-        #endif
+#ifndef LHDC_MAX(a, b)
+#define LHDC_MAX(a, b) ((a) > (b) ? (a) : (b))
+#endif
 
-        #define lhdc_dump_data           tlkapi_sendData
-        #define lhdc_dump_s32            tlkapi_sendU32s
+#define lhdc_dump_data           tlkapi_sendData
+#define lhdc_dump_s32            tlkapi_sendU32s
 
-        #define TMUSIC_LHDC_BUFF_NUM_MAX (BT_MUSIC_ENC_FIFO_SIZE / LHDC_FRAME_MAX_SIZE)
+#define TMUSIC_LHDC_BUFF_NUM_MAX (BT_MUSIC_ENC_FIFO_SIZE / LHDC_FRAME_MAX_SIZE)
 
-        #define LHDC_DEBUG_EN            1
-        #define LHDC_ERROR_CHECK(err)                                    \
-            do {                                                         \
-                if (!(err)) {                                            \
-                    lhdc_dump_data(LHDC_DEBUG_EN, "lhdcv5 error", 0, 0); \
-                    lhdc_dump_data(LHDC_DEBUG_EN, __func__, 0, 0);       \
-                }                                                        \
-            } while (0)
+#define LHDC_DEBUG_EN            1
+#define LHDC_ERROR_CHECK(err)                                    \
+    do {                                                         \
+        if (!(err)) {                                            \
+            lhdc_dump_data(LHDC_DEBUG_EN, "lhdcv5 error", 0, 0); \
+            lhdc_dump_data(LHDC_DEBUG_EN, __func__, 0, 0);       \
+        }                                                        \
+    } while (0)
 
-        #define LHDC_VENDOR_ID1     0x3a
-        #define LHDC_VENDOR_ID2     0x05
-        #define LHDC_VENDOR_ID3     0x00
-        #define LHDC_VENDOR_ID4     0x00
-        #define LHDC_VENDRO_CODECID 0x4c35
+#define LHDC_VENDOR_ID1     0x3a
+#define LHDC_VENDOR_ID2     0x05
+#define LHDC_VENDOR_ID3     0x00
+#define LHDC_VENDOR_ID4     0x00
+#define LHDC_VENDRO_CODECID 0x4c35
 
 ///brief music fsm state
 typedef enum
@@ -216,70 +216,70 @@ extern lhdc_config_t lhdc_config;
  * @param[in]   src - Pointer to source LHDC sync information
  * @return      None
  */
-void           lhdc_slave_param_set(const lhdc_sync_info_t *src);
+void lhdc_slave_param_set(const lhdc_sync_info_t *src);
 
 /**
  * @brief       Check if LHDC player is initialized
  * @param[in]   None
  * @return      true if LHDC player is initialized, false otherwise
  */
-bool           is_lhdc_player_init(void);
+bool is_lhdc_player_init(void);
 
 /**
  * @brief       Set LHDC player initialization flag
  * @param[in]   flag - Initialization flag value
  * @return      None
  */
-void           lhdc_player_init_set(uint8_t flag);
+void lhdc_player_init_set(uint8_t flag);
 
 /**
  * @brief       Set LHDC EQ initialization flag
  * @param[in]   flag - Initialization flag value
  * @return      None
  */
-void           lhdc_eq_init_set(uint8_t flag);
+void lhdc_eq_init_set(uint8_t flag);
 
 /**
  * @brief       Check if LHDC EQ is initialized
  * @param[in]   None
  * @return      true if LHDC EQ is initialized, false otherwise
  */
-bool           is_lhdc_eq_init(void);
+bool is_lhdc_eq_init(void);
 
 /**
  * @brief       Open LHDC audio
  * @param[in]   None
  * @return      None
  */
-void           lhdc_audio_open(void);
+void lhdc_audio_open(void);
 
 /**
  * @brief       Ready LHDC audio
  * @param[in]   None
  * @return      Operation result
  */
-int            lhdc_audio_ready(void);
+int lhdc_audio_ready(void);
 
 /**
  * @brief       Update LHDC asynchronously
  * @param[in]   None
  * @return      None
  */
-void           async_lhdc_update(void);
+void async_lhdc_update(void);
 
 /**
  * @brief       Delay LHDC mute for N milliseconds
  * @param[in]   n - Number of milliseconds to delay
  * @return      None
  */
-void           lhdc_mute_delay_5ms(uint16_t n);
+void lhdc_mute_delay_5ms(uint16_t n);
 
 /**
  * @brief       Reset LHDC ready time
  * @param[in]   None
  * @return      Reset value
  */
-uint16_t       lhdc_ready_time_reset(void);
+uint16_t lhdc_ready_time_reset(void);
 
 /**
  * @brief       Adjust LHDC music frame
@@ -288,14 +288,14 @@ uint16_t       lhdc_ready_time_reset(void);
  * @param[in]   frame_len - Frame length
  * @return      None
  */
-void           lhdc_mus_frame_adjust(const uint8_t *src, uint8_t *dst, uint16_t frame_len);
+void lhdc_mus_frame_adjust(const uint8_t *src, uint8_t *dst, uint16_t frame_len);
 
 /**
  * @brief       Initialize LHDC decoder player
  * @param[in]   None
  * @return      LHDC operation result
  */
-lhdc_result_e  lhdc_dec_player_init(void);
+lhdc_result_e lhdc_dec_player_init(void);
 
 /**
  * @brief       Get LHDC configuration
@@ -309,21 +309,21 @@ lhdc_config_t *lhdc_get_config(void);
  * @param[in]   None
  * @return      LHDC operation result
  */
-lhdc_result_e  lhdc_license_verify(void);
+lhdc_result_e lhdc_license_verify(void);
 
 /**
  * @brief       Parse LHDC configuration
  * @param[in]   lhdc_cap - Pointer to LHDC codec capability
  * @return      0 if successful, non-zero otherwise
  */
-uint8_t        lhdc_config_parse(const lhdc_codec_cap_t *lhdc_cap);
+uint8_t lhdc_config_parse(const lhdc_codec_cap_t *lhdc_cap);
 
 /**
  * @brief       Verify LHDC v5 license
  * @param[in]   lhdc - Pointer to LHDC configuration
  * @return      LHDC operation result
  */
-lhdc_result_e  lhdcv5_license_verify(const lhdc_config_t *lhdc);
+lhdc_result_e lhdcv5_license_verify(const lhdc_config_t *lhdc);
 
 /**
  * @brief       Get license data
@@ -332,7 +332,7 @@ lhdc_result_e  lhdcv5_license_verify(const lhdc_config_t *lhdc);
  * @param[in]   len - Length of data
  * @return      License verification result
  */
-license_ret_e  license_data_get(uint8_t offset, uint8_t *data, uint8_t len);
+license_ret_e license_data_get(uint8_t offset, uint8_t *data, uint8_t len);
 
 /**
  * @brief       Get LHDC v5 frame information
@@ -340,13 +340,13 @@ license_ret_e  license_data_get(uint8_t offset, uint8_t *data, uint8_t len);
  * @param[in]   len - Length of data
  * @return      Frame information result
  */
-int32_t        lhdcv5_get_frame_info(uint8_t *s, uint16_t len);
+int32_t lhdcv5_get_frame_info(uint8_t *s, uint16_t len);
 
 /**
  * @brief       Get LHDC encoder memory
  * @param[out]  addr - Pointer to memory address
  * @return      0 if successful, non-zero otherwise
  */
-uint8_t        lhdc_get_enc_mem(uint8_t **addr);
-    #endif
+uint8_t lhdc_get_enc_mem(uint8_t **addr);
+#endif
 #endif /* __BT_MUSIC_LHDC_H__ */

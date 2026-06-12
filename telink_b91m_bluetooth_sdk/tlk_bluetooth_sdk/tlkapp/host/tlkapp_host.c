@@ -127,7 +127,7 @@ static void tlkapp_host_handler(void)
  */
 const tlksys_task_cfg_t *tlkapp_host_getTaskCfg(void)
 {
-    _attribute_os_heap_sec_ static uint8_t sTlkAppHostTaskBuffer[TLKAPP_HOST_TASK_STASK_SIZE];
+    _attribute_os_heap_sec_ __attribute__((aligned(4))) static uint8_t sTlkAppHostTaskBuffer[TLKAPP_HOST_TASK_STASK_SIZE + TLKSYS_TASK_EXTRA_STATIC_BUFFER_SIZE];
     (void)sTlkAppHostTaskBuffer;
     static const tlksys_task_cfg_t sTlkAppHostTask = {
         .Init      = tlkapp_host_init,
@@ -135,7 +135,7 @@ const tlksys_task_cfg_t *tlkapp_host_getTaskCfg(void)
         .Input     = tlkapp_host_input,
         .Handler   = tlkapp_host_handler,
         .priority  = TLKSYS_TASK_HOST_PRIORITY,
-        .stackSize = TLKAPP_HOST_TASK_STASK_SIZE,
+        .stackSize = TLKAPP_HOST_TASK_STASK_SIZE + TLKSYS_TASK_EXTRA_STATIC_BUFFER_SIZE, //do not use sizeof(sTlkAppHostTaskBuffer)
         .pTaskName = "HOST",
 #if TLK_CFG_RTOS_ENABLE
         .pTaskStaticBuffer = &sTlkAppHostTaskBuffer,

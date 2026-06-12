@@ -31,67 +31,52 @@
  */
 void tlksys_hal_platform_init(void)
 {
-       const tlksys_hal_platform_init_cfg_t * pCfg = tlksys_hal_port_getPlatformInitCfg();
-    if(pCfg == NULL){
+    const tlksys_hal_platform_init_cfg_t *pCfg = tlksys_hal_port_getPlatformInitCfg();
+    if (pCfg == NULL) {
         return;
     }
-    extern void tlkapp_flash_prot_init(unsigned char flash_protect_en);
-    tlkapp_flash_prot_init(pCfg->flashProtectEn);
-
-    extern void tlkapp_flash_enable_4line(unsigned char en);
-    switch (pCfg->flashLineCfg){
-        case TLKSYS_HAL_INIT_FLASH_LINE_CFG_4LINE_DIS:
-            tlkapp_flash_enable_4line(0);
-            break;
-        default:
-            tlkapp_flash_enable_4line(1);
-            break;
-    }
-
-
+    tlkhal_flash_init(!pCfg->flashProtectClose);
+    tlkhal_flash_4line_enable();
 
     /* RTOS 32k source select need this */
-    switch (pCfg->lpTmrCfg){
-        case TLKSYS_HAL_INIT_LP_TMR_CFG_32kXTAL:
-            blc_pm_select_external_32k_crystal(); //NOT supported, error_code
-            break;
-        default:
-            blc_pm_select_internal_32k_crystal();
-            break;
+    switch (pCfg->lpTmrCfg) {
+    default:
+        blc_pm_select_internal_32k_crystal();
+        break;
     }
 
-    switch (pCfg->powerCfg){
-        case TLKSYS_HAL_INIT_POWER_CFG_LDO:
-            sys_init(LDO_1P25_LDO_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
-            break;
-        default:
-            sys_init(LDO_1P25_LDO_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
-            break;
+    switch (pCfg->powerCfg) {
+    case TLKSYS_HAL_INIT_POWER_CFG_LDO:
+        sys_init(LDO_1P25_LDO_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
+        break;
+    default:
+        sys_init(LDO_1P25_LDO_1P8, VBAT_MAX_VALUE_GREATER_THAN_3V6, INTERNAL_CAP_XTAL24M);
+        break;
     }
 
-    switch (pCfg->gpioCfg){
-        case TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN:
-            gpio_shutdown(GPIO_ALL);
-            break;
-        default:
-            gpio_init(0);
-            break;
+    switch (pCfg->gpioCfg) {
+    case TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN:
+        gpio_shutdown(GPIO_ALL);
+        break;
+    default:
+        gpio_init(0);
+        break;
     }
 
     gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
     pm_update_status_info(1);
-    pm_set_dig_module_power_switch(FLD_PD_ZB_EN,PM_POWER_UP);
-    tlkhal_clock_setLevel(pCfg->clockLevel,NULL);
+    pm_set_dig_module_power_switch(FLD_PD_ZB_EN, PM_POWER_UP);
+    tlkhal_clock_setLevel(pCfg->clockLevel, NULL);
 
     wd_32k_stop();
     wd_stop();
-        switch (pCfg->calibrationCfg){
-        case TLKSYS_HAL_INIT_CALIBRATION_CFG_DIS:
-            break;
-        default:
-            extern void calibration_func(void);
-            calibration_func();
-            break;
+    switch (pCfg->calibrationCfg) {
+    case TLKSYS_HAL_INIT_CALIBRATION_CFG_DIS:
+        break;
+    default:
+        extern void calibration_func(void);
+        calibration_func();
+        break;
     }
 
     pm_set_dig_ldo(DIG_VOL_1V1_MODE, 1000);

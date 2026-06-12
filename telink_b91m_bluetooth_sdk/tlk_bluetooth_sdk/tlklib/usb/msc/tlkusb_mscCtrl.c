@@ -45,9 +45,9 @@ static int  tlkusb_mscctrl_getClassInf(tlkusb_setup_req_t *pSetup, uint8_t infNu
  */
 static int tlkusb_mscctrl_setClassInf(tlkusb_setup_req_t *pSetup, uint8_t infNumb)
 {
-	(void) pSetup;
-	(void) infNumb;
-	return -TLK_ENOSUPPORT;
+    (void)pSetup;
+    (void)infNumb;
+    return -TLK_ENOSUPPORT;
 }
 
 /**
@@ -58,9 +58,9 @@ static int tlkusb_mscctrl_setClassInf(tlkusb_setup_req_t *pSetup, uint8_t infNum
  */
 static int tlkusb_mscctrl_getClassEdp(tlkusb_setup_req_t *pSetup, uint8_t edpNumb)
 {
-	(void) pSetup;
-	(void) edpNumb;
-	return TLK_ENONE;
+    (void)pSetup;
+    (void)edpNumb;
+    return TLK_ENONE;
 }
 
 /**
@@ -71,9 +71,9 @@ static int tlkusb_mscctrl_getClassEdp(tlkusb_setup_req_t *pSetup, uint8_t edpNum
  */
 static int tlkusb_mscctrl_setClassEdp(tlkusb_setup_req_t *pSetup, uint8_t edpNumb)
 {
-	(void) pSetup;
-	(void) edpNumb;
-	return TLK_ENONE;
+    (void)pSetup;
+    (void)edpNumb;
+    return TLK_ENONE;
 }
 
 /**
@@ -84,9 +84,9 @@ static int tlkusb_mscctrl_setClassEdp(tlkusb_setup_req_t *pSetup, uint8_t edpNum
  */
 static int tlkusb_mscctrl_getInterface(tlkusb_setup_req_t *pSetup, uint8_t infNumb)
 {
-	(void) pSetup;
-	(void) infNumb;
-	return TLK_ENONE;
+    (void)pSetup;
+    (void)infNumb;
+    return TLK_ENONE;
 }
 
 /**
@@ -97,22 +97,22 @@ static int tlkusb_mscctrl_getInterface(tlkusb_setup_req_t *pSetup, uint8_t infNu
  */
 static int tlkusb_mscctrl_setInterface(tlkusb_setup_req_t *pSetup, uint8_t infNumb)
 {
-	(void) pSetup;
-	(void) infNumb;
-	return TLK_ENONE;
+    (void)pSetup;
+    (void)infNumb;
+    return TLK_ENONE;
 }
 
-
 const tlkusb_modCtrl_t sTlkUsbMscModCtrl = {
-	.Init         = tlkusb_mscctrl_init, 
-	.Reset        = tlkusb_mscctrl_reset, 
-	.Handler      = tlkusb_mscctrl_handler,
-	.GetClassInf  = tlkusb_mscctrl_getClassInf,
-	.SetClassInf  = tlkusb_mscctrl_setClassInf,
-	.GetClassEdp  = tlkusb_mscctrl_getClassEdp,
-	.SetClassEdp  = tlkusb_mscctrl_setClassEdp,
-	.GetInterface = tlkusb_mscctrl_getInterface,
-	.SetInterface = tlkusb_mscctrl_setInterface,
+    .Init         = tlkusb_mscctrl_init,
+    .Reset        = tlkusb_mscctrl_reset,
+    .Deinit       = tlkusb_msc_scsiReset,
+    .Handler      = tlkusb_mscctrl_handler,
+    .GetClassInf  = tlkusb_mscctrl_getClassInf,
+    .SetClassInf  = tlkusb_mscctrl_setClassInf,
+    .GetClassEdp  = tlkusb_mscctrl_getClassEdp,
+    .SetClassEdp  = tlkusb_mscctrl_setClassEdp,
+    .GetInterface = tlkusb_mscctrl_getInterface,
+    .SetInterface = tlkusb_mscctrl_setInterface,
 };
 
 /**
@@ -122,36 +122,36 @@ const tlkusb_modCtrl_t sTlkUsbMscModCtrl = {
  */
 static int tlkusb_mscctrl_init(void)
 {
-	int index;
-	uint8_t isoMode;
-	tlkusb_msc_disk_t *pDisk;
-	
-	tlkusb_msc_scsiInit();
-	
-	
-	for(index=0; index<TLKUSB_MSC_UNIT_COUNT; index++){
-		pDisk = tlkusb_msc_getDisk(index);
-		if(pDisk != NULL && pDisk->Init != NULL){
-			pDisk->Init();
-		}
-	}
-	
-	usbhw_enable_manual_interrupt(FLD_CTRL_EP_AUTO_STD | FLD_CTRL_EP_AUTO_DESC | FLD_CTRL_EP_AUTO_INTF);
-	usbhw_set_eps_max_size(TLKUSB_MSC_REC_BUFFER_LEN);
-	usbhw_set_ep_addr((uint8_t)TLKUSB_MSC_EDP_OUT, 0);
-    usbhw_set_ep_addr((uint8_t)TLKUSB_MSC_EDP_IN, TLKUSB_MSC_REC_BUFFER_LEN);
-    
+    int                index;
+    uint8_t            isoMode;
+    tlkusb_msc_disk_t *pDisk;
 
-	isoMode = reg_usb_iso_mode;
-	isoMode &= ~ BIT(TLKUSB_MSC_EDP_IN);
-	isoMode &= ~ BIT(TLKUSB_MSC_EDP_OUT);
-	reg_usb_iso_mode = isoMode;
-	reg_usb_ep8_fifo_mode = 0;
-	usbhw_reset_ep_ptr((uint8_t)TLKUSB_MSC_EDP_OUT);
-	reg_usb_ep_ctrl(TLKUSB_MSC_EDP_OUT) = FLD_EP_DAT_ACK;
-	usb_set_pin(1);
-	usbhw_set_eps_irq_mask(FLD_USB_EDP5_IRQ);
-	return TLK_ENONE;
+    tlkusb_msc_scsiInit();
+
+
+    for (index = 0; index < TLKUSB_MSC_UNIT_COUNT; index++) {
+        pDisk = tlkusb_msc_getDisk(index);
+        if (pDisk != NULL && pDisk->Init != NULL) {
+            pDisk->Init();
+        }
+    }
+
+    usbhw_enable_manual_interrupt(FLD_CTRL_EP_AUTO_STD | FLD_CTRL_EP_AUTO_DESC | FLD_CTRL_EP_AUTO_INTF);
+    usbhw_set_eps_max_size(TLKUSB_MSC_REC_BUFFER_LEN);
+    usbhw_set_ep_addr((uint8_t)TLKUSB_MSC_EDP_OUT, 0);
+    usbhw_set_ep_addr((uint8_t)TLKUSB_MSC_EDP_IN, TLKUSB_MSC_REC_BUFFER_LEN);
+
+
+    isoMode = reg_usb_iso_mode;
+    isoMode &= ~BIT(TLKUSB_MSC_EDP_IN);
+    isoMode &= ~BIT(TLKUSB_MSC_EDP_OUT);
+    reg_usb_iso_mode      = isoMode;
+    reg_usb_ep8_fifo_mode = 0;
+    usbhw_reset_ep_ptr((uint8_t)TLKUSB_MSC_EDP_OUT);
+    reg_usb_ep_ctrl(TLKUSB_MSC_EDP_OUT) = FLD_EP_DAT_ACK;
+    usb_set_pin(1);
+    usbhw_set_eps_irq_mask(FLD_USB_EDP5_IRQ);
+    return TLK_ENONE;
 }
 
 /**
@@ -161,8 +161,8 @@ static int tlkusb_mscctrl_init(void)
  */
 static void tlkusb_mscctrl_reset(void)
 {
-	reg_usb_ep_ctrl(TLKUSB_MSC_EDP_OUT) = FLD_EP_DAT_ACK; 
-	tlkusb_msc_scsiReset();
+    reg_usb_ep_ctrl(TLKUSB_MSC_EDP_OUT) = FLD_EP_DAT_ACK;
+    tlkusb_msc_scsiReset();
 }
 
 /**
@@ -172,9 +172,8 @@ static void tlkusb_mscctrl_reset(void)
  */
 static void tlkusb_mscctrl_handler(void)
 {
-	tlkusb_msc_scsiHandler();
+    tlkusb_msc_scsiHandler();
 }
-
 
 /**
  * @brief       Get class interface.
@@ -184,21 +183,19 @@ static void tlkusb_mscctrl_handler(void)
  */
 static int tlkusb_mscctrl_getClassInf(tlkusb_setup_req_t *pSetup, uint8_t infNumb)
 {
-	if(infNumb != TLKUSB_MSC_INF_MSC){
-		return -TLK_ENOSUPPORT;
-	}
-	if(pSetup->bRequest == MS_REQ_GetMaxLUN){
-		uint8_t count = tlkusb_msc_getDiskCount();
-		if(count != 0){
-			usbhw_write_ctrl_ep_data(count-1);
-			return TLK_ENONE;
-		}
-	}else if(pSetup->bRequest == MS_REQ_MassStorageReset){
-		return TLK_ENONE;
-	}
-	return -TLK_ENOSUPPORT;
+    if (infNumb != TLKUSB_MSC_INF_MSC) {
+        return -TLK_ENOSUPPORT;
+    }
+    if (pSetup->bRequest == MS_REQ_GetMaxLUN) {
+        uint8_t count = tlkusb_msc_getDiskCount();
+        if (count != 0) {
+            usbhw_write_ctrl_ep_data(count - 1);
+            return TLK_ENONE;
+        }
+    } else if (pSetup->bRequest == MS_REQ_MassStorageReset) {
+        return TLK_ENONE;
+    }
+    return -TLK_ENOSUPPORT;
 }
 
 #endif //#if (TLK_USB_MSC_ENABLE)
-
-

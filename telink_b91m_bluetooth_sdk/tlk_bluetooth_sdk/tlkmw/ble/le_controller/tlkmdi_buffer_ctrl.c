@@ -35,11 +35,7 @@
 
 /***************************** HCI TX & RX data FIFO allocation, Begin *********************************************/
 //_attribute_iram_noinit_data_
-u8 tlkmdi_app_hci_rxAclfifo[HCI_RX_ACL_FIFO_SIZE * HCI_RX_ACL_FIFO_NUM] = { 0 };
-//_attribute_iram_noinit_data_
-u8 app_hci_rxfifo[HCI_RX_FIFO_SIZE * HCI_RX_FIFO_NUM] = { 0 };
-//_attribute_iram_noinit_data_
-u8 app_hci_txfifo[HCI_TX_FIFO_SIZE * HCI_TX_FIFO_NUM] = { 0 };
+u8 g_tlk_ble_app_hci_rxAclfifo[HCI_RX_ACL_FIFO_SIZE * HCI_RX_ACL_FIFO_NUM] = {0};
 
 #if (TLKMDI_ACL_CENTRAL_EN || TLKMDI_ACL_PERIPHR_EN)
 /********************* ACL connection LinkLayer TX & RX data FIFO allocation, Begin *******************************/
@@ -50,14 +46,14 @@ u8 app_hci_txfifo[HCI_TX_FIFO_SIZE * HCI_TX_FIFO_NUM] = { 0 };
  * @brief   ACL RX buffer, shared by all connections to hold LinkLayer RF RX data.
  *          user should define and initialize this buffer if either ACL Central or ACL Peripheral is used.
  */
-_attribute_ble_data_retention_ u8 app_acl_rx_fifo[ACL_RX_FIFO_SIZE * ACL_RX_FIFO_NUM] = { 0 };
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_acl_rx_fifo[ACL_RX_FIFO_SIZE * ACL_RX_FIFO_NUM] = {0};
 
 #if TLKMDI_ACL_CENTRAL_EN
 /**
  * @brief   ACL Central TX buffer, shared by all central connections to hold LinkLayer RF TX data.
  *          ACL Central TX buffer should be defined only when ACl connection central role is used.
  */
-_attribute_ble_data_retention_ u8 app_acl_cen_tx_fifo[ACL_CENTRAL_TX_FIFO_SIZE * ACL_CENTRAL_TX_FIFO_NUM * TLKMW_ACL_CENTRAL_MAX_NUM] = { 0 };
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_acl_cen_tx_fifo[ACL_CENTRAL_TX_FIFO_SIZE * ACL_CENTRAL_TX_FIFO_NUM * TLKMW_ACL_CENTRAL_MAX_NUM] = {0};
 
 #endif
 
@@ -66,7 +62,7 @@ _attribute_ble_data_retention_ u8 app_acl_cen_tx_fifo[ACL_CENTRAL_TX_FIFO_SIZE *
  * @brief   ACL Peripheral TX buffer, shared by all peripheral connections to hold LinkLayer RF TX data.
  *          ACL Peripheral TX buffer should be defined only when ACl connection peripheral role is used.
  */
-_attribute_ble_data_retention_ u8 app_acl_per_tx_fifo[ACL_PERIPHR_TX_FIFO_SIZE * ACL_PERIPHR_TX_FIFO_NUM * TLKMW_ACL_PERIPHR_MAX_NUM] = { 0 };
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_acl_per_tx_fifo[ACL_PERIPHR_TX_FIFO_SIZE * ACL_PERIPHR_TX_FIFO_NUM * TLKMW_ACL_PERIPHR_MAX_NUM] = {0};
 
 #endif
 
@@ -79,7 +75,7 @@ _attribute_ble_data_retention_ u8 app_acl_per_tx_fifo[ACL_PERIPHR_TX_FIFO_SIZE *
   * @brief   Extended ADV parameters buffer, used to hold extended ADV parameters which used in SDK.
   *          ADV_SET_PARAM_LENGTH is determined by SDK, user can not change !!!
   */
-_attribute_ble_data_retention_ u8 app_extAdvSetParam_buf[ADV_SET_PARAM_LENGTH * EXT_ADV_SETS_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_ext_adv_set_param_buf[ADV_SET_PARAM_LENGTH * EXT_ADV_SETS_NUMBER];
 
 
 /**
@@ -87,7 +83,7 @@ _attribute_ble_data_retention_ u8 app_extAdvSetParam_buf[ADV_SET_PARAM_LENGTH * 
   *          if any ADV Set use ADV data(e.g. Extended, Connectable), this buffer should be defined and initialized.
   *          if no  ADV Set use ADV data(e.g. Extended, Scannable), this buffer is not necessary.
   */
-_attribute_ble_data_retention_ u8 app_extAdvData_buf[EXT_ADV_DATA_LENGTH * EXT_ADV_SETS_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_ext_adv_data_buf[EXT_ADV_DATA_LENGTH * EXT_ADV_SETS_NUMBER];
 
 #if TLKMDI_LE_EXTENDED_SCAN_RSP_EN
 /**
@@ -95,13 +91,13 @@ _attribute_ble_data_retention_ u8 app_extAdvData_buf[EXT_ADV_DATA_LENGTH * EXT_A
   *          if any ADV Set use scan response data(e.g. Extended, Scannable), this buffer should be defined and initialized.
   *          if no  ADV Set use scan response data(e.g. Extended, Connectable), this buffer is not necessary.
   */
-_attribute_ble_data_retention_ u8 app_extScanRspData_buf[EXT_SCANRSP_DATA_LENGTH * EXT_ADV_SETS_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_extScanRspData_buf[EXT_SCANRSP_DATA_LENGTH * EXT_ADV_SETS_NUMBER];
 #endif
 
 #if TLKMDI_LE_PERIODIC_ADV_EN
 
-_attribute_ble_data_retention_ u8 app_peridAdvSet_buffer[PERD_ADV_PARAM_LENGTH * APP_PERID_ADV_SETS_NUMBER];
-_attribute_ble_data_retention_ u8          app_peridAdvData_buffer[APP_PERID_ADV_DATA_LENGTH * APP_PERID_ADV_SETS_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_perid_adv_set_buffer[PERD_ADV_PARAM_LENGTH * APP_PERID_ADV_SETS_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_perid_adv_data_buffer[APP_PERID_ADV_DATA_LENGTH * APP_PERID_ADV_SETS_NUMBER];
 
 #endif
 
@@ -118,14 +114,14 @@ _attribute_ble_data_retention_ u8          app_peridAdvData_buffer[APP_PERID_ADV
  *          CIG_PARAM_LEN is determined by SDK, user can not change this value.
  *          CIG_NUMBER is set by user.
  */
-_attribute_ble_data_retention_ u8 app_cig_param[CIG_PARAM_LEN * CIG_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_cig_param[CIG_PARAM_LEN * CIG_NUMBER];
 #endif
 /**
  * @brief   CIS Peripheral parameters buffer for stack use
  *          CIS_SLV_PARAM_LEN is determined by SDK, user can not change this value.
  *          CIS_PERIPHR_NUMBER is set by user.
  */
-_attribute_ble_data_retention_ u8 app_cis_per_param[CIS_SLV_PARAM_LEN * CIS_PERIPHR_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_cis_per_param[CIS_SLV_PARAM_LEN * CIS_PERIPHR_NUMBER];
 
 
 /**
@@ -133,7 +129,7 @@ _attribute_ble_data_retention_ u8 app_cis_per_param[CIS_SLV_PARAM_LEN * CIS_PERI
  *          CIS_CONN_PARAM_LENGTH is determined by SDK, user can not change this value.
  *          TOTAL_CIS_NUMBER is total number of CIS Central & CIS Peripheral.
  */
-_attribute_ble_data_retention_ u8 app_cis_conn_param[CIS_CONN_PARAM_LENGTH * TOTAL_CIS_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_cis_conn_param[CIS_CONN_PARAM_LENGTH * TOTAL_CIS_NUMBER];
 
 /********************************** CIS Global Data Definition, End **************************************************/
 
@@ -143,23 +139,23 @@ _attribute_ble_data_retention_ u8 app_cis_conn_param[CIS_CONN_PARAM_LENGTH * TOT
  * @brief   CIS RX PDU buffer. fifo_size & fifo_number defined in app_buffer.h
  * CIS RX PDU buffer is shared by all CIS connections to hold CIS RX data, user should define this buffer
  */
-_attribute_ble_data_retention_ u8 app_cis_rxPduFifo[CIS_RX_PDU_FIFO_SIZE * CIS_RX_PDU_FIFO_NUM] = {0};
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_cis_rx_pdu_fifo[CIS_RX_PDU_FIFO_SIZE * CIS_RX_PDU_FIFO_NUM] = {0};
 
 /**
  * @brief   CIS TX PDU buffer. fifo_size & fifo_number & cis_cnn_num defined in app_buffer.h
  * CIS TX PDU buffer can not be shared, every CIS connection has its own CIS TX PDU buffer.
  */
-_attribute_ble_data_retention_ u8 app_cis_txPduFifo[CIS_TX_PDU_FIFO_SIZE * CIS_TX_PDU_FIFO_NUM * TOTAL_CIS_NUMBER] = {0};
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_cis_tx_pdu_fifo[CIS_TX_PDU_FIFO_SIZE * CIS_TX_PDU_FIFO_NUM * TOTAL_CIS_NUMBER] = {0};
 
 /************************* CIS connection RX/TX ISO PDU buffer allocation, End ***************************************/
 
 
 /************************ CIS connection ISOAL SDU in and out buffer FIFO allocation, Begin **************************/
 /* SDU in buffer is used to hold local SDU data which will send to peer device */
-_attribute_ble_data_retention_ u8 app_cis_sdu_in_fifo[CIS_SDU_IN_FIFO_SIZE * TOTAL_CIS_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_cis_sdu_in_fifo[CIS_SDU_IN_FIFO_SIZE * TOTAL_CIS_NUMBER];
 
 /* SDU out buffer is used to hold SDU data received by RF from peer device */
-_attribute_ble_data_retention_ u8 app_cis_sdu_out_fifo[CIS_SDU_OUT_FIFO_SIZE * TOTAL_CIS_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_cis_sdu_out_fifo[CIS_SDU_OUT_FIFO_SIZE * TOTAL_CIS_NUMBER];
 
 /************************ CIS connection ISOAL SDU in and out buffer FIFO allocation, End  ***************************/
 
@@ -168,7 +164,7 @@ _attribute_ble_data_retention_ u8 app_cis_sdu_out_fifo[CIS_SDU_OUT_FIFO_SIZE * T
 
 #if (TLKMDI_ISOCHRONOUS_BROADCASTER_EN || TLKMDI_ISOCHRONOUS_BROADCASTER_SYNC_EN)
 /********************************** BIS BCST/BIS SYNC common Data Definition, Begin ***************************************/
-_attribute_ble_data_retention_ u8 app_bisToatlParam[BIS_PARAM_LENGTH * TOTAL_BIS_NUMBER];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_bis_toatl_param[BIS_PARAM_LENGTH * TOTAL_BIS_NUMBER];
 /********************************** BIS BCST/BIS SYNC common Data Definition, Begin  ****************************************/
 
 
@@ -178,20 +174,20 @@ _attribute_ble_data_retention_ u8 app_bisToatlParam[BIS_PARAM_LENGTH * TOTAL_BIS
  * @brief   BIS BCST TX buffer. size & number defined in app_buffer.h
  */
 //_attribute_iram_noinit_data_
-u8 app_bisBcstTxfifo[BIS_TX_PDU_FIFO_SIZE * BIS_TX_PDU_FIFO_NUM * BIS_NUM_IN_ALL_BIG_BCST] = { 0 };
+u8 g_tlk_ble_app_bis_bcst_txfifo[BIS_TX_PDU_FIFO_SIZE * BIS_TX_PDU_FIFO_NUM * BIS_NUM_IN_ALL_BIG_BCST] = {0};
 
 /************************* BIS BCST TX ISO PDU buffer FIFO allocation, End ********************************/
 
 
 /************************ BIS BCST TX ISOAL SDU buffer FIFO allocation, Begin *****************************/
 //_attribute_iram_noinit_data_
-u8 app_bis_sdu_in_fifo[BIS_SDU_IN_FIFO_SIZE * BIS_SDU_IN_FIFO_NUM * BIS_NUM_IN_ALL_BIG_BCST];
+u8 g_tlk_ble_app_bis_sdu_in_fifo[BIS_SDU_IN_FIFO_SIZE * BIS_SDU_IN_FIFO_NUM * BIS_NUM_IN_ALL_BIG_BCST];
 /************************ BIS BCST TX ISOAL SDU buffer FIFO allocation, End  ******************************/
 
 
 /********************************** BIS BCST Global Data Definition, Begin ***************************************/
 //_attribute_iram_noinit_data_
-u8 app_bigBcstParam[BIG_BCST_PARAM_LENGTH * BIG_BCST_NUM];
+u8 g_tlk_ble_app_big_bcst_param[BIG_BCST_PARAM_LENGTH * BIG_BCST_NUM];
 /********************************** BIS BCST Global Data Definition, End  ****************************************/
 
 
@@ -199,18 +195,18 @@ u8 app_bigBcstParam[BIG_BCST_PARAM_LENGTH * BIG_BCST_NUM];
 /**
  * @brief   BIS SYNC RX buffer. size & number defined in app_buffer.h
  */
-_attribute_ble_data_retention_ u8 app_bisSyncRxfifo[BIS_RX_PDU_FIFO_SIZE * BIS_RX_PDU_FIFO_NUM * BIS_NUM_IN_ALL_BIG_SYNC] = { 0 };
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_bis_sync_rxfifo[BIS_RX_PDU_FIFO_SIZE * BIS_RX_PDU_FIFO_NUM * BIS_NUM_IN_ALL_BIG_SYNC] = {0};
 
 /************************* BIS SYNC RX ISO PDU buffer FIFO allocation, End ********************************/
 
 
 /************************ BIS SYNC RX ISOAL SDU buffer FIFO allocation, Begin *****************************/
-_attribute_ble_data_retention_ u8 app_bis_sdu_out_fifo[BIS_SDU_OUT_FIFO_SIZE * BIS_SDU_OUT_FIFO_NUM * BIS_NUM_IN_ALL_BIG_SYNC];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_bis_sdu_out_fifo[BIS_SDU_OUT_FIFO_SIZE * BIS_SDU_OUT_FIFO_NUM * BIS_NUM_IN_ALL_BIG_SYNC];
 /************************ BIS SYNC RX ISOAL SDU buffer FIFO allocation, End  ******************************/
 
 
 /********************************** BIS BSYNC Global Data Definition, Begin ***************************************/
-_attribute_ble_data_retention_ u8 app_bigSyncParam[BIG_SYNC_PARAM_LENGTH * BIG_SYNC_NUM];
+_attribute_ble_data_retention_ u8 g_tlk_ble_app_big_sync_param[BIG_SYNC_PARAM_LENGTH * BIG_SYNC_NUM];
 /********************************** BIS BSYNC Global Data Definition, End  ****************************************/
 #endif
 

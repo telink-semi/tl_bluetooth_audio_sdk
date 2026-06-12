@@ -83,16 +83,16 @@ static const uint16_t defaultPeriConnParametersLen = sizeof(defaultPeriConnParam
  * @brief the structure for default GAP service List.
  */
 static const struct atts_attribute gapList[] = {
-    ATTS_PRIMARY_SERVICE(serviceGenericAccessUuid),
+    ATTS_PRIMARY_SERVICE(serviceGenericAccessAttUuid),
 
     //device name
-    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicDeviceNameUuid, defaultDevName),
+    ATTS_CHAR_UUID_READ_POINT_NOCB(charPropRead, characteristicDeviceNameAttUuid, defaultDevName),
 
     //Appearance
-    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicAppearanceUuid, defaultAppearance),
+    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicAppearanceAttUuid, defaultAppearance),
 
     //period connect parameter
-    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicPeripheralPreferredConnParamUuid, defaultPeriConnParameters),
+    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicPeripheralPreferredConnParamAttUuid, defaultPeriConnParameters),
 };
 
 
@@ -142,20 +142,20 @@ static const uint16_t                     databaseHashValLen = 0x10;
  * @brief the structure for default GATT service List.
  */
 static const struct atts_attribute gattList[] = {
-    ATTS_PRIMARY_SERVICE(serviceGenericAttributeUuid),
+    ATTS_PRIMARY_SERVICE(serviceGenericAttributeAttUuid),
 
     //service change
-    ATTS_CHAR_UUID_NO_RDWR_POINT_NOCB(charPropIndicate, characteristicServiceChangedUuid, gattServiceChangeVal),
+    ATTS_CHAR_UUID_NO_RDWR_POINT_NOCB(charPropIndicate, characteristicServiceChangedAttUuid, gattServiceChangeVal),
     ATTS_COMMON_CCC_DEFINE,
 
     //serverSuppFeat
-    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicServerSupportedFeaturesUuid, serverSuppFeatVal),
+    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicServerSupportedFeaturesAttUuid, serverSuppFeatVal),
 
     //clientSuppFeat
-    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteWriteWithout, characteristicClientSupportedFeaturesUuid, clientSuppFeatVal),
+    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteWriteWithout, characteristicClientSupportedFeaturesAttUuid, clientSuppFeatVal),
 
     //database Hash
-    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicDatabaseHashUuid, databaseHashVal),
+    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicDatabaseHashAttUuid, databaseHashVal),
 };
 
 /*

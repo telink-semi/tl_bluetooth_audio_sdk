@@ -26,7 +26,8 @@
 #include "tlkmw/tinysql/tlkmdi_tinySql.h"
 #include "tlkmw/tinysql/tlkmdi_tinySql_inner.h"
 #include "tlkmw/bt/tlkmdi_btacl.h"
-#if (TLK_MW_TINYSQL_ENABLE && TLK_STK_BT_ENABLE)
+#if (TLK_MW_TINYSQL_ENABLE)
+#if (TLK_STK_BT_ENABLE)
 /******************************************************************************
                            private code begin
 ******************************************************************************/
@@ -88,8 +89,8 @@ typedef struct
     pairingDevice_item_t items[TINYSQL_PARING_DEVICE_NUMB]; /*!< Array of pairing device items */
 } pairingDevices_t;                                         //all paring devices;
 
-static pairingDevices_t   sPairingDevices     = {0};
-static tlkapi_save_ctrl_t sPairingDevicesCtrl = {0};
+static pairingDevices_t   sTlkmdiPairingDevices     = {0};
+static tlkapi_save_ctrl_t sTlkmdiPairingDevicesCtrl = {0};
 
 /**
  * @brief       Operate pairing devices mutex lock.
@@ -108,32 +109,32 @@ static void tlkmdi_tinySql_pairingDevices_mutexOperate(uint8_t isLock)
  */
 static bool tlkmdi_tinySql_PairingDevicesCheck(void)
 {
-    if (sPairingDevices.count > TINYSQL_PARING_DEVICE_NUMB) {
+    if (sTlkmdiPairingDevices.count > TINYSQL_PARING_DEVICE_NUMB) {
         return false;
     }
     uint32_t count     = 0;
-    uint16_t itemIndex = sPairingDevices.headItemIndex;
+    uint16_t itemIndex = sTlkmdiPairingDevices.headItemIndex;
     while (itemIndex != tinySql_nullptr) {
         if (itemIndex >= TINYSQL_PARING_DEVICE_NUMB) {
             return false;
         }
-        pairingDevice_item_t *pItem = &sPairingDevices.items[itemIndex];
+        pairingDevice_item_t *pItem = &sTlkmdiPairingDevices.items[itemIndex];
         itemIndex                   = pItem->nextItemIndex;
         count++;
-        if (count > sPairingDevices.count) {
+        if (count > sTlkmdiPairingDevices.count) {
             return false;
         }
     }
     count     = 0;
-    itemIndex = sPairingDevices.lastItemIndex;
+    itemIndex = sTlkmdiPairingDevices.lastItemIndex;
     while (itemIndex != tinySql_nullptr) {
         if (itemIndex >= TINYSQL_PARING_DEVICE_NUMB) {
             return false;
         }
-        pairingDevice_item_t *pItem = &sPairingDevices.items[itemIndex];
+        pairingDevice_item_t *pItem = &sTlkmdiPairingDevices.items[itemIndex];
         itemIndex                   = pItem->preItemIndex;
         count++;
-        if (count > sPairingDevices.count) {
+        if (count > sTlkmdiPairingDevices.count) {
             return false;
         }
     }
@@ -148,9 +149,9 @@ static bool tlkmdi_tinySql_PairingDevicesCheck(void)
 static void tlkmdi_tinySql_PairingDevicesReset(void)
 {
     tlkmdi_tinySql_pairingDevices_mutexOperate(true);
-    memset(&sPairingDevices, 0, sizeof(pairingDevices_t));
-    sPairingDevices.headItemIndex = tinySql_nullptr;
-    sPairingDevices.lastItemIndex = tinySql_nullptr;
+    memset(&sTlkmdiPairingDevices, 0, sizeof(pairingDevices_t));
+    sTlkmdiPairingDevices.headItemIndex = tinySql_nullptr;
+    sTlkmdiPairingDevices.lastItemIndex = tinySql_nullptr;
     tlkmdi_tinySql_requestSave(tinySql_pairingDevicesSaveIndex);
     tlkmdi_tinySql_pairingDevices_mutexOperate(false);
 }
@@ -163,9 +164,9 @@ static void tlkmdi_tinySql_PairingDevicesReset(void)
  */
 static uint16_t tlkmdi_tinySql_getPDIndex(uint8_t *pDevAddr)
 {
-    uint16_t itemIndex = sPairingDevices.headItemIndex;
+    uint16_t itemIndex = sTlkmdiPairingDevices.headItemIndex;
     while (itemIndex != tinySql_nullptr) {
-        pairingDevice_item_t *pItem = &sPairingDevices.items[itemIndex];
+        pairingDevice_item_t *pItem = &sTlkmdiPairingDevices.items[itemIndex];
         if (tmemcmp(pItem->devAddr, pDevAddr, 6) == 0) {
             return itemIndex;
         }
@@ -182,7 +183,7 @@ static uint16_t tlkmdi_tinySql_getPDIndex(uint8_t *pDevAddr)
 static uint16_t tlkmdi_tinySql_getIdlePDIndex(void)
 {
     for (uint16_t index = 0; index < TINYSQL_PARING_DEVICE_NUMB; index++) {
-        pairingDevice_item_t *pItem = &sPairingDevices.items[index];
+        pairingDevice_item_t *pItem = &sTlkmdiPairingDevices.items[index];
         if (pItem->isUsed == false) {
             return index;
         }
@@ -202,7 +203,7 @@ static uint16_t tlkmdi_tinySql_getIdlePDIndex(void)
  */
 static inline bool tlkmdi_tinySql_isPDSame(uint16_t itemIndex, uint8_t *pDevAddr, uint32_t *devClass, uint8_t *pLinkKey, uint8_t *pDevName)
 {
-    pairingDevice_item_t *items = sPairingDevices.items;
+    pairingDevice_item_t *items = sTlkmdiPairingDevices.items;
 
     if (tmemcmp(pDevAddr, items[itemIndex].devAddr, 6) != 0) {
         return false;
@@ -276,16 +277,11 @@ static void tlkmdi_tinySql_pairingDeviceDiskInit(void)
 {
     //get airingDevices data from flash,if nodata/not right version/crc fail -> reset data
     unsigned int saveAddress = tlkmdi_tinySql_getSaveAddr(TLKMDI_TINYSQL_DISK1_ADDR);
-    tlkapi_save3_init(&sPairingDevicesCtrl, TLKMDI_TINYSQL_SAVE_SIGN, TLKMDI_TINYSQL_VER, sizeof(pairingDevices_t), saveAddress + 4096 * 0,
-                      saveAddress + 4096 * 1); //2*4K
-    int ret = tlkapi_save3_load(&sPairingDevicesCtrl, (uint8_t *)&sPairingDevices, sizeof(sPairingDevices));
+    tlkapi_save3_init(&sTlkmdiPairingDevicesCtrl, TLKMDI_TINYSQL_SAVE_SIGN, TLKMDI_TINYSQL_VER, sizeof(pairingDevices_t), saveAddress);
+    int ret = tlkapi_save3_load(&sTlkmdiPairingDevicesCtrl, (uint8_t *)&sTlkmdiPairingDevices, sizeof(sTlkmdiPairingDevices));
     if (ret < (int)sizeof(pairingDevices_t) || tlkmdi_tinySql_PairingDevicesCheck() == false) {
         tlkmdi_tinySql_PairingDevicesReset();
-        // tlkmdi_tinySql_requestSave(tinySql_pairingDevicesSaveIndex);
     }
-    //note:temp code for qianghang
-    //erase flash when mcu boot
-    tlkapi_save3_migrate(&sPairingDevicesCtrl, (uint8_t *)&sPairingDevices, sizeof(sPairingDevices));
 }
 
 /**
@@ -295,10 +291,7 @@ static void tlkmdi_tinySql_pairingDeviceDiskInit(void)
  */
 static void tlkmdi_tinySql_pairingDeviceDiskSave(void)
 {
-    if (sPairingDevicesCtrl.offs + sPairingDevicesCtrl.lens > 4095) {
-        tlkapi_printf(TLKMDI_TINYSQL_LOG_ENABLE, "[SQL]<WARN>change sector begin(erase flash)");
-    }
-    tlkapi_save3_smartSave(&sPairingDevicesCtrl, (uint8_t *)&sPairingDevices, sizeof(sPairingDevices));
+    tlkapi_save3_smartSave(&sTlkmdiPairingDevicesCtrl, (uint8_t *)&sTlkmdiPairingDevices, sizeof(sTlkmdiPairingDevices));
 }
 
 /**
@@ -308,7 +301,7 @@ static void tlkmdi_tinySql_pairingDeviceDiskSave(void)
  */
 static void tlkmdi_tinySql_pairingDeviceDiskRestore(void)
 {
-    tlkapi_save3_clean(&sPairingDevicesCtrl);
+    tlkapi_save3_clean(&sTlkmdiPairingDevicesCtrl);
     tlkmdi_tinySql_PairingDevicesReset();
     tlkmdi_tinySql_requestSave(tinySql_pairingDevicesSaveIndex);
 }
@@ -330,7 +323,7 @@ const tinySqlDisk_t tinySql_pairingDevice_disk = {
  */
 uint32_t tlkmdi_tinySql_getPairingDevicesCount(void)
 {
-    return sPairingDevices.count;
+    return sTlkmdiPairingDevices.count;
 }
 
 /**
@@ -347,34 +340,34 @@ int tlkmdi_tinySql_updatePairingDeviceThreadUnsafe(uint8_t *pDevAddr, uint32_t *
     if (pDevAddr == NULL) {
         return -TLK_EPARAM;
     }
-    pairingDevice_item_t *items = sPairingDevices.items;
+    pairingDevice_item_t *items = sTlkmdiPairingDevices.items;
     //itemIndex used as a data ptr
     uint16_t itemIndex = tlkmdi_tinySql_getPDIndex(pDevAddr);
-    if (itemIndex == tinySql_notFind) {                                  //not find in the list
-        itemIndex = tlkmdi_tinySql_getIdlePDIndex();                     //new one
-        if (itemIndex == tinySql_full) {                                 //devices are full ,so 'new' failed
-            itemIndex                   = sPairingDevices.headItemIndex; //take off the head point
+    if (itemIndex == tinySql_notFind) {                                        //not find in the list
+        itemIndex = tlkmdi_tinySql_getIdlePDIndex();                           //new one
+        if (itemIndex == tinySql_full) {                                       //devices are full ,so 'new' failed
+            itemIndex                   = sTlkmdiPairingDevices.headItemIndex; //take off the head point
             pairingDevice_item_t *pItem = &items[itemIndex];
             pItem->isDevClassSaved      = 0;
             pItem->isLinkKeySaved       = 0;
             pItem->isnameSaved          = 0;
         }
     } //By above steps,we can get a itemIndex(ptr).
-    uint16_t tail = sPairingDevices.lastItemIndex;
-    uint16_t head = sPairingDevices.headItemIndex;
+    uint16_t tail = sTlkmdiPairingDevices.lastItemIndex;
+    uint16_t head = sTlkmdiPairingDevices.headItemIndex;
     if (items[itemIndex].isUsed == false) { //malloc a new node
         if (head == tinySql_nullptr) {      //the list is empty
-            sPairingDevices.headItemIndex = itemIndex;
+            sTlkmdiPairingDevices.headItemIndex = itemIndex;
         } else {
             items[tail].nextItemIndex = itemIndex;
         }
-        items[itemIndex].preItemIndex  = tail;            //new node->pre is old list->tail
-        items[itemIndex].nextItemIndex = tinySql_nullptr; //new node->next is NULL
-        sPairingDevices.lastItemIndex  = itemIndex;       //list->tail now is new node
-        items[itemIndex].isUsed        = true;
-        items[itemIndex].volume.music  = TLKBTP_A2DP_DEFAULT_VOL;
-        items[itemIndex].volume.voice  = TLKBTP_HFP_DEFAULT_VOL;
-        sPairingDevices.count += 1;
+        items[itemIndex].preItemIndex       = tail;            //new node->pre is old list->tail
+        items[itemIndex].nextItemIndex      = tinySql_nullptr; //new node->next is NULL
+        sTlkmdiPairingDevices.lastItemIndex = itemIndex;       //list->tail now is new node
+        items[itemIndex].isUsed             = true;
+        items[itemIndex].volume.music       = TLKBTP_A2DP_DEFAULT_VOL;
+        items[itemIndex].volume.voice       = TLKBTP_HFP_DEFAULT_VOL;
+        sTlkmdiPairingDevices.count += 1;
     } else { //replace one node
         if (tail == itemIndex) {
             //if is tail node,no need to remove and re_insert
@@ -387,7 +380,7 @@ int tlkmdi_tinySql_updatePairingDeviceThreadUnsafe(uint8_t *pDevAddr, uint32_t *
                 items[items[itemIndex].preItemIndex].nextItemIndex = items[itemIndex].nextItemIndex;
                 //nownode->pre->next = nownode->next
             } else {
-                sPairingDevices.headItemIndex = items[itemIndex].nextItemIndex;
+                sTlkmdiPairingDevices.headItemIndex = items[itemIndex].nextItemIndex;
                 //when now node is head,we need update the headptr extrally
             }
             items[items[itemIndex].nextItemIndex].preItemIndex = items[itemIndex].preItemIndex;
@@ -395,10 +388,10 @@ int tlkmdi_tinySql_updatePairingDeviceThreadUnsafe(uint8_t *pDevAddr, uint32_t *
 
             //now we remove the node from list,we need re_insert it to the tail of list
 
-            items[tail].nextItemIndex      = itemIndex;
-            items[itemIndex].preItemIndex  = tail;            //new node->pre is old list->tail
-            items[itemIndex].nextItemIndex = tinySql_nullptr; //new node->next is NULL
-            sPairingDevices.lastItemIndex  = itemIndex;       //list->tail now is new node
+            items[tail].nextItemIndex           = itemIndex;
+            items[itemIndex].preItemIndex       = tail;            //new node->pre is old list->tail
+            items[itemIndex].nextItemIndex      = tinySql_nullptr; //new node->next is NULL
+            sTlkmdiPairingDevices.lastItemIndex = itemIndex;       //list->tail now is new node
         }
     }
     //final: we copy data
@@ -461,18 +454,18 @@ int tlkmdi_tinySql_setPairingDeviceRfcChidThreadUnsafe(uint8_t *pDevAddr, uint16
         return -TLK_ESEEK;
     }
     if (type == TLKMDI_BT_AVRCP_ArtPsm) {
-        if (sPairingDevices.items[itemIndex].RfcChId.avrcpCoverArtPsm == val) {
+        if (sTlkmdiPairingDevices.items[itemIndex].RfcChId.avrcpCoverArtPsm == val) {
             return TLK_ENONE; //when same no need save
         }
-        sPairingDevices.items[itemIndex].RfcChId.avrcpCoverArtPsm = val;
+        sTlkmdiPairingDevices.items[itemIndex].RfcChId.avrcpCoverArtPsm = val;
     } else if (type < TLKMDI_BT_RFC_CHID_MAX) {
-        uint8_t *p = (uint8_t *)&sPairingDevices.items[itemIndex].RfcChId;
+        uint8_t *p = (uint8_t *)&sTlkmdiPairingDevices.items[itemIndex].RfcChId;
         if (*(p + type) == (val & 0xff)) {
             return TLK_ENONE; //when same no need save
         }
         *(p + type) = val & 0xff;
     } else if (type == TLKMDI_BT_RFC_GATT_SUPPORT) {
-        uint8_t *p = (uint8_t *)&sPairingDevices.items[itemIndex].RfcChId;
+        uint8_t *p = (uint8_t *)&sTlkmdiPairingDevices.items[itemIndex].RfcChId;
         *(p + type) |= (val & 0x01);
     }
     tlkmdi_tinySql_requestSave(tinySql_pairingDevicesSaveIndex);
@@ -514,36 +507,16 @@ int tlkmdi_tinySql_getPairingDeviceRfcChid(uint8_t *pDevAddr, void *val, uint8_t
     }
     if (type == TLKMDI_BT_AVRCP_ArtPsm) {
         uint16_t *avrcpCoverArtPsmVal = (uint16_t *)val;
-        *avrcpCoverArtPsmVal          = sPairingDevices.items[itemIndex].RfcChId.avrcpCoverArtPsm;
+        *avrcpCoverArtPsmVal          = sTlkmdiPairingDevices.items[itemIndex].RfcChId.avrcpCoverArtPsm;
     } else if (type < TLKMDI_BT_RFC_CHID_MAX) {
         uint8_t *rfcChIdVal = (uint8_t *)val;
-        uint8_t *p          = (uint8_t *)&sPairingDevices.items[itemIndex].RfcChId;
+        uint8_t *p          = (uint8_t *)&sTlkmdiPairingDevices.items[itemIndex].RfcChId;
         *rfcChIdVal         = *(p + type);
     } else if (type == TLKMDI_BT_RFC_GATT_SUPPORT) {
         uint8_t *rfcChIdVal = (uint8_t *)val;
-        uint8_t *p          = (uint8_t *)&sPairingDevices.items[itemIndex].RfcChId;
+        uint8_t *p          = (uint8_t *)&sTlkmdiPairingDevices.items[itemIndex].RfcChId;
         *rfcChIdVal         = *(p + type) & 0x01;
     }
-    tlkmdi_tinySql_pairingDevices_mutexOperate(false);
-    return TLK_ENONE;
-}
-
-/**
- * @brief       Set user magic word for pairing device.
- * @param[in]   pDevAddr    - Device address pointer.
- * @param[in]   magicWord   - Magic word to set.
- * @return      0 if success, otherwise error code.
- */
-int tlkmdi_tinySql_setPairingDeviceUserMagicWord(uint8_t *pDevAddr, uint32_t magicWord)
-{
-    tlkmdi_tinySql_pairingDevices_mutexOperate(true);
-    uint16_t itemIndex = tlkmdi_tinySql_getPDIndex(pDevAddr);
-    if (itemIndex == tinySql_notFind) { //not find in the list
-        tlkmdi_tinySql_pairingDevices_mutexOperate(false);
-        return -TLK_ESEEK;
-    }
-    sPairingDevices.items[itemIndex].magicWordForUser = magicWord;
-    tlkmdi_tinySql_requestSave(tinySql_pairingDevicesSaveIndex);
     tlkmdi_tinySql_pairingDevices_mutexOperate(false);
     return TLK_ENONE;
 }
@@ -564,11 +537,11 @@ int tlkmdi_tinySql_setPairingDeviceVolume(uint8_t *pDevAddr, uint8_t isMusic, ui
         tlkmdi_tinySql_pairingDevices_mutexOperate(false);
         return -TLK_ESEEK;
     }
-    sPairingDevices.items[itemIndex].volume.isIos = isIos;
+    sTlkmdiPairingDevices.items[itemIndex].volume.isIos = isIos;
     if (isMusic) {
-        sPairingDevices.items[itemIndex].volume.music = val;
+        sTlkmdiPairingDevices.items[itemIndex].volume.music = val;
     } else {
-        sPairingDevices.items[itemIndex].volume.voice = val;
+        sTlkmdiPairingDevices.items[itemIndex].volume.voice = val;
     }
     tlkmdi_tinySql_requestSave(tinySql_pairingDevicesSaveIndex);
     tlkmdi_tinySql_pairingDevices_mutexOperate(false);
@@ -592,13 +565,13 @@ int tlkmdi_tinySql_getPairingDeviceVolume(uint8_t *pDevAddr, uint8_t isMusic, ui
         return -TLK_ESEEK;
     }
     if (isIos != NULL) {
-        *isIos = sPairingDevices.items[itemIndex].volume.isIos;
+        *isIos = sTlkmdiPairingDevices.items[itemIndex].volume.isIos;
     }
     if (val != NULL) {
         if (isMusic) {
-            *val = sPairingDevices.items[itemIndex].volume.music;
+            *val = sTlkmdiPairingDevices.items[itemIndex].volume.music;
         } else {
-            *val = sPairingDevices.items[itemIndex].volume.voice;
+            *val = sTlkmdiPairingDevices.items[itemIndex].volume.voice;
         }
     }
     tlkmdi_tinySql_pairingDevices_mutexOperate(false);
@@ -616,7 +589,7 @@ int tlkmdi_tinySql_deletePairingDevice(uint8_t *pDevAddr)
         return -TLK_EPARAM;
     }
     tlkmdi_tinySql_pairingDevices_mutexOperate(true);
-    pairingDevice_item_t *items     = sPairingDevices.items;
+    pairingDevice_item_t *items     = sTlkmdiPairingDevices.items;
     uint16_t              itemIndex = tlkmdi_tinySql_getPDIndex(pDevAddr);
     if (itemIndex == tinySql_notFind) {
         tlkmdi_tinySql_pairingDevices_mutexOperate(false);
@@ -626,18 +599,18 @@ int tlkmdi_tinySql_deletePairingDevice(uint8_t *pDevAddr)
         items[items[itemIndex].preItemIndex].nextItemIndex = items[itemIndex].nextItemIndex;
         //nownode->pre->next = nownode->next
     } else {
-        sPairingDevices.headItemIndex = items[itemIndex].nextItemIndex;
+        sTlkmdiPairingDevices.headItemIndex = items[itemIndex].nextItemIndex;
         //when now node is head,we need update the headptr extrally
     }
     if (items[itemIndex].nextItemIndex != tinySql_nullptr) { //if not the tail node
         items[items[itemIndex].nextItemIndex].preItemIndex = items[itemIndex].preItemIndex;
         //nownode->next->pre = nownode->pre
     } else {
-        sPairingDevices.lastItemIndex = items[itemIndex].preItemIndex;
+        sTlkmdiPairingDevices.lastItemIndex = items[itemIndex].preItemIndex;
         //when now node is tail,we need update the tailptr extrally
     }
     memset(&items[itemIndex], 0, sizeof(pairingDevice_item_t));
-    sPairingDevices.count -= 1;
+    sTlkmdiPairingDevices.count -= 1;
     tlkmdi_tinySql_requestSave(tinySql_pairingDevicesSaveIndex);
     tlkmdi_tinySql_pairingDevices_mutexOperate(false);
     return TLK_ENONE;
@@ -674,7 +647,7 @@ int tlkmdi_tinySql_getPairingDeviceByAddr(uint8_t *pDevAddr, uint32_t *devClass,
         tlkmdi_tinySql_pairingDevices_mutexOperate(false);
         return -TLK_ESEEK;
     }
-    pairingDevice_item_t *pItem = &(sPairingDevices.items[itemIndex]);
+    pairingDevice_item_t *pItem = &(sTlkmdiPairingDevices.items[itemIndex]);
     int                   res   = tlkmdi_tinySql_getPairingDeviceByItemPtr(pItem, devClass, pLinkKey, pDevName);
     tlkmdi_tinySql_pairingDevices_mutexOperate(false);
     return res;
@@ -692,13 +665,13 @@ int tlkmdi_tinySql_getPairingDeviceByAddr(uint8_t *pDevAddr, uint32_t *devClass,
 int tlkmdi_tinySql_getPairingDeviceByIndex(uint32_t index, uint8_t *pDevAddr, uint32_t *devClass, uint8_t *pLinkKey, uint8_t *pDevName)
 {
     tlkmdi_tinySql_pairingDevices_mutexOperate(true);
-    if (index >= sPairingDevices.count) {
+    if (index >= sTlkmdiPairingDevices.count) {
         tlkmdi_tinySql_pairingDevices_mutexOperate(false);
         return -TLK_ESEEK;
     }
-    uint32_t itemIndex = sPairingDevices.headItemIndex;
+    uint32_t itemIndex = sTlkmdiPairingDevices.headItemIndex;
     while (itemIndex != tinySql_nullptr && index != 0) {
-        pairingDevice_item_t *pItem = &sPairingDevices.items[itemIndex];
+        pairingDevice_item_t *pItem = &sTlkmdiPairingDevices.items[itemIndex];
         itemIndex                   = pItem->nextItemIndex;
         index -= 1;
     }
@@ -706,7 +679,7 @@ int tlkmdi_tinySql_getPairingDeviceByIndex(uint32_t index, uint8_t *pDevAddr, ui
         tlkmdi_tinySql_pairingDevices_mutexOperate(false);
         return -TLK_ESEEK;
     }
-    pairingDevice_item_t *pItem = &(sPairingDevices.items[itemIndex]);
+    pairingDevice_item_t *pItem = &(sTlkmdiPairingDevices.items[itemIndex]);
     if (pDevAddr != NULL) {
         tmemcpy(pDevAddr, pItem->devAddr, 6);
     }
@@ -725,38 +698,9 @@ int tlkmdi_tinySql_getPairingDeviceByIndex(uint32_t index, uint8_t *pDevAddr, ui
  */
 int tlkmdi_tinySql_getLastPairingDevice(uint8_t *pDevAddr, uint32_t *devClass, uint8_t *pLinkKey, uint8_t *pDevName)
 {
-    uint32_t lastindex = sPairingDevices.count - 1;
+    uint32_t lastindex = sTlkmdiPairingDevices.count - 1;
     //if count == 0,lastindex will become 0xffffffff,then return -TLK_ESEEK;
     return tlkmdi_tinySql_getPairingDeviceByIndex(lastindex, pDevAddr, devClass, pLinkKey, pDevName);
-}
-
-/**
- * @brief       Search last bt peer device with same magic word.
- * @param[in]   magicWord   - Key for search.
- * @param[out]  pDevAddr    - Device address pointer, can be NULL.
- * @param[out]  devClass    - Device class pointer, can be NULL.
- * @param[out]  pLinkKey    - Link key pointer, can be NULL.
- * @param[out]  pDevName    - Device name pointer, can be NULL.
- * @return      0 if success, otherwise error code.
- */
-int tlkmdi_tinySql_searchLastPairingDeviceWithMagicWord(uint32_t magicWord, uint8_t *pDevAddr, uint32_t *devClass, uint8_t *pLinkKey, uint8_t *pDevName)
-{
-    tlkmdi_tinySql_pairingDevices_mutexOperate(true);
-    uint16_t itemIndex = sPairingDevices.lastItemIndex;
-    while (itemIndex != tinySql_nullptr) {
-        pairingDevice_item_t *pItem = &sPairingDevices.items[itemIndex];
-        if (pItem->magicWordForUser == magicWord) {
-            int res = tlkmdi_tinySql_getPairingDeviceByItemPtr(pItem, devClass, pLinkKey, pDevName);
-            if (pDevAddr != NULL) {
-                tmemcpy(pDevAddr, pItem->devAddr, 6);
-            }
-            tlkmdi_tinySql_pairingDevices_mutexOperate(false);
-            return res;
-        }
-        itemIndex = pItem->preItemIndex;
-    }
-    tlkmdi_tinySql_pairingDevices_mutexOperate(false);
-    return -TLK_ESEEK;
 }
 
 /**
@@ -767,14 +711,24 @@ int tlkmdi_tinySql_searchLastPairingDeviceWithMagicWord(uint32_t magicWord, uint
 void tlkmdi_tinySql_printPairingDevices(void)
 {
     tlkmdi_tinySql_pairingDevices_mutexOperate(true);
-    uint16_t itemIndex = sPairingDevices.headItemIndex;
-    tlkapi_trace(0xffffffff, "[TinySQL]", "devices: %d", sPairingDevices.count);
+    uint16_t itemIndex = sTlkmdiPairingDevices.headItemIndex;
+    tlkapi_trace(0xffffffff, "[TinySQL]", "devices: %d", sTlkmdiPairingDevices.count);
     while (itemIndex != tinySql_nullptr) {
-        pairingDevice_item_t *pItem = &sPairingDevices.items[itemIndex];
+        pairingDevice_item_t *pItem = &sTlkmdiPairingDevices.items[itemIndex];
         tlkapi_trace(0xffffffff, "[TinySQL]", "   (index-%d,class-0x%x,addr-0x%x,linkey-0x%x): ", itemIndex, pItem->devClass, *(uint32_t *)(pItem->devAddr),
                      *(uint32_t *)(pItem->linkKey));
         itemIndex = pItem->nextItemIndex;
     }
     tlkmdi_tinySql_pairingDevices_mutexOperate(false);
 }
+#else
+int tlkmdi_tinySql_updatePairingDevice(uint8_t *pDevAddr, uint32_t *devClass, uint8_t *pLinkKey, uint8_t *pDevName)
+{
+    (void)pDevAddr;
+    (void)devClass;
+    (void)pLinkKey;
+    (void)pDevName;
+    return -TLK_ENOSUPPORT;
+}
+#endif
 #endif

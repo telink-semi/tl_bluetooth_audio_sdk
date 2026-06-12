@@ -36,6 +36,10 @@
 #include "stack/ble/ble.h"
 #endif
 
+#if (MCU_DUAL_CORE_ENABLE)
+#include "stack/multiCoreComm/service/service_mailbox.h"
+#endif
+
 #if (TLK_CFG_A2DP_TO_BIS_ENABLE)
 
 
@@ -54,9 +58,17 @@ static uint8_t *s_alg_asrc_441to16_buffer = NULL;
 #endif
 uint8_t                 g_a2dp_to_bis_bt_enable_flag = 0;
 tlkmdi_audio_path_scene g_audio_scene                = TLKMDI_AUDIO_PATH_A2DP2BIS;
-
-codec_int       g_middle_spk_buff[CODEC_SPK_FIFO_SAMPLES];
+#if (!TLK_CFG_TEMP_DRAM_OPTM_TPSLL)
+codec_int g_middle_spk_buff[CODEC_SPK_FIFO_SAMPLES];
+#else
+_attribute_iram_data_ codec_int g_middle_spk_buff[CODEC_SPK_FIFO_SAMPLES];
+#endif
 extern uint32_t dec_intval_us;
+
+#if (MCU_DUAL_CORE_ENABLE)
+u32 tlkMdiBigInt = 0;
+u32 tlkMdiBigRef = 0;
+#endif
 
 /**
  * @brief       Set the audio scene for A2DP to BIS
@@ -197,6 +209,18 @@ static void tlkmdi_a2dp_to_bis_state_change_cb(uint16_t handle, uint8_t state)
     }
 }
 
+#if (MCU_DUAL_CORE_ENABLE)
+void tlksys_dualcore_a2dp_to_bis_ref_cb(u8 *data)
+{
+    BYTE_TO_UINT32(tlkMdiBigRef, data);
+}
+
+void tlksys_dualcore_a2dp_to_bis_int_cb(u8 *data)
+{
+    BYTE_TO_UINT32(tlkMdiBigInt, data);
+}
+#endif
+
 /*
  * @brief  Initial the A2DP sink block, register the data callback.
  * @param[in] None
@@ -207,6 +231,10 @@ int tlkmdi_a2dp_to_bis_init(void)
     tlkapi_trace(TLKMDI_BT_MUSIC_DBG_FLAG, TLKMDI_BT_MUSIC_DBG_SIGN, "tlkmdi_a2dp_to_bis_init");
     tlkmdi_audio_btif_addMusicStateChgCB(tlkmdi_a2dp_to_bis_state_change_cb, false);
     tlkmdi_audio_btif_regMusicVolChgCB(tlkmdi_a2dp_to_bis_vol_change_cb);
+#if (MCU_DUAL_CORE_ENABLE)
+    tlk_mailbox_register_message_cb(TLK_MESSAGE_FROM_N22_TO_D25F_BCST_INT, tlksys_dualcore_a2dp_to_bis_int_cb);
+    tlk_mailbox_register_message_cb(TLK_MESSAGE_FROM_N22_TO_D25F_BCST_REF, tlksys_dualcore_a2dp_to_bis_ref_cb);
+#endif
     return TLK_ENONE;
 }
 
@@ -372,8 +400,8 @@ bool tlkmdi_a2dp_to_bis_switch(uint16_t handle, uint8_t status)
             return false;
         }
 
-
-        bt_music_audio_path_init();
+        tlkmw_audio_btif_inform_host_audio_en(handle, true);
+        bt_music_audio_path_init(handle);
 #if (TLKBTP_CFG_A2DPSNK_ENABLE)
         btp_a2dpsnk_regRecvDataCB(tlkmdi_a2dp_to_bis_rcv_a2dp_frame);
 #endif
@@ -391,9 +419,8 @@ bool tlkmdi_a2dp_to_bis_switch(uint16_t handle, uint8_t status)
             //return false;
         }
 
-        tlkmw_audio_btif_inform_host_audio_en(handle, true);
         audio_codec_flag_set(CODEC_FLAG_MUSIC, 1);
-        bt_music_calibrate_enable(1);
+        bt_music_calibrate_enable(0);
     } else {
         bt_music_close_codec();
         bt_audio_task_register_run_cb(NULL, 0);
@@ -441,11 +468,59 @@ void tlkmdi_a2dp_to_bis_start_audio_timer(void)
     tlkmdi_audio_task_set_next_irq(10000);
 }
 
+#if (MCU_DUAL_CORE_ENABLE)
+u32 tlkmdi_a2dp_to_bis_get_ref(u32 clockTick)
+{
+    if (tlkMdiBigRef != 0) {
+        if ((clockTick - tlkMdiBigRef) < ((u32)BIT(30))) {
+            u32 num = (clockTick - tlkMdiBigRef) / tlkMdiBigInt;
+            if ((clockTick - tlkMdiBigRef) % tlkMdiBigInt) {
+                num = num + 1;
+            }
+            return (tlkMdiBigRef + num * tlkMdiBigInt);
+        } else {
+            return tlkMdiBigRef;
+        }
+    } else {
+        return 0;
+    }
+}
+
+static uint32_t s_a2dp_to_bis_total_delay = 0;
+
+void tlkmdi_a2dp_to_bis_set_total_delay(uint32_t total_delay)
+{
+    s_a2dp_to_bis_total_delay = total_delay * SYSTEM_TIMER_TICK_1US;
+}
+
+uint32_t tlkmdi_a2dp_to_bis_get_timestamp(void)
+{
+    uint32_t ref = tlkmdi_a2dp_to_bis_get_ref(clock_time());
+
+    return ref + s_a2dp_to_bis_total_delay;
+}
+
+// void app_ui_test_api(void)
+// {
+//     uint8_t temp_buff[1920] = {0};
+//     uint16_t sample_num = 480;
+
+//     lea_a2dp_to_bis_input_data_process((int16_t *)temp_buff, sample_num);
+
+//     uint32_t ref = tlkmdi_a2dp_to_bis_get_timestamp();
+
+//     tlk_printf("ref:%x, clock is %x, diff is %d us", ref, clock_time(), (ref-clock_time())/SYSTEM_TIMER_TICK_1US);
+//     gpio_toggle(GPIO_PA0);
+// }
+
+#endif
 /**
  * @brief       Timer interrupt handler for A2DP to BIS
  * @param       None
  * @return      None
  */
+// uint32_t bis_sync_ms = 0, bis_sync_sample = 0;
+// uint16_t bis_wptr = 0, bis_rptr = 0, bis_ava = 0;
 void tlkmdi_a2dp_to_bis_timer_irq_handler(void)
 {
     codec_int temp_buff[480];
@@ -456,7 +531,11 @@ void tlkmdi_a2dp_to_bis_timer_irq_handler(void)
     if (!s_a2dp_to_bis_ctl.timer_big_alig_flag) {
         uint32_t tick_cur                     = clock_time();
         s_a2dp_to_bis_ctl.timer_big_alig_flag = true;
-        uint32_t ticks                        = blc_ll_getLatestBigBcstSyncApTick4FutMoments(BIG_HANDLE_0);
+#if (MCU_DUAL_CORE_ENABLE)
+        uint32_t ticks = tlkmdi_a2dp_to_bis_get_ref(tick_cur);
+#else
+        uint32_t ticks = blc_ll_getLatestBigBcstSyncApTick4FutMoments(BIG_HANDLE_0);
+#endif
 
         uint32_t us_val = 0;
         if (ticks != 0) {
@@ -500,11 +579,20 @@ void tlkmdi_a2dp_to_bis_timer_irq_handler(void)
     tlkmdi_a2dp_to_bis_get_data_middle_buff((uint8_t *)temp_buff, sample_num * sizeof(codec_int));
 
 #if 0
-signed short  bis_sin_48k_stereo[]__attribute__((aligned(4))) = {
-    0,0,1069,1069,2120,2120,3134,3134,4095,4095,4986,4986,5792,5792,6499,6499,7094,7094,7568,7568,7912,7912,8121,8121,8191,8191,8121,8121,7912,7912,7568,7568,
-    7094,7094,6499,6499,5792,5792,4986,4986,4096,4096,3134,3134,2120,2120,1069,1069,0,0,-1069,-1069,-2120,-2120,-3134,-3134,-4095,-4095,-4986,-4986,-5792,-5792,-6499,-6499,
-    -7094,-7094,-7568,-7568,-7912,-7912,-8121,-8121,-8191,-8191,-8121,-8121,-7912,-7912,-7568,-7568,-7094,-7094,-6499,-6499,-5792,-5792,-4986,-4986,-4096,-4096,-3134,-3134,-2120,-2120,-1069,-1069,
-};
+    signed short  bis_sin_48k_stereo[]__attribute__((aligned(4))) = {
+        0     , 0     , 4276  , 4276  , 8480  , 8480  , 12539 , 12539 ,
+        16383 , 16383 , 19947 , 19947 , 23169 , 23169 , 25995 , 25995 ,
+        28377 , 28377 , 30272 , 30272 , 31650 , 31650 , 32486 , 32486 ,
+        32767 , 32767 , 32486 , 32486 , 31650 , 31650 , 30272 , 30272 ,
+        28377 , 28377 , 25995 , 25995 , 23169 , 23169 , 19947 , 19947 ,
+        16383 , 16383 , 12539 , 12539 , 8480  , 8480  , 4276  , 4276  ,
+        0     , 0     , -4276 , -4276 , -8480 , -8480 , -12539, -12539,
+        -16383, -16383, -19947, -19947, -23169, -23169, -25995, -25995,
+        -28377, -28377, -30272, -30272, -31650, -31650, -32486, -32486,
+        -32767, -32767, -32486, -32486, -31650, -31650, -30272, -30272,
+        -28377, -28377, -25995, -25995, -23169, -23169, -19947, -19947,
+        -16383, -16383, -12539, -12539, -8480 , -8480 , -4276 , -4276 ,
+    };
     static uint16_t bis_sine_count = 0;
     short *psrc = (short *)temp_buff;
     for (int i = 0; i < sample_num*2; i++) {
@@ -514,13 +602,30 @@ signed short  bis_sin_48k_stereo[]__attribute__((aligned(4))) = {
 #endif
 
 #if (TLK_MW_LEA_A2DP_TO_BIS_ENABLE)
-    if (!tlkmdi_a2dp_to_bis_get_sync_flag()) {
-        blc_ll_clr1stSduSyncRefTicks(BIG_HANDLE_0);
-        tlkmdi_a2dp_to_bis_set_bis_sync_flag();
-    }
-    lea_a2dp_to_bis_input_data_process((int16_t *)temp_buff, sample_num);
-#endif
 
+    lea_a2dp_to_bis_input_data_process((int16_t *)temp_buff, sample_num);
+
+    if (!tlkmdi_a2dp_to_bis_get_sync_flag()) {
+        // gpio_set_high_level(GPIO_PB7);
+#if (MCU_DUAL_CORE_ENABLE)
+        uint32_t ticks_diff  = tlkmdi_a2dp_to_bis_get_timestamp() - clock_time();
+        uint32_t bis_sync_ms = ticks_diff / SYSTEM_TIMER_TICK_1US / 1000;
+        // bis_sync_ms = 20;
+        uint32_t bis_sync_sample = (sample_num / 10) * (bis_sync_ms);
+#else
+        uint32_t bis_sync_sample = 48 * 20;
+#endif
+        tlkdrv_codec_sync_play_samples(bis_sync_sample);
+
+        // delay_us(1000);
+        // bis_wptr = tlkdrv_codec_getSpkOffset()/sizeof(codec_int),
+        // bis_rptr = tlkdrv_codec_get_speaker_rptr(),
+        // bis_ava = tlkdrv_codec_get_spk_avail_samples();
+        tlkmdi_a2dp_to_bis_set_bis_sync_flag();
+
+        // gpio_set_low_level(GPIO_PB7);
+    }
+#endif
 
     // uint16_t send_data[3];
     // send_data[0] = tlkdrv_codec_getSpkOffset()/sizeof(codec_int);

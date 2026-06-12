@@ -44,152 +44,43 @@
 #include "vendor/common/user_config.h"
 #include "svc_vcp.h"
 
-
-#define VOCS_START_HDL            SERVICE_VOCS_IN_VCS_HDL
-
-#define VOCS_OUTPUT_DESC_MAX_SIZE 50
-
-const uint16_t gVocsOutDescMaxSize = VOCS_OUTPUT_DESC_MAX_SIZE;
-
-#define VOCS_VOL_OFFSET_STATE_FIX_LEN 3
-#define VOCS_AUDIO_LOCATION_FIX_LEN   4
+#define VOCS_START_HDL SERVICE_VOCS_IN_VCS_HDL
 
 #if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 0
-static uint8_t vocsVolumeOffsetStateValue[LEA_VCP_INCLUDED_VOCS_SERVER_NUM][VOCS_VOL_OFFSET_STATE_FIX_LEN] = {
-    {0x00, 0x00, 0x00},
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 1
-    {0x00, 0x00, 0x00},
-#endif
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 2
-    {0x00, 0x00, 0x00},
-#endif
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 3
-    {0x00, 0x00, 0x00},
-#endif
-};
-static const uint16_t vocsVolumeOffsetStateValueLen = VOCS_VOL_OFFSET_STATE_FIX_LEN;
+static const uint8_t defaultVocsVolumeOffsetStateValue[]      = {0x00, 0x00, 0x00};
+static const uint8_t defaultVocsAudioLocationValue[]          = {0x00, 0x00, 0x00, 0x00};
+static const uint8_t defaultVocsAudioOutputDescriptionValue[] = {'V', 'O', 'C', 'S'};
 
-static uint32_t vocsAudioLocationValue[LEA_VCP_INCLUDED_VOCS_SERVER_NUM] = {
-    0x00,
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 1
-    0x00,
-#endif
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 2
-    0x00,
-#endif
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 3
-    0x00,
-#endif
-};
-static const uint16_t vocsAudioLocationValueLen = VOCS_AUDIO_LOCATION_FIX_LEN;
+static const uint16_t defaultVocsVolumeOffsetStateValueLen      = sizeof(defaultVocsVolumeOffsetStateValue);
+static const uint16_t defaultVocsAudioLocationValueLen          = sizeof(defaultVocsAudioLocationValue);
+static const uint16_t defaultVocsAudioOutputDescriptionValueLen = sizeof(defaultVocsAudioOutputDescriptionValue);
 
-static uint8_t vocsAudioOutputDescriptionValue[LEA_VCP_INCLUDED_VOCS_SERVER_NUM][VOCS_OUTPUT_DESC_MAX_SIZE];
+#define LEA_AUDIO_VOCS_SERVICE_DEFAULT_SERVICE_LIST                                                                                                               \
+    ATTS_SECONDARY_SERVICE(serviceVolumeOffsetControlAttUuid), /* < Volume Offset State */                                                                        \
+        ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicVolumeOffsetStateAttUuid, defaultVocsVolumeOffsetStateValue),                         \
+        ATTS_COMMON_CCC_DEFINE, /** < Audio Location */                                                                                                           \
+        ATTS_CHAR_UUID_ENCR_RDWR_POINT_RWCB(charPropReadWriteWithoutNotify, characteristicAudioLocationAttUuid, defaultVocsAudioLocationValue),                   \
+        ATTS_COMMON_CCC_DEFINE,                                                                       /* < Volume Offset Control Point */                         \
+        ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWrite, characteristicVolumeOffsetControlPointAttUuid), /* < Audio Output Description */                            \
+        ATTS_CHAR_UUID_ENCR_RDWR_POINT_RWCB(charPropReadWriteWithoutNotify, characteristicAudioOutputDescriptionAttUuid, defaultVocsAudioOutputDescriptionValue), \
+        ATTS_COMMON_CCC_DEFINE
 
-static uint16_t vocsAudioOutputDescriptionValueLen[LEA_VCP_INCLUDED_VOCS_SERVER_NUM];
-#endif
-
-#define ATTS_CHAR_VOL_OFFSET_STATE(value)                 \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadNotify), \
-        ATTS_CHAR_UUID_DEFINE(ATT_PERMISSIONS_ENCRYPT_READ, characteristicVolumeOffsetStateUuid, vocsVolumeOffsetStateValueLen, VOCS_VOL_OFFSET_STATE_FIX_LEN, value, 0)
-
-#define ATTS_CHAR_AUDIO_LOCATION(value)                                                                                                                     \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadWriteWithoutNotify),                                                                                       \
-        ATTS_CHAR_UUID_DEFINE(ATT_PERMISSIONS_ENCRYPT_RDWR, characteristicAudioLocationUuid, vocsAudioLocationValueLen, VOCS_AUDIO_LOCATION_FIX_LEN, value, \
-                              ATTS_SET_WRITE_CALLBACK | ATTS_SET_ALLOW_WRITE)
-
-#define ATTS_CHAR_VOL_OFFSET_CTRL_POINT()                                                                                                                     \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropWrite),                                                                                                          \
-    {                                                                                                                                                         \
-        ATT_PERMISSIONS_ENCRYPT_WRITE, ATT_16_UUID_LEN, (uint8_t *)(size_t)characteristicVolumeOffsetControlPointUuid, NULL, 0, NULL, ATTS_SET_WRITE_CALLBACK \
-    }
-
-#define ATTS_CHAR_AUDIO_OUTPUT_DESC(value, len)                                                                                              \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadWriteWithoutNotify),                                                                        \
-        ATTS_CHAR_UUID_DEFINE(ATT_PERMISSIONS_ENCRYPT_RDWR, characteristicAudioOutputDescriptionUuid, len, VOCS_OUTPUT_DESC_MAX_SIZE, value, \
-                              ATTS_SET_WRITE_CALLBACK | ATTS_SET_ALLOW_WRITE | ATTS_SET_VARIABLE_LEN)
-
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 0
 /*
  * @brief the structure for default VOCS service List.
  */
 static const struct atts_attribute vocsList[] = {
-    ATTS_SECONDARY_SERVICE(serviceVolumeOffsetControlUuid),
-
-    //Volume Offset State
-    ATTS_CHAR_VOL_OFFSET_STATE(&vocsVolumeOffsetStateValue[0][0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Audio Location
-    ATTS_CHAR_AUDIO_LOCATION(&vocsAudioLocationValue[0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Volume Offset Control Point
-    ATTS_CHAR_VOL_OFFSET_CTRL_POINT(),
-
-    //Audio output description
-    ATTS_CHAR_AUDIO_OUTPUT_DESC(&vocsAudioOutputDescriptionValue[0][0], vocsAudioOutputDescriptionValueLen[0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 1
-    ATTS_SECONDARY_SERVICE(serviceVolumeOffsetControlUuid),
-
-    //Volume Offset State
-    ATTS_CHAR_VOL_OFFSET_STATE(&vocsVolumeOffsetStateValue[1][0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Audio Location
-    ATTS_CHAR_AUDIO_LOCATION(&vocsAudioLocationValue[1]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Volume Offset Control Point
-    ATTS_CHAR_VOL_OFFSET_CTRL_POINT(),
-
-    //Audio output description
-    ATTS_CHAR_AUDIO_OUTPUT_DESC(&vocsAudioOutputDescriptionValue[1][0], vocsAudioOutputDescriptionValueLen[1]),
-    ATTS_COMMON_CCC_DEFINE,
+    LEA_AUDIO_VOCS_SERVICE_DEFAULT_SERVICE_LIST,
+#if LE_AUDIO_VOCS_SERVICE_COUNT > 1
+    LEA_AUDIO_VOCS_SERVICE_DEFAULT_SERVICE_LIST,
 #endif
-
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 2
-    ATTS_SECONDARY_SERVICE(serviceVolumeOffsetControlUuid),
-
-    //Volume Offset State
-    ATTS_CHAR_VOL_OFFSET_STATE(&vocsVolumeOffsetStateValue[2][0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Audio Location
-    ATTS_CHAR_AUDIO_LOCATION(&vocsAudioLocationValue[2]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Volume Offset Control Point
-    ATTS_CHAR_VOL_OFFSET_CTRL_POINT(),
-
-    //Audio output description
-    ATTS_CHAR_AUDIO_OUTPUT_DESC(&vocsAudioOutputDescriptionValue[2][0], vocsAudioOutputDescriptionValueLen[2]),
-    ATTS_COMMON_CCC_DEFINE,
+#if LE_AUDIO_VOCS_SERVICE_COUNT > 2
+    LEA_AUDIO_VOCS_SERVICE_DEFAULT_SERVICE_LIST,
 #endif
-
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 3
-    ATTS_SECONDARY_SERVICE(serviceVolumeOffsetControlUuid),
-
-    //Volume Offset State
-    ATTS_CHAR_VOL_OFFSET_STATE(&vocsVolumeOffsetStateValue[3][0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Audio Location
-    ATTS_CHAR_AUDIO_LOCATION(&vocsAudioLocationValue[3]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Volume Offset Control Point
-    ATTS_CHAR_VOL_OFFSET_CTRL_POINT(),
-
-    //Audio output description
-    ATTS_CHAR_AUDIO_OUTPUT_DESC(&vocsAudioOutputDescriptionValue[3][0], vocsAudioOutputDescriptionValueLen[3]),
-    ATTS_COMMON_CCC_DEFINE,
+#if LE_AUDIO_VOCS_SERVICE_COUNT > 3
+    LEA_AUDIO_VOCS_SERVICE_DEFAULT_SERVICE_LIST,
 #endif
 };
-#endif
 
-#if LEA_VCP_INCLUDED_VOCS_SERVER_NUM > 0
 /*
  * @brief the structure for default VOCS service group.
  */

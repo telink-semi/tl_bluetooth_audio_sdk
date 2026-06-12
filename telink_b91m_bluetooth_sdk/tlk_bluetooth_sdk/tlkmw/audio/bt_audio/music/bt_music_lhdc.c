@@ -164,7 +164,7 @@ _attribute_ram_code_ void async_lhdc_update(void)
  */
 static uint8_t lhdc_channel_sel(lhdc_config_t *lhdc)
 {
-    lhdc->channel = tph_headset_is_left() ? LHDC_OUTPUT_LEFT_CHANNEL : LHDC_OUTPUT_RIGHT_CHANNEL;
+    lhdc->channel = tlk_tpsll_tph_headset_is_left() ? LHDC_OUTPUT_LEFT_CHANNEL : LHDC_OUTPUT_RIGHT_CHANNEL;
     return 0;
 }
 
@@ -212,7 +212,7 @@ uint16_t lhdc_ready_time_reset(void)
  */
 void lhdc_mus_frame_adjust(const uint8_t *src, uint8_t *dst, uint16_t frame_len)
 {
-    if (!tph_headset_is_left()) {
+    if (!tlk_tpsll_tph_headset_is_left()) {
         tmemcpy(&dst[2], &src[frame_len], frame_len - 2);
     }
 }
@@ -261,11 +261,10 @@ lhdc_result_e lhdc_dec_player_init(void)
     lhdc_enc_param_set(LHDC_FRAME_MAX_SIZE, TMUSIC_LHDC_BUFF_NUM_MAX, lhdc_config.dec_param.samples_total);
     //lhdcv5_license_verify(&lhdc_config);
 
-    bt_music_open_codec(lhdc_config.dec_param.srate);
     lhdc_config.lhdc_player_init = 1;
     ticks_ms                     = (clock_time() - ticks_ms) / 16 / 1000;
 
-    if (tph_headset_is_master() || tlkmdi_bt_tpt_isSlave()) {
+    if (tlk_tpsll_tph_headset_is_master() || tlkmdi_bt_tpt_isSlave()) {
         lhdc_mute_delay_5ms(1000);
         lhdc_ready_time_reset();
     }

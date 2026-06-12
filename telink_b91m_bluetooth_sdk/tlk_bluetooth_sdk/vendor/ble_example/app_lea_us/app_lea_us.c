@@ -24,13 +24,16 @@
 #include <stdio.h>
 #include "stack/ble/ble.h"
 #include "driver.h"
-#include "tlkmw/ble/le_audio/inc/lea_us_headset.h"
-#include "tlkmw/ble/le_audio/inc/lea_us_tws.h"
+#include "tlkmw/ble/le_audio/inc/lea_us.h"
+
 #include "../app_example.h"
 #define LEA_US_HEADSET     0
 #define LEA_US_TWS         1
 #define LEA_US_DEVICE_TYPE LEA_US_HEADSET
-
+#ifndef TLK_CFG_FLASH_USER_USBID_ADDR
+#define TLK_CFG_FLASH_USER_USBID_ADDR  0x0000
+#define TLK_CFG_FLASH_LE_TWS_SIRK_ADDR 0x0000
+#endif
 static void app_connected_callback(struct ble_host_conn *conn);
 static void app_disconnected_callback(struct ble_host_conn *conn, uint8_t reason);
 
@@ -74,7 +77,8 @@ static uint8_t app_lea_us_get_device_type(void)
         tlk_printf("[APP] Device type is already set: %d", s_device_type);
         return s_device_type;
     }
-    uint32_t read_type_addr = TLK_CFG_FLASH_USER_USBID_ADDR + flash_full_size - 0x100000;
+    uint32_t tlkhal_flash_get_size(void);
+    uint32_t read_type_addr = TLK_CFG_FLASH_USER_USBID_ADDR + tlkhal_flash_get_size() - 0x100000;
     flash_read_page(read_type_addr, 1, (uint8_t *)&s_device_type);
     if (s_device_type != TWS_LEFT_EAR_BUD && s_device_type != TWS_RIGHT_EAR_BUD) {
         s_device_type = TWS_LEFT_EAR_BUD;
@@ -91,8 +95,9 @@ static uint8_t app_lea_us_get_device_type(void)
  */
 static void app_ble_get_device_sirk(uint8_t *sirk)
 {
-    uint8_t  s_sirk[16]     = {0};
-    uint32_t read_sirk_addr = TLK_CFG_FLASH_LE_TWS_SIRK_ADDR + flash_full_size - 0x100000;
+    uint8_t  s_sirk[16] = {0};
+    uint32_t tlkhal_flash_get_size(void);
+    uint32_t read_sirk_addr = TLK_CFG_FLASH_LE_TWS_SIRK_ADDR + tlkhal_flash_get_size() - 0x100000;
     flash_read_page(read_sirk_addr, 16, s_sirk);
     int i = 0;
     for (; i < 16; i++) {
@@ -127,7 +132,7 @@ int INIT(APP_BLE_LEA_US)(void)
     app_ble_get_device_sirk(s_le_tws_param.sirk);
     lea_unicast_server_tws_initial(&s_le_tws_param);
 #elif (LEA_US_DEVICE_TYPE == LEA_US_HEADSET)
-    static struct lea_us_headset_param s_le_headset_param = {
+    static struct tlk_mw_lea_cap_headset_param s_le_headset_param = {
         .device_name = "app_lea_us_headset",
         .interval    = 50,
         .volume      = 150,

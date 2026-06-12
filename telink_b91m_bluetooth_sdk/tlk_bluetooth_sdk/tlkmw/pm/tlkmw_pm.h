@@ -38,11 +38,4 @@ void tlkmdi_pm_init(void);
  */
 void tlkmdi_pm_process(void);
 
-/**
- * @brief      Enable or disable controller core sleep check
- * @param[in]  en - Enable flag. Non-zero to disable sleep check, zero to enable sleep check
- * @return     none
- */
-void tlkmw_pm_enableControllerCoreSleepCheck(uint8_t en);
-
 #endif // #ifndef TLKMW_USER_CTRL_H

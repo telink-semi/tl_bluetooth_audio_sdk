@@ -28,20 +28,20 @@
 #include "tlk_ota_interface_port.h"
 #include "tlk_ota_timer_port.h"
 #include "tlk_ota_timer_porting_example.h"
+#include "general_protocol/tlk_ota_general_protocol.h"
 
-#define OTA_PRINTF(format, args...)     tlk_printf(format, ##args)
+#define OTA_PRINTF(format, args...) tlk_printf(format, ##args)
 
-#define OTA_MEMSET tmemset
-#define OTA_MEMCPY tmemcpy
+#define OTA_MEMSET                  tmemset
+#define OTA_MEMCPY                  tmemcpy
 
-
-enum
+typedef enum
 {
     TLK_FIRMWARE_OTA_IDLE    = 0xFF,
     TLK_FIRMWARE_OTA_ING     = 0x01,
     TLK_FIRMWARE_OTA_FAIL    = 0x02,
     TLK_FIRMWARE_OTA_SUCCESS = 0x03,
-};
+} TLK_FIRMWARE_OTA_STATUS_ENUM;
 
 #define OTA_NONE        0x00 //"no error"
 #define OTA_INITERR     0x01 //"init error"
@@ -56,6 +56,7 @@ enum
 #define OTA_CHANNELERR  0x0A //"write error"
 #define OTA_MALLOCERR   0x0B //"write error"
 #define OTA_MEMORYERR   0x0C //"write error"
+#define OTA_REGISTERERR 0x0D //"write error"
 
 
 #endif // #ifndef TLK_OTA_TYPES_H

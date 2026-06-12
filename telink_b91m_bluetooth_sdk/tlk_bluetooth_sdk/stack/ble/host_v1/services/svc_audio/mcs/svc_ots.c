@@ -89,46 +89,46 @@ static const uint8_t otsObjectListFilterValueLen = sizeof(otsObjectListFilterVal
  * @brief the structure for default OTS service List.
  */
 static const struct atts_attribute otsList[] = {
-    ATTS_SECONDARY_SERVICE(serviceObjectTransferUuid),
+    ATTS_SECONDARY_SERVICE(serviceObjectTransferAttUuid),
 
     //OTS-Feature
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicOtsFeatureUuid, otsFeatureValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicOtsFeatureAttUuid, otsFeatureValue),
 
     //Object Name
-    ATTS_CHAR_UUID_ENCR_RDWR_POINT_NOCB(charPropReadWrite, characteristicObjectNameUuid, otsObjectNameValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_POINT_NOCB(charPropReadWrite, characteristicObjectNameAttUuid, otsObjectNameValue),
 
     //Object type
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicObjectTypeUuid, otsObjectTypeValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicObjectTypeAttUuid, otsObjectTypeValue),
 
     //Object Size
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicObjectSizeUuid, otsObjectSizeValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicObjectSizeAttUuid, otsObjectSizeValue),
 
     //Object First-Created
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadWrite, characteristicObjectFirstCreatedUuid, otsObjectFirstCreatedValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadWrite, characteristicObjectFirstCreatedAttUuid, otsObjectFirstCreatedValue),
 
     //Object Lats-Modified
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadWrite, characteristicObjectLastModifiedUuid, otsObjectLastModifiedValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadWrite, characteristicObjectLastModifiedAttUuid, otsObjectLastModifiedValue),
 
     //Object ID
-    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicObjectIdUuid, otsObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicObjectIdAttUuid, otsObjectIDValue),
 
     //Object Properties
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadWrite, characteristicObjectPropertiesUuid, otsObjectPropertiesValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadWrite, characteristicObjectPropertiesAttUuid, otsObjectPropertiesValue),
 
     //Object Action Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteIndicate, characteristicObjectActionControlPointUuid),
+    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteIndicate, characteristicObjectActionControlPointAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Object List Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteIndicate, characteristicObjectListControlPointUuid),
+    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteIndicate, characteristicObjectListControlPointAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Object Changed
-    ATTS_CHAR_UUID_INDICATE_ONLY(characteristicObjectListFilterUuid),
+    ATTS_CHAR_UUID_INDICATE_ONLY(characteristicObjectListFilterAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Object List Filter
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadWrite, characteristicObjectChangedUuid, otsObjectListFilterValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadWrite, characteristicObjectChangedAttUuid, otsObjectListFilterValue),
 };
 
 /*

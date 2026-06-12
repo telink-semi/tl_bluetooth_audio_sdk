@@ -23,35 +23,35 @@
  *******************************************************************************************************/
 #pragma once
 
-#define TLKDRV_LED_MAX_NUMB GPIO_LED_NUMS 
+#define TLKDRV_LED_MAX_NUMB GPIO_LED_NUMS
 
 /**
  * @brief	LED patterns enumeration
  */
 typedef enum
 {
-    TLKDRV_LED_PATTERN_OFF,                     //!< LED off pattern
-    TLKDRV_LED_PATTERN_ON,                      //!< LED on pattern
-    TLKDRV_LED_PATTERN_ON_LOW_DUTY,             //!< LED on with low duty pattern
-    TLKDRV_LED_PATTERN_FLASH_SLOW,              //!< LED slow flash pattern
-    TLKDRV_LED_PATTERN_FLASH_FAST,              //!< LED fast flash pattern
-    TLKDRV_LED_PATTERN_FLASH_PAIR,              //!< LED pairing flash pattern
-    TLKDRV_LED_PATTERN_IDLE,                    //!< LED idle flash pattern
-    TLKDRV_LED_PATTERN_FAST_FLASH_1_TIME,       //!< LED fast flash 1 time pattern
-    TLKDRV_LED_PATTERN_FAST_FLASH_2_TIMES,      //!< LED fast flash 2 times pattern
-    TLKDRV_LED_PATTERN_SLOW_FLASH_2_TIMES,      //!< LED slow flash 2 times pattern
-    TLKDRV_LED_PATTERN_FAST_FLASH_3_TIMES,      //!< LED fast flash 3 times pattern
-    TLKDRV_LED_PATTERN_ON_500MS,                //!< LED on for 500ms pattern
-    TLKDRV_LED_PATTERN_ON_1S,                   //!< LED on for 1 second pattern
-    TLKDRV_LED_PATTERN_SLOW_FLASH_3_TIMES,      //!< LED slow flash 3 times pattern
+    TLKDRV_LED_PATTERN_OFF,                //!< LED off pattern
+    TLKDRV_LED_PATTERN_ON,                 //!< LED on pattern
+    TLKDRV_LED_PATTERN_ON_LOW_DUTY,        //!< LED on with low duty pattern
+    TLKDRV_LED_PATTERN_FLASH_SLOW,         //!< LED slow flash pattern
+    TLKDRV_LED_PATTERN_FLASH_FAST,         //!< LED fast flash pattern
+    TLKDRV_LED_PATTERN_FLASH_PAIR,         //!< LED pairing flash pattern
+    TLKDRV_LED_PATTERN_IDLE,               //!< LED idle flash pattern
+    TLKDRV_LED_PATTERN_FAST_FLASH_1_TIME,  //!< LED fast flash 1 time pattern
+    TLKDRV_LED_PATTERN_FAST_FLASH_2_TIMES, //!< LED fast flash 2 times pattern
+    TLKDRV_LED_PATTERN_SLOW_FLASH_2_TIMES, //!< LED slow flash 2 times pattern
+    TLKDRV_LED_PATTERN_FAST_FLASH_3_TIMES, //!< LED fast flash 3 times pattern
+    TLKDRV_LED_PATTERN_ON_500MS,           //!< LED on for 500ms pattern
+    TLKDRV_LED_PATTERN_ON_1S,              //!< LED on for 1 second pattern
+    TLKDRV_LED_PATTERN_SLOW_FLASH_3_TIMES, //!< LED slow flash 3 times pattern
 
-    TLKDRV_LED_PATTERN_BREATH_SLOW,             //!< LED slow breath pattern
-    TLKDRV_LED_PATTERN_BREATH_FAST,             //!< LED fast breath pattern
-    TLKDRV_LED_PATTERN_BREATH_PAIR,             //!< LED pairing breath pattern
-    TLKDRV_LED_PATTERN_SLOW_BREATH_3_TIMES,     //!< LED slow breath 3 times pattern
-    TLKDRV_LED_PATTERN_FAST_BREATH_3_TIMES,     //!< LED fast breath 3 times pattern
+    TLKDRV_LED_PATTERN_BREATH_SLOW,         //!< LED slow breath pattern
+    TLKDRV_LED_PATTERN_BREATH_FAST,         //!< LED fast breath pattern
+    TLKDRV_LED_PATTERN_BREATH_PAIR,         //!< LED pairing breath pattern
+    TLKDRV_LED_PATTERN_SLOW_BREATH_3_TIMES, //!< LED slow breath 3 times pattern
+    TLKDRV_LED_PATTERN_FAST_BREATH_3_TIMES, //!< LED fast breath 3 times pattern
 
-    TLKDRV_LED_PATTERN_MAX_STATE,               //!< Max LED pattern number
+    TLKDRV_LED_PATTERN_MAX_STATE, //!< Max LED pattern number
 } tlkdrv_led_pattern_e;
 
 /**

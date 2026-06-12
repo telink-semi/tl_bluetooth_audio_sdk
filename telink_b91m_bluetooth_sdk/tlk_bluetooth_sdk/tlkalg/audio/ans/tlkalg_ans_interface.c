@@ -26,27 +26,27 @@
 #include "tlkalg_ans_interface.h"
 
 #if (TLKALG_ANS_ENABLE | TLKALG_ANS_SPK_ENABLE)
-uint8_t *g_ans_buf_ptr = NULL;
-uint8_t *g_ans_src_buf_ptr = NULL;
-uint8_t *g_ans_spk_buf_ptr = NULL;
+uint8_t *g_ans_buf_ptr         = NULL;
+uint8_t *g_ans_src_buf_ptr     = NULL;
+uint8_t *g_ans_spk_buf_ptr     = NULL;
 uint8_t *g_ans_spk_src_buf_ptr = NULL;
 
 W_NS_CFG_PARAM ans_para = {
-    .frame_size = 80,
-    .sampleRate = 16000,
+    .frame_size   = 80,
+    .sampleRate   = 16000,
     .target_level = k16dB,
-    .lowShelf_En = 1,
-    .preGain = 2.0,
-    .postGain = 1.0,
+    .lowShelf_En  = 1,
+    .preGain      = 2.0,
+    .postGain     = 1.0,
 };
 
 W_NS_CFG_PARAM ans_spk_para = {
-    .frame_size = 80,
-    .sampleRate = 16000,
+    .frame_size   = 80,
+    .sampleRate   = 16000,
     .target_level = k16dB,
-    .lowShelf_En = 1,
-    .preGain = 2.0,
-    .postGain = 1.0,
+    .lowShelf_En  = 1,
+    .preGain      = 2.0,
+    .postGain     = 1.0,
 };
 
 /**
@@ -57,8 +57,8 @@ W_NS_CFG_PARAM ans_spk_para = {
 uint16_t tlkalg_ans_get_size(uint8_t channel)
 {
     (void)channel;
-    int size = tlka_w_ns_get_size();
-    size     = (size + 3) / 4 * 4;
+    int size     = tlka_w_ns_get_size();
+    size         = (size + 3) / 4 * 4;
     int scr_size = tlka_w_ns_get_scratch_size();
     scr_size     = (scr_size + 3) / 4 * 4;
 
@@ -80,10 +80,10 @@ int8_t tlkalg_ans_init(uint8_t *p_buff, uint8_t channel)
         return 0;
     }
 
-    g_ans_buf_ptr = p_buff;
+    g_ans_buf_ptr     = p_buff;
     g_ans_src_buf_ptr = g_ans_buf_ptr + (tlka_w_ns_get_size() + 3) / 4 * 4;
 
-    tlka_w_ns_init((void*)g_ans_buf_ptr, ans_para, (void*)g_ans_src_buf_ptr);
+    tlka_w_ns_init((void *)g_ans_buf_ptr, ans_para, (void *)g_ans_src_buf_ptr);
 
     return 1;
 }
@@ -95,7 +95,7 @@ int8_t tlkalg_ans_init(uint8_t *p_buff, uint8_t channel)
 int8_t tlkalg_ans_deinit(void)
 {
     tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_ans_deinit");
-    g_ans_buf_ptr = NULL;
+    g_ans_buf_ptr     = NULL;
     g_ans_src_buf_ptr = NULL;
 
     return 0;
@@ -146,10 +146,10 @@ int8_t tlkalg_ans_spk_init(uint8_t *p_buff, uint8_t channel)
         return 0;
     }
 
-    g_ans_spk_buf_ptr = p_buff;
+    g_ans_spk_buf_ptr     = p_buff;
     g_ans_spk_src_buf_ptr = g_ans_spk_buf_ptr + (tlka_w_ns_get_size() + 3) / 4 * 4;
 
-    tlka_w_ns_init((void*)g_ans_spk_buf_ptr, ans_spk_para, (void*)g_ans_spk_src_buf_ptr);
+    tlka_w_ns_init((void *)g_ans_spk_buf_ptr, ans_spk_para, (void *)g_ans_spk_src_buf_ptr);
 
     return 1;
 }
@@ -161,7 +161,7 @@ int8_t tlkalg_ans_spk_init(uint8_t *p_buff, uint8_t channel)
 int8_t tlkalg_ans_spk_deinit(void)
 {
     tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_ans_deinit");
-    g_ans_spk_buf_ptr = NULL;
+    g_ans_spk_buf_ptr     = NULL;
     g_ans_spk_src_buf_ptr = NULL;
 
     return 0;
@@ -186,7 +186,7 @@ int tlkalg_ans_spk_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width
         return 0;
     }
 
-    if (g_ans_spk_buf_ptr == NULL||g_ans_spk_src_buf_ptr == NULL) {
+    if (g_ans_spk_buf_ptr == NULL || g_ans_spk_src_buf_ptr == NULL) {
         tlkapi_trace(0xFFFFFFFF, "[ERR]", "tlkalg_ans_struct null");
         return 0;
     }

@@ -18,9 +18,9 @@ For details on the SDK's OTA protocol and workflow, refer to the official Handbo
 To obtain the OTA mobile application, contact your FAE (Field Application Engineer) or refer to the official Handbook documentation.
 
 ## BLE OTA Example Code Structure
-To enable the SDK's OTA functionality, use the macro definition `TLK_MW_USER_CTRL_ENABLE`:
+To enable the SDK's OTA functionality, use the macro definition `TLK_MW_OTA_ENABLE`:
 ```c
-#define TLK_MW_USER_CTRL_ENABLE       1
+#define TLK_MW_OTA_ENABLE       1
 ```
 
 Register the BLE Telink OTA v2 Service and add OTA characteristics using the API `blc_svc_addOtaV2Group`:

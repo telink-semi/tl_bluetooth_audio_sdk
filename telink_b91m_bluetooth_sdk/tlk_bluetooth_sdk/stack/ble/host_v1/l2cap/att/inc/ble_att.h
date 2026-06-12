@@ -219,6 +219,13 @@ struct ble_host_att_process_handle
 int ble_host_att_init(struct att_initial_param *init_param);
 
 /**
+ *    @brief Initialize EATT layer.
+ *
+ *    @return None.
+ */
+void ble_host_eatt_initialize(void);
+
+/**
  *   @brief ATT Layer set MTU size for system.
  *
  *   @param[in] mtu MTU size, range 23-65535.
@@ -285,3 +292,5 @@ int ble_host_att_set_mtu(uint16_t conn_handle, uint16_t mtu);
  *   @return MTU size, if the connection handle or channel id is invalid, return 0.
  */
 uint16_t ble_host_get_att_mtu(uint16_t conn_handle, uint16_t cid);
+
+uint16_t ble_host_eatt_cid_info(uint16_t conn_handle, uint16_t src_cid[5]);

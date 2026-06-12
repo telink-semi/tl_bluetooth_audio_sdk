@@ -75,6 +75,7 @@
 #define HOST_ERASE 0x26                    //  (38) Erase
 #define HOST_FAST_IO 0x27                  //  (39) Used to read write 8bit(register) data fields
 #define HOST_GO_IRQ_STATE 0x28             //  (40) Sets the system into interrupt mode
+#define HOST_ACMD_SEND_OP_COND 0x29        //  (41) Send application opcode condition
 #define HOST_LOCK_UNLOCK 0x2A              //  (42) Lock unlock
 #define HOST_Q_MANAGEMENT 0x2B             //  (43) Command Queue Management command
 #define HOST_Q_TASK_INFO_A 0x2C            //  (44) Queued Tasks command

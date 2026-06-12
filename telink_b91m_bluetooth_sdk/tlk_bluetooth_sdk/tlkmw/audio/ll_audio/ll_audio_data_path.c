@@ -55,7 +55,12 @@ void ll_audio_audio_rx(uint32_t tick, uint8_t rx_packet_id, uint8_t wptr, uint8_
     rcv_tick_diff        = async_audio_ctx.data_rcv_tick - g_data_rcv_tick_last;
     rcv_tick_diff        = rcv_tick_diff / 24;
     g_data_rcv_tick_last = async_audio_ctx.data_rcv_tick;
-    async_audio_ctx.tpsll_pkt_cnt++;
+
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+    gpio_write(GPIO_PC0, 0);
+    gpio_write(GPIO_PC0, 1);
+    gpio_write(GPIO_PC0, 0);
+#endif
 
     if (async_audio_ctx.stimer_ref_wptr != wptr) {
         //        gpio_write(GPIO_PB6, 0);
@@ -112,7 +117,7 @@ void ll_audio_audio_rx(uint32_t tick, uint8_t rx_packet_id, uint8_t wptr, uint8_
     }
 
     ll_aud_gpio_toggle_test(wptr);
-    tlksys_task_setEvt(TLKSYS_TASKID_AUDIO, TLKSYS_TASK_EVT_AUD_MAIN);
+    tlksys_task_setEvtFromIsr(TLKSYS_TASKID_AUDIO, TLKSYS_TASK_EVT_AUD_MAIN);
 }
 
 /*disable by mingqian 20250704, confirm by xiaogang.*/
@@ -129,7 +134,7 @@ _attribute_ram_code_sec_noinline_ void ll_audio_update_sco_msg_rx_params(uint32_
     async_audio_ctx.mix_tick = clock_time();
     async_audio_ctx.wptr     = p_pdu_format->data_wptr;
 
-    p_src = tph_get_sco_msg_from_rxfifo(async_audio_ctx.wptr);
+    p_src = tlk_tpsll_tph_get_sco_msg_from_rxfifo(async_audio_ctx.wptr);
 
     if (async_audio_ctx.mix_tick && clock_time_exceed(async_audio_ctx.mix_tick, 400000)) {
         async_audio_ctx.mix_tick = 0;
@@ -223,20 +228,23 @@ uint8_t *ll_audio_get_async_queue_wptr(uint8_t wptr)
  */
 void ll_audio_post_audio_data_to_async_fifo(uint8_t idx, uint8_t *p_enc)
 {
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+    gpio_write(GPIO_PC0, 0);
+    gpio_write(GPIO_PC0, 1);
+    gpio_write(GPIO_PC0, 0);
+#endif
+
     (void)idx;
-    // u32 ret = tph_sco_msg_push_txfifo(ASYNC_AUDIO_FORMAT_LC3A, idx, p_enc + 6, LL_10MS_MIC_LC3_DATA_LEN, 0);
+    // u32 ret = tlk_tpsll_tph_sco_msg_push_txfifo(ASYNC_AUDIO_FORMAT_LC3A, idx, p_enc + 6, LL_10MS_MIC_LC3_DATA_LEN, 0);
     /* p_enc has not header from dsp, only encode data, need to confirm. */
-#if AUDIO_TWS_MODE
     if (ll_audio_get_ultra_low_latency_flag()) {
         tpsll_hci_sendMicDataCmd(1, 0, ULTRA_LL_5MS_MIC_LC3_DATA_LEN, &p_enc[0]);
-    } else
-#endif
-    {
+    } else {
         tpsll_hci_sendMicDataCmd(1, 0, LL_10MS_MIC_LC3_DATA_LEN, &p_enc[0]);
     }
 
 #if 0
-    tph_sco_msg_push_txfifo(ASYNC_AUDIO_FORMAT_LC3A, idx, p_enc, LL_10MS_MIC_LC3_DATA_LEN, 0);
+    tlk_tpsll_tph_sco_msg_push_txfifo(ASYNC_AUDIO_FORMAT_LC3A, idx, p_enc, LL_10MS_MIC_LC3_DATA_LEN, 0);
 #endif
     //  tlkapi_send_string_data(1, "push mic pkt", p_enc, 30);
     // tlkapi_send_string_data(1, "push mic idx", &idx, 1);

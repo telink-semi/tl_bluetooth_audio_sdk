@@ -90,37 +90,37 @@ static const uint16_t defaultSuppAudioContextLen = sizeof(defaultSuppAudioContex
  * @brief the structure for default PACS service List.
  */
 static const struct atts_attribute pacsList[] = {
-    ATTS_PRIMARY_SERVICE(servicePublishedAudioCapabilitiesUuid),
+    ATTS_PRIMARY_SERVICE(servicePublishedAudioCapabilitiesAttUuid),
 #if LE_AUDIO_PACS_SINK_PAC
     //Sink PAC
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicSinkPacUuid, defaultSinkPac),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicSinkPacAttUuid, defaultSinkPac),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_PACS_SINK_AUDIO_LOCATIONS
     //Sink Audio Locations
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicSinkAudioLocationsUuid, defaultSinkAudioLocation),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicSinkAudioLocationsAttUuid, defaultSinkAudioLocation),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_PACS_SOURCE_PAC
     //Source PAC
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicSourcePacUuid, defaultSourcePac),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicSourcePacAttUuid, defaultSourcePac),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_PACS_SOURCE_AUDIO_LOCATIONS
     //Source Audio Locations
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicSourceAudioLocationsUuid, defaultSourceAudioLocation),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicSourceAudioLocationsAttUuid, defaultSourceAudioLocation),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
     //Available Audio Contexts
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicAvailableAudioContextsUuid, defaultAvaAudioContext),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicAvailableAudioContextsAttUuid, defaultAvaAudioContext),
     ATTS_COMMON_CCC_DEFINE,
 
     //Supported Audio Contexts
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicSupportedAudioContextsUuid, defaultSuppAudioContext),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicSupportedAudioContextsAttUuid, defaultSuppAudioContext),
     ATTS_COMMON_CCC_DEFINE,
 };
 

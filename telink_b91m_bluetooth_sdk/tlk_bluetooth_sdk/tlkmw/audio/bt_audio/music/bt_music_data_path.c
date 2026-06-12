@@ -42,6 +42,10 @@ uint32_t g_a2dp_rev_start_tick = 0;
 int      g_a2dp_rcv_ok         = 0;
 #endif
 
+#if TLKADU_MIDBUF_ENABLE
+void tlkaud_a2dp_rx_audio_info_dump(void);
+#endif
+
 /**
  * @brief       Get the number of available encoded buffers
  * @param[in]   None
@@ -91,6 +95,10 @@ audio_ram_code uint8_t bt_music_receive_a2dp_frames(uint8_t *p_data, uint16_t le
               )) {
         return 0;
     }
+
+#if TLKADU_MIDBUF_ENABLE
+    tlkaud_a2dp_rx_audio_info_dump();
+#endif
 
 #ifdef SLET_bt_a2dp_rx
     log_tick_general(SL_BT_MUSIC_LOG_EN, SLET_bt_a2dp_rx);
@@ -146,10 +154,7 @@ audio_ram_code uint8_t bt_music_receive_a2dp_frames(uint8_t *p_data, uint16_t le
 
                 bt_music_set_play_status(BT_MUSIC_SYNC_PLAY_IDLE);
                 init_ret = bt_music_init_aac_decoder_params(enc_para, p_data, len);
-                if (init_ret) {
-                    //bt_music_close_codec();
-                    bt_music_open_codec(bt_music_cfg.sample_rate);
-                }
+                (void)init_ret;
             }
         }
 #endif // AAC_CODEC_ENABLE
@@ -229,10 +234,7 @@ audio_ram_code uint8_t bt_music_receive_a2dp_frames(uint8_t *p_data, uint16_t le
 
             bt_music_set_play_status(BT_MUSIC_SYNC_PLAY_IDLE);
             init_ret = bt_music_init_sbc_decoder_params(enc_para, p_data, len);
-            if (init_ret) {
-                //bt_music_close_codec();
-                bt_music_open_codec(bt_music_cfg.sample_rate);
-            }
+            (void)init_ret;
         }
     }
 

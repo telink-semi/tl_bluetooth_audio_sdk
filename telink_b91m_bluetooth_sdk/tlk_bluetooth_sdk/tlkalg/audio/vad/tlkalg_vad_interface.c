@@ -37,7 +37,7 @@ void *g_vad_buf_ptr = NULL;
  */
 uint16_t tlkalg_vad_get_size(uint8_t channel)
 {
-	(void)channel;
+    (void)channel;
     int size = tlka_vad_get_size();
     size     = (size + 3) / 4 * 4;
 
@@ -53,7 +53,7 @@ uint16_t tlkalg_vad_get_size(uint8_t channel)
  */
 int8_t tlkalg_vad_init(uint8_t *p_buff, uint8_t channel)
 {
-	(void)channel;
+    (void)channel;
 
     if (NULL == p_buff) {
         tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_vad_init error, pointer null");
@@ -61,11 +61,11 @@ int8_t tlkalg_vad_init(uint8_t *p_buff, uint8_t channel)
     }
 
     g_vad_buf_ptr = (void *)p_buff;
-    int freq = 16000/1000;
+    int freq      = 16000 / 1000;
 
-    int ret = tlka_vad_init(g_vad_buf_ptr, freq, 1);
-    ((tlka_vad_param*)g_vad_buf_ptr)->pwr_diffthd_linear = 4;
-    ((tlka_vad_param*)g_vad_buf_ptr)->pwr_shortterm_thd = 50000;
+    int ret                                               = tlka_vad_init(g_vad_buf_ptr, freq, 1);
+    ((tlka_vad_param *)g_vad_buf_ptr)->pwr_diffthd_linear = 4;
+    ((tlka_vad_param *)g_vad_buf_ptr)->pwr_shortterm_thd  = 50000;
 
     return ret;
 }
@@ -93,10 +93,10 @@ int8_t tlkalg_vad_deinit(void)
  */
 int tlkalg_vad_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel)
 {
-	(void)pd;
-	(void)len;
-	(void)width;
-	(void)channel;
+    (void)pd;
+    (void)len;
+    (void)width;
+    (void)channel;
     if (ps == NULL) {
         tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_vad_PS null");
         return 0;
@@ -109,10 +109,10 @@ int tlkalg_vad_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, ui
 
     int vad_en = 1;
 
-    int ret = tlka_vad_process_frame(g_vad_buf_ptr, (short*)ps, vad_en);
+    int ret = tlka_vad_process_frame(g_vad_buf_ptr, (short *)ps, vad_en);
 
 
     return ret;
 }
- 
+
 #endif

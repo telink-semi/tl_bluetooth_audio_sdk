@@ -27,7 +27,7 @@
 #include "tl_common.h"
 #include "tlka_nn_ns_vad_api.h"
 
-extern uint8_t *g_nn_ns_vad_buf_ptr;
+extern uint8_t        *g_nn_ns_vad_buf_ptr;
 extern NN_NS_PARA_STRU g_nn_ns_vad_para;
 
 /**
@@ -43,13 +43,13 @@ uint16_t tlkalg_nn_ns_get_size(uint8_t channel);
  * @param[in]   channel - the audio channel, not used in this implementation.
  * @return      The result of the initialization, 0 if successful, non-zero if an error occurred.
  */
-int8_t   tlkalg_nn_ns_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_nn_ns_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function deinitializes the neural network noise suppression and voice activity detection algorithm.
  * @return      The result of the deinitialization, always 0.
  */
-int8_t   tlkalg_nn_ns_deinit(void);
+int8_t tlkalg_nn_ns_deinit(void);
 
 /**
  * @brief       This function sets parameters for the neural network noise suppression and voice activity detection algorithm.
@@ -57,7 +57,7 @@ int8_t   tlkalg_nn_ns_deinit(void);
  * @param[in]   param   - pointer to the parameter value to set.
  * @return      The result of setting the parameter, 0 if successful, non-zero if an error occurred.
  */
-uint8_t  tlkalg_nn_ns_set_param(uint8_t type, void *param);
+uint8_t tlkalg_nn_ns_set_param(uint8_t type, void *param);
 
 /**
  * @brief       This function processes a frame of audio data using the neural network noise suppression and voice activity detection algorithm.
@@ -68,7 +68,7 @@ uint8_t  tlkalg_nn_ns_set_param(uint8_t type, void *param);
  * @param[in]   channel - the audio channel, not used in this implementation.
  * @return      The result of processing the audio frame, 0 if successful, non-zero if an error occurred.
  */
-int      tlkalg_nn_ns_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_nn_ns_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 //int tlka_nn_ns_get_version(void);
 //int tlka_nn_ns_get_size();

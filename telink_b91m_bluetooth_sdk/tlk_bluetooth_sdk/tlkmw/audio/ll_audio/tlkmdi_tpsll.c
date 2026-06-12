@@ -32,20 +32,23 @@
 #include "stack/bt/host/btp/avrcp/btp_avrcp.h"
 #include "stack/tpsll/tpsll.h"
 #include "tlkalg/audio/lc3_plus/tlkalg_lc3_plus_interface.h"
+#if TLKADU_MIDBUF_ENABLE
+#include "vendor/GameSir_Xiaoji/audio_mw/tlkaud_audio_mw.h"
+#endif
 
 
 #if (TLKSTK_BT_TPS_ENABLE)
 
 
-    #ifndef APP_AUDIO_LOG_EN
-        #define APP_AUDIO_LOG_EN (1)
-    #else
-        #undef APP_AUDIO_LOG_EN
-        #define APP_AUDIO_LOG_EN (1)
-    #endif
+#ifndef APP_AUDIO_LOG_EN
+#define APP_AUDIO_LOG_EN (1)
+#else
+#undef APP_AUDIO_LOG_EN
+#define APP_AUDIO_LOG_EN (1)
+#endif
 
-    #define TLKMDI_LL_AUDIO_DBG_FLAG ((TLK_MAJOR_DBGID_MDI_AUDIO << 24) | (TLK_MINOR_DBGID_MDI_AUD_CC_LL_AUDIO << 16) | TLK_DEBUG_DBG_FLAG_ALL)
-    #define TLKMDI_LL_AUDIO_DBG_SIGN "[MDI TPSLL_AUD]"
+#define TLKMDI_LL_AUDIO_DBG_FLAG ((TLK_MAJOR_DBGID_MDI_AUDIO << 24) | (TLK_MINOR_DBGID_MDI_AUD_CC_LL_AUDIO << 16) | TLK_DEBUG_DBG_FLAG_ALL)
+#define TLKMDI_LL_AUDIO_DBG_SIGN "[MDI TPSLL_AUD]"
 
 typedef struct
 {
@@ -62,7 +65,11 @@ static tlkmdi_tpsll_audio_context_t s_tlk_mdi_tpsll_audio_ctx = {0};
  */
 void tlkmdi_tpsll_audio_mode_change_cb(uint16_t mode)
 {
+#if (TLK_STK_TPH_ENABLE)
     if (mode & TPH_HOST_MODE_DONGLE_AUDIO) {
+#elif (TLK_STK_TPT_ENABLE)
+    if (mode & TPT_HOST_MODE_DONGLE_AUDIO) {
+#endif
         tlkmdi_tpsll_audio_enable();
     } else {
         tlkmdi_tpsll_audio_disable();
@@ -77,22 +84,22 @@ void tlkmdi_tpsll_audio_mode_change_cb(uint16_t mode)
  */
 int ll_audio_tpsll_event_mode_change_cb(uint8_t *pData, uint16_t dataLen)
 {
-    (void) dataLen;
+    (void)dataLen;
     uint16_t mode = ll_audio_get_mode(pData);
     tlkapi_printf(APP_AUDIO_LOG_EN, "=== tpsll mode change: 0x%x", mode);
-    const uint8_t bufferLen = sizeof(tlksys_msg_hostEvt_t)+sizeof(tlksys_msg_hostEvt_tpsAudStateChg_t);
-    uint8_t buffer[bufferLen];
-    tlksys_msg_hostEvt_t *evt = (tlksys_msg_hostEvt_t *)buffer;
-    evt->dataLen = sizeof(tlksys_msg_hostEvt_tpsAudStateChg_t);
-    evt->hostType = TLKSYS_MSG_HOST_TYPE_TPT;
-    evt->msgID = TLKSYS_MSG_TPS_HOST_EVT_TYPE_AUD_STATE_CHG;
-    tlksys_msg_hostEvt_tpsAudStateChg_t *evtDat = (tlksys_msg_hostEvt_tpsAudStateChg_t *) evt->data;
-    evtDat->mode = mode;
+    const uint8_t         bufferLen = sizeof(tlksys_msg_hostEvt_t) + sizeof(tlksys_msg_hostEvt_tpsAudStateChg_t);
+    uint8_t               buffer[bufferLen];
+    tlksys_msg_hostEvt_t *evt                   = (tlksys_msg_hostEvt_t *)buffer;
+    evt->dataLen                                = sizeof(tlksys_msg_hostEvt_tpsAudStateChg_t);
+    evt->hostType                               = TLKSYS_MSG_HOST_TYPE_TPT;
+    evt->msgID                                  = TLKSYS_MSG_TPS_HOST_EVT_TYPE_AUD_STATE_CHG;
+    tlksys_msg_hostEvt_tpsAudStateChg_t *evtDat = (tlksys_msg_hostEvt_tpsAudStateChg_t *)evt->data;
+    evtDat->mode                                = mode;
     tlksys_sendMsg(TLKSYS_TASKID_AUDIO, TLKSYS_AUD_MSGID_HOST_EVT_COME, buffer, bufferLen);
     return 0;
 }
 
-TPSLL_EVT_REGISTER (TPSLL_EVTID_HEADSET_MODE_CHANGE, ll_audio_tpsll_event_mode_change_cb);
+TPSLL_EVT_REGISTER(TPSLL_EVTID_HEADSET_MODE_CHANGE, ll_audio_tpsll_event_mode_change_cb);
 
 /**
  * @brief      Initializes TPSLL audio module
@@ -160,14 +167,19 @@ bool tlkmdi_tpsll_audio_switch(uint16_t handle, uint8_t status)
         ll_audio_switch_in();
         ll_audio_open_codec();
     } else {
-        s_tlk_mdi_tpsll_audio_ctx.enable = false;
+        s_tlk_mdi_tpsll_audio_ctx.enable     = false;
         s_tlk_mdi_tpsll_audio_ctx.acl_handle = 0;
         ll_audio_switch_out();
+#if TLKADU_MIDBUF_ENABLE
+        tlkaud_clear_audio_mode(AUDIO_TPSLL_SPK);
+        tlkaud_clear_audio_mode(AUDIO_TPSLL_MIC);
+#else
         tlkdrv_codec_close(TLKDRV_CODEC_SUBDEV_SPK);
         tlkdrv_codec_close(TLKDRV_CODEC_SUBDEV_MIC);
-        #if TLK_MW_DSP_COMM_ENABLE
+#endif
+#if (TLK_MW_DSP_COMM_ENABLE && !TLKADU_MIDBUF_ENABLE)
         tlkmw_dsp_pause();
-        #endif
+#endif
     }
 
     return true;
@@ -192,7 +204,7 @@ bool tlkmdi_tpsll_audio_is_busy(void)
 int tlkmdi_tpsll_audio_start(uint16_t handle, uint32_t param)
 {
     (void)param;
-    return tlkmdi_audio_tpsif_sendKey(handle,AUD_TPSIF_KEYID_PLAY_PAUSE);
+    return tlkmdi_audio_tpsif_sendKey(handle, AUD_TPSIF_KEYID_PLAY_PAUSE);
 }
 
 /**
@@ -202,7 +214,7 @@ int tlkmdi_tpsll_audio_start(uint16_t handle, uint32_t param)
  */
 int tlkmdi_tpsll_audio_close(uint16_t handle)
 {
-    return tlkmdi_audio_tpsif_sendKey(handle,AUD_TPSIF_KEYID_PLAY_PAUSE);
+    return tlkmdi_audio_tpsif_sendKey(handle, AUD_TPSIF_KEYID_PLAY_PAUSE);
 }
 
 /**
@@ -212,10 +224,10 @@ int tlkmdi_tpsll_audio_close(uint16_t handle)
  */
 bool tlkmdi_tpsll_audio_next(void)
 {
-    int ret = tlkmdi_audio_tpsif_sendKey(s_tlk_mdi_tpsll_audio_ctx.acl_handle,AUD_TPSIF_KEYID_PLAY_FORWARD);
+    int ret = tlkmdi_audio_tpsif_sendKey(s_tlk_mdi_tpsll_audio_ctx.acl_handle, AUD_TPSIF_KEYID_PLAY_FORWARD);
     if (ret == TLK_ENONE) {
         return true;
-    } 
+    }
     return false;
 }
 
@@ -226,10 +238,10 @@ bool tlkmdi_tpsll_audio_next(void)
  */
 bool tlkmdi_tpsll_audio_previous(void)
 {
-    int ret = tlkmdi_audio_tpsif_sendKey(s_tlk_mdi_tpsll_audio_ctx.acl_handle,AUD_TPSIF_KEYID_PLAY_BACKWARD);
+    int ret = tlkmdi_audio_tpsif_sendKey(s_tlk_mdi_tpsll_audio_ctx.acl_handle, AUD_TPSIF_KEYID_PLAY_BACKWARD);
     if (ret == TLK_ENONE) {
         return true;
-    } 
+    }
     return false;
 }
 
@@ -249,11 +261,11 @@ bool tlkmdi_tpsll_audio_process_operate(uint16_t handle, uint8_t opcode, uint8_t
     switch (opcode) {
     case TLKAUD_OPCODE_VOLUME_INC:
     {
-        tlkmdi_audio_tpsif_sendKey(s_tlk_mdi_tpsll_audio_ctx.acl_handle,AUD_TPSIF_KEYID_VOL_UP);
+        tlkmdi_audio_tpsif_sendKey(s_tlk_mdi_tpsll_audio_ctx.acl_handle, AUD_TPSIF_KEYID_VOL_UP);
     } break;
     case TLKAUD_OPCODE_VOLUME_DEC:
     {
-        tlkmdi_audio_tpsif_sendKey(s_tlk_mdi_tpsll_audio_ctx.acl_handle,AUD_TPSIF_KEYID_VOL_DOWN);
+        tlkmdi_audio_tpsif_sendKey(s_tlk_mdi_tpsll_audio_ctx.acl_handle, AUD_TPSIF_KEYID_VOL_DOWN);
     } break;
     case TLKAUD_OPCODE_TONE_MIX_ENABLE:
     {

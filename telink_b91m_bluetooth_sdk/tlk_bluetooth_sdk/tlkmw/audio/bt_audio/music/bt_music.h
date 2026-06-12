@@ -31,43 +31,40 @@
 #endif
 
 #if 1 //(TLKBTP_CFG_A2DPSNK_ENABLE)
-    #ifndef bt_audio_debug_ram_code
-        #define bt_audio_debug_ram_code
-    #endif
-
-    #define SBC_MAX_FRAMESIZE 119
-
-    #ifndef BT_MUSIC_ENC_SAMPLES
-#ifdef BT_MUSIC_SUPPORT_DYNAMIC_LATENCY
-        #define BT_MUSIC_ENC_SAMPLES (1024 * 45)
-#else
-        #define BT_MUSIC_ENC_SAMPLES (1024 * 12)
+#ifndef bt_audio_debug_ram_code
+#define bt_audio_debug_ram_code
 #endif
-    #endif
 
-    #define BT_MUSIC_AAC_ENC_BUF_SIZE (1024)
-    #define BT_MUSIC_ENC_FIFO_SIZE    (BT_MUSIC_ENC_SAMPLES)
+#define SBC_MAX_FRAMESIZE 119
 
-    #ifndef BT_MUSIC_SBC_BUFF_NUM_MAX
-        #define BT_MUSIC_SBC_BUFF_NUM_MAX 360
-    #endif
+#ifndef BT_MUSIC_ENC_SAMPLES
+#ifdef BT_MUSIC_SUPPORT_DYNAMIC_LATENCY
+#define BT_MUSIC_ENC_SAMPLES (1024 * 45)
+#else
+#define BT_MUSIC_ENC_SAMPLES (1024 * 12)
+#endif
+#endif
 
-    #ifndef BT_MUSIC_AAC_BUFF_NUM_MAX
-        #define BT_MUSIC_AAC_BUFF_NUM_MAX 20
-        #define BT_MUSIC_AAC_BUFF_SIZE    670
-    #endif
+#define BT_MUSIC_AAC_ENC_BUF_SIZE (1024)
+#define BT_MUSIC_ENC_FIFO_SIZE    (BT_MUSIC_ENC_SAMPLES)
 
-    #ifndef TMUSIC_AAC_BUFF_NUM_MAX
-        #define TMUSIC_AAC_BUFF_NUM_MAX 18
-    #endif
+#ifndef BT_MUSIC_SBC_BUFF_NUM_MAX
+#define BT_MUSIC_SBC_BUFF_NUM_MAX 360
+#endif
 
-    #define AAC_PACKET_FLAG 0x47
+#ifndef BT_MUSIC_AAC_BUFF_NUM_MAX
+#define BT_MUSIC_AAC_BUFF_NUM_MAX 20
+#define BT_MUSIC_AAC_BUFF_SIZE    670
+#endif
 
-#define CLK_MODE_96M      1
-#define CLK_MODE_132M     2
+#ifndef TMUSIC_AAC_BUFF_NUM_MAX
+#define TMUSIC_AAC_BUFF_NUM_MAX 18
+#endif
 
-#define BT_LATENCY_NORMAL    0
-#define BT_LATENCY_PKTLOSS   1
+#define AAC_PACKET_FLAG    0x47
+
+#define BT_LATENCY_NORMAL  0
+#define BT_LATENCY_PKTLOSS 1
 
 /** music rate calibrate state */
 #define FLG_WRITE_UPDATE 1
@@ -101,7 +98,7 @@ typedef uint16_t (*bt_music_crc_func_callback_t)(uint16_t crc, uint8_t *pStart, 
 typedef struct
 {
     int16_t  sync_ppm;
-    uint16_t sync_samples;     /**< decoded samples total num. */
+    uint16_t sync_samples; /**< decoded samples total num. */
 
     uint16_t sync_tick;
     uint16_t sync_enc_buf_num; /**< encoded frames total num. */
@@ -118,30 +115,30 @@ typedef struct
 typedef struct
 {
     uint8_t  enc_buf_id;        /**< id(avdtp frame number) of most updated frame */
-    uint16_t  enc_buf_rptr;      /**< encoded buf read ptr. */
-    uint16_t  enc_buf_wptr;      /**< encoded buf write ptr. */
-    uint16_t  enc_buf_num;       /**< encoded buf num. SBC: 86, AAC: 18 */
+    uint16_t enc_buf_rptr;      /**< encoded buf read ptr. */
+    uint16_t enc_buf_wptr;      /**< encoded buf write ptr. */
+    uint16_t enc_buf_num;       /**< encoded buf num. SBC: 86, AAC: 18 */
     uint16_t enc_buf_size;      /**< SBC: sbc_framesize or AAC: 1200 */
     uint16_t samples_per_frame; /**< Samples included in a frame. SBC: 128, AAC: 1024 */
 
-    uint32_t enc_para;          /**< AAC codec param. */
+    uint32_t enc_para; /**< AAC codec param. */
     uint32_t sample_rate;
 
 
-    uint32_t sync_tick_ref;    /**< task tick */
+    uint32_t sync_tick_ref; /**< task tick */
 
-    int16_t  sync_ppm;
-    uint16_t sync_samples;     /**< decoded samples total num. */
-    uint16_t sync_tick;        /**< remainder ticks that is not enough to play a single sample */
+    int16_t           sync_ppm;
+    uint16_t          sync_samples;     /**< decoded samples total num. */
+    uint16_t          sync_tick;        /**< remainder ticks that is not enough to play a single sample */
     volatile uint16_t sync_enc_buf_num; /**< recv encoded frames total num. */
-    int8_t   sync_frac;
-    uint8_t sync_id;           /**< enc_buf_id */
-    uint8_t sync_play_countdown;
-    uint16_t sync_info1;
-    uint16_t sync_info2;
-    uint8_t sync_info3;
+    int8_t            sync_frac;
+    uint8_t           sync_id; /**< enc_buf_id */
+    uint8_t           sync_play_countdown;
+    uint16_t          sync_info1;
+    uint16_t          sync_info2;
+    uint8_t           sync_info3;
 
-    uint8_t sync_play;         /**< 0x0 - 0x80 */
+    uint8_t sync_play; /**< 0x0 - 0x80 */
     uint8_t sync_countdown;
 
     bt_music_dec_func_callback_t dec_func;
@@ -162,8 +159,8 @@ typedef struct
     int16_t  sync_ppm_cur;
     uint8_t  sync_ppm_set;
     uint8_t  sync_frac_peer;
-    uint16_t  enc_buf_mute_num;
-    uint16_t  enc_buf_wptr_last;
+    uint16_t enc_buf_mute_num;
+    uint16_t enc_buf_wptr_last;
 
     uint16_t aac_len[TMUSIC_AAC_BUFF_NUM_MAX];
     uint16_t aac_offset[TMUSIC_AAC_BUFF_NUM_MAX];
@@ -178,7 +175,7 @@ typedef struct
     uint16_t skip_samples;
 
     uint16_t sync_buf_num_peer;
-    uint8_t sync_ppm_set_pending;
+    uint8_t  sync_ppm_set_pending;
     uint16_t resv2byte;
 
     uint32_t tick_skip;
@@ -186,11 +183,11 @@ typedef struct
     uint32_t sync_stimer_tick;
     uint32_t sync_stimer_tick_last;
 
-    uint8_t  rcv_sync_info;
+    uint8_t rcv_sync_info;
 
-    uint8_t  inc_peer_tx_power;
-    uint8_t  inc_peer_tx_power_available;
-    uint8_t  inc_peer_tx_power_is_pending;
+    uint8_t inc_peer_tx_power;
+    uint8_t inc_peer_tx_power_available;
+    uint8_t inc_peer_tx_power_is_pending;
 
     bt_music_crc_func_callback_t crc_func;
     uint32_t                     crc_mute;
@@ -292,10 +289,10 @@ void bt_music_close_codec(void);
 
 /**
  * @brief       Initialize audio path for music
- * @param[in]   None
+ * @param[in]   handle - ACL connection handle
  * @return      None
  */
-void bt_music_audio_path_init(void);
+void bt_music_audio_path_init(uint16_t handle);
 
 /**
  * @brief       Deinitialize audio path for music
@@ -537,20 +534,6 @@ void tlkmdi_btmusic_switch_out(uint16_t handle);
  * @return      None
  */
 void bt_music_alg_eq_init(uint32_t samplerate, ALG_CHANNEL_IDX chnl, e_eq_type_e eq_type);
-#endif
-#if TLKALG_ASRC_441TO48_16BIT_TEMP_ENABLE
-/**
- * @brief       Initialize 44.1kHz to 48kHz conversion
- * @param[in]   None
- * @return      None
- */
-void bt_music_441to48_init(void);
-/**
- * @brief       Deinitialize 44.1kHz to 48kHz conversion
- * @param[in]   None
- * @return      None
- */
-void bt_music_441to48_deinit(void);
 #endif
 /**
  * @brief       Initialize Bluetooth music buffer and algorithms

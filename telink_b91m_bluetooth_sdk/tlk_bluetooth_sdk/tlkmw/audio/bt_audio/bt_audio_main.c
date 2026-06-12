@@ -31,6 +31,10 @@
 #include "tlkmw/tpsll/tlkmdi_bt_tpsll_tws/tlkmdi_bt_tpsll_tws.h"
 #endif
 
+#if TLKADU_MIDBUF_ENABLE
+#include "vendor/GameSir_Xiaoji/audio_mw/tlkaud_codec_task.h"
+#endif
+
 #if !(MCU_CORE_TYPE == CHIP_TYPE_B91)
 #include <nds_utils_math.h>
 #include <riscv_dsp_utils_math.h>
@@ -61,10 +65,6 @@ volatile int16_t g_bt_voice_vol = 0;
 
 #endif /* audio_ram_code */
 
-#ifndef SUPPORT_AVRCP_TG_EN
-#define SUPPORT_AVRCP_TG_EN 0
-#endif
-
 #ifndef CODEC_VOICE_MIX_DELAY_TEST_EN
 #define CODEC_VOICE_MIX_DELAY_TEST_EN 0
 #endif
@@ -85,23 +85,21 @@ uint16_t g_tone_sync_play_wptr;
 uint32_t g_tone_wptr_samples_offset;
 #endif
 
-volatile uint8_t g_timer1_irq_process_is_ongoing = 0;
+static volatile uint8_t s_timer1_irq_process_is_ongoing = 0;
 #if ((TLK_USB_UAC_ENABLE && TLKBTP_CFG_HFPAG_ENABLE))
 extern int tlkmdi_u2h_voice_fillSpkData(uint8_t *pBuffer, uint16_t dataLen);
 #endif
 
 bt_audio_get_pcm_data_callback_t  bt_audio_get_pcm_data_cb  = NULL;
 bt_audio_post_pcm_data_callback_t bt_audio_post_pcm_data_cb = NULL;
-bt_audio_lowpower_callback_t      bt_audio_lowpower_cb      = NULL;
 
 #if TLK_PCM_DATA_WR_EN
 bt_audio_trans_pcm_data_callback_t bt_audio_get_spk_data_cb     = NULL;
 bt_audio_trans_pcm_data_callback_t bt_audio_get_mic_data_cb     = NULL;
 bt_audio_trans_pcm_data_callback_t bt_audio_get_dsp_mic_data_cb = NULL;
 #endif
-uint32_t g_a2dp_started_tick = 0;
 
-extern int16_t  g_tone_buff[512];
+extern int16_t  g_tone_buff[300];
 extern int16_t *g_tone_buff_ptr;
 
 #if (TLKSTK_BT_TPS_ENABLE)
@@ -114,11 +112,8 @@ static uint8_t *s_alg_tws_spk_ppm_buff  = NULL;
 int             g_app_tws_spk_ppm_ready = 0;
 #endif
 
-extern uint8_t g_audio_timer_type;
-
 #if SCO_ENC_QUEUE_ENABLE
-extern void             btif_process_sco_enc_buff(void);
-extern volatile uint8_t g_timer1_irq_process_is_ongoing;
+extern void btif_process_sco_enc_buff(void);
 #endif
 
 extern uint8_t bt_music_dec_update_sync_enc_buf_num;
@@ -192,9 +187,6 @@ codec_cfg_t g_codec_cfg = {
 
 static const uint8_t bt_music_avrcp_absVol_table[16] = {0, 8, 16, 25, 33, 42, 50, 59, 67, 76, 84, 93, 101, 110, 118, 127};
 
-uint32_t bt_audio_player_tick;
-uint32_t bt_audio_player_rptr;
-int16_t  pcm_tmp[120];
 uint32_t g_codec_fifo_size = 0;
 
 /**
@@ -303,10 +295,10 @@ void bt_audio_register_get_dsp_mic_data_callback(void *p)
 _attribute_ram_code_sec_ void bt_music_gpio_toggle(uint8_t times)
 {
     for (uint8_t i = 0; i < times; i++) {
-#if TWS_AUDIO_PATH_GPIO_DEBUG
-//        gpio_write(GPIO_PA2, 0);
-//        gpio_write(GPIO_PA2, 1);
-//        gpio_write(GPIO_PA2, 0);
+#if 0 //BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+       gpio_write(GPIO_PF5, 0);
+       gpio_write(GPIO_PF5, 1);
+       gpio_write(GPIO_PF5, 0);
 #endif
     }
 }
@@ -339,16 +331,6 @@ void bt_audio_register_get_pcm_data_callback(void *p)
 void bt_audio_register_post_pcm_data_callback(void *p)
 {
     bt_audio_post_pcm_data_cb = (bt_audio_post_pcm_data_callback_t)p;
-}
-
-/**
- * @brief  register lowpower function
- * @param[in]  p - lowpower function
- * @returns none
- */
-void bt_audio_register_lowpower_callback(void *p)
-{
-    bt_audio_lowpower_cb = (bt_audio_lowpower_callback_t)p;
 }
 
 /**
@@ -482,17 +464,17 @@ audio_ram_code uint8_t bt_audio_voice_is_need_decode(void)
 {
     uint8_t  ret                       = 0;
     uint16_t codec_buffer_avail_size   = tlkdrv_codec_get_spk_buf_idle_size();
-    uint16_t codec_buff_size_threshold = TWS_PLAY_FIFO_SIZE / 2;
+    uint16_t codec_buff_size_threshold = CODEC_SPK_FIFO_SAMPLES / 2;
 
 #if TLKMW_INTERPHONE_EN
     codec_buff_size_threshold = CODEC_SPK_FIFO_SAMPLES / 2;
 #else
-    codec_buff_size_threshold = TWS_PLAY_FIFO_SIZE / 2;
+    codec_buff_size_threshold = CODEC_SPK_FIFO_SAMPLES / 2;
 #endif
 
 #if TLKSTK_BTTPSLL_TWS_ENABLE
     if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
-        codec_buff_size_threshold = TWS_PLAY_FIFO_SIZE / 4;
+        codec_buff_size_threshold = CODEC_SPK_FIFO_SAMPLES / 4;
     }
 #endif
 
@@ -518,6 +500,9 @@ audio_ram_code void bt_audio_main_loop(void)
     if (tlkmdi_audu2h_voice_isBusy()) {
 #elif (TLKBTP_CFG_HFP_ENABLE)
     if (tlkmdi_bt_voice_is_busy()
+#if (TLKMW_BT_1_TO_2_FORWARD_EN)
+        || tlkmdi_bt_voice_forward_isBusy()
+#endif
 #if TLKMW_INTERPHONE_EN
         || tlkmdi_interphone_is_busy()
 #endif
@@ -530,29 +515,36 @@ audio_ram_code void bt_audio_main_loop(void)
 #endif
 
 #if DONGLE_VOICE_MIC_EN && (!TLK_CFG_HRA_ENABLE)
+        // ll_audio_bt_voice_mix_mode_uplink_xfer();
         ll_audio_mix_mode_loop();
 #if AUDIO_TWS_MODE
-        if (tlkmdi_bt_tpt_isMaster() || tlkmdi_bt_tpt_isSingle()) {
+        if (tlkmdi_bt_tpt_isMaster() || tlkmdi_bt_tpt_isSingle())
+#endif
+        {
             ll_audio_mix_switch_mic(); //TODO: Need Evt Trigger
         }
-#else
-        ll_audio_mix_switch_mic(); //TODO: Need Evt Trigger
-#endif
 #endif
 
 #if (TLKBTP_CFG_HFP_ENABLE)
 #if SCO_ENC_QUEUE_ENABLE
-        btif_process_sco_enc_buff();
-        if (!g_timer1_irq_process_is_ongoing
-#if TLKSTK_BTTPSLL_TWS_ENABLE
-            && bt_audio_voice_is_need_decode()
+#if (TLKMW_BT_1_TO_2_FORWARD_EN)
+        if (tlkmdi_bt_voice_forward_isBusy()) {
+            bt_voice_forward_main_loop();
+        } else
 #endif
-        ) {
+        {
             btif_process_sco_enc_buff();
-        } else {
-            uint8_t sco_enc_buff_rcv = btif_get_sco_enc_buff_available();
-            if (sco_enc_buff_rcv > 0) {
-                tlkmdi_audio_runMainAfterTimeMs(2);
+            if (!bt_audio_irq_task_is_running()
+#if TLKSTK_BTTPSLL_TWS_ENABLE
+                && bt_audio_voice_is_need_decode()
+#endif
+            ) {
+                btif_process_sco_enc_buff();
+            } else {
+                uint8_t sco_enc_buff_rcv = btif_get_sco_enc_buff_available(SCO_ENC_QUEUE_ID_HF);
+                if (sco_enc_buff_rcv > 0) {
+                    tlkmdi_audio_runMainAfterTimeMs(2);
+                }
             }
         }
 #endif
@@ -561,7 +553,11 @@ audio_ram_code void bt_audio_main_loop(void)
 
 #if (TLKSTK_BT_TPS_ENABLE)
 #if (LE_AUDIO_BT_MUSIC_MIX_ENABLE || LE_AUDIO_BT_VOICE_MIX_ENABLE)
+#if (TLK_STK_TPH_ENABLE)
     if (app_tph_headset_get_mode() & TPH_HOST_MODE_DONGLE_AUDIO) {
+#elif (TLK_STK_TPT_ENABLE)
+    if (app_tph_headset_get_mode() & TPT_HOST_MODE_DONGLE_AUDIO) {
+#endif
         tlkmdi_audio_runMainAfterTimeMs(3);
     }
     if ((tlkmdi_bt_music_is_busy()
@@ -570,8 +566,15 @@ audio_ram_code void bt_audio_main_loop(void)
 #endif
              ) &&
         ll_audio_is_in_mix_mode()) {
+        ll_audio_bt_music_mix_mode_uplink_xfer();
+        async_audio_ctx.tpsll_mix_dec_loop_ongoing = 1;
+        ll_audio_mix_bt_music_mode_decoder_task_mcu(1);
         ll_audio_mix_mode_loop();
-        ll_audio_mix_bt_music_mode_decoder_task_mcu();
+        ll_audio_bt_music_mix_mode_uplink_xfer();
+        if (async_audio_ctx.latency_mode != TPSLL_LATENCY_PKTLOSS || async_audio_ctx.tpsll_mix_lc3_dec_cnt < 2) {
+            ll_audio_mix_bt_music_mode_decoder_task_mcu(2);
+        }
+        async_audio_ctx.tpsll_mix_dec_loop_ongoing = 0;
     }
 #if DONGLE_VOICE_MIC_EN && (!TLK_CFG_HRA_ENABLE)
 #if AUDIO_TWS_MODE
@@ -597,7 +600,28 @@ audio_ram_code void bt_audio_main_loop(void)
 #endif
 #endif
 #endif
+
+#if TLKADU_MIDBUF_ENABLE
+    if (tlkaud_codec_task_old2new()) {
+        //close bt audio scene and reopen it
+        tlkaud_codec_task_reopen_cur_audio_task();
+    }
+#endif
 }
+
+audio_ram_code void bt_audio_forward_audio_irq_task(void)
+{
+    if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
+        bt_audio_recorder_task();
+    }
+}
+
+audio_ram_code uint8_t bt_audio_irq_task_is_running(void)
+{
+    return s_timer1_irq_process_is_ongoing;
+}
+
+void bt_audio_forward_alg_mode_player_task(void);
 
 /**
  * @brief  timer1 irq handler, used to encode/decode sco and decode a2dp
@@ -607,16 +631,13 @@ audio_ram_code void bt_audio_main_loop(void)
 _attribute_retention_code_ void bt_audio_main(void)
 {
     uint32_t tdiff_us, tdiff_tick;
-    uint32_t tnext;
     //uint16_t rptr = codec_get_speaker_rptr(buff_playback);
     bt_audio_task_env_t *p_bt_audio_task_env = get_bt_audio_task_env_ptr();
 
-#if TWS_AUDIO_PATH_GPIO_DEBUG
-    gpio_write(GPIO_PC0, 1);
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+    gpio_write(GPIO_PB0, 1);
 #endif
     tlkmdi_audio_stop_timer();
-
-    //bt_music_gpio_toggle(3);
 
 #if AUDIO_TWS_MODE
     bt_voice_cfg_t *p_bt_voice_env = get_bt_voice_env_ptr();
@@ -628,7 +649,7 @@ _attribute_retention_code_ void bt_audio_main(void)
     }
 #endif
 
-    g_timer1_irq_process_is_ongoing = 1;
+    s_timer1_irq_process_is_ongoing = 1;
 
 #ifdef SL01_audio_task
     log_task_begin_irq(SL_AUDIO_PATH_LOG_EN, SL01_audio_task);
@@ -683,53 +704,51 @@ _attribute_retention_code_ void bt_audio_main(void)
 #endif
         }
 
+#if (TLKADU_MIDBUF_ENABLE)
+        tlkmdi_audio_task_set_next_irq(1000);
+#else
         tlkmdi_audio_task_set_next_irq(tdiff_us);
+#endif
 #endif
     }
 
     if (g_bt_audio_task_env.irq_en) {
-        if (0) { //if (!flash_is_idle()) {
-            tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "== flash busy: timer1_irq_handler ==");
-        } else {
-            //if (!audio_mode_change_is_ongoing())
+#if (TLK_CFG_HRA_ENABLE)
+        tlkmdi_hra_bt_audio_proc();
+        if (audio_codec_flag_get(CODEC_FLAG_MUSIC)) {
+#endif
+#if (TLKMW_BT_1_TO_2_FORWARD_EN)
+            if (tlkmdi_bt_voice_forward_isBusy()) {
+                bt_audio_recorder_task();
+                bt_audio_forward_alg_mode_player_task();
+            } else
+#endif
             {
-//ll_audio_mix_bt_music_mode_decoder_task_mcu();
-#if (TLK_CFG_HRA_ENABLE)
-                tlkmdi_hra_bt_audio_proc();
-                if (audio_codec_flag_get(CODEC_FLAG_MUSIC)) {
-#endif
-                    bt_audio_recorder_task();
-                    bt_audio_player_task();
-#if (TLK_CFG_HRA_ENABLE)
-                } else if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
-                    if (tlkmdi_hra_stack_get_timer_flag()) {
-                        tlkmdi_hra_stack_set_timer_flag(false);
-                        bt_audio_recorder_task();
-                        bt_audio_player_task();
-                    }
-                }
-#endif
+                bt_audio_recorder_task();
+                bt_audio_player_task();
             }
-        }
 
-        if (bt_audio_lowpower_cb) {
-            tnext = bt_audio_lowpower_cb();
-            if (tnext) {
-                //tlkmdi_audio_task_set_next_irq(tnext);
+#if (TLK_CFG_HRA_ENABLE)
+        } else if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
+            if (tlkmdi_hra_stack_get_timer_flag()) {
+                tlkmdi_hra_stack_set_timer_flag(false);
+                bt_audio_recorder_task();
+                bt_audio_player_task();
             }
         }
+#endif
     }
 
-#if TWS_AUDIO_PATH_GPIO_DEBUG
-    gpio_write(GPIO_PC0, 0);
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+    gpio_write(GPIO_PB0, 0);
 #endif
     //log_task(SL_APP_AUDIO_EN, SL01_bt_timer0_irq, 0);
-    g_timer1_irq_process_is_ongoing               = 0;
+    s_timer1_irq_process_is_ongoing               = 0;
     p_bt_audio_task_env->sco_packet_is_processing = 0;
 
 #if (TLKBTP_CFG_HFP_ENABLE)
     if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
-        uint8_t sco_enc_buff_rcv = btif_get_sco_enc_buff_available();
+        uint8_t sco_enc_buff_rcv = btif_get_sco_enc_buff_available(SCO_ENC_QUEUE_ID_HF);
         if (sco_enc_buff_rcv > 0) {
             tlkmdi_audio_runMainAfterTimeMs(2);
         }
@@ -753,11 +772,16 @@ _attribute_retention_code_ void bt_audio_main(void)
 audio_ram_code void bt_audio_recorder_task(void)
 {
 #if (TLKBTP_CFG_HFP_ENABLE)
-    bt_voice_process_mic_data();
+    if (bt_voice_cfg.bt_voice_mode == BT_VOICE_PLAYBACK_MODE) {
+        bt_voice_process_mic_data();
+    }
 #endif
 }
 
 #ifdef DUMP_AUDIO_TASK_STACK_USAGE
+uint32_t             g_bt_audio_stack_usage = 0;
+extern tlksys_task_t sTlkSysTaskList[TLKSYS_TASKID_MAXNUM];
+
 /**
  * @brief  print bt audio task stack information
  * @param[in]  none
@@ -774,6 +798,16 @@ void bt_audio_print_task_stack_info(void)
 #endif
 
 //#define CODEC_BUF_DEBUG
+
+audio_ram_code void bt_audio_forward_alg_mode_player_task(void)
+{
+    int16_t  buff_mix0[300];
+    int16_t  buff_mix1[300];
+    uint16_t dec_pcm_num = 0;
+
+    dec_pcm_num = bt_audio_get_pcm_data_cb((int16_t *)buff_mix0, (int16_t *)buff_mix1);
+    if (dec_pcm_num == 3) {}
+}
 
 /**
  * @brief  bt voice and music playback process, called by timer1_irq_handler
@@ -797,8 +831,8 @@ audio_ram_code void bt_audio_player_task(void)
 #if AUDIO_PATH_24BITS_EN
     int32_t pcm_stereo[PCM_BLOCK_SIZE * 2];
 
-    int16_t buff_mix0[128 + 64]; // left channel
-    int16_t buff_mix1[128 + 64]; // right channel
+    int32_t buff_mix0[128 + 64]; // left channel
+    int32_t buff_mix1[128 + 64]; // right channel
 #else
     int16_t buff_mix0[128 + 64];
     int16_t buff_mix1[128 + 64];
@@ -810,20 +844,16 @@ audio_ram_code void bt_audio_player_task(void)
     int16_t pcm_mono_48k_ppm[360 + 200];
 #endif
 
-#if (TLKSTK_BT_TPS_ENABLE && TLKALG_ASRC_16TO48_16BIT_ENABLE)
+#if ((TLKCFG_MULTI_MIC_EN || TLKSTK_BT_TPS_ENABLE) && TLKALG_ASRC_16TO48_16BIT_ENABLE)
     int16_t pcm_mono_48k_l[360 + 80];
     int16_t pcm_mono_48k_r[360 + 80];
 #endif
 
-    // uint16_t post_pcm_num = 0;
     uint16_t dec_pcm_num = 0;
     uint16_t pcm_num, samples_num;
-    uint16_t i;
-
     int16_t *ps0 = NULL;
     int16_t *ps1 = NULL;
-
-    //bt_music_gpio_toggle(1);
+    uint16_t i   = 0;
 
 #ifdef SL16_codec_fifo_samples
     int samples_in_fifo = tlkdrv_codec_get_spk_avail_samples();
@@ -831,19 +861,12 @@ audio_ram_code void bt_audio_player_task(void)
 #endif
 
     /* ps0: left, ps1: right */
-    ps0 = buff_mix0;
-    ps1 = buff_mix1;
-
-    if (g_bt_audio_task_env.irq_en) {
-        // if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
-        //     tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "bt_audio_player_task 00000 return ");
-        // }
-        // return;
-    }
+    ps0 = (int16_t *)buff_mix0;
+    ps1 = (int16_t *)buff_mix1;
 
 #if (TLKSTK_BT_TPS_ENABLE)
     if (async_audio_ctx.tpsll_dec_update_mix_buf_is_ongoing == 1 && g_ll_audio_mix_mode == 1) {
-        bt_music_gpio_toggle(4);
+        bt_music_gpio_toggle(2);
         return;
     }
 #endif
@@ -883,12 +906,12 @@ audio_ram_code void bt_audio_player_task(void)
 #if (TLKMW_INTERPHONE_EN || TLK_CFG_A2DP_TO_BIS_ENABLE)
     uint16_t codec_buff_size_threshold = CODEC_SPK_FIFO_SAMPLES / 2;
 #else
-    uint16_t codec_buff_size_threshold = TWS_PLAY_FIFO_SIZE / 2;
+    uint16_t codec_buff_size_threshold = CODEC_SPK_FIFO_SAMPLES * 60 / 100; //TWS_PLAY_FIFO_SIZE / 2;
 #endif
 
 #if TLKSTK_BTTPSLL_TWS_ENABLE
     if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
-        codec_buff_size_threshold = TWS_PLAY_FIFO_SIZE / 4;
+        codec_buff_size_threshold = CODEC_SPK_FIFO_SAMPLES / 4;
     }
 #endif
 
@@ -904,13 +927,25 @@ audio_ram_code void bt_audio_player_task(void)
     spk_buf_idle_size0      = tlkdrv_codec_get_spk_buf_idle_size();
 #endif
 
+    // int samples_in_fifo = tlkdrv_codec_get_spk_avail_samples();
+    // uint8_t a2dp_continu_dec = 0;
+    // if (ll_audio_is_in_mix_mode()) {
+    //     if (clock_time_exceed(async_audio_ctx.stimer_irq_tick, 1250*5)) {
+    //         a2dp_continu_dec = 1;
+    //     }
+    // }
+
 #if (TLKBTP_CFG_A2DPSNK_ENABLE)
-    extern volatile uint8_t g_bt_music_enc_mode_is_changing;
-    if (!g_bt_music_enc_mode_is_changing && bt_audio_get_pcm_data_cb && (codec_buffer_avail_size > codec_buff_size_threshold)
+    //extern volatile uint8_t g_bt_music_enc_mode_is_changing; //!g_bt_music_enc_mode_is_changing &&
+    if ((codec_buffer_avail_size > codec_buff_size_threshold) // || (a2dp_continu_dec && samples_in_fifo < 300)
 #if TLK_CFG_HRA_ENABLE
         && (mid_spk_buffer_avail_size > codec_buff_size_threshold)
 #endif
     )
+#elif TLKMW_RECORDING_CARD_EN
+    (void)codec_buff_size_threshold;
+    (void)codec_buffer_avail_size;
+    if (bt_audio_get_pcm_data_cb)
 #else
     if (bt_audio_get_pcm_data_cb && (codec_buffer_avail_size > codec_buff_size_threshold))
 #endif // TLKBTP_CFG_A2DPSNK_ENABLE
@@ -918,28 +953,47 @@ audio_ram_code void bt_audio_player_task(void)
     {
 
 #if (TLKSTK_BT_TPS_ENABLE)
-        if (async_audio_ctx.tpsll_dec_is_ongoing) {
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+        if (async_audio_ctx.tpsll_dec_is_ongoing && async_audio_ctx.tpsll_5ms_dec_times == 1) {
+            // gpio_write(GPIO_PA2, 0);
+            // gpio_write(GPIO_PA2, 1);
+            // gpio_write(GPIO_PA2, 0);
+            return;
+        }
+#else
+        if (async_audio_ctx.tpsll_dec_is_ongoing || async_audio_ctx.tpsll_enc_is_ongoing) {
             async_audio_ctx.tpsll_mix_bt_dec_cnt++;
+            if (async_audio_ctx.tpsll_mix_bt_dec_cnt >= 2) {
+                bt_music_gpio_toggle(3);
+                return;
+            }
         } else {
             async_audio_ctx.tpsll_mix_bt_dec_cnt = 0;
         }
+#endif
+#endif
 
-        if (async_audio_ctx.tpsll_mix_bt_dec_cnt >= 2) {
-            bt_music_gpio_toggle(5);
-            return;
-        }
+#if (TLKMW_RECORDING_CARD_EN && TLKBTP_CFG_HFPAG_ENABLE)
+        extern bool tlkmdi_record_fill_mic_data_from_uac(uint16_t samples);
+        tlkmdi_record_fill_mic_data_from_uac(120 * 2);
 #endif
 
         /* muisc decode or voice decode, mix0 is left, mix1 is right */
-        dec_pcm_num = bt_audio_get_pcm_data_cb((int16_t *)buff_mix0, (int16_t *)buff_mix1);
+        if (bt_audio_get_pcm_data_cb) {
+            dec_pcm_num = bt_audio_get_pcm_data_cb((int16_t *)buff_mix0, (int16_t *)buff_mix1);
+        } else {
+            return;
+        }
 
         if (dec_pcm_num == 3) {
             // bt voice, push pcm data to playback in dsp callback
-            //tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "skip.. ");
+            tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "skip.. ");
+            bt_music_gpio_toggle(4);
             return;
         }
 
         if (dec_pcm_num == 0) {
+            bt_music_gpio_toggle(1);
 #if AUDIO_PATH_DBG
             tlkapi_error(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "play_fail, get 0 pcm data, %d", codec_buffer_avail_size);
 #endif
@@ -953,10 +1007,10 @@ audio_ram_code void bt_audio_player_task(void)
         (void)g_pcm_threshold_flag;
         (void)g_pcm_threshold_check_flag;
         if (g_pcm_threshold_check_flag) {
-            g_pcm_threshold_flag = tlkmdi_audio_dB_is_less_threshold(-200, buff_mix0, dec_pcm_num);
+            g_pcm_threshold_flag = tlkmdi_audio_dB_is_less_threshold(-200, (short *)buff_mix0, dec_pcm_num);
         }
 
-#if (TLKSTK_BT_TPS_ENABLE && (TLKALG_ASRC_16TO48_16BIT_ENABLE || AUDIO_HD_HAC_EN))
+#if ((TLKCFG_MULTI_MIC_EN || TLKSTK_BT_TPS_ENABLE) && (TLKALG_ASRC_16TO48_16BIT_ENABLE || AUDIO_HD_HAC_EN))
         if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
 #if TLKALG_ASRC_16TO48_16BIT_ENABLE
             uint16_t samples_num_48K = 3 * dec_pcm_num;
@@ -1001,7 +1055,7 @@ audio_ram_code void bt_audio_player_task(void)
             }
 
 #else
-            ps1 = buff_mix0;
+            ps1 = (int16_t *)buff_mix0;
 #endif
 
 #if AUDIO_TWS_MODE
@@ -1025,7 +1079,32 @@ audio_ram_code void bt_audio_player_task(void)
               || tlkmdi_anc_ll_audio_is_busy()
 #endif
                   )) {
-            mix_ll_audio_stereo(ps0, ps1, dec_pcm_num);
+            if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
+                if (bt_voice_cfg.sync_init == 1 && bt_voice_cfg.codec_sync_init == 0) {
+                    bt_voice_cfg.codec_sync_init = 1;
+#if TLKADU_MIDBUF_ENABLE
+                    if (tlkaud_codec_task_if_can_start()) {
+                        //tlkmdi_midbuf_sync_spk(240);
+                    } else {
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+                        gpio_write(GPIO_PA1, 0);
+                        gpio_write(GPIO_PA1, 1);
+                        gpio_write(GPIO_PA1, 0);
+#endif
+
+                        tlkdrv_codec_sync_play_samples(200); //240*3 + 25
+                    }
+#else
+                    tlkdrv_codec_sync_play_samples(240);
+#endif
+                }
+
+                if (bt_voice_cfg.codec_sync_init) {
+                    mix_ll_audio_stereo(ps0, ps1, dec_pcm_num);
+                }
+            } else {
+                mix_ll_audio_stereo(ps0, ps1, dec_pcm_num);
+            }
         }
 #endif
 
@@ -1221,6 +1300,9 @@ audio_ram_code void bt_audio_player_task(void)
             } else {
                 tlkdrv_codec_fillSpkBuff((uint8_t *)pcm, fill_num * sizeof(codec_int));
             }
+#elif (TLKMW_RECORDING_CARD_EN && TLKBTP_CFG_HFPAG_ENABLE)
+            extern bool tlkmdi_record_fill_spk_data_to_uac(int16_t * pData, uint16_t samples);
+            tlkmdi_record_fill_spk_data_to_uac((int16_t *)pcm, fill_num * 2);
 #else
 // music sbc 512, voice 120*2*2
 #if TLK_PCM_DATA_WR_EN
@@ -1232,7 +1314,11 @@ audio_ram_code void bt_audio_player_task(void)
 #endif
 #endif
 #else
+#if (AUDIO_PATH_24BITS_EN)
+            tlkmdi_u2h_voice_fillSpkData((uint8_t *)pcm_stereo, samples_num * sizeof(codec_int));
+#else
             tlkmdi_u2h_voice_fillSpkData((uint8_t *)pcm, samples_num * sizeof(codec_int));
+#endif // #if (AUDIO_PATH_24BITS_EN)
 #endif
 
             ps0 += samples_num;
@@ -1263,16 +1349,9 @@ audio_ram_code void bt_audio_player_task(void)
     g_codec_fifo_size = tlkdrv_codec_get_spk_avail_samples();
 
 #ifdef DUMP_AUDIO_TASK_STACK_USAGE
-    g_bt_audio_stack_usage = tlkos_task_getStackWaterMark(NULL);
+    g_bt_audio_stack_usage = tlkos_task_getStackWaterMark(sTlkSysTaskList[TLKSYS_TASKID_AUDIO].taskHandle);
 #endif
 }
-
-/**
- * @brief  printf audio info
- * @param[in]  none
- * @returns none
- */
-void bt_audio_dump(void) {}
 
 /**
  * @brief  get music volume step
@@ -1366,14 +1445,6 @@ void bt_audio_set_music_vol_percent(uint8_t is_ios, uint8_t step)
         }
     }
 
-#if 0
-    /* g_a2dp_started_tick will be cleared after 100ms */
-    extern uint8_t app_bt_has_music(void);
-    if (!app_bt_has_music() || g_a2dp_started_tick) {
-        g_bt_music_vol = g_codec_cfg.music_vol_percent;
-    }
-#endif
-
     tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "@bt_audio_set_music_vol_percent, step:%d, ios:%d, m_vol:%d, v_vol:%d", step, is_ios, g_codec_cfg.music_vol_percent,
                  g_codec_cfg.voice_vol_percent);
 }
@@ -1437,8 +1508,8 @@ int16_t bt_audio_get_music_vol_percent(void)
 
 #endif
 
-
-/* @brief  Fill mute data to given buffer.
+/**
+* @brief  Fill mute data to given buffer.
 * @param[in]  pd0 - start address 0
 * @param[in]  pd1 - start address 1
 * @returns one_frame_samples: mute data length
@@ -1455,7 +1526,7 @@ audio_ram_code uint16_t bt_audio_get_mute_data(int16_t *pd0, int16_t *pd1)
     }
 #if (TLKBTP_CFG_HFP_ENABLE) // xiaogang will check later
     else if (audio_codec_flag_get(CODEC_FLAG_VOICE)) {
-        one_frame_samples = (HFP_CODEC_ID_MSBC == btif_get_hfp_codec() ? 120 : 120);
+        one_frame_samples = 120; //(HFP_CODEC_ID_MSBC == btif_get_hfp_codec() ? 120 : 120);
     }
 #endif
     else {

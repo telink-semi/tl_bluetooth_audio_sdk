@@ -68,7 +68,7 @@ struct mblock_free;
  *
  ****************************************************************************************
  */
-void ke_mem_init(uint8_t type, uint8_t *heap, uint16_t heap_size);
+void tlk_bt_ctrl_ke_mem_init(uint8_t type, uint8_t *heap, uint16_t heap_size);
 
 /**
  ****************************************************************************************
@@ -83,7 +83,7 @@ void ke_mem_init(uint8_t type, uint8_t *heap, uint16_t heap_size);
  *
  ****************************************************************************************
  */
-void *ke_malloc(uint32_t size, uint8_t type);
+void *tlk_bt_ctrl_ke_malloc(uint32_t size, uint8_t type);
 
 
 /**
@@ -97,7 +97,7 @@ void *ke_malloc(uint32_t size, uint8_t type);
  *
  ****************************************************************************************
  */
-bool ke_check_malloc(uint32_t size, uint8_t type);
+bool tlk_bt_ctrl_ke_check_malloc(uint32_t size, uint8_t type);
 
 /**
  ****************************************************************************************
@@ -110,7 +110,7 @@ bool ke_check_malloc(uint32_t size, uint8_t type);
  *
  ****************************************************************************************
  */
-void ke_free(void *mem_ptr);
+void tlk_bt_ctrl_ke_free(void *mem_ptr);
 
 
 /**
@@ -122,7 +122,7 @@ void ke_free(void *mem_ptr);
  * @return true if heap not used, false else.
  ****************************************************************************************
  */
-bool ke_mem_is_empty(uint8_t type);
+bool tlk_bt_ctrl_ke_mem_is_empty(uint8_t type);
 
 
 /**
@@ -134,7 +134,7 @@ bool ke_mem_is_empty(uint8_t type);
  * @return true if already free, false else.
  ****************************************************************************************
  */
-bool ke_is_free(void *mem_ptr);
+bool tlk_bt_ctrl_ke_is_free(void *mem_ptr);
 
 #if (KE_PROFILING)
 
@@ -147,7 +147,7 @@ bool ke_is_free(void *mem_ptr);
  * @return current memory usage of current heap.
  ****************************************************************************************
  */
-uint16_t ke_get_mem_usage(uint8_t type);
+uint16_t tlk_bt_ctrl_ke_get_mem_usage(uint8_t type);
 
 
 /**
@@ -158,7 +158,7 @@ uint16_t ke_get_mem_usage(uint8_t type);
  * @return max memory usage of all heap.
  ****************************************************************************************
  */
-uint32_t ke_get_max_mem_usage(void);
+uint32_t tlk_bt_ctrl_ke_get_max_mem_usage(void);
 
 #endif // (KE_PROFILING)
 

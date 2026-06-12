@@ -24,7 +24,6 @@
 #ifndef TLKMDI_LEA_BROADCAST_MEDIA_SENDER_H
 #define TLKMDI_LEA_BROADCAST_MEDIA_SENDER_H
 
-
 struct lea_bms_config
 { // refer to struct lea_config.
     uint8_t  blocks;
@@ -49,7 +48,7 @@ struct lea_bms_stream_param
  * @brief       Initialize BMS state, callbacks, and open 48 kHz codec.
  * @return      TLK_ENONE on success.
  */
-int  tlkmdi_lea_bms_init(void);
+int tlkmdi_lea_bms_init(void);
 
 /**
  * @brief       Check whether BMS audio pipeline is currently active.
@@ -64,6 +63,7 @@ bool tlkmdi_lea_bms_is_busy(void);
  * @return      true if transition accepted, false otherwise.
  */
 bool tlkmdi_lea_bms_switch(uint16_t handle, uint8_t status);
+
 struct tlkmdi_lea_bms_config
 {
     uint8_t  samplingFrequency;

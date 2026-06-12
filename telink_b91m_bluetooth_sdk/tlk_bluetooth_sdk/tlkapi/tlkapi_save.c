@@ -77,11 +77,10 @@ static inline void tlkapi_save_flashWriteByte(uint32_t addr, uint8_t byte)
  * @param[in]   sign      - Information identification tag
  * @param[in]   version   - The version of the save method
  * @param[in]   length    - The length of each item in the save's method
- * @param[in]   address0  - The address of the first backup sector of the system
- * @param[in]   address1  - The address of the second backup sector of the system
+ * @param[in]   address0  - The address of the 2 backup sector(8k) of the system
  * @return      Operating results, TLK_ENONE means success, others means failure
  */
-static int tlkapi_save34_preinit(tlkapi_save_ctrl_t *pCtrl, uint8_t sign, uint8_t version, uint16_t length, uint32_t address0, uint32_t address1)
+static int tlkapi_save34_preinit(tlkapi_save_ctrl_t *pCtrl, uint8_t sign, uint8_t version, uint16_t length, uint32_t address0)
 {
     bool    isEarse;
     uint8_t buffer0[4] = {0};
@@ -89,17 +88,17 @@ static int tlkapi_save34_preinit(tlkapi_save_ctrl_t *pCtrl, uint8_t sign, uint8_
     if (pCtrl == NULL || sign == 0xFF || length > TLKAPI_SAVE_ONE_ITEM_MAX_LEN) {
         return -TLK_EPARAM;
     }
-    if ((address0 & (TLKAPI_FLASH_SECTOR_SIZE - 1)) != 0 || (address1 & (TLKAPI_FLASH_SECTOR_SIZE - 1)) != 0 || address0 == address1 || version == 0x00 || version == 0xFF) {
+    if ((address0 & (TLKAPI_FLASH_SECTOR_SIZE - 1)) != 0 || version == 0x00 || version == 0xFF) {
         return -TLK_EPARAM;
     }
-    pCtrl->sign  = sign;
-    pCtrl->vers  = version;
-    pCtrl->addr  = address0;
-    pCtrl->lens  = length + 4;
-    pCtrl->offs  = 0;
-    pCtrl->prev  = 0;
-    pCtrl->addr0 = address0;
-    pCtrl->addr1 = address1;
+    pCtrl->sign       = sign;
+    pCtrl->vers       = version;
+    pCtrl->addr       = address0;
+    pCtrl->lens       = length + 4;
+    pCtrl->offs       = 0;
+    pCtrl->prev       = 0;
+    pCtrl->addr0      = address0;
+    uint32_t address1 = address0 + 4096;
     tlkapi_save_flashRead(address0 + 0, &buffer0[0], 2); // Read sector start flag
     tlkapi_save_flashRead(address0 + TLKAPI_SAVE_SECTOR_VALID_SIZE, &buffer0[2], 1);
     tlkapi_save_flashRead(address1 + 0, &buffer1[0], 2);
@@ -177,8 +176,7 @@ static int tlkapi_save34_preinit(tlkapi_save_ctrl_t *pCtrl, uint8_t sign, uint8_
  * @param[in]   sign      - Information identification tag
  * @param[in]   version   - The version of the save method
  * @param[in]   length    - The length of each item in the save's method
- * @param[in]   address0  - The address of the first backup sector of the system
- * @param[in]   address1  - The address of the second backup sector of the system
+ * @param[in]   address0  - The address of the 2 backup sector(8k) of the system
  * @return      Operating results, TLK_ENONE means success, others means failure
  *              -TLK_ENODATA means no valid data found
  * @note:       
@@ -196,12 +194,12 @@ static int tlkapi_save34_preinit(tlkapi_save_ctrl_t *pCtrl, uint8_t sign, uint8_
  *              5.If data migration is terminated abnormally (such as power failure)
  *                during the last migration, the interface continues to migrate data.
  */
-int tlkapi_save3_init(tlkapi_save_ctrl_t *pCtrl, uint8_t sign, uint8_t version, uint16_t length, uint32_t address0, uint32_t address1)
+int tlkapi_save3_init(tlkapi_save_ctrl_t *pCtrl, uint8_t sign, uint8_t version, uint16_t length, uint32_t address0)
 {
     int     ret;
     uint8_t buffer[4] = {0};
     uint8_t savedData[TLKAPI_SAVE_ONE_ITEM_MAX_LEN]; //in heap is better then stack
-    ret = tlkapi_save34_preinit(pCtrl, sign, version, length, address0, address1);
+    ret = tlkapi_save34_preinit(pCtrl, sign, version, length, address0);
     if (ret != TLK_ENONE) {
         return ret;
     }
@@ -340,7 +338,7 @@ int tlkapi_save3_migrate(tlkapi_save_ctrl_t *pCtrl, uint8_t *pData, uint16_t dat
 
     curAddr = pCtrl->addr;
     if (pCtrl->addr == pCtrl->addr0) {
-        pCtrl->addr = pCtrl->addr1;
+        pCtrl->addr = pCtrl->addr0 + 4096;
     } else {
         pCtrl->addr = pCtrl->addr0;
     }

@@ -53,14 +53,15 @@ static int app_spp_read_cb(uint16_t conn_handle, uint8_t opcode, uint16_t attr_h
 static int app_spp_write_cb(uint16_t conn_handle, uint8_t opcode, uint16_t attr_handle, uint8_t *value, uint16_t value_len);
 
 static const struct atts_attribute sppList[] = {
-    ATTS_PRIMARY_SERVICE_128(characteristicTlkSppServiceUuid),
+    ATTS_PRIMARY_SERVICE_128(tlk_spp_service_att_uuid),
 
     ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadNotify),
-    {ATT_PERMISSIONS_ENCRYPT_READ, ATT_128_UUID_LEN, (uint8_t *)&characteristicTlkSppServer2ClientUuid[0], NULL, 0, NULL, ATTS_SET_READ_CALLBACK},
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_ENCRYPT_READ, tlk_spp_server2client_char_att_uuid, ATTS_SET_READ_CALLBACK, 0, NULL, NULL),
+
     ATTS_COMMON_CCC_DEFINE,
 
     ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadWriteWriteWithoutNotify),
-    {ATT_PERMISSIONS_ENCRYPT_RDWR, ATT_128_UUID_LEN, (uint8_t *)&characteristicTlkSppClient2ServerUuid[0], NULL, 0, NULL, ATTS_SET_WRITE_CALLBACK | ATTS_SET_READ_CALLBACK},
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_ENCRYPT_RDWR, tlk_spp_client2server_char_att_uuid, ATTS_SET_WRITE_CALLBACK | ATTS_SET_READ_CALLBACK, 0, NULL, NULL),
     ATTS_COMMON_CCC_DEFINE,
 };
 

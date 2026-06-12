@@ -27,6 +27,5 @@
  *******************************************************************************************************/
 #pragma once
 
-int tlk_multi_core_communication_init(void);
+int  tlk_multi_core_communication_init(void);
 void tlk_multi_core_communication_loop(void);
-

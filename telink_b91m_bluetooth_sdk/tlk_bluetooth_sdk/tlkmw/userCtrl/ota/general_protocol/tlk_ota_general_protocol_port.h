@@ -105,7 +105,7 @@ enum
     TLK_OTA_RESULT_FIRMWARE_MARK_ERR,
     TLK_OTA_RESULT_FW_SIZE_ERR,
     TLK_OTA_RESULT_DATA_PACKET_TIMEOUT,
-    TLK_OTA_RESULT_TIMEOUT,
+    TLK_OTA_RESULT_TIMEOUT = 0x0D,
     TLK_OTA_RESULT_CONNECTION_TERMINATE,
     TLK_OTA_RESULT_TOTAL_FW_DESCRRIPTORS_ERR,
     TLK_OTA_RESULT_CUR_FW_DESCRRIPTORS_ERR,
@@ -255,10 +255,21 @@ int tlk_ota_notify_status(uint8_t *pBuffer, uint32_t buffLen, void *UserArg);
 void tlk_ota_general_protocol_send_data(uint8_t opcode, uint8_t *pData, uint16_t dataLen, void *userArg);
 
 /**
+ * @brief      Receive data via OTA general protocol
+ * @param[in]  taskID  - task identifier
+ * @param[in]  pData   - pointer to data buffer
+ * @param[in]  dataLen - length of data
+ * @param[in]  UserArg - user argument
+ * @param[out] none
+ * @return     int - OTA_NONE if success, error code otherwise
+ */
+int tlk_ota_general_protocol_recv_data(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg);
+
+/**
  * @brief      Initialize OTA general protocol
  * @param[in]  pInterface - pointer to OTA interface
  * @return     int - OTA_NONE if success, error code otherwise
  */
-int tlk_ota_general_protocol_init(nvds_ota_Interface_t *pInterface);
+int tlk_ota_general_protocol_init(nvds_ota_Interface_t pInterface);
 
 #endif // #ifndef TLK_OTA_GENERAL_PROTOCOL_PORT_H

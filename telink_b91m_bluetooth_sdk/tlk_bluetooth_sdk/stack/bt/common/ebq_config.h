@@ -28,5 +28,5 @@
 #ifndef EBQ_CONFIG_H_
 #define EBQ_CONFIG_H_
 
-#define EBQ_BT_CTRLER_ONLY_TEST_MODE 	0 //for EBQ bt controller only test mode
+#define EBQ_BT_CTRLER_ONLY_TEST_MODE 0 //for EBQ bt controller only test mode
 #endif

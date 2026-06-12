@@ -27,12 +27,14 @@
 //#define EN_PRINT_DEBUG
 
 /*! Version number to ensure header and binary are matching. */
-#define W_HYBRID_ALG_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
-#define W_HYBRID_ALG_VERSION_                         W_HYBRID_ALG_VERSION_INT(0, 3, 2)
+#define W_AGC_ALG_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
+#define W_AGC_ALG_VERSION_                         W_AGC_ALG_VERSION_INT(0, 4, 0)
 
 typedef struct
 {
-    /* support 7.5ms/10ms/15ms @ 16k hz
+    /* support 6ms/7.5ms/10ms/15ms @ 16k hz
+	 * or 2ms/2.5ms/3.3ms/5ms @ 48k hz
+	  6ms: 96
 	  7.5ms: 120
 	  10ms: 160
 	  15ms: 240 */

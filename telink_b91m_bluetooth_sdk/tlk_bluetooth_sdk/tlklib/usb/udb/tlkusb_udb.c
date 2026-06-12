@@ -40,8 +40,8 @@
 static bool tlkusb_udb_recvDatDeal(void);
 static void tlkusb_udb_recvCmdProc(uint8_t *pData, uint16_t dataLen, bool *pIsDown);
 
-static uint16_t sTlkUsbUdbCmdLength = 0;
-static uint8_t  sTlkUsbUdbCmdBuffer[TLKUSB_UDB_BUFF_SIZE];
+static uint16_t sTlkUsbUdbCmdLength  = 0;
+static uint8_t *spTlkUsbUdbCmdBuffer = NULL;
 
 extern const tlkusb_modDesc_t sTlkUsbUdbModDesc;
 extern const tlkusb_modCtrl_t sTlkUsbUdbModCtrl;
@@ -93,9 +93,8 @@ _attribute_ram_code_ void tlkusb_udb_recvHandler(void)
     do {
         ready = tlkusb_udb_recvDatDeal();
         if (ready) {
-            tlkusb_udb_recvCmdProc(sTlkUsbUdbCmdBuffer, sTlkUsbUdbCmdLength, &isDown);
+            tlkusb_udb_recvCmdProc(spTlkUsbUdbCmdBuffer, sTlkUsbUdbCmdLength, &isDown);
             if (isDown) {
-                tlkusb_hal_disable_eventMode();
                 sTlkUsbUdbCmdLength = 0;
             }
         }
@@ -106,10 +105,12 @@ _attribute_ram_code_ void tlkusb_udb_recvHandler(void)
 #endif
     } while (isDown);
     if (ready) {
-        if (sTlkUsbUdbCmdBuffer[0] == 0x11) {
-            tlkusb_debug_shell_hook(sTlkUsbUdbCmdBuffer, sTlkUsbUdbCmdLength);
+        if (spTlkUsbUdbCmdBuffer[0] == 0x11) {
+            tlkusb_debug_shell_hook(spTlkUsbUdbCmdBuffer, sTlkUsbUdbCmdLength);
         }
         sTlkUsbUdbCmdLength = 0;
+        tlkos_free(spTlkUsbUdbCmdBuffer);
+        spTlkUsbUdbCmdBuffer = NULL;
     }
 }
 
@@ -129,7 +130,13 @@ _attribute_ram_code_ static bool tlkusb_udb_recvDatDeal(void)
         tlkusb_hal_read_ep_data(TLK_CFG_USB_UDB_INDEX, TLKUSB_UDB_EDP_DBG_OUT, buffer, length);
         tlkusb_hal_data_ep_ack(TLK_CFG_USB_UDB_INDEX, TLKUSB_UDB_EDP_DBG_OUT);
         if (length != 0 && length + sTlkUsbUdbCmdLength < TLKUSB_UDB_BUFF_SIZE) {
-            tmemcpy(sTlkUsbUdbCmdBuffer + sTlkUsbUdbCmdLength, buffer, length);
+            if (spTlkUsbUdbCmdBuffer == NULL) {
+                spTlkUsbUdbCmdBuffer = tlkos_malloc(TLKUSB_UDB_BUFF_SIZE);
+                if (spTlkUsbUdbCmdBuffer == NULL) {
+                    return false;
+                }
+            }
+            tmemcpy(spTlkUsbUdbCmdBuffer + sTlkUsbUdbCmdLength, buffer, length);
             sTlkUsbUdbCmdLength += length;
         }
         if (length != 0 && length < 64) {
@@ -226,6 +233,7 @@ _attribute_ram_code_ static void tlkusb_udb_recvCmdProc(uint8_t *pData, uint16_t
         } else if (type == 0xFE) { // FW_DOWNLOAD
             core_interrupt_disable();
             tlkusb_hal_disable_eventMode();
+            tlkhal_flash_unlock();
 #if (TLKDBG_CFG_UDB_LOG_ENABLE)
             tlkdbg_stream_reset();
 #endif

@@ -33,11 +33,6 @@
 #define I2S0_TDM_TX_FIFO        FIFO1
 #define I2S0_TDM_RX_FIFO        FIFO1
 #define CODEC_MICB_FIFO         FIFO2
-
-#define I2S0_TDM_TX_DMA         DMA8
-#define I2S0_TDM_RX_DMA         DMA9
-#define CODEC_MICB_DMA          DMA10
-
 #define HRA_AUDIO_ID            IPC_DATA_PATH_0
 
 #define MCU2DSP_MICA_CHNL_NUM   2

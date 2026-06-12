@@ -23,9 +23,7 @@
  *******************************************************************************************************/
 #pragma once
 
-
-#define TLKUSB_MSC_BLOCK_SIZE         512 //64*n
-#define TLKUSB_MSC_UNIT_COUNT         2
+#define TLKUSB_MSC_UNIT_COUNT         1
 
 #define TLKUSB_MSC_VENDOR_STRING_DEF  "TLK-DISK"         // length<=8
 #define TLKUSB_MSC_PRODUCE_STRING_DEF "Telink Disk Demo" // length<=16

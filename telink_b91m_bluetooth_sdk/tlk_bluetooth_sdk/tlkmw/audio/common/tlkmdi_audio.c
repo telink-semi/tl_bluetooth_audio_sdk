@@ -26,6 +26,10 @@
 #include "tlkapi/tlkapi.h"
 #include "tlkmw/tlkmw.h"
 
+#if TLKADU_MIDBUF_ENABLE
+#include "vendor/GameSir_Xiaoji/audio_mw/tlkaud_audio_mw.h"
+#endif
+
 #if (TLK_MW_AUDIO_ENABLE)
 
 /**
@@ -38,24 +42,33 @@ void tlkmdi_audio_init(void)
 #if (TLK_CFG_RTOS_ENABLE)
     tlkmdi_audio_use_rtos();
 #endif
-
+    tlkmdi_audio_debug_init();
 #if (TLK_DEV_CODEC_ENABLE)
     tlkmw_codec_init();
 #endif
+
+#if ((TLKALG_GET_AUDIO_DATA_EN) && (TLKMW_RECORDING_CARD_EN))
+    tlkmdi_audio_spi_data_init();
+#else
     tlkmdi_audio_debug_init();
+#endif
+
     tlkmdi_audmem_init();
 
-    #if TLK_MW_DSP_COMM_ENABLE
+#if TLK_MW_DSP_COMM_ENABLE
     tlkmw_dsp_init();
-    #endif
+#endif
 
-    #if TLKALG_ASRC_441TO48_16BIT_TEMP_ENABLE
-    bt_music_441to48_init();
-    #endif
-
-    #if TLKALG_EQ_ENABLE
+#if TLKALG_EQ_ENABLE
     tlkalg_eq_read_para_from_flash(0);
-    #endif
+#endif
+#if TLKAUD_SIDETONE_EN
+    extern int tlkaud_sidetone_init(void);
+    tlkaud_sidetone_init();
+#endif
+#if TLKADU_MIDBUF_ENABLE
+    tlkaud_set_mic_des(MIC_TO_BT);
+#endif
 }
 
 /**
@@ -94,7 +107,7 @@ int tlkmdi_audio_sendStartEvtEx(uint8_t audChn, uint16_t handle, uint8_t priorit
  */
 int tlkmdi_audio_sendCloseEvt(uint8_t audChn, uint16_t handle)
 {
-    return tlkmdi_audio_sendCloseEvtEx(audChn,handle,0);
+    return tlkmdi_audio_sendCloseEvtEx(audChn, handle, 0);
 }
 
 /**
@@ -121,7 +134,7 @@ int tlkmdi_audio_sendCloseEvtEx(uint8_t audChn, uint16_t handle, uint8_t isDelet
  */
 _always_inline void tlkmdi_audio_sendDebugMsgOutput(void)
 {
-    tlksys_task_setEvtFromIsr(TLKSYS_TASKID_AUDIO,TLKSYS_TASK_EVT_AUD_DEBUG);
+    tlksys_task_setEvtFromIsr(TLKSYS_TASKID_AUDIO, TLKSYS_TASK_EVT_AUD_DEBUG);
 }
 
 /**
@@ -131,7 +144,7 @@ _always_inline void tlkmdi_audio_sendDebugMsgOutput(void)
  */
 _always_inline void tlkmdi_audio_sendChangeTxPower(void)
 {
-    tlksys_task_setEvt(TLKSYS_TASKID_AUDIO,TLKSYS_TASK_EVT_AUD_MAIN);
+    tlksys_task_setEvt(TLKSYS_TASKID_AUDIO, TLKSYS_TASK_EVT_AUD_MAIN);
 }
 
 #endif // #if (TLK_MW_AUDIO_ENABLE)

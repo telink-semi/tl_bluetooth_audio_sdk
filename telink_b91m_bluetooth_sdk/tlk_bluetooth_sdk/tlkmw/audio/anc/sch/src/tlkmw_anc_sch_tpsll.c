@@ -41,7 +41,11 @@ static AncSchTpsll_t sAncSchTpsll = {0};
  */
 static void tlkmw_anc_sch_tpsll_state_change_cb(uint16_t mode)
 {
+#if (TLK_STK_TPH_ENABLE)
     if (mode & TPH_HOST_MODE_DONGLE_AUDIO) {
+#elif (TLK_STK_TPT_ENABLE)
+    if (mode & TPT_HOST_MODE_DONGLE_AUDIO) {
+#endif
         if (sAncSchTpsll.handle != 0) {
             return;
         }

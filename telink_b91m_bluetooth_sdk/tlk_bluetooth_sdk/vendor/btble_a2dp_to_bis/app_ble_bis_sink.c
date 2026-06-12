@@ -57,21 +57,31 @@ static const struct ble_vcss_register_param s_vcss_param = {
 };
 
 /*** PACS Server Parameters ***/
-static const struct lea_pac_param s_sink_pac[] = {
-    // LEA_PAC_PARAM(LC3_8_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    LEA_PAC_PARAM(LC3_16_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    // LEA_PAC_PARAM(LC3_24_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    // LEA_PAC_PARAM(LC3_32_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    LEA_PAC_PARAM(LC3_48_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
-    LEA_PAC_PARAM(LC3_48_4, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT),
+#define LEA_PACS_SINK_PAC_CHANNEL_1_2_LIST                                                \
+    X(LC3_16_1, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_16_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_24_1, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_24_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_32_1, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_32_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_48_1, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_48_2, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_48_3, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT) \
+    X(LC3_48_4, LEA_CHANNEL_COUNTS_1 | LEA_CHANNEL_COUNTS_2, LEA_CONTEXT_TYPE_ALL_SELECT)
+
+static const uint8_t s_pacs_sink_pac_channel_1_2[] = {
+#define X(lc3_id, chn, contexts) lc3_id,
+    COUNT_ARGS(LEA_PACS_SINK_PAC_CHANNEL_1_2_LIST) - 1,
+#undef X
+#define X(lc3_id, chn, contexts) LEA_PAC_PARAM(lc3_id, chn, contexts),
+    LEA_PACS_SINK_PAC_CHANNEL_1_2_LIST
+#undef X
 };
 
 static const struct ble_pacss_register_param s_pacss_param = {
-    .sink_pac_num              = ARRAY_SIZE(s_sink_pac),
-    .sink_pac                  = s_sink_pac,
+    .sink_pac_len              = ARRAY_SIZE(s_pacs_sink_pac_channel_1_2),
+    .sink_pac                  = s_pacs_sink_pac_channel_1_2,
     .sink_audio_locations      = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT,
-    .source_pac_num            = 0,
-    .source_pac                = NULL,
     .source_audio_locations    = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT,
     .available_sink_contexts   = LEA_CONTEXT_TYPE_ALL_SELECT,
     .available_source_contexts = LEA_CONTEXT_TYPE_PROHIBITED,

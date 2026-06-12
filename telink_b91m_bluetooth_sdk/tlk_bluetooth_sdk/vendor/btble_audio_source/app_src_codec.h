@@ -23,9 +23,9 @@
  *******************************************************************************************************/
 #pragma once
 
-#define TLKBTP_CFG_RFC_ENABLE     (1 && TLK_STK_BT_ENABLE)
-#define TLKBTP_CFG_HFP_ENABLE     (1 && TLKBTP_CFG_RFC_ENABLE)
-#define TLKBTP_CFG_HFPAG_ENABLE   (1 && TLKBTP_CFG_HFP_ENABLE)
+#define TLKBTP_CFG_RFC_ENABLE      (1 && TLK_STK_BT_ENABLE)
+#define TLKBTP_CFG_HFP_ENABLE      (1 && TLKBTP_CFG_RFC_ENABLE)
+#define TLKBTP_CFG_HFPAG_ENABLE    (1 && TLKBTP_CFG_HFP_ENABLE)
 
 #define TLK_DEV_CODEC_ENABLE       1
 #define TLKDRV_CODEC_ICODEC_ENABLE (1 & TLK_DEV_CODEC_ENABLE)

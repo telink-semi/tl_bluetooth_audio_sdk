@@ -29,12 +29,13 @@
  * @param[in] pCfg : Pointer to PWM channel configuration structure
  * @returns  None.
  */
-void tlkhal_pwm_chnInit(const tlkhal_pwm_chn_cfg_t * const pCfg)
+void tlkhal_pwm_chnInit(const tlkhal_pwm_chn_cfg_t *const pCfg)
 {
     (void)pCfg;
     // TLKHAL_ASSERT(pCfg->chn <= PWM5_ID);
     // pwm_set_pin(pCfg->pin,PWM0 + pCfg->chn);
 }
+
 /**
  * @brief  Start PWM channel
  * @param[in] chn : PWM channel number to start
@@ -43,8 +44,8 @@ void tlkhal_pwm_chnInit(const tlkhal_pwm_chn_cfg_t * const pCfg)
  */
 void tlkhal_pwm_chnStart(uint8_t chn, void *futureUse)
 {
-    (void) futureUse;
-    (void) chn;
+    (void)futureUse;
+    (void)chn;
     // TLKHAL_ASSERT(chn <= PWM5_ID);
     // if (chn == 0) {
     //     pwm_start(FLD_PWM0_EN);
@@ -52,6 +53,7 @@ void tlkhal_pwm_chnStart(uint8_t chn, void *futureUse)
     //     pwm_start(BIT(chn));
     // }
 }
+
 /**
  * @brief  Stop PWM channel
  * @param[in] chn : PWM channel number to stop
@@ -60,7 +62,7 @@ void tlkhal_pwm_chnStart(uint8_t chn, void *futureUse)
  */
 void tlkhal_pwm_chnStop(uint8_t chn, void *futureUse)
 {
-    (void) futureUse;
+    (void)futureUse;
     (void)chn;
     // TLKHAL_ASSERT(chn <= PWM5_ID);
     // if (chn == 0) {

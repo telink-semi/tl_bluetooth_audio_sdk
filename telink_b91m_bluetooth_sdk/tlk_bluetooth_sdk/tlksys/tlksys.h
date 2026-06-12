@@ -32,5 +32,3 @@
 #include "tlksys/tlksys_pm.h"
 #include "tlksys/tlksys_devMgr.h"
 #include "tlksys/tlksys_define.h"
-
-

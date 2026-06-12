@@ -119,7 +119,7 @@ void ble_host_hci_init(void);
  *
  *   @note This function is Host HCI data input API, called by the Application Layer.
  */
-void ble_host_hci_rx_packet(uint8_t *data, uint32_t len);
+void ble_host_hci_rx_packet(const uint8_t *data, uint32_t len);
 
 /**
  *   @brief BLE Host HCI Receive HCI complete packet.
@@ -180,21 +180,6 @@ void ble_host_hci_register_rx_acl_data_callback(ble_host_hci_rx_acl_data_callbac
  *   @return None.
  */
 void ble_host_hci_register_rx_iso_data_callback(ble_host_hci_rx_iso_data_callback_t callback);
-
-/* OS systerm used only, here empty function */
-/**
- *   @brief BLE Host HCI lock task.
- *
- *   @return None.
- */
-void ble_host_hci_lock(void);
-
-/**
- *   @brief BLE Host HCI unlock task.
- *
- *   @return None.
- */
-void ble_host_hci_unlock(void);
 
 /**
  *   @brief BLE Host HCI send a vendor specific command.

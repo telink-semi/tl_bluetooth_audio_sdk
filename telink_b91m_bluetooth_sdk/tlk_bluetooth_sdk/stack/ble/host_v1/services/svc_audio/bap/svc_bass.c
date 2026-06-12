@@ -56,28 +56,28 @@ static const uint16_t bassRecvStateLen = 0;
  * @brief the structure for default BASS service List.
  */
 static const struct atts_attribute bassList[] = {
-    ATTS_PRIMARY_SERVICE(serviceBroadcastAudioScanUuid),
+    ATTS_PRIMARY_SERVICE(serviceBroadcastAudioScanAttUuid),
 
     //Broadcast Audio Scan Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteWriteWithout, characteristicBasControlPointUuid),
+    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteWriteWithout, characteristicBasControlPointAttUuid),
 
 #if LEA_BASS_RECV_STATE_CNT > 0
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicBroadcastReceiveStateUuid, bassRecvState),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicBroadcastReceiveStateAttUuid, bassRecvState),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LEA_BASS_RECV_STATE_CNT > 1
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicBroadcastReceiveStateUuid, bassRecvState),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicBroadcastReceiveStateAttUuid, bassRecvState),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LEA_BASS_RECV_STATE_CNT > 2
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicBroadcastReceiveStateUuid, bassRecvState),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicBroadcastReceiveStateAttUuid, bassRecvState),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LEA_BASS_RECV_STATE_CNT > 3
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicBroadcastReceiveStateUuid, bassRecvState),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicBroadcastReceiveStateAttUuid, bassRecvState),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 };

@@ -26,11 +26,11 @@
  *
  *******************************************************************************************************/
 
-#define HID_INPUT_REPORT_NUM            1
-#define HID_OUTPUT_REPORT_NUM           0
-#define HID_FEATURE_REPORT_NUM          0
+#define HID_INPUT_REPORT_NUM   1
+#define HID_OUTPUT_REPORT_NUM  0
+#define HID_FEATURE_REPORT_NUM 0
 
-#define HID_INPUT_REPORT_1_ID           BLE_HOST_HID_REPORT_ID_MOUSE_INPUT
+#define HID_INPUT_REPORT_1_ID  BLE_HOST_HID_REPORT_ID_MOUSE_INPUT
 
 // extern const unsigned char tlk_hid_mouse_report_map[];
 // extern const unsigned short tlk_hid_mouse_report_map_len;

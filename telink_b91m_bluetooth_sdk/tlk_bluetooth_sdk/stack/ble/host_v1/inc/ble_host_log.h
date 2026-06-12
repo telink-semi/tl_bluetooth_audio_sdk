@@ -27,7 +27,6 @@
  *******************************************************************************************************/
 
 
-
 extern const uint8_t g_ble_host_acl_device_manager_log_enable;
 extern const uint8_t g_ble_host_controller_info_log_enable;
 

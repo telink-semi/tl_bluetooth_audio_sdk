@@ -39,17 +39,17 @@ typedef void (*CpltCallback)(unsigned int *param);
   */
 typedef struct
 {
-    unsigned int baudrate;       //This member configures the baud rate for UART communication.
+    unsigned int baudrate; //This member configures the baud rate for UART communication.
 
-    unsigned int tx_Pin;         //
+    unsigned int tx_Pin; //
 
-    unsigned int rx_Pin;         //
+    unsigned int rx_Pin; //
 
-    unsigned int HwFlowCtl;      //Specifies whether the hardware flow control mode is enabled or disabled
+    unsigned int HwFlowCtl; //Specifies whether the hardware flow control mode is enabled or disabled
 
-    unsigned int cts_Pin;        //uart_parity_e
+    unsigned int cts_Pin; //uart_parity_e
 
-    unsigned int rts_Pin;        //uart_parity_e
+    unsigned int rts_Pin; //uart_parity_e
 
     CpltCallback RxCpltCallback; // UART Tx Complete Callback
     CpltCallback TxCpltCallback; // UART Rx Complete Callback

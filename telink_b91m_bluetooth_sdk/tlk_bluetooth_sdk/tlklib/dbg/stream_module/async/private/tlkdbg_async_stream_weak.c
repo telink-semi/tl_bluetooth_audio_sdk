@@ -54,3 +54,8 @@ __attribute__((weak)) void tlkdbg_async_stream_write(uint8_t type, void *pData, 
  * @return      none.
  */
 __attribute__((weak)) void tlkdbg_async_stream_handler(void) {}
+
+__attribute__((weak)) bool tlkdbg_async_stream_is_busy(void)
+{
+    return false;
+}

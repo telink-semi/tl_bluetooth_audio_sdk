@@ -40,6 +40,22 @@ void tlkmw_user_ctrl_wakeUpThread(void)
     tlksys_task_setEvt(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_USER_CTRL);
 }
 
+static sTlkMwUsrCtrlTaskNode_t sTlkMwUsrCtrlTaskList[TLKMW_USER_CTRL_CHN_MAX_NUM];
+
+/**
+ * @brief      Initialize the task list
+ * @param[in]  none
+ * @param[out] none
+ * @return     none
+ */
+void tlkmw_initTaskList()
+{
+    for (int i = 0; i < TLKMW_USER_CTRL_CHN_MAX_NUM; i++) {
+        sTlkMwUsrCtrlTaskList[i].taskID      = 0;
+        sTlkMwUsrCtrlTaskList[i].pBufferHead = NULL;
+    }
+}
+
 /**
  * @brief      Initialize the user control module
  * @param[in]  none
@@ -48,9 +64,12 @@ void tlkmw_user_ctrl_wakeUpThread(void)
  */
 void tlkmw_user_ctrl_init()
 {
+    tlkmw_initTaskList();
+#if (TLK_MW_OTA_ENABLE)
     tlkmw_ota_common_init();
     tlksys_pm_regChn(TLKSYS_PM_CHN_OTA);
     tlksys_pm_setChn(TLKSYS_PM_CHN_OTA, 0, 0);
+#endif
 }
 
 /**
@@ -75,22 +94,6 @@ void tlkmw_userctrl_mutex_unlock(void)
     tlksys_mutex_unlock(TLKSYS_MUTEX_USERCTRL);
 }
 
-static sTlkMwUsrCtrlTaskNode_t sTlkMwUsrCtrlTaskList[TLKMW_USER_CTRL_CHN_MAX_NUM];
-
-/**
- * @brief      Initialize the task list
- * @param[in]  none
- * @param[out] none
- * @return     none
- */
-void tlkmw_initTaskList()
-{
-    for (int i = 0; i < TLKMW_USER_CTRL_CHN_MAX_NUM; i++) {
-        sTlkMwUsrCtrlTaskList[i].taskID      = 0;
-        sTlkMwUsrCtrlTaskList[i].pBufferHead = NULL;
-    }
-}
-
 /**
  * @brief      Print the task list for debugging
  * @param[in]  none
@@ -102,11 +105,11 @@ void tlkmw_user_ctrl_print_task_list()
     for (uint8_t i = 0; i < TLKMW_USER_CTRL_CHN_MAX_NUM; i++) {
         sTlkMwUsrCtrlTaskNode_t *pTask = &sTlkMwUsrCtrlTaskList[i];
 
-        tlk_printf("taskID[%x] pBufferHead[%x]", pTask->taskID, pTask->pBufferHead);
+        // tlk_printf("taskID[%x] pBufferHead[%x]", pTask->taskID, pTask->pBufferHead);
 
         sTlkMwUsrCtrlBufferNode_t *pCurrent = pTask->pBufferHead;
-        while (pCurrent != NULL) {
-            tlk_printf("type[%x] pBuffer[%x] buffer_size[%d]", pCurrent->type, pCurrent->pBuffer, pCurrent->buffer_size);
+        while (pCurrent != NULL && pCurrent->pBuffer != NULL) {
+            // tlk_printf("type[%x] pBuffer[%x] buffer_size[%d]", pCurrent->type, pCurrent->pBuffer, pCurrent->buffer_size);
             tlkapi_array(0xffffffff, "[OTA]", "OTA data", pCurrent->pBuffer, pCurrent->buffer_size);
             pCurrent = pCurrent->pNext;
         }
@@ -127,6 +130,28 @@ sTlkMwUsrCtrlTaskNode_t *tlkmw_findTaskNode(uint32_t taskID)
         }
     }
     return NULL;
+}
+
+/**
+ * @brief      Find last task node by task ID
+ * @param[in]  taskID - task identifier
+ * @param[out] none
+ * @return     sTlkMwUsrCtrlTaskNode_t* - pointer to the task node, or NULL if not found
+ */
+sTlkMwUsrCtrlBufferNode_t *tlkmw_findLastBufferNode(uint32_t taskID)
+{
+    sTlkMwUsrCtrlTaskNode_t *pTask = tlkmw_findTaskNode(taskID);
+    if (pTask == NULL || pTask->pBufferHead == NULL) {
+        return NULL;
+    }
+
+    sTlkMwUsrCtrlBufferNode_t *pLastNode = pTask->pBufferHead;
+
+    while (pLastNode->pNext != NULL) {
+        pLastNode = pLastNode->pNext;
+    }
+
+    return pLastNode;
 }
 
 /**
@@ -174,14 +199,16 @@ sTlkMwUsrCtrlTaskNode_t *tlkmw_createTaskNode(uint32_t taskID)
 /**
  * @brief      Push data to a task
  * @param[in]  taskID  - task identifier
+ * @param[in]  designate_chn -  designated channel
  * @param[in]  pData   - pointer to data buffer
  * @param[in]  dataLen - length of data
- * @param[out] none
  * @return     int - TLK_ENONE if success, error code otherwise
+ * @note       This function is used to push ota data to ota module.
+ * 			   If designate_chn is 0, means use the channel parsed from data,otherwise, use the designated channel.
  */
-int tlkmw_userctrl_pushDataToTask(uint32_t taskID, uint8_t *pData, uint16_t dataLen)
+int tlkmw_userctrl_pushDataToTask(uint32_t taskID, uint8_t designate_chn, uint8_t *pData, uint16_t dataLen)
 {
-    if (pData == NULL || dataLen < 5) {
+    if (pData == NULL || dataLen == 0) {
         return -TLK_EPARAM;
     }
 
@@ -189,6 +216,32 @@ int tlkmw_userctrl_pushDataToTask(uint32_t taskID, uint8_t *pData, uint16_t data
     uint16_t offset = 0;
 
     tlkmw_userctrl_mutex_lock();
+
+    sTlkMwUsrCtrlBufferNode_t *pLastBuffer = tlkmw_findLastBufferNode(taskID);
+
+    if (pLastBuffer != NULL && pLastBuffer->remain_size > 0) {
+        sTlkMwUsrCtrlBufferNode_t *pPrevBuffer = pLastBuffer->pPrev;
+        if (pLastBuffer->pBuffer == NULL || dataLen < pLastBuffer->remain_size) {
+            OTA_PRINTF("Pack last frame fail, free data.");
+            if (pLastBuffer->pBuffer != NULL) {
+                tlkos_free(pLastBuffer->pBuffer);
+                pLastBuffer->pBuffer = NULL;
+            }
+            tlkos_free(pLastBuffer);
+            if (pPrevBuffer != NULL) {
+                pPrevBuffer->pNext = NULL;
+            }
+            tlkmw_userctrl_mutex_unlock();
+            return -TLK_EPARAM;
+        } else {
+            // OTA_PRINTF("Pack last frame. remainSize[%d], dataLen[%d]", pLastBuffer->remain_size, dataLen);
+            uint8_t *pTemp = pLastBuffer->pBuffer + (pLastBuffer->buffer_size - pLastBuffer->remain_size);
+            memcpy(pTemp, pData + offset, pLastBuffer->remain_size);
+            pData += pLastBuffer->remain_size;
+            dataLen -= pLastBuffer->remain_size;
+            pLastBuffer->remain_size = 0;
+        }
+    }
 
     while (offset < dataLen && (dataLen - offset) >= 5) {
         uint8_t  type     = pData[offset];
@@ -204,41 +257,52 @@ int tlkmw_userctrl_pushDataToTask(uint32_t taskID, uint8_t *pData, uint16_t data
         if (pTask == NULL) {
             pTask = tlkmw_createTaskNode(taskID);
             if (pTask == NULL) {
-                return -TLK_ENOITEM;
+                ret = -TLK_ENOITEM;
+                break;
             }
             pTask->taskID = taskID;
         }
 
         sTlkMwUsrCtrlBufferNode_t *pBufferNode = NULL;
 
-        pBufferNode = (sTlkMwUsrCtrlBufferNode_t *)tlkos_malloc(sizeof(sTlkMwUsrCtrlBufferNode_t));
+        pBufferNode = (sTlkMwUsrCtrlBufferNode_t *)tlkos_calloc(sizeof(sTlkMwUsrCtrlBufferNode_t));
         if (pBufferNode == NULL) {
             ret = -TLK_EFAIL;
             break;
         }
 
-        memset(pBufferNode, 0, sizeof(sTlkMwUsrCtrlBufferNode_t));
-        pBufferNode->type    = type;
-        pBufferNode->channel = channel;
-
-        pBufferNode->pBuffer = (uint8_t *)tlkos_malloc(parseLen - 1);
+        pBufferNode->type = type;
+        if (designate_chn != TLKMW_OTA_TRANS_CHN_NONE && designate_chn != channel) {
+            pBufferNode->channel = designate_chn; //replace channel to the designated channel
+        } else {
+            pBufferNode->channel = channel;
+        }
+        pBufferNode->pNext   = NULL;
+        pBufferNode->pBuffer = (uint8_t *)tlkos_calloc(parseLen);
         if (pBufferNode->pBuffer == NULL) {
             tlkos_free(pBufferNode);
             ret = -TLK_EFAIL;
             break;
         }
 
-        memcpy(pBufferNode->pBuffer, pData + offset + 1, parseLen - 1);
-        pBufferNode->buffer_size = parseLen - 1;
+        if ((dataLen - offset) >= parseLen) {
+            memcpy(pBufferNode->pBuffer, pData + offset, parseLen);
+        } else {
+            memcpy(pBufferNode->pBuffer, pData + offset, dataLen - offset);
+            pBufferNode->remain_size = parseLen - (dataLen - offset);
+        }
+        pBufferNode->buffer_size = parseLen;
 
         if (pTask->pBufferHead == NULL) {
-            pTask->pBufferHead = pBufferNode;
+            pTask->pBufferHead        = pBufferNode;
+            pTask->pBufferHead->pPrev = NULL;
         } else {
             sTlkMwUsrCtrlBufferNode_t *current = pTask->pBufferHead;
             while (current->pNext != NULL) {
                 current = current->pNext;
             }
-            current->pNext = pBufferNode;
+            current->pNext     = pBufferNode;
+            pBufferNode->pPrev = current;
         }
 
         offset += parseLen;
@@ -271,6 +335,7 @@ int tlkmw_userctrl_pushOtaDataToTask(uint32_t taskID, uint8_t channel, uint8_t *
     if (pTask == NULL) {
         pTask = tlkmw_createTaskNode(taskID);
         if (pTask == NULL) {
+            tlkmw_userctrl_mutex_lock();
             return -TLK_ENOITEM;
         }
         pTask->taskID = taskID;
@@ -278,19 +343,20 @@ int tlkmw_userctrl_pushOtaDataToTask(uint32_t taskID, uint8_t channel, uint8_t *
 
     sTlkMwUsrCtrlBufferNode_t *pBufferNode = NULL;
 
-    pBufferNode = (sTlkMwUsrCtrlBufferNode_t *)tlkos_malloc(sizeof(sTlkMwUsrCtrlBufferNode_t));
+    pBufferNode = (sTlkMwUsrCtrlBufferNode_t *)tlkos_calloc(sizeof(sTlkMwUsrCtrlBufferNode_t));
     if (pBufferNode == NULL) {
+        tlkmw_userctrl_mutex_lock();
         return -TLK_EFAIL;
     }
 
-    tmemset(pBufferNode, 0, sizeof(sTlkMwUsrCtrlBufferNode_t));
     pBufferNode->type    = TLKMW_USER_CTRL_MODE_OTA;
     pBufferNode->channel = channel;
 
     /*need push channel at first byte.*/
-    pBufferNode->pBuffer = (uint8_t *)tlkos_malloc(dataLen + 1);
+    pBufferNode->pBuffer = (uint8_t *)tlkos_calloc(dataLen + 1);
     if (pBufferNode->pBuffer == NULL) {
         tlkos_free(pBufferNode);
+        tlkmw_userctrl_mutex_lock();
         return -TLK_EFAIL;
     }
 
@@ -331,8 +397,13 @@ int tlkmw_removeTaskNode(uint32_t taskID)
                 if (current->pBuffer != NULL) {
                     tlkos_free(current->pBuffer);
                 }
+                current->pNext = NULL;
+                current->pPrev = NULL;
                 tlkos_free(current);
                 current = next;
+                if (current != NULL) {
+                    current->pPrev = NULL;
+                }
             }
 
             sTlkMwUsrCtrlTaskList[i].taskID      = 0;
@@ -341,6 +412,28 @@ int tlkmw_removeTaskNode(uint32_t taskID)
         }
     }
     return -TLK_ENOITEM;
+}
+
+__attribute__((weak)) void tlkmw_user_recv_audio_data(uint32_t taskID, uint8_t channel, uint8_t *pData, uint16_t dataLen)
+{
+    (void)taskID;
+    (void)channel;
+    (void)pData;
+    (void)dataLen;
+
+    if (dataLen < 6) {
+        tlk_printf("tlkmw_user_recv_audio_data length error");
+    }
+
+    //Temp.
+    uint8_t opcode = pData[3];
+    uint8_t enable = pData[6];
+
+    if (opcode == 0x01) {
+        tlk_printf("ANC status[%d]", enable);
+    } else if (opcode == 0x02) {
+        tlk_printf("Adaptive ANC status[%d]", enable);
+    }
 }
 
 /**
@@ -363,11 +456,21 @@ void tlkmw_user_ctrl_common_handler()
             sTlkMwUsrCtrlBufferNode_t *pCurrent = pTask->pBufferHead;
             if (pCurrent->pBuffer == NULL) {
                 pTask->pBufferHead = pCurrent->pNext;
+                if (pTask->pBufferHead != NULL) {
+                    pTask->pBufferHead->pPrev = NULL;
+                }
+                pCurrent->pNext = NULL;
+                pCurrent->pPrev = NULL;
                 tlkos_free(pCurrent);
                 continue;
             }
 
+            if (pCurrent->remain_size > 0) {
+                break;
+            }
+
             if (pCurrent->type == TLKMW_USER_CTRL_MODE_OTA) {
+#if (TLK_MW_OTA_ENABLE)
                 /*OTA processing*/
                 uint32_t ota_busy_taskid = tlkmw_ota_common_get_busy_taskid();
                 if (ota_busy_taskid == 0 || ota_busy_taskid == pTask->taskID) {
@@ -376,18 +479,27 @@ void tlkmw_user_ctrl_common_handler()
                 } else {
                     tlk_printf("recv new ota data, but ota is busy, drop it. new task[%x], busy task[%x]", pTask->taskID, ota_busy_taskid);
                 }
+#endif
+            } else if (pCurrent->type == TLKMW_USER_CTRL_MODE_AUDIO) {
+                tlkmw_user_recv_audio_data(pTask->taskID, pCurrent->channel, pCurrent->pBuffer, pCurrent->buffer_size);
             } else {
                 tlk_printf("recv other data typs:[%d]", pCurrent->type);
                 /*Other processing*/
             }
 
             pTask->pBufferHead = pCurrent->pNext;
+            if (pTask->pBufferHead != NULL) {
+                pTask->pBufferHead->pPrev = NULL;
+            }
             tlkos_free(pCurrent->pBuffer);
+            pCurrent->pNext = NULL;
+            pCurrent->pPrev = NULL;
             tlkos_free(pCurrent);
         }
 
-        /*All data buffer is deal done, so clean task node*/
-        tlkmw_removeTaskNode(pTask->taskID);
+        if (pTask->pBufferHead == NULL) {
+            pTask->taskID = 0;
+        }
     }
 
     tlkmw_userctrl_mutex_unlock();
@@ -396,16 +508,19 @@ void tlkmw_user_ctrl_common_handler()
 #else
 
 /**
- * @brief      Push data to a task (unsupported implementation)
+ * @brief      Push data to a task
  * @param[in]  taskID  - task identifier
+ * @param[in]  designate_chn -  designated channel
  * @param[in]  pData   - pointer to data buffer
  * @param[in]  dataLen - length of data
- * @param[out] none
- * @return     int - TLK_ENOSUPPORT error code
+ * @return     int - TLK_ENONE if success, error code otherwise
+ * @note       This function is used to push ota data to ota module.
+ * 			   If designate_chn is 0, means use the channel parsed from data,otherwise, use the designated channel.
  */
-int tlkmw_userctrl_pushDataToTask(uint32_t taskID, uint8_t *pData, uint16_t dataLen)
+int tlkmw_userctrl_pushDataToTask(uint32_t taskID, uint8_t designate_chn, uint8_t *pData, uint16_t dataLen)
 {
     (void)taskID;
+    (void)designate_chn;
     (void)pData;
     (void)dataLen;
 

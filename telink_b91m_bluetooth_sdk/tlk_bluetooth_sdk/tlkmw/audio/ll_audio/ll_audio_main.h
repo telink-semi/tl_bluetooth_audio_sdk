@@ -27,12 +27,12 @@
 #if (TLKSTK_BT_TPS_ENABLE)
 
 
-#include "stack/tpsll/tph/tph_host_interface.h"
+#include "stack/tpsll/controller/tph/tph_host_interface.h"
 
 #define APP_AUDIO_LOG_EN         (1)
 #define EQ_SAMPLES_STEP          40
 #define SAMPLES                  480
-#define PCM_MIX_SAMPLES          (SAMPLES * 3 + 20)
+#define PCM_MIX_SAMPLES          (SAMPLES * 3 + 240)
 #define LL_10MS_SAMPLES          480
 #define LL_10MS_MIC_LC3_DATA_LEN (30)
 
@@ -59,6 +59,8 @@
 #define TPSLL_LATENCY_NORMAL               0
 #define TPSLL_LATENCY_PKTLOSS              1
 
+#define MIC_BUF_CAP                        (160 * 2 + 32) // 352
+
 extern uint8_t *g_ll_audio_dec_buf_ptr;
 extern int16_t  g_ll_voice_mode;
 
@@ -66,28 +68,13 @@ extern int16_t  g_ll_voice_mode;
 
 typedef struct async_audio_context
 {
-    uint8_t  tone_st;
-    uint16_t vol;
     uint32_t pkt_audio;
     uint8_t  audio_mute;
     uint8_t  plc_num;
 
     uint8_t audio_per;
-    uint8_t sync;
-    uint8_t dev_mode_peer;
-    uint8_t peer_bt_mode;
-    uint8_t dev_bt_mode_last;
-
-    uint8_t pkt_wptr;
     uint8_t pkt_rptr;
-    uint8_t pkt_len;
-
     uint8_t wptr;
-    uint8_t wptr_last;
-    int8_t  rptr;
-
-    uint8_t  format;
-    uint16_t ll_rcvd;
 
     uint32_t tick0;
     uint32_t tick_stimer_trigger;
@@ -101,31 +88,28 @@ typedef struct async_audio_context
     uint16_t pcm_buf_mix_samples;
 
     /* mix mode */
-    uint8_t  rx_pkt;
-    uint32_t mix_tick;
-    uint8_t  mix_wptr;
-    uint8_t  mix_rptr;
-    uint8_t  mix_decoded_rptr;
-    uint8_t  rx_packet_id;
-    uint8_t  sco_num_in_bt;
-    uint8_t  stimer_ll_mix_cnt;
-    uint8_t  next_tpsll_rptr;
-    uint8_t  stimer_ref_wptr;
-    uint8_t  next_tpsll_rptr_and_flag;
-    uint8_t  tpsll_pkt_cnt;
-    uint32_t stimer_irq_tick;
-    uint8_t  bt_page_state;
-    uint8_t  bt_acl_connecting;
+    uint8_t           is_mix_mode;
+    uint32_t          mix_tick;
+    uint8_t           mix_wptr;
+    uint8_t           mix_rptr;
+    uint8_t           mix_decoded_rptr;
+    uint8_t           rx_packet_id;
+    uint8_t           sco_num_in_bt;
+    uint8_t           stimer_ref_wptr;
+    uint8_t           next_tpsll_rptr_and_flag;
+    volatile uint32_t stimer_irq_tick;
+    uint8_t           bt_page_state;
+    uint8_t           tpsll_uplink_enc_pkt_sent_cnt;
+    uint8_t           tpsll_mix_dec_num;
 
+    volatile uint8_t tpsll_mix_dec_loop_ongoing;
+    volatile uint8_t tpsll_5ms_dec_times;
     volatile uint8_t tpsll_dec_is_ongoing;
     volatile uint8_t tpsll_dec_update_mix_buf_is_ongoing;
+    volatile uint8_t tpsll_enc_is_ongoing;
     volatile uint8_t tpsll_mix_bt_dec_cnt;
-    volatile uint8_t tpsll_data_push;
-    uint32_t         lc3_mix_dec_time;
-    uint16_t         bt_mix_reset;
-
-    uint8_t mic_data_ready;
-    uint8_t mic_state;
+    volatile uint8_t tpsll_mix_lc3_dec_cnt;
+    uint8_t          mic_state;
 } __attribute__((aligned(4))) async_audio_context_t;
 
 extern async_audio_context_t async_audio_ctx;
@@ -141,6 +125,14 @@ extern tpsll_ultra_ll_context_t g_tpsll_ultra_ll_ctx;
 
 enum
 {
+    LL_BT_MUSIC_MIX_DEC_S1_START = 0x1,
+    LL_BT_MUSIC_MIX_DEC_S1_END   = 0x2,
+    LL_BT_MUSIC_MIX_DEC_S2_START = 0x3,
+    LL_BT_MUSIC_MIX_DEC_S2_END   = 0x4,
+};
+
+enum
+{
     AYNC_FORMAT_1M       = 0x28,
     AYNC_FORMAT_1M25     = 0x29,
     AYNC_FORMAT_MIC_TEST = 0x2b,
@@ -151,7 +143,7 @@ enum
     ASYNC_AUDIO_LC3A_FRMAE = 90,
     ASYNC_AUDIO_DATA_LEN   = ASYNC_AUDIO_LC3A_FRMAE,
 
-    ASYNC_AUDIO_LC3A_ULTRA_LL_FRMAE = 50,
+    ASYNC_AUDIO_LC3A_ULTRA_LL_FRMAE = 45,
     ASYNC_AUDIO_ULTRA_LL_DATA_LEN   = ASYNC_AUDIO_LC3A_ULTRA_LL_FRMAE,
 
     // TPH_RF_PACKET_DONGLE_MAX_MSG_PDU_LENGTH(90) + 12
@@ -221,7 +213,7 @@ void ll_audio_main(void);
  * @param[in] idx - Mic ID.
  * @return none
  */
-void ll_audio_mic_data_process_task_mcu(uint8_t idx);
+uint8_t ll_audio_mic_data_process_task_mcu(uint8_t idx);
 
 /**
  * @brief Check mic samples in FIFO and reset MIC samples if they are not within the threshold.
@@ -423,6 +415,12 @@ uint32_t ll_audio_get_frame_length(void);
  */
 uint16_t ll_audio_get_enc_frame_length(void);
 
+/**
+ * @brief Get headset encoder frame length.
+ * @param[in] none
+ * @return Encoder frame length.
+ */
+uint16_t ll_audio_get_headset_enc_frame_length(void);
 /**
  * @brief Get samples length for low latency audio.
  * @param[in] none

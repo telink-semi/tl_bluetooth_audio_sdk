@@ -32,8 +32,8 @@
 
 #if (TLK_CFG_TPSLL_HCI_ENABLE)
 
-    #define TPSLL_HCICMD_DBG_FLAG 0xFFFFFFFF
-    #define TPSLL_HCICMD_DBG_SIGN "[tpsll_cmd]"
+#define TPSLL_HCICMD_DBG_FLAG 0xFFFFFFFF
+#define TPSLL_HCICMD_DBG_SIGN "[tpsll_cmd]"
 
 extern int tlktpsll_hci_sendH2cCmd(uint16_t opcode, uint8_t *pData, uint16_t dataLen);
 
@@ -493,7 +493,7 @@ int tpsll_hci_sendHeadsetConnectSetupCmd(uint8_t mode, uint32_t timeout)
     tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_sendHeadsetConnectSetupCmd: %d %d", mode, timeout);
     uint8_t buffLen = 0;
     uint8_t buffer[8];
-    buffer[buffLen++] = mode;  
+    buffer[buffLen++] = mode;
     buffer[buffLen++] = (timeout & 0x000000FF);
     buffer[buffLen++] = (timeout & 0x0000FF00) >> 8;
     buffer[buffLen++] = (timeout & 0x00FF0000) >> 16;
@@ -526,12 +526,12 @@ int tpsll_hci_sendHeadsetCurIsLeftCmd(void)
  *******************************************************************************/
 int tpsll_hci_sendWriteHeadsetPduMsgCmd(uint8_t msgType, uint8_t *pData, uint8_t dataLen, void (*cb)(uint8_t, uint8_t, uint8_t))
 {
-    uint8_t buffLen;
-    uint8_t buffer[16];
+    uint8_t  buffLen;
+    uint8_t  buffer[256];
     uint32_t callback;
 
     buffLen = 0;
-    tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_sendWriteHeadsetPduMsgCmd:");
+    // tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_sendWriteHeadsetPduMsgCmd:");
 
     buffer[buffLen++] = msgType;
     buffer[buffLen++] = dataLen;
@@ -587,7 +587,7 @@ int tpsll_hci_sendReadProfileSyncInfoCmd(void)
 int tpsll_hci_sendLmpDataCmd(uint8_t dstID, uint8_t msgID, uint8_t cmd, uint8_t *pData, uint8_t dataLen)
 {
     // tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_sendLmpDataCmd:");
-   
+
     uint8_t buffer[32];
     uint8_t buffLen = 0;
 
@@ -609,7 +609,7 @@ int tpsll_hci_sendLmpDataCmd(uint8_t dstID, uint8_t msgID, uint8_t cmd, uint8_t 
 int tpsll_hci_sendAclDataCmd(uint8_t dstID, uint8_t msgID, uint8_t cmd, uint8_t *pData, uint8_t dataLen)
 {
     tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_sendAclDataCmd:");
-   
+
     uint8_t buffer[64];
     uint8_t buffLen = 0;
 
@@ -631,7 +631,7 @@ int tpsll_hci_sendAclDataCmd(uint8_t dstID, uint8_t msgID, uint8_t cmd, uint8_t 
 int tpsll_hci_sendReadTwsLinkInfoCmd(uint8_t linkType, uint16_t aclHandle)
 {
     tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_sendReadTwsLinkInfoCmd:");
-   
+
     uint8_t buffer[8];
     uint8_t buffLen = 0;
 
@@ -650,7 +650,7 @@ int tpsll_hci_sendReadTwsLinkInfoCmd(uint8_t linkType, uint16_t aclHandle)
 int tpsll_hci_sendStartHandoverCmd()
 {
     tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_sendStartHandoverCmd:");
-   
+
     return tlktpsll_hci_sendH2cCmd(TPSLL_HCI_TWS_START_HANDOVER_OPCODE, NULL, 0);
 }
 
@@ -663,7 +663,7 @@ int tpsll_hci_sendStartHandoverCmd()
 int tpsll_hci_sendStartHandoverRequestCmd()
 {
     tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_sendStartHandoverRequestCmd:");
-   
+
     return tlktpsll_hci_sendH2cCmd(TPSLL_HCI_TWS_START_HANDOVER_REQ_OPCODE, NULL, 0);
 }
 
@@ -693,7 +693,7 @@ int tpsll_hci_sendWriteTwsHandoverInfoCmd(uint8_t *pData, uint16_t dataLen)
 int tpsll_hci_sendRequestSyncHostTimerCmd(uint8_t type, uint16_t magicWord)
 {
     const uint16_t len = sizeof(type) + sizeof(magicWord);
-    uint8_t buffer[len];
+    uint8_t        buffer[len];
     buffer[0] = type;
     buffer[1] = (magicWord & 0x00FF);
     buffer[2] = (magicWord & 0xFF00) >> 8;
@@ -702,7 +702,7 @@ int tpsll_hci_sendRequestSyncHostTimerCmd(uint8_t type, uint16_t magicWord)
 
 int tpsll_hci_startTpsllTaskCmd(uint8_t isLeft, void *futureUse)
 {
-    (void) futureUse;
+    (void)futureUse;
     return tlktpsll_hci_sendH2cCmd(TPSLL_HCI_START_TPSLL_TASK, &isLeft, 1);
 }
 
@@ -717,9 +717,26 @@ int tpsll_hci_startTpsllTaskCmd(uint8_t isLeft, void *futureUse)
 int tpsll_hci_setPower_Control(uint8_t obj, uint8_t pwr_opcode)
 {
     uint8_t buffer[8];
-    uint8_t buffLen = 0;
+    uint8_t buffLen   = 0;
     buffer[buffLen++] = obj;
     buffer[buffLen++] = pwr_opcode;
+    return tlktpsll_hci_sendH2cCmd(TPSLL_HCI_TX_POWER_CONTROL_OPCODE, buffer, buffLen);
+}
+
+/******************************************************************************
+ * Function: tpsll_hci_setPower_index
+ * Descript: use to control local tx power or remote device power.
+ * Params:
+ *       @pwr_opcode[IN]--power index , set power level index from host, match enum "rf_power_level_index_e"
+ * Return: TLK_ENONE is success, other value is failure.
+ *******************************************************************************/
+int tpsll_hci_setPower_Index(uint8_t power_index)
+{
+    uint8_t buffer[8];
+    uint8_t buffLen   = 0;
+    buffer[buffLen++] = 0x00; //TPH_HOST_LOCAL_POWER_CONTROL;
+    buffer[buffLen++] = 0x04; //TPH_HOST_SET_POWER_INDEX;
+    buffer[buffLen++] = power_index;
     return tlktpsll_hci_sendH2cCmd(TPSLL_HCI_TX_POWER_CONTROL_OPCODE, buffer, buffLen);
 }
 
@@ -747,11 +764,18 @@ int tpsll_hci_send_start_dongle_sco_setup(uint8_t audio_mode)
     return tlktpsll_hci_sendH2cCmd(TPSLL_HCI_DONGLE_SCO_SETUP, buffer, buffLen);
 }
 
-int tpsll_hci_send_exit_dongle_sco()
+int tpsll_hci_send_exit_dongle_sco(void)
 {
-
     tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_send_exit_dongle_sco");
 
     return tlktpsll_hci_sendH2cCmd(TPSLL_HCI_DONGLE_EXIT_SCO_SETUP, NULL, 0);
 }
+
+int tpsll_hci_set_dongle_ota_status(uint8_t is_ota_running)
+{
+    tlkapi_trace(TPSLL_HCICMD_DBG_FLAG, TPSLL_HCICMD_DBG_SIGN, "tpsll_hci_set_dongle_ota_status");
+
+    return tlktpsll_hci_sendH2cCmd(TPSLL_HCI_DONGLE_SET_OTA_STATUS, &is_ota_running, 1);
+}
+
 #endif

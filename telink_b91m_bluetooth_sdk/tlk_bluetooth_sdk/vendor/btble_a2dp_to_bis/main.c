@@ -33,16 +33,11 @@
  * @note        This function provides platform-specific configuration including
  *              GPIO settings and clock levels
  */
-const tlksys_hal_platform_init_cfg_t * tlksys_hal_port_getPlatformInitCfg(void)
+const tlksys_hal_platform_init_cfg_t *tlksys_hal_port_getPlatformInitCfg(void)
 {
-
     static const tlksys_hal_platform_init_cfg_t cfg = {
-        .gpioCfg = TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN,
+        .gpioCfg    = TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN,
         .clockLevel = TLK_CFG_AUDIO_CLOCK_LEVEL,
-
-        #if (TLK_CFG_FLASH_PROT_ENABLE)
-        .flashProtectEn = 1,
-        #endif
     };
     return &cfg;
 }
@@ -60,18 +55,18 @@ int main(void)
     tlksys_start(tlkapp_create_allTasks);
     //*note: if use rtos,code will end in tlksys_start*/
 
-	#if (APP_UI_ENABLE)
-	app_ui_init();
-	#endif
+#if (APP_UI_ENABLE)
+    app_ui_init();
+#endif
 
-    while(1){
-        #if !TLK_CFG_RTOS_ENABLE
+    while (1) {
+#if !TLK_CFG_RTOS_ENABLE
         tlksys_handler();
-        #if (!MCU_DUAL_CORE_ENABLE)
-            void tlksdk_main_loop(void);
-            tlksdk_main_loop();
-        #endif
-        #endif
+#if (!MCU_DUAL_CORE_ENABLE)
+        void tlk_sys_main_loop(void);
+        tlk_sys_main_loop();
+#endif
+#endif
     }
     return 0;
 }

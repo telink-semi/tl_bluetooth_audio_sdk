@@ -25,16 +25,22 @@
 
 typedef struct
 {
-    uint8_t  isReady;
-    uint8_t  hotPlug;              //1-Enable, 0-Disable
-    uint16_t blkSize;              //Block size
+    uint8_t prevent;
+    uint8_t isReady;
+    uint8_t unitAttention;
+} tlkusb_msc_disk_var_t;
+
+typedef struct
+{
+    uint32_t blkSize;              //Block size
     uint32_t (*getBlkCount)(void); //get block count func
-    char *pVendorStr;              //VENDOR_STRING Length<=8
-    char *pProductStr;             //PRODUCT_STRING Length<=16
-    char *pVersionStr;             //VERSION_STRING Length<=4
+    const char *pVendorStr;        //VENDOR_STRING Length<=8
+    const char *pProductStr;       //PRODUCT_STRING Length<=16
+    const char *pVersionStr;       //VERSION_STRING Length<=4
     int (*Init)(void);
     int (*Read)(uint8_t *pBuff, uint32_t blkOffs, uint32_t blkNumb);
     int (*Write)(uint8_t *pData, uint32_t blkOffs, uint32_t blkNumb);
+    tlkusb_msc_disk_var_t *pVar;
 } tlkusb_msc_disk_t;
 
 /**

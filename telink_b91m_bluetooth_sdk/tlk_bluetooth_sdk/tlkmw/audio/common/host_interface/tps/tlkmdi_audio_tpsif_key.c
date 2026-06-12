@@ -53,11 +53,11 @@ static uint16_t tlkmdi_audio_tpsif_getHidMsgID(void)
 int tlkmdi_audio_tpsif_sendKey(uint16_t handle, uint8_t key)
 {
     uint8_t buffer[4];
-    uint8_t buffLen = 0;
+    uint8_t buffLen   = 0;
     buffer[buffLen++] = key;
     buffer[buffLen++] = (handle & 0x00FF);
     buffer[buffLen++] = (handle & 0xFF00) >> 8;
-    uint16_t msgID = tlkmdi_audio_tpsif_getHidMsgID();
+    uint16_t msgID    = tlkmdi_audio_tpsif_getHidMsgID();
     return tlksys_sendMsg(TLKSYS_TASKID_HOST, msgID, buffer, buffLen);
 }
 

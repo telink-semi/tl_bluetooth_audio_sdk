@@ -26,19 +26,19 @@
 
 #if (TLK_ALG_EC_ENABLE)
 
-    #include "tlkalg_ec.h"
+#include "tlkalg_ec.h"
 
 
-    #include "tlkalg/audio/aec/tlkalg_aec_ns.h"
-    #include "tlkalg/audio/agc/tlkalg_agc.h"
+#include "tlkalg/audio/aec/tlkalg_aec_ns.h"
+#include "tlkalg/audio/agc/tlkalg_agc.h"
 
 
 static SpeexPreprocessState *sTlkAlgEcNsCtrl  = NULL;
 static SpeexEchoState       *sTlkAlgEcAecCtrl = NULL;
 static void                 *sTlkAlgEcScratch = NULL;
- 
+
 static short sTlkAlgEcOutBuffer[256];
- 
+
 /**
  * @brief   Initializes the echo cancellation and noise suppression modules.
  * @param[in]   pNs     - Pointer to the noise suppression control structure.
@@ -51,7 +51,7 @@ void tlkalg_ec_init(uint8_t *pNs, uint8_t *pAec, uint8_t *pScratch)
     sTlkAlgEcAecCtrl = (SpeexEchoState *)pAec;
     sTlkAlgEcScratch = (void *)pScratch;
 
-    #if TLK_ALG_AEC_ENABLE
+#if TLK_ALG_AEC_ENABLE
     if (sTlkAlgEcAecCtrl != NULL) {
         AEC_CFG_PARAS aecParas;
         aecParas.use_pre_emp   = 1;     /* 1: enable pre-emphasis filter, 0: disable pre-emphasis filter */
@@ -61,8 +61,8 @@ void tlkalg_ec_init(uint8_t *pNs, uint8_t *pAec, uint8_t *pScratch)
         aecParas.filter_length = 120;
         tlka_aec_init(sTlkAlgEcAecCtrl, &aecParas, (void *)sTlkAlgEcScratch);
     }
-    #endif
-    #if TLK_ALG_EC_ENABLE
+#endif
+#if TLK_ALG_EC_ENABLE
     if (sTlkAlgEcNsCtrl != NULL) {
         NS_CFG_PARAS nsParas;
         nsParas.low_shelf_enable                 = 1,     //low shelf enable
@@ -80,9 +80,9 @@ void tlkalg_ec_init(uint8_t *pNs, uint8_t *pAec, uint8_t *pScratch)
             tlka_ns_set_parameter(sTlkAlgEcNsCtrl, SPEEX_PREPROCESS_SET_ECHO_STATE, sTlkAlgEcAecCtrl);
         }
     }
-    #endif
+#endif
 }
- 
+
 /**
  * @brief   Processes a frame for echo cancellation and noise suppression.
  * @param[in]   pMicData- Pointer to the microphone input data.
@@ -91,17 +91,17 @@ void tlkalg_ec_init(uint8_t *pNs, uint8_t *pAec, uint8_t *pScratch)
  */
 short *tlkalg_ec_frame(uint8_t *pMicData, uint8_t *pSpkData)
 {
-    #if TLK_ALG_AEC_ENABLE
+#if TLK_ALG_AEC_ENABLE
     if (sTlkAlgEcAecCtrl != NULL) {
         tlka_aec_process_frame(sTlkAlgEcAecCtrl, (const spx_int16_t *)pMicData, (const spx_int16_t *)pSpkData, (spx_int16_t *)sTlkAlgEcOutBuffer);
     }
-    #else
+#else
     uint16_t *mic_tp     = sTlkAlgEcOutBuffer;
     uint16_t *mic_out_tp = (unsigned short *)pMicData;
     for (int i = 0; i < 120; i++) {
         *mic_tp++ = *mic_out_tp++;
     }
-    #endif
+#endif
 
     if (sTlkAlgEcNsCtrl != NULL) {
         tlka_ns_process_frame(sTlkAlgEcNsCtrl, sTlkAlgEcOutBuffer);
@@ -109,5 +109,5 @@ short *tlkalg_ec_frame(uint8_t *pMicData, uint8_t *pSpkData)
 
     return sTlkAlgEcOutBuffer;
 }
- 
+
 #endif //#if (TLK_ALG_EC_ENABLE)

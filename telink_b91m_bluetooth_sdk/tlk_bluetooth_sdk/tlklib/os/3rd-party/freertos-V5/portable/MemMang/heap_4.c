@@ -25,7 +25,7 @@
  */
 
 #include "../../../../tlkos_config.h"
-#if TLKOS_CFG_FREERTOS_ENABLE
+#if TLKOS_CFG_FREERTOS_ENABLE && (TLKOS_CFG_OS_HEAP_ALG_SELECT == TLKOS_CFG_OS_HEAP_ALG_HEAP4)
 /*
  * A sample implementation of pvPortMalloc() and vPortFree() that combines
  * (coalescences) adjacent memory blocks as they are freed, and in so doing
@@ -113,7 +113,6 @@ PRIVILEGED_DATA static size_t xNumberOfSuccessfulFrees = 0;
 PRIVILEGED_DATA static size_t xBlockAllocatedBit = 0;
 
 /*-----------------------------------------------------------*/
-_attribute_os_core_code_ram_sec_
 void * pvPortMalloc( size_t xWantedSize )
 {
     BlockLink_t * pxBlock, * pxPreviousBlock, * pxNewBlockLink;
@@ -123,14 +122,14 @@ void * pvPortMalloc( size_t xWantedSize )
     {
         /* If this is the first call to malloc then the heap will require
          * initialisation to setup the list of free blocks. */
-        if( pxEnd == NULL )
-        {
-            prvHeapInit();
-        }
-        else
-        {
-            mtCOVERAGE_TEST_MARKER();
-        }
+        // if( pxEnd == NULL )
+        // {
+        //     prvHeapInit();
+        // }
+        // else
+        // {
+        //     mtCOVERAGE_TEST_MARKER();
+        // }//close lazy init to reduce ram_code 
 
         /* Check the requested block size is not so large that the top bit is
          * set.  The top bit of the block size member of the BlockLink_t structure
@@ -332,7 +331,6 @@ void vPortInitialiseBlocks( void )
     /* This just exists to keep the linker quiet. */
 }
 /*-----------------------------------------------------------*/
-_attribute_os_core_code_ram_sec_
 static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
 {
     BlockLink_t * pxFirstFreeBlock;
@@ -493,5 +491,16 @@ void vPortGetHeapStats( HeapStats_t * pxHeapStats )
         pxHeapStats->xMinimumEverFreeBytesRemaining = xMinimumEverFreeBytesRemaining;
     }
     taskEXIT_CRITICAL();
+}
+
+void tlkos_mem_print(void)
+{
+    
+}
+
+void tlkos_mem_init(void)
+{
+    memset(ucHeap,0,configTOTAL_HEAP_SIZE);
+    prvHeapInit();
 }
 #endif //TLKOS_CFG_FREERTOS_ENABLE

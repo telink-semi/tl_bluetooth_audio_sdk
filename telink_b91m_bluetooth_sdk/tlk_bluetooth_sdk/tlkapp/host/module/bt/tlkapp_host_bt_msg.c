@@ -77,7 +77,7 @@ int tlkapp_btmgr_sendCommEvt(uint8_t evtID, uint8_t *pData, uint8_t dataLen)
  * @param[in]   dataLen  - length of data.
  * @return      0 if success, otherwise error code.
  */
-static int tlkapp_btmgr_setHfpVolumeDeal(uint8_t *pData, uint8_t dataLen)
+__attribute__((weak)) int tlkapp_btmgr_setHfpVolumeDeal(uint8_t *pData, uint8_t dataLen)
 {
     (void)dataLen;
     uint16_t handle = ((uint16_t)pData[1] << 8) | pData[0];
@@ -97,7 +97,7 @@ static int tlkapp_btmgr_setHfpVolumeDeal(uint8_t *pData, uint8_t dataLen)
 #if TLKSTK_BTTPSLL_TWS_ENABLE
         tlkmdi_bt_tpt_volSync(handle, false, volume);
 #endif
-        return btp_hfphf_setSpkVolume(volume);
+        return btp_hfphf_setSpkVolumeByHandle(item->handle, volume);
 #endif
     }
     return TLK_ENONE;
@@ -146,15 +146,22 @@ static int tlkapp_btmgr_setScanDeal(uint8_t *pData, uint16_t dataLen)
     uint8_t mode;
     uint8_t enPageScan;
     uint8_t enInqScan;
-    if (tlkmdi_btacl_getUsedCount() >= TLKMDI_BTACL_ITEM_NUMB) {
+    if (tlkmdi_btacl_getIdleCount() == 0) {
         return TLK_ENONE;
     }
+
     if (pData == NULL || dataLen < 2) {
         return -TLK_EPARAM;
     }
 
     enInqScan  = pData[0];
     enPageScan = pData[1];
+
+    uint8_t cur_mode = tlkmdi_btGetScan_state();
+    if (cur_mode == TLKMDI_BTSCAN_MODE_BOTH_DISABLE) {
+        /*Already closed, do not open again.*/
+        return TLK_ENONE;
+    }
 
     mode = (enInqScan && enPageScan) ? TLKMDI_BTSCAN_MODE_BOTH_SCAN :
            (enInqScan)               ? TLKMDI_BTSCAN_MODE_INQUIRY_SCAN :
@@ -194,10 +201,11 @@ static void tlkapp_btmgr_recvTriggerSiriDeal(void)
 {
 #if (TLKBTP_CFG_HFPHF_ENABLE)
 #if !TLKSTK_BTTPSLL_TWS_ENABLE
-    uint16_t handle = btp_hfphf_getCurHandle();
-    if (bth_handle_searchUsedSco(handle) == NULL) {
-        tlkmdi_bthfphf_assistant(handle);
+    if (bth_handle_getUsedScoCount() != 0) {
+        return;
     }
+    uint16_t handle = tlkapp_host_bt_selectHandleToTriggerSiriHook();
+    tlkmdi_bthfphf_assistant(handle);
 #else
     tlkmdi_bt_tpt_triggerSiri();
 #endif
@@ -915,7 +923,7 @@ static void tlkapp_btmgr_recvClosePairCmdDeal(uint8_t *pData, uint8_t dataLen)
  * @param[in]   dataLen  - length of data.
  * @return      0 if success, otherwise error code.
  */
-static int tlkapp_btmgr_recvHfsendAcceptDeal(uint8_t *pData, uint16_t dataLen)
+__attribute__((weak)) int tlkapp_btmgr_recvHfsendAcceptDeal(uint8_t *pData, uint16_t dataLen)
 {
     (void)pData;
     (void)dataLen;
@@ -929,7 +937,6 @@ static int tlkapp_btmgr_recvHfsendAcceptDeal(uint8_t *pData, uint16_t dataLen)
     if (pItem == NULL) {
         return -TLK_ENOITEM;
     }
-    tlk_printf("----test222----pItem->status = %d pItem.setup_status= %d", pItem->status, pItem->setup_status);
 #if TLK_BT_MULTIPNT_ENABLE
     uint8_t gBtpHfpNumber = btp_hfp_getsBtpHfpNumber();
     if (pItem->status == BTP_HFP_CALL_STATUS_NONE && pItem->setup_status == BTP_HFP_CALL_DIR_NONE) {
@@ -941,9 +948,7 @@ static int tlkapp_btmgr_recvHfsendAcceptDeal(uint8_t *pData, uint16_t dataLen)
                 break;
             }
         }
-        tlk_printf("------tlkapp_btmgr_recvHfsendAcceptDeal test handle3= %x", handle);
     }
-    tlk_printf("----test----pItem->status = %d pItem.setup_status= %d", pItem->status, pItem->setup_status);
 
 #endif //TLK_BT_MULTIPNT_ENABLE
 

@@ -29,10 +29,10 @@
 
 typedef struct
 {
-    int (*Init)(void);                                               // Init
-    void (*Reset)(void);                                             // Reset
-    void (*Deinit)(void);                                            // Deinit
-    void (*Handler)(void);                                           // Handler
+    int (*Init)(void);                                                // Init
+    void (*Reset)(void);                                              // Reset
+    void (*Deinit)(void);                                             // Deinit
+    void (*Handler)(void);                                            // Handler
     int (*GetClassInf)(tlkusb_setup_req_t *pSetup, uint8_t infNumb);  // GetClassInf
     int (*SetClassInf)(tlkusb_setup_req_t *pSetup, uint8_t infNumb);  // SetClassInf
     int (*GetClassEdp)(tlkusb_setup_req_t *pSetup, uint8_t edpNumb);  // GetClassEdp
@@ -45,22 +45,22 @@ typedef struct
 {
     uint16_t (*GetDeviceLens)(void);                       // GetDeviceLens
     uint16_t (*GetConfigLens)(void);                       // GetConfigLens
-    uint16_t (*GetStringLens)(uint8_t index);               // GetStringLens
+    uint16_t (*GetStringLens)(uint8_t index);              // GetStringLens
     uint16_t (*GetInfDesLens)(tlkusb_setup_req_t *pSetup); // GetInterfaceLens
-    TLKUSB_MODULE_UINT08_PTR (*GetDeviceDesc)
-    (void);                                              // Get device descriptor
-    TLKUSB_MODULE_UINT08_PTR (*GetConfigDesc)
-    (void);                                              // Get config descriptor
-    TLKUSB_MODULE_UINT08_PTR (*GetStringDesc)
-    (uint8_t index);                                      // Get Serial String Descriptor
-    TLKUSB_MODULE_UINT08_PTR (*GetInfDesDesc)
-    (tlkusb_setup_req_t *pSetup);                        // Get interface descriptor
+    TLKUSB_MODULE_UINT08_PTR(*GetDeviceDesc)
+    (void); // Get device descriptor
+    TLKUSB_MODULE_UINT08_PTR(*GetConfigDesc)
+    (void); // Get config descriptor
+    TLKUSB_MODULE_UINT08_PTR(*GetStringDesc)
+    (uint8_t index); // Get Serial String Descriptor
+    TLKUSB_MODULE_UINT08_PTR(*GetInfDesDesc)
+    (tlkusb_setup_req_t *pSetup); // Get interface descriptor
 } tlkusb_modDesc_t;
 
 typedef struct
 {
-    uint8_t                  modType;
-    uint8_t                  resv[3];
+    uint8_t                 modType;
+    uint8_t                 resv[3];
     const tlkusb_modDesc_t *pDesc;
     const tlkusb_modCtrl_t *pCtrl;
 } tlkusb_module_t;
@@ -70,7 +70,7 @@ typedef struct
  * @param[in]   modType  - the USB module type to initialize.
  * @returns     TLK_ENONE on success, otherwise is failure.
  */
-int  tlkusb_module_init(uint8_t modType);
+int tlkusb_module_init(uint8_t modType);
 
 /**
  * @brief       This function resets the USB module of the specified type.
@@ -100,7 +100,7 @@ void tlkusb_module_handler(uint8_t modType);
  * @param[in]   infNumb   - the interface number.
  * @returns     TLK_ENONE on success, otherwise is failure.
  */
-int  tlkusb_module_getClassInf(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t infNumb);
+int tlkusb_module_getClassInf(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t infNumb);
 
 /**
  * @brief       This function sets class information for the specified interface of the USB module.
@@ -109,7 +109,7 @@ int  tlkusb_module_getClassInf(uint8_t modType, tlkusb_setup_req_t *pSetup, uint
  * @param[in]   infNumb   - the interface number.
  * @returns     TLK_ENONE on success, otherwise is failure.
  */
-int  tlkusb_module_setClassInf(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t infNumb);
+int tlkusb_module_setClassInf(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t infNumb);
 
 /**
  * @brief       This function gets class information for the specified endpoint of the USB module.
@@ -118,7 +118,7 @@ int  tlkusb_module_setClassInf(uint8_t modType, tlkusb_setup_req_t *pSetup, uint
  * @param[in]   edpNumb   - the endpoint number.
  * @returns     TLK_ENONE on success, otherwise is failure.
  */
-int  tlkusb_module_getClassEdp(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t edpNumb);
+int tlkusb_module_getClassEdp(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t edpNumb);
 
 /**
  * @brief       This function sets class information for the specified endpoint of the USB module.
@@ -127,7 +127,7 @@ int  tlkusb_module_getClassEdp(uint8_t modType, tlkusb_setup_req_t *pSetup, uint
  * @param[in]   edpNumb   - the endpoint number.
  * @returns     TLK_ENONE on success, otherwise is failure.
  */
-int  tlkusb_module_setClassEdp(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t edpNumb);
+int tlkusb_module_setClassEdp(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t edpNumb);
 
 /**
  * @brief       This function gets interface information of the USB module.
@@ -136,7 +136,7 @@ int  tlkusb_module_setClassEdp(uint8_t modType, tlkusb_setup_req_t *pSetup, uint
  * @param[in]   infNumb   - the interface number.
  * @returns     TLK_ENONE on success, otherwise is failure.
  */
-int  tlkusb_module_getInterface(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t infNumb);
+int tlkusb_module_getInterface(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t infNumb);
 
 /**
  * @brief       This function sets interface of the USB module.
@@ -145,7 +145,7 @@ int  tlkusb_module_getInterface(uint8_t modType, tlkusb_setup_req_t *pSetup, uin
  * @param[in]   infNumb   - the interface number.
  * @returns     TLK_ENONE is success, otherwise is failure.
  */
-int  tlkusb_module_setInterface(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t infNumb);
+int tlkusb_module_setInterface(uint8_t modType, tlkusb_setup_req_t *pSetup, uint8_t infNumb);
 
 /**
  * @brief       This function gets the length of the device descriptor of the USB module.

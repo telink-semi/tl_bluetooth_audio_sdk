@@ -37,14 +37,16 @@
  */
 void tlkdbg_n22core_write(uint8_t type, void *pData, uint16_t dataLen)
 {
-    (void) type;
+    (void)type;
     uint8_t *headBuffer = pData + TLK_DEBUG_LOG_CACHE_HEAD_RESERVE - 5;
-    headBuffer[0] = '[';
-    headBuffer[1] = 'N';
-    headBuffer[2] = '2';
-    headBuffer[3] = '2';
-    headBuffer[4] = ']';
+    headBuffer[0]       = '[';
+    headBuffer[1]       = 'N';
+    headBuffer[2]       = '2';
+    headBuffer[3]       = '2';
+    headBuffer[4]       = ']';
+#if MCU_DUAL_CORE_ENABLE
     tlk_n22_log_send_message(TLK_SHARE_MEMORY_MESSAGE_TYPE_LOG, headBuffer, dataLen + 5 - TLK_DEBUG_LOG_CACHE_RESERVE_LEN);
+#endif
 }
 
-#endif 
+#endif

@@ -32,7 +32,6 @@ typedef struct
     uint16_t offs; // Cur Offset
     uint32_t addr; // Flash Start Address
     uint32_t addr0;
-    uint32_t addr1;
 } tlkapi_save_ctrl_t;
 
 /**
@@ -41,8 +40,7 @@ typedef struct
  * @param[in]   sign      - Information identification tag
  * @param[in]   version   - The version of the save method
  * @param[in]   length    - The length of each item in the save's method
- * @param[in]   address0  - The address of the first backup sector of the system
- * @param[in]   address1  - The address of the second backup sector of the system
+ * @param[in]   address0  - The address of the 2 backup sector(8k) of the system
  * @return      Operating results, TLK_ENONE means success, others means failure
  *              -TLK_ENODATA means no valid data found
  * @note:       
@@ -60,7 +58,7 @@ typedef struct
  *              5.If data migration is terminated abnormally (such as power failure)
  *                during the last migration, the interface continues to migrate data.
  */
-int tlkapi_save3_init(tlkapi_save_ctrl_t *pCtrl, uint8_t sign, uint8_t version, uint16_t length, uint32_t address0, uint32_t address1);
+int tlkapi_save3_init(tlkapi_save_ctrl_t *pCtrl, uint8_t sign, uint8_t version, uint16_t length, uint32_t address0);
 
 /**
  * @brief       Load data from flash storage using save method 3

@@ -112,7 +112,7 @@
 #endif
 
 /// Number of '1' bits in a byte
-#define NB_ONE_BITS(byte) (one_bits[byte & 0x0F] + one_bits[byte >> 4])
+#define NB_ONE_BITS(byte) (tlk_bt_ctrl_gc_one_bits[byte & 0x0F] + tlk_bt_ctrl_gc_one_bits[byte >> 4])
 
 /// Get the number of elements within an array, give also number of rows in a 2-D array
 #define ARRAY_LEN(array) (sizeof((array)) / sizeof((array)[0]))
@@ -122,17 +122,17 @@
 
 
 /// Macro for LMP message handler function declaration or definition
-#define LMP_MSG_HANDLER(msg_name) __STATIC int lmp_##msg_name##_handler(struct lmp_##msg_name const *param, ke_task_id_t const dest_id)
+#define LMP_MSG_HANDLER(msg_name) __STATIC int tlk_bt_ctrl_lmp_##msg_name##_handler(struct lmp_##msg_name const *param, ke_task_id_t const dest_id)
 /// Macro for LMP message handler function declaration or definition
 #define LLCP_MSG_HANDLER(msg_name) __STATIC int llcp_##msg_name##_handler(struct llcp_##msg_name const *param, ke_task_id_t const dest_id)
 
 /// Macro for HCI message handler function declaration or definition (for multi-instantiated tasks)
-#define HCI_CMD_HANDLER_C(cmd_name, param_struct) __STATIC int lc_hci_##cmd_name##_cmd_handler(param_struct const *param, ke_task_id_t const dest_id, uint16_t opcode)
+#define HCI_CMD_HANDLER_C(cmd_name, param_struct) __STATIC int tlk_bt_ctrl_lc_hci_##cmd_name##_cmd_handler(param_struct const *param, ke_task_id_t const dest_id, uint16_t opcode)
 
 /// Macro for HCI message handler function declaration or definition (with parameters)
-#define HCI_CMD_HANDLER(cmd_name, param_struct) __STATIC int lm_hci_##cmd_name##_cmd_handler(param_struct const *param, uint16_t opcode)
+#define HCI_CMD_HANDLER(cmd_name, param_struct) __STATIC int tlk_bt_ctrl_lm_hci_##cmd_name##_cmd_handler(param_struct const *param, uint16_t opcode)
 /// Macro for HCI message handler function declaration or definition (with parameters)
-#define HCI_CMD_HANDLER_DBG(cmd_name, param_struct) __STATIC int dbg_hci_##cmd_name##_cmd_handler(param_struct const *param, uint16_t opcode)
+#define HCI_CMD_HANDLER_DBG(cmd_name, param_struct) __STATIC int tlk_bt_ctrl_dbg_hci_##cmd_name##_cmd_handler(param_struct const *param, uint16_t opcode)
 
 ///// Macro for HCI message handler function declaration or definition (with parameters)
 #define HCI_CMD_HANDLER_TAB(task) __STATIC const struct task##_hci_cmd_handler task##_hci_command_handler_tab[] =
@@ -202,34 +202,34 @@ enum phy_rate
  */
 
 /// Number of '1' bits in values from 0 to 15, used to fasten bit counting
-extern const unsigned char one_bits[16];
+extern const unsigned char tlk_bt_ctrl_gc_one_bits[16];
 
 /// Conversion table Sleep Clock Accuracy to PPM
-extern const uint16_t co_sca2ppm[];
+extern const uint16_t tlk_bt_ctrl_gc_co_sca2ppm[];
 
 /// NULL BD address
-extern const struct bd_addr co_null_bdaddr;
+extern const struct bd_addr tlk_bt_ctrl_gc_co_null_bdaddr;
 
 /// Default BD address
-extern const struct bd_addr co_default_bdaddr;
+extern const struct bd_addr tlk_bt_ctrl_gc_co_default_bdaddr;
 
 /// Table for converting rate to PHY
-extern const uint8_t co_rate_to_phy[];
+extern const uint8_t tlk_bt_ctrl_gc_co_rate_to_phy[];
 
 /// Table for converting PHY to rate (Warning: the coded PHY is converted to 125K by default)
-extern const uint8_t co_phy_to_rate[];
+extern const uint8_t tlk_bt_ctrl_gc_co_phy_to_rate[];
 
 /// Convert PHY mask (with one single bit set) to a value
-extern const uint8_t co_phy_mask_to_value[];
+extern const uint8_t tlk_bt_ctrl_gc_co_phy_mask_to_value[];
 
 /// Convert PHY a value to the corresponding mask bit
-extern const uint8_t co_phy_value_to_mask[];
+extern const uint8_t tlk_bt_ctrl_gc_co_phy_value_to_mask[];
 
 /// Convert Rate value to the corresponding PHY mask bit
-extern const uint8_t co_rate_to_phy_mask[];
+extern const uint8_t tlk_bt_ctrl_gc_co_rate_to_phy_mask[];
 
 /// Convert Rate value to byte duration in us
-extern const uint8_t co_rate_to_byte_dur_us[];
+extern const uint8_t tlk_bt_ctrl_gc_co_rate_to_byte_dur_us[];
 
 /*
  * OPERATIONS ON BT CLOCK
@@ -581,7 +581,7 @@ __INLINE void co_write16p(void const *ptr16, uint16_t value)
  * @param[in]  nb_bytes  Number of bytes to display in the string
  ****************************************************************************************
  */
-void co_bytes_to_string(char *dest, uint8_t *src, uint8_t nb_bytes);
+void tlk_bt_ctrl_co_bytes_to_string(char *dest, uint8_t *src, uint8_t nb_bytes);
 #endif //(RW_DEBUG || DISPLAY_SUPPORT)
 
 /**
@@ -596,7 +596,7 @@ void co_bytes_to_string(char *dest, uint8_t *src, uint8_t nb_bytes);
  * @return result of the comparison (true: equal | false: different).
  ****************************************************************************************
  */
-bool co_bdaddr_compare(struct bd_addr const *bd_address1, struct bd_addr const *bd_address2);
+bool tlk_bt_ctrl_co_bdaddr_compare(struct bd_addr const *bd_address1, struct bd_addr const *bd_address2);
 
 #if (BLE_EMB_PRESENT)
 /**
@@ -606,7 +606,7 @@ bool co_bdaddr_compare(struct bd_addr const *bd_address1, struct bd_addr const *
  * @return  Number of good channels
  ******************************************************************************
  */
-uint8_t co_nb_good_le_channels(const struct le_chnl_map *map);
+uint8_t tlk_bt_ctrl_co_nb_good_le_channels(const struct le_chnl_map *map);
 #endif //BLE_EMB_PRESENT
 
 #if (BT_EMB_PRESENT)
@@ -618,7 +618,7 @@ uint8_t co_nb_good_le_channels(const struct le_chnl_map *map);
  * @return  Duration (in number of ticks).
  ******************************************************************************
  */
-uint32_t co_slot_to_duration(uint32_t slot_cnt);
+uint32_t tlk_bt_ctrl_co_slot_to_duration(uint32_t slot_cnt);
 
 /**
  ******************************************************************************
@@ -627,7 +627,7 @@ uint32_t co_slot_to_duration(uint32_t slot_cnt);
  * @return  Number of good channels
  ******************************************************************************
  */
-uint8_t co_nb_good_channels(const struct chnl_map *map);
+uint8_t tlk_bt_ctrl_co_nb_good_channels(const struct chnl_map *map);
 
 #endif //BT_EMB_PRESENT
 
@@ -666,7 +666,7 @@ uint8_t co_nb_good_channels(const struct chnl_map *map);
  * @return  Status of the packing operation
  *****************************************************************************************
  */
-uint8_t co_util_pack(uint8_t *out, uint8_t *in, uint16_t *out_len, uint16_t in_len, const char *format);
+uint8_t tlk_bt_ctrl_co_util_pack(uint8_t *out, uint8_t *in, uint16_t *out_len, uint16_t in_len, const char *format);
 
 /**
  ****************************************************************************************
@@ -706,7 +706,7 @@ uint8_t co_util_pack(uint8_t *out, uint8_t *in, uint16_t *out_len, uint16_t in_l
  * @return  Status of the unpacking operation
  *****************************************************************************************
  */
-uint8_t co_util_unpack(uint8_t *out, uint8_t *in, uint16_t *out_len, uint16_t in_len, const char *format);
+uint8_t tlk_bt_ctrl_co_util_unpack(uint8_t *out, uint8_t *in, uint16_t *out_len, uint16_t in_len, const char *format);
 
 
 #if (BLE_EMB_PRESENT)
@@ -721,7 +721,7 @@ uint8_t co_util_unpack(uint8_t *out, uint8_t *in, uint16_t *out_len, uint16_t in
  * @return packet duration in us.
  *****************************************************************************************
  */
-uint16_t co_ble_pkt_dur_in_us(uint8_t len, uint8_t rate);
+uint16_t tlk_bt_ctrl_co_ble_pkt_dur_in_us(uint8_t len, uint8_t rate);
 #endif // (BLE_EMB_PRESENT)
 /// @} CO_UTILS
 

@@ -27,7 +27,6 @@
 #include "tlkapi/tlkapi_common.h"
 #include "tlkapi/tlkapi_qfifo.h"
 
-
 /**
  * @brief       Initialize the QFIFO structure
  * @param[in]   pFifo     - pointer to the QFIFO structure
@@ -164,7 +163,6 @@ uint16_t tlkapi_qfifo_usedNum(tlkapi_qfifo_t *pFifo)
     }
 }
 
-
 /**
  * @brief       Get the number of idle slots in the QFIFO
  * @param[in]   pFifo   - pointer to the QFIFO structure
@@ -212,7 +210,7 @@ uint8_t *tlkapi_qfifo_getData(tlkapi_qfifo_t *pFifo)
  */
 uint8_t *tlkapi_qfifo_takeBuff(tlkapi_qfifo_t *pFifo)
 {
-    uint16_t  wptr;
+    uint16_t wptr;
     uint8_t *pBuffer;
     if (pFifo->full) {
         return NULL;

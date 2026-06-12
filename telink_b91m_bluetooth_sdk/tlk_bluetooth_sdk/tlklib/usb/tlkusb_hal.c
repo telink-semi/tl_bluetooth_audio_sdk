@@ -33,7 +33,7 @@ typedef struct
     uint8_t epsIrq[2];
 } tlkusb_reg_t;
 
-static uint8_t      sUsbUseEventMode = 0;
+static uint8_t      sTlkUsbUseEventMode = 0;
 static tlkusb_reg_t sTlkUsbReg;
 
 /**
@@ -44,12 +44,20 @@ void tlkusb_hal_core_init(uint8_t index)
 {
     if (index == 0) {
 #if (MCU_CORE_TYPE == MCU_CORE_TL721X)
+#if TLK_USB_REMOTEWAKEUP_EN
+        usbhw_enable_manual_interrupt(FLD_CTRL_EP_AUTO_STD | FLD_CTRL_EP_AUTO_DESC | FLD_CTRL_EP_AUTO_CFG | FLD_CTRL_EP_AUTO_INTF | FLD_CTRL_EP_AUTO_FEAT);
+#else
         usbhw_enable_manual_interrupt(FLD_CTRL_EP_AUTO_STD | FLD_CTRL_EP_AUTO_DESC | FLD_CTRL_EP_AUTO_CFG | FLD_CTRL_EP_AUTO_INTF);
+#endif
         usbhw_set_printer_threshold(1);
         usbhw_set_ep8_fifo_mode();
 #elif (MCU_CORE_TYPE == MCU_CORE_TL751X || MCU_CORE_TYPE == MCU_CORE_TL753X)
         usbhw_enable_hw_feature(FLD_USB_AUTO_HALT_CLR | FLD_USB_AUTO_HALT_STALL);
+#if TLK_USB_REMOTEWAKEUP_EN
+        usbhw_enable_manual_interrupt(FLD_CTRL_EP_AUTO_STD | FLD_CTRL_EP_AUTO_DESC | FLD_CTRL_EP_AUTO_CFG | FLD_CTRL_EP_AUTO_INTF | FLD_CTRL_EP_AUTO_FEAT);
+#else
         usbhw_enable_manual_interrupt(FLD_CTRL_EP_AUTO_STD | FLD_CTRL_EP_AUTO_DESC | FLD_CTRL_EP_AUTO_CFG | FLD_CTRL_EP_AUTO_INTF);
+#endif
 #elif (MCU_CORE_TYPE == MCU_CORE_TL322X)
 
 #elif (MCU_CORE_TYPE == MCU_CORE_TL752X)
@@ -73,7 +81,7 @@ void tlkusb_hal_core_init(uint8_t index)
  */
 uint32_t tlkusb_hal_get_ctrl_ep_irq(uint8_t index)
 {
-    if (sUsbUseEventMode == 0) {
+    if (sTlkUsbUseEventMode == 0) {
         if (index == 0) {
 #if (MCU_CORE_TYPE != MCU_CORE_TL322X) && (MCU_CORE_TYPE != MCU_CORE_TL752X)
             return usbhw_get_ctrl_ep_irq();
@@ -96,7 +104,7 @@ uint32_t tlkusb_hal_get_ctrl_ep_irq(uint8_t index)
  */
 void tlkusb_hal_clr_ctrl_ep_irq(uint8_t index, int ep)
 {
-    if (sUsbUseEventMode == 0) {
+    if (sTlkUsbUseEventMode == 0) {
         if (index == 0) {
 #if (MCU_CORE_TYPE != MCU_CORE_TL322X) && (MCU_CORE_TYPE != MCU_CORE_TL752X)
             usbhw_clr_ctrl_ep_irq(ep);
@@ -233,6 +241,12 @@ void tlkusb_hal_gpio_enable(uint8_t index)
         usb_set_pin_en();
 #endif
     } else if (index == 1) {
+#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
+        gpio_function_en(TLK_USB1_DP_PIN);
+        gpio_function_en(TLK_USB1_DM_PIN);
+        gpio_set_mux_function(TLK_USB1_DP_PIN, GPIO_ALTERNATE_DEFAULT);
+        gpio_set_mux_function(TLK_USB1_DM_PIN, GPIO_ALTERNATE_DEFAULT);
+#endif
         gpio_input_en(TLK_USB1_DP_PIN);
         gpio_input_en(TLK_USB1_DM_PIN);
     }
@@ -355,7 +369,7 @@ void tlkusb_hal_data_ep_ack(uint8_t index, uint32_t ep)
  */
 uint32_t tlkusb_hal_get_eps_irq(uint8_t index)
 {
-    if (sUsbUseEventMode == 0) {
+    if (sTlkUsbUseEventMode == 0) {
         if (index == 0) {
 #if (MCU_CORE_TYPE != MCU_CORE_TL322X) && (MCU_CORE_TYPE != MCU_CORE_TL752X)
             return usbhw_get_eps_irq();
@@ -378,7 +392,7 @@ uint32_t tlkusb_hal_get_eps_irq(uint8_t index)
  */
 void tlkusb_hal_clr_eps_irq(uint8_t index, int ep)
 {
-    if (sUsbUseEventMode == 0) {
+    if (sTlkUsbUseEventMode == 0) {
         if (index == 0) {
 #if (MCU_CORE_TYPE != MCU_CORE_TL322X) && (MCU_CORE_TYPE != MCU_CORE_TL752X)
             usbhw_clr_eps_irq(ep);
@@ -447,10 +461,10 @@ void tlkusb_hal_read_ep_data(uint8_t index, uint32_t ep, uint8_t *buffer, uint16
 #if (MCU_CORE_N22 == 0)
 inline void tlkusb_hal_enable_eventMode(void)
 {
-    if (sUsbUseEventMode == 1) {
+    if (sTlkUsbUseEventMode == 1) {
         return;
     }
-    sUsbUseEventMode = 1;
+    sTlkUsbUseEventMode = 1;
 #if (MCU_CORE_TYPE == MCU_CORE_TL322X)
     plic_interrupt_enable(IRQ_USB1_CTRL_EP_SETUP);
     plic_interrupt_enable(IRQ_USB1_CTRL_EP_DATA);
@@ -469,13 +483,20 @@ inline void tlkusb_hal_enable_eventMode(void)
     plic_interrupt_enable(IRQ_USB_CTRL_EP_STATUS);
     plic_interrupt_enable(IRQ_USB_RESET);
     plic_interrupt_enable(IRQ_USB_ENDPOINT);
+#if TLK_USB_REMOTEWAKEUP_EN
+    plic_interrupt_enable(IRQ_USB_PWDN);
+#endif
 #endif
 
 #if (MCU_CORE_TYPE == MCU_CORE_B92)
     usbhw_set_irq_mask(USB_IRQ_RESET_MASK);
 #endif
 #if (MCU_CORE_TYPE == MCU_CORE_TL751X || MCU_CORE_TYPE == MCU_CORE_TL721X || MCU_CORE_TYPE == MCU_CORE_TL753X)
+#if TLK_USB_REMOTEWAKEUP_EN
+    usbhw_set_irq_mask(USB_IRQ_DATA_MASK | USB_IRQ_SETUP_MASK | USB_IRQ_STATUS_MASK | USB_IRQ_RESET_MASK | FLD_USB_IRQ_SUSPEND_MASK);
+#else
     usbhw_set_irq_mask(USB_IRQ_DATA_MASK | USB_IRQ_SETUP_MASK | USB_IRQ_STATUS_MASK | USB_IRQ_RESET_MASK);
+#endif
 #endif
 #if (MCU_CORE_TYPE == MCU_CORE_TL752X)
     usb1hw_set_irq_mask(USB1_IRQ_RESET_MASK | USB1_IRQ_SETUP_MASK | USB1_IRQ_DATA_MASK | USB1_IRQ_STATUS_MASK);
@@ -515,10 +536,10 @@ void tlkusb_hal_enable_eventMode(void) {}
 #if (MCU_CORE_N22 == 0)
 void tlkusb_hal_disable_eventMode(void)
 {
-    if (sUsbUseEventMode == 0) {
+    if (sTlkUsbUseEventMode == 0) {
         return;
     }
-    sUsbUseEventMode = 0;
+    sTlkUsbUseEventMode = 0;
 #if (MCU_CORE_TYPE == MCU_CORE_TL322X)
     plic_interrupt_disable(IRQ_USB1_CTRL_EP_SETUP);
     plic_interrupt_disable(IRQ_USB1_CTRL_EP_DATA);
@@ -577,7 +598,7 @@ void tlkusb_hal_disable_eventMode(void) {}
  */
 uint8_t tlkusb_hal_is_eventMode(void)
 {
-    return sUsbUseEventMode;
+    return sTlkUsbUseEventMode;
 }
 
 /**
@@ -633,6 +654,13 @@ inline void tlkusb_ctrl_ep_irq_handler(uint8_t index)
 #if (MCU_CORE_TYPE != CHIP_TYPE_TL752X)
         irq = usbhw_get_ctrl_ep_irq();
         usbhw_clr_ctrl_ep_irq(irq);
+#if TLK_USB_REMOTEWAKEUP_EN
+        if (irq & FLD_USB_IRQ_SUSPEND_STATUS) {
+            plic_interrupt_disable(IRQ_USB_PWDN);
+        } else if ((reg_irq_src(IRQ_USB_PWDN) & BIT(IRQ_USB_PWDN % 32)) == 0) {
+            plic_interrupt_enable(IRQ_USB_PWDN);
+        }
+#endif //#if TLK_USB_REMOTEWAKEUP_EN
 #endif
 #endif
     } else if (index == 1) {

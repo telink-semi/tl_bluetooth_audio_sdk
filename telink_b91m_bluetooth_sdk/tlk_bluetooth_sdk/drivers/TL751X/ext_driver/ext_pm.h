@@ -34,7 +34,7 @@ extern pm_status_info_s *g_p_pm_status_info;
 typedef int (*cpu_pm_handler_t)(pm_sleep_mode_e sleep_mode, pm_sleep_wakeup_src_e wakeup_src, unsigned int wakeup_tick);
 extern cpu_pm_handler_t cpu_sleep_wakeup;
 
-#define DEFAULT_DEEPSLEEP_MODE_RET_SRAM_SIZE    RET_MODE_SRAM_LOW384K_LOW384K_NONE
+#define DEFAULT_DEEPSLEEP_MODE_RET_SRAM_SIZE RET_MODE_SRAM_LOW384K_LOW384K_NONE
 
 /**
  * @brief   deepsleep wakeup by external xtal
@@ -196,6 +196,8 @@ __INLINE int pm_get_wakeup_status(void)
     return g_pm_status_info.wakeup_src;
 #endif
 }
+
+void pm_ext_32k_rc_set_suspend_power_cfg(pm_pd_module_e value, unsigned char on_off);
 
 #define cpu_set_gpio_wakeup pm_set_gpio_wakeup
 

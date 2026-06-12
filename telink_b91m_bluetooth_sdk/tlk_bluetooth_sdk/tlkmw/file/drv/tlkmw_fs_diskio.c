@@ -28,18 +28,25 @@
 #include "tlklib/fatfs/tlkfs_diskio.h"
 #include "tlkmw_fs_diskio.h"
 
-static TlkOsMutexHandle_t sTlkmwFsMutex = NULL;
-static uint8_t sTlkmwFsIsDiskSleep = 0;
-static TlkApiTimer_t sTlkmwFsSleepTmr = {0};
-static tlksys_devmgr_item_t sTlkmwFsDev = {0};
+static TlkOsMutexHandle_t   sTlkmwFsMutex            = NULL;
+static uint8_t              sTlkmwFsIsDiskSleep      = 0;
+static uint8_t              sTlkmwFsIsAllowDiskSleep = 0;
+static TlkApiTimer_t        sTlkmwFsSleepTmr         = {0};
+static tlksys_devmgr_item_t sTlkmwFsDev              = {0};
 
 
-#if MCU_CORE_TYPE == CHIP_TYPE_TL751X
-extern const tlkmw_fs_diskio_t gTlkmwFsDiskIoEmmc;
-static const tlkmw_fs_diskio_t* spTlkmwFsDiskIo = &gTlkmwFsDiskIoEmmc;
-#elif MCU_CORE_TYPE == CHIP_TYPE_TL721X
-extern const tlkmw_fs_diskio_t gTlkmwFsDiskIoSpisd;
-static const tlkmw_fs_diskio_t* spTlkmwFsDiskIo = &gTlkmwFsDiskIoSpisd;
+#if TLKMW_FS_DISK_IO_SELECT == TLKMW_FS_DISK_IO_EMMC
+extern const tlkmw_fs_diskio_t  gTlkmwFsDiskIoEmmc;
+static const tlkmw_fs_diskio_t *spTlkmwFsDiskIo = &gTlkmwFsDiskIoEmmc;
+#elif TLKMW_FS_DISK_IO_SELECT == TLKMW_FS_DISK_IO_SDCARD
+extern const tlkmw_fs_diskio_t  gTlkmwFsDiskIoSdcard;
+static const tlkmw_fs_diskio_t *spTlkmwFsDiskIo = &gTlkmwFsDiskIoSdcard;
+#elif TLKMW_FS_DISK_IO_SELECT == TLKMW_FS_DISK_IO_SPI_SDIO
+extern const tlkmw_fs_diskio_t  gTlkmwFsDiskIoSpisd;
+static const tlkmw_fs_diskio_t *spTlkmwFsDiskIo = &gTlkmwFsDiskIoSpisd;
+#elif TLKMW_FS_DISK_IO_SELECT == TLKMW_FS_DISK_IO_DS35X
+extern const tlkmw_fs_diskio_t  gTlkmwFsDiskIoDs35x;
+static const tlkmw_fs_diskio_t *spTlkmwFsDiskIo = &gTlkmwFsDiskIoDs35x;
 #endif
 
 /**
@@ -48,14 +55,17 @@ static const tlkmw_fs_diskio_t* spTlkmwFsDiskIo = &gTlkmwFsDiskIoSpisd;
  * @param[in]   userArg   - user argument.
  * @return      none.
  */
-static void tlkmw_fs_diskio_sleepTmr(TlkApiTimerHandle_t handle, void* userArg)
+static void tlkmw_fs_diskio_sleepTmr(TlkApiTimerHandle_t handle, void *userArg)
 {
-    (void) handle;
-    (void) userArg;
+    (void)handle;
+    (void)userArg;
+    if (sTlkmwFsIsAllowDiskSleep == 0) {
+        return;
+    }
     tlkos_recursiveMutex_lock(sTlkmwFsMutex);
-    if(sTlkmwFsIsDiskSleep == 0){
+    if (sTlkmwFsIsDiskSleep == 0) {
         spTlkmwFsDiskIo->sleep();
-        sTlkmwFsIsDiskSleep = 1;  
+        sTlkmwFsIsDiskSleep = 1;
     }
     tlkos_recursiveMutex_unlock(sTlkmwFsMutex);
 }
@@ -67,13 +77,34 @@ static void tlkmw_fs_diskio_sleepTmr(TlkApiTimerHandle_t handle, void* userArg)
  */
 static void tlkmw_fs_diskio_sleepCheck(void)
 {
-    if(sTlkmwFsIsDiskSleep){
-        tlksys_devmgr_setBusy(&sTlkmwFsDev,1);
+    if (sTlkmwFsIsDiskSleep) {
+        tlksys_devmgr_setBusy(&sTlkmwFsDev, 1);
         spTlkmwFsDiskIo->awake();
         sTlkmwFsIsDiskSleep = 0;
-        tlksys_devmgr_setBusy(&sTlkmwFsDev,0);
+        tlksys_devmgr_setBusy(&sTlkmwFsDev, 0);
     }
-    tlksys_timer_reStart(TLKSYS_TASKID_SYSTEM,&sTlkmwFsSleepTmr);
+    if (sTlkmwFsIsAllowDiskSleep) {
+        tlksys_timer_reStart(TLKSYS_TASKID_SYSTEM, &sTlkmwFsSleepTmr);
+    }
+}
+
+/**
+ * @brief       This function used to set diskio is allowed to sleep
+ * @param[in]   en    - enable allowed. 
+ * @return      none.
+ */
+void tlkmw_fs_diskio_allow_sleep(uint8_t en)
+{
+    en = en ? 1 : 0;
+    if (sTlkmwFsIsAllowDiskSleep == en) {
+        return;
+    }
+    sTlkmwFsIsAllowDiskSleep = en;
+    if (sTlkmwFsIsAllowDiskSleep) {
+        tlksys_timer_reStart(TLKSYS_TASKID_SYSTEM, &sTlkmwFsSleepTmr);
+    } else {
+        tlksys_timer_stop(TLKSYS_TASKID_SYSTEM, &sTlkmwFsSleepTmr);
+    }
 }
 
 /**
@@ -83,7 +114,7 @@ static void tlkmw_fs_diskio_sleepCheck(void)
  * @param[in]   cnt     - the number of blocks to write.
  * @return      Returns RES_OK on success, otherwise failure.
  */
-int tlkmw_fs_diskio_write(uint8_t* buff, uint32_t lba, uint32_t cnt)
+int tlkmw_fs_diskio_write(uint8_t *buff, uint32_t lba, uint32_t cnt)
 {
     tlkos_recursiveMutex_lock(sTlkmwFsMutex);
     tlkmw_fs_diskio_sleepCheck();
@@ -99,7 +130,7 @@ int tlkmw_fs_diskio_write(uint8_t* buff, uint32_t lba, uint32_t cnt)
  * @param[in]   cnt     - the number of blocks to read.
  * @return      Returns RES_OK on success, otherwise failure.
  */
-int tlkmw_fs_diskio_read(uint8_t* buff, uint32_t lba, uint32_t cnt)
+int tlkmw_fs_diskio_read(uint8_t *buff, uint32_t lba, uint32_t cnt)
 {
     tlkos_recursiveMutex_lock(sTlkmwFsMutex);
     tlkmw_fs_diskio_sleepCheck();
@@ -109,17 +140,28 @@ int tlkmw_fs_diskio_read(uint8_t* buff, uint32_t lba, uint32_t cnt)
 }
 
 /**
+ * @brief       This function used to get fs parmater config.
+ * @param[in]   none.
+ * @return      Point to cfg.
+ */
+const tlkmw_fs_parm_cfg_t *tlkmw_fs_diskio_get_parm_cfg(void)
+{
+    return spTlkmwFsDiskIo->fsParmCfg;
+}
+
+/**
  * @brief       This function initializes the disk IO.
  * @param[in]   none.
  * @return      none.
  */
 void tlkmw_fs_diskio_init(void)
 {
-    tlksys_devmgr_mount(&sTlkmwFsDev,NULL);
+    sTlkmwFsIsAllowDiskSleep = 1;
+    tlksys_devmgr_mount(&sTlkmwFsDev, NULL);
     tlkos_recursiveMutex_create(&sTlkmwFsMutex);
     spTlkmwFsDiskIo->init();
-    tlksys_timer_createStatic(TLKSYS_TASKID_SYSTEM,&sTlkmwFsSleepTmr,10 * 1000 * 1000,false,tlkmw_fs_diskio_sleepTmr,NULL);
-    tlksys_timer_reStart(TLKSYS_TASKID_SYSTEM,&sTlkmwFsSleepTmr);
+    tlksys_timer_createStatic(TLKSYS_TASKID_SYSTEM, &sTlkmwFsSleepTmr, 10 * 1000 * 1000, false, tlkmw_fs_diskio_sleepTmr, NULL);
+    tlksys_timer_reStart(TLKSYS_TASKID_SYSTEM, &sTlkmwFsSleepTmr);
 }
 
 /**
@@ -142,7 +184,7 @@ uint32_t tlkmw_fs_diskio_getBlkCount(void)
  */
 int tlkfs_diskio_write(uint8_t *buff, uint32_t sector, uint32_t cnt)
 {
-    return tlkmw_fs_diskio_write(buff,sector,cnt);
+    return tlkmw_fs_diskio_write(buff, sector, cnt);
 }
 
 /**
@@ -154,7 +196,7 @@ int tlkfs_diskio_write(uint8_t *buff, uint32_t sector, uint32_t cnt)
  */
 int tlkfs_diskio_read(uint8_t *buff, uint32_t sector, uint32_t cnt)
 {
-    return tlkmw_fs_diskio_read(buff,sector,cnt);
+    return tlkmw_fs_diskio_read(buff, sector, cnt);
 }
 
 /**
@@ -165,7 +207,7 @@ int tlkfs_diskio_read(uint8_t *buff, uint32_t sector, uint32_t cnt)
 tlkfs_diskio_info_t tlkfs_diskio_getDiskInfo(void)
 {
     tlkfs_diskio_info_t info = {
-        .sector_num = spTlkmwFsDiskIo->getSectorNum(),
+        .sector_num  = spTlkmwFsDiskIo->getSectorNum(),
         .sector_size = spTlkmwFsDiskIo->getSectorSize(),
     };
     return info;

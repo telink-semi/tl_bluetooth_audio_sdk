@@ -76,11 +76,11 @@ void tlksys_hal_platform_init(void)
     gpio_set_up_down_res(GPIO_SWS, GPIO_PIN_PULLUP_1M);
     wd_stop();
     CCLK_96M_HCLK_48M_PCLK_24M;
+    tlkhal_flash_init(0);
     core_interrupt_enable();
     gpio_init(0);
-    
-    blc_pm_select_internal_32k_crystal();
 
+    blc_pm_select_internal_32k_crystal();
 }
 
 

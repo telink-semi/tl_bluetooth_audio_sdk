@@ -586,9 +586,9 @@ enum
 
 /******************************* FIFOs *******************************/
 /**
- * @brief
- * TX FIFO: Dedicated transmit FIFO for each of the device IN endpoints, each FIFO is 1K. \n
- * RX FIFO: Single receive FIFO to receive the data for all the OUT endpoints, FIFO size is 8K.
+ * @brief FIFO size is 8K bytes. \n
+ * TX FIFO: Dedicated transmit FIFO for each of the device IN endpoints. \n
+ * RX FIFO: Single receive FIFO to receive the data for all the OUT endpoints.
  * 
  */
 #define reg_usb_fifo(i) REG_ADDR32(REG_USB0_BASE + 0x1000 + (i) * 0x400)

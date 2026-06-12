@@ -23,11 +23,11 @@
  *******************************************************************************************************/
 #pragma once
 
-typedef struct 
+typedef struct
 {
     uint32_t sector_size;
     uint32_t sector_num;
-}tlkfs_diskio_info_t;
+} tlkfs_diskio_info_t;
 
 
 const struct tm *tlkfs_diskio_getTime(void);

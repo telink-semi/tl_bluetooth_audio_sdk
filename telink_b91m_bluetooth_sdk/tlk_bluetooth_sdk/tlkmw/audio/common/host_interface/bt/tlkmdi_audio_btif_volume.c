@@ -100,21 +100,21 @@ static uint8_t tlkmdi_audio_getBtpVolumeByStep(uint8_t is_ios, uint8_t step)
  * @param[out]  isIos - Pointer to store iOS device flag
  * @return      TLK_ENONE: success; Others: failure
  */
-int tlkmdi_audio_btif_getVolumeStep(uint16_t handle, uint8_t isMusic,uint8_t *step,uint8_t *isIos)
+int tlkmdi_audio_btif_getVolumeStep(uint16_t handle, uint8_t isMusic, uint8_t *step, uint8_t *isIos)
 {
-    uint8_t vol = 0;
-    bth_acl_handle_t * item = bth_handle_getConnAcl(handle);
-    if(item == NULL){
+    uint8_t           vol  = 0;
+    bth_acl_handle_t *item = bth_handle_getConnAcl(handle);
+    if (item == NULL) {
         return -TLK_ESEEK;
     }
-    int ret = tlkmdi_tinySql_getPairingDeviceVolume(item->btaddr,isMusic,&vol,isIos);
-    if(ret != TLK_ENONE){
+    int ret = tlkmdi_tinySql_getPairingDeviceVolume(item->btaddr, isMusic, &vol, isIos);
+    if (ret != TLK_ENONE) {
         return ret;
     }
-    if(isMusic){
-        vol = tlkmdi_audio_get_music_vol_step(*isIos, vol);//val -> step
+    if (isMusic) {
+        vol = tlkmdi_audio_get_music_vol_step(*isIos, vol); //val -> step
     }
-    if(step != NULL){
+    if (step != NULL) {
         *step = vol;
     }
     return TLK_ENONE;
@@ -127,27 +127,27 @@ int tlkmdi_audio_btif_getVolumeStep(uint16_t handle, uint8_t isMusic,uint8_t *st
  * @param[in]   isMusic - Music or voice flag
  * @return      TLK_ENONE: success; Others: failure
  */
-int tlkmdi_audio_btif_VolumeOperate(uint16_t handle, uint8_t isInc ,uint8_t isMusic)
+int tlkmdi_audio_btif_VolumeOperate(uint16_t handle, uint8_t isInc, uint8_t isMusic)
 {
-    (void)        isMusic;
-    uint8_t        isIos = 0;
-    uint8_t        isSrc = 0;
-    uint8_t        vol = 0;
-    
-    if(isMusic){
+    (void)isMusic;
+    uint8_t isIos = 0;
+    uint8_t isSrc = 0;
+    uint8_t vol   = 0;
+
+    if (isMusic) {
         isSrc = btp_a2dp_isSrc(handle);
-    }else{
-        #if (TLKBTP_CFG_HFP_ENABLE)
-        if (btp_hfp_getAgHandle() == 0) {
+    } else {
+#if (TLKBTP_CFG_HFP_ENABLE)
+        if (btp_hfp_isHfpHF(handle)) {
             isSrc = 0;
-        } else {
+        } else if (btp_hfp_isHfpAG(handle)) {
             isSrc = 1;
         }
-        #endif
+#endif
     }
-    
-    int ret = tlkmdi_audio_btif_getVolumeStep(handle,isMusic,&vol,&isIos);
-    if(ret != TLK_ENONE){
+
+    int ret = tlkmdi_audio_btif_getVolumeStep(handle, isMusic, &vol, &isIos);
+    if (ret != TLK_ENONE) {
         return ret;
     }
     if (isInc) {
@@ -169,20 +169,20 @@ int tlkmdi_audio_btif_VolumeOperate(uint16_t handle, uint8_t isInc ,uint8_t isMu
         }
         vol--;
     }
-    if(isMusic){
+    if (isMusic) {
         bt_audio_set_music_vol_percent(isIos, vol);
-    }else{
+    } else {
         bt_audio_set_voice_vol_percent(vol);
     }
-    
-    if(isMusic){
-        vol = tlkmdi_audio_getBtpVolumeByStep(isIos, vol);
+
+    if (isMusic) {
+        vol             = tlkmdi_audio_getBtpVolumeByStep(isIos, vol);
         uint8_t buffLen = 0;
         uint8_t buffer[6];
         buffer[buffLen++] = (handle & 0xFF);
         buffer[buffLen++] = (handle & 0xFF00) >> 8;
-        buffer[buffLen++] = isSrc;    // isSrc
-        buffer[buffLen++] = vol; // AVRCP Volume
+        buffer[buffLen++] = isSrc; // isSrc
+        buffer[buffLen++] = vol;   // AVRCP Volume
         return tlksys_sendMsg(TLKSYS_TASKID_HOST, TLKSYS_BT_MSGID_SET_AVRCP_VOLUME, buffer, buffLen);
     }
 

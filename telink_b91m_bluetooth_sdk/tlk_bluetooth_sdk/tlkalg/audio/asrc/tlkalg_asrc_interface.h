@@ -40,13 +40,13 @@ uint16_t tlkalg_asrc_48to16_get_size(uint8_t channel);
  * @param[in]   channel   - the number of channels.
  * @return      The result of the initialization, 0 on failure.
  */
-int8_t   tlkalg_asrc_48to16_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_asrc_48to16_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function deinitializes ASRC for 48kHz to 16kHz conversion.
  * @return      Always returns 0.
  */
-int8_t   tlkalg_asrc_48to16_deinit(void);
+int8_t tlkalg_asrc_48to16_deinit(void);
 
 /**
  * @brief       This function processes audio data for ASRC 48kHz to 16kHz conversion.
@@ -57,7 +57,7 @@ int8_t   tlkalg_asrc_48to16_deinit(void);
  * @param[in]   channel   - the number of channels (unused).
  * @return      The length of the processed audio data in samples.
  */
-int      tlkalg_asrc_48to16_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_asrc_48to16_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 /**
  * @brief       This function calculates the required buffer size for ASRC 16kHz to 48kHz conversion.
@@ -72,13 +72,13 @@ uint16_t tlkalg_asrc_16to48_get_size(uint8_t channel);
  * @param[in]   channel   - the number of channels.
  * @return      The result of the initialization, 0 on failure.
  */
-int8_t   tlkalg_asrc_16to48_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_asrc_16to48_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function deinitializes ASRC for 16kHz to 48kHz conversion.
  * @return      Always returns 0.
  */
-int8_t   tlkalg_asrc_16to48_deinit(void);
+int8_t tlkalg_asrc_16to48_deinit(void);
 
 /**
  * @brief       This function processes audio data for ASRC 16kHz to 48kHz conversion.
@@ -89,7 +89,7 @@ int8_t   tlkalg_asrc_16to48_deinit(void);
  * @param[in]   channel   - the number of channels (unused).
  * @return      The length of the processed audio data in samples.
  */
-int      tlkalg_asrc_16to48_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_asrc_16to48_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 /**
  * @brief       This function calculates the required buffer size for ASRC 48kHz to 44.1kHz conversion.
@@ -104,13 +104,13 @@ uint16_t tlkalg_asrc_48to441_get_size(uint8_t channel);
  * @param[in]   channel   - the number of channels.
  * @return      The result of the initialization, 0 on failure.
  */
-int8_t   tlkalg_asrc_48to441_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_asrc_48to441_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function deinitializes ASRC for 48kHz to 44.1kHz conversion.
  * @return      Always returns 0.
  */
-int8_t   tlkalg_asrc_48to441_deinit(void);
+int8_t tlkalg_asrc_48to441_deinit(void);
 
 /**
  * @brief       This function processes audio data for ASRC 48kHz to 44.1kHz conversion.
@@ -121,7 +121,7 @@ int8_t   tlkalg_asrc_48to441_deinit(void);
  * @param[in]   channel   - the number of channels (unused).
  * @return      The length of the processed audio data in samples.
  */
-int      tlkalg_asrc_48to441_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_asrc_48to441_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 /**
  * @brief       This function calculates the required buffer size for ASRC 44.1kHz to 48kHz conversion.
@@ -136,13 +136,13 @@ uint16_t tlkalg_asrc_441to48_get_size(uint8_t channel);
  * @param[in]   channel   - the number of channels.
  * @return      The result of the initialization, 0 on failure.
  */
-int8_t   tlkalg_asrc_441to48_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_asrc_441to48_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function deinitializes ASRC for 44.1kHz to 48kHz conversion.
  * @return      Always returns 0.
  */
-int8_t   tlkalg_asrc_441to48_deinit(void);
+int8_t tlkalg_asrc_441to48_deinit(void);
 
 /**
  * @brief       This function processes audio data for ASRC 44.1kHz to 48kHz conversion.
@@ -153,7 +153,7 @@ int8_t   tlkalg_asrc_441to48_deinit(void);
  * @param[in]   channel   - the number of channels (unused).
  * @return      The length of the processed audio data in samples.
  */
-int      tlkalg_asrc_441to48_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_asrc_441to48_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 /**
  * @brief       This function calculates the required buffer size for ASRC 44.1kHz to 16kHz conversion.
@@ -168,13 +168,13 @@ uint16_t tlkalg_asrc_441to16_get_size(uint8_t channel);
  * @param[in]   channel   - the number of channels.
  * @return      The result of the initialization, 0 on failure.
  */
-int8_t   tlkalg_asrc_441to16_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_asrc_441to16_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function deinitializes ASRC for 44.1kHz to 16kHz conversion.
  * @return      Always returns 0.
  */
-int8_t   tlkalg_asrc_441to16_deinit(void);
+int8_t tlkalg_asrc_441to16_deinit(void);
 
 /**
  * @brief       This function processes audio data for ASRC 44.1kHz to 16kHz conversion.
@@ -185,6 +185,6 @@ int8_t   tlkalg_asrc_441to16_deinit(void);
  * @param[in]   channel   - the number of channels (unused).
  * @return      The length of the processed audio data in samples.
  */
-int      tlkalg_asrc_441to16_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_asrc_441to16_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 #endif

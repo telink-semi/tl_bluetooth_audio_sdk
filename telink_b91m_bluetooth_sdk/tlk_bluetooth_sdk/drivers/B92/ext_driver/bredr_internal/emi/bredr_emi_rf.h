@@ -39,8 +39,8 @@
 #define BT_RADIO_RX_PATH_DELAY    14
 #define BT_RADIO_RX_POWER_UP      (100 - BT_RADIO_RX_PATH_DELAY) //CEVA bug
 #define BT_RADIO_TX_PATH_DELAY(m) ((m == 0) ? 3 : 6)             //BR:0,EDR2:2,EDR3:3
-#define BT_RADIO_TX_POWER_UP      100
-#define BT_RADIO_POWER_DOWN       4
+// #define BT_RADIO_TX_POWER_UP        100
+#define BT_RADIO_POWER_DOWN 4
 //////////////////////////////////////////////////////////
 #define APBRG_BASE            0x140000
 #define PSLV7_BASE            (APBRG_BASE + 0x1c0)

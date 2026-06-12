@@ -36,16 +36,16 @@ typedef enum
 
 typedef struct
 {
-    uint8_t         cur_scan_state;
-    uint8_t         waiting_confirm_value : 4; /* waiting hci set scan command complete */
-    uint8_t         waiting_flag          : 2; /* waiting hci set scan command complete */
-    uint8_t         pending_scanflag      : 2;
-    uint16_t       waiting_confirm_value_time;
-    uint8_t         pending_scan_value;        /* during waiting hci set scan command complete, system set a new value */
-    uint8_t         reserve[3];
-    uint16_t       pending_scan_value_time;
-    uint16_t         timeout;                   /* the number of 1s unit */
-    TlkApiTimer_t  timer;
+    uint8_t       cur_scan_state;
+    uint8_t       waiting_confirm_value : 4; /* waiting hci set scan command complete */
+    uint8_t       waiting_flag          : 2; /* waiting hci set scan command complete */
+    uint8_t       pending_scanflag      : 2;
+    uint16_t      waiting_confirm_value_time;
+    uint8_t       pending_scan_value; /* during waiting hci set scan command complete, system set a new value */
+    uint8_t       reserve[3];
+    uint16_t      pending_scan_value_time;
+    uint16_t      timeout; /* the number of 1s unit */
+    TlkApiTimer_t timer;
 } tlkmdi_bt_scan_t;
 
 /**
@@ -101,6 +101,6 @@ uint16_t tlkmdi_btscan_getRemainedScanTime(void);
  * @return      The current scan state.
  * @note        
  */
-uint8_t tlkmdi_btscan_getCurScanState(void); 
+uint8_t tlkmdi_btscan_getCurScanState(void);
 
 #endif //TLKMDI_BTSCAN_H

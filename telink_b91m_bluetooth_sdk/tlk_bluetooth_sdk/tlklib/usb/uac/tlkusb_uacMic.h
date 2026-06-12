@@ -26,8 +26,8 @@
 
 #include "common/types.h"
 #include "tlklib/usb/uac/tlkusb_uac.h"
-#define TLKUSB_AUDMIC_VOL_MIN  ((int16_t)0x0000)                                /* Volume Minimum Value */
-#define TLKUSB_AUDMIC_VOL_MAX  ((int16_t)0x1e00)                                /* Volume Maximum Value */
+#define TLKUSB_AUDMIC_VOL_MIN  ((int16_t)0x0000)                               /* Volume Minimum Value */
+#define TLKUSB_AUDMIC_VOL_MAX  ((int16_t)0x1e00)                               /* Volume Maximum Value */
 #define TLKUSB_AUDMIC_VOL_RES  0x0180                                          /* Volume Resolution */
 #define TLKUSB_AUDMIC_VOL_DEF  0x1800                                          /* Volume default */
 #define TLKUSB_AUDMIC_VOL_STEP (TLKUSB_AUDMIC_VOL_MAX / TLKUSB_AUDMIC_VOL_RES) /*Volume step*/

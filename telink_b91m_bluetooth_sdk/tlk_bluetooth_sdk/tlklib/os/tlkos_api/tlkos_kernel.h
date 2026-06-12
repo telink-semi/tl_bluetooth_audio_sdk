@@ -59,4 +59,3 @@ void tlkos_init(void);
  * @returns   None.
  */
 void tlkos_start(TlkOsInitFunc_t initFunc);
-

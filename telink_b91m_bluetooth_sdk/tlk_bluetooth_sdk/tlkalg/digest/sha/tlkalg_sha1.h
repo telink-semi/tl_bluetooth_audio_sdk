@@ -31,7 +31,7 @@ typedef struct
 {
     uint32_t state[5];
     uint32_t count[2];
-    uint8_t buff[64];
+    uint8_t  buff[64];
 } tlkalg_sha1_context_t;
 
 typedef struct

@@ -27,10 +27,8 @@
  *******************************************************************************************************/
 #pragma once
 
-int btp_timer_create(TlkApiTimer_t *pTimer,uint32_t periodUs,uint32_t autoReload, TlkApiTimerCB_t timerCB, void* userArg);
+int btp_timer_create(TlkApiTimer_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void *userArg);
 
 int btp_timer_start(TlkApiTimerHandle_t pTimer);
 
 int btp_timer_stop(TlkApiTimerHandle_t pTimer);
-
-

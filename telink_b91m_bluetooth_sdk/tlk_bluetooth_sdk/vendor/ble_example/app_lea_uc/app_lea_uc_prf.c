@@ -201,4 +201,5 @@ void app_uc_prf_initial(void)
     ble_lea_register_CSIS_control_client(NULL);
 
     ble_host_smp_initial(BLE_HOST_SMP_SC_JUST_WORKS_INIT_PARAMS);
+    ble_host_smp_store_init(0, 4);
 }

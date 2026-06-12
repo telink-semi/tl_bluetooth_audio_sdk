@@ -52,9 +52,7 @@ int tlksys_init(void)
     tlkos_init();
     tlksys_dualcore_init();
     tlksys_timer_coreInit();
-    for (uint16_t i = 0; i < TLKSYS_MUTEX_NUM; i++) {
-        tlkos_mutex_create(&sTlkMutexHandles[i]);
-    }
+    tlkos_recursiveMutex_createMultiple(sTlkMutexHandles, TLKSYS_MUTEX_NUM);
     tlksys_initFinishedHook();
     return TLK_ENONE;
 }
@@ -169,7 +167,7 @@ _always_inline void tlksys_leave_critical(void)
  */
 _always_inline void tlksys_mutex_lock(uint16_t mutexID)
 {
-    tlkos_mutex_lock(sTlkMutexHandles[mutexID]);
+    tlkos_recursiveMutex_lock(sTlkMutexHandles[mutexID]);
 }
 
 /**
@@ -179,7 +177,7 @@ _always_inline void tlksys_mutex_lock(uint16_t mutexID)
  */
 _always_inline void tlksys_mutex_unlock(uint16_t mutexID)
 {
-    tlkos_mutex_unlock(sTlkMutexHandles[mutexID]);
+    tlkos_recursiveMutex_unlock(sTlkMutexHandles[mutexID]);
 }
 
 /**

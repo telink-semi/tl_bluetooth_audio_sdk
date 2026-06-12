@@ -64,6 +64,5 @@ static __attribute__((__always_inline__)) inline unsigned int usbhw_get_ep_ptr_i
 #else
     return usbhw_get_ep_ptr(ep);
 #endif
-
 }
 #endif // TLKUSB_STDIO_H

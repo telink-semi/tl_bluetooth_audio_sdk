@@ -52,10 +52,10 @@ static const uint16_t                          tmasTmapRoleValueLen = sizeof(tma
  * @brief the structure for default TMAS service List.
  */
 static const struct atts_attribute tmasList[] = {
-    ATTS_PRIMARY_SERVICE(serviceTelephonyAndMediaAudioUuid),
+    ATTS_PRIMARY_SERVICE(serviceTelephonyAndMediaAudioAttUuid),
 
     //TMAP Role
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropRead, characteristicTmapRoleUuid, tmasTmapRoleValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropRead, characteristicTmapRoleAttUuid, tmasTmapRoleValue),
 };
 
 /*

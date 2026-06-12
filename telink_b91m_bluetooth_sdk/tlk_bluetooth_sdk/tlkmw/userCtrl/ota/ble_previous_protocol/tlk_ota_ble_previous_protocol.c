@@ -37,7 +37,7 @@
  */
 int tlk_ota_ble_previous_protocol_recv_data(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg)
 {
-	(void)taskID;
+    (void)taskID;
     (void)pData;
     (void)dataLen;
     (void)UserArg;
@@ -53,7 +53,6 @@ int tlk_ota_ble_previous_protocol_recv_data(uint32_t taskID, uint8_t *pData, uin
 int tlk_ota_ble_previous_protocol_init(nvds_ota_Interface_t *pInterface)
 {
     (void)pInterface;
-	tlkmw_ota_register_chn_recv_interface(TLKMW_OTA_TRANS_CHN_BLE_PREVIOUS_MODE, tlk_ota_ble_previous_protocol_recv_data);
 
     return OTA_NONE;
 }

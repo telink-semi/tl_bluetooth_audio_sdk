@@ -28,8 +28,6 @@
 #include "tlkmw/tinysql/tlkmdi_tinySql_disk_pairingDevice.h"
 #include "tlkmw/tinysql/tlkmdi_tinySql_disk_btMac.h"
 #include "tlkmw/tinysql/tlkmdi_tinySql_disk_pbap.h"
-#include "tlkmw/tinysql/tlkmdi_tinySql_disk_le.h"
-#include "tlkmw/tinysql/tlkmdi_tinySql_disk_audio.h"
 
 /**
  * @brief   Operates the mutex for TinySQL module.
@@ -69,15 +67,3 @@ bool tlkmdi_tinySql_isRequestSave(void);
  * @note    When disabled, save requests will be ignored.
  */
 void tlkmdi_tinySql_setSaveEnable(uint8_t en);
-
-/**
- * @brief   Suspends saving functionality.
- * @note    This function increments the critical section counter to prevent saving.
- */
-void tlkmdi_tinySql_suspendSave(void);
-
-/**
- * @brief   Resumes saving functionality.
- * @note    This function decrements the critical section counter and may trigger a save if needed.
- */
-void tlkmdi_tinySql_resumeSave(void);

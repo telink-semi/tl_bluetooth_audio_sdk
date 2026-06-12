@@ -29,14 +29,13 @@
 #include <stdio.h>
 #include <string.h>
 //#include "clock.h"
-#include "drv_uart.h"
-#include "drv_audio_dac.h"
-#include "drv_audio_adc.h"
-#include "soc_printf.h"
-#include "drv_gpio.h"
-#include "drv_cpr.h"
-#include "drv_dmac.h"
-#include "hal_systimer.h"
+#include "drivers/TL752X/driver/inc/drv_uart.h"
+#include "drivers/TL752X/driver/inc/drv_audio_dac.h"
+#include "drivers/TL752X/driver/inc/drv_audio_adc.h"
+#include "drivers/TL752X/driver/modules/drv_gpio.h"
+#include "drivers/TL752X/driver/inc/drv_cpr.h"
+#include "drivers/TL752X/driver/inc/drv_dmac.h"
+#include "drivers/TL752X/driver/hal/hal_systimer.h"
 #include "drivers/TL752X/temp_cmpt/temp_cmpt.h"
 
 #if (MCU_CORE_TYPE == MCU_CORE_TL752X)

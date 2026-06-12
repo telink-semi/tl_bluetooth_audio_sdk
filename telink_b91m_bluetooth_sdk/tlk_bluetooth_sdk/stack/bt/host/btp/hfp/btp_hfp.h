@@ -30,6 +30,10 @@
 
 #include "common/bit.h"
 
+#define BTP_HFP_PHONE_NUMBER_MAX_LEN 64
+#define BTP_HFP_VOICE_RECOGNITION    (0x1 << 2)
+#define BTP_HFP_CODEC_NEGOTIATION    (0x1 << 9)
+
 typedef enum
 {
     BTP_HFP_CALL_DIR_NONE = 0,
@@ -48,6 +52,18 @@ typedef enum
     BTP_HFP_CALL_STATUS_PAUSED,
     BTP_HFP_CALL_STATUS_WAITING,
 } BTP_HFP_CALL_STATUS_ENUM;
+
+typedef enum
+{
+    BTP_HFP_CLCC_STATUS_NONE     = 0x00,
+    BTP_HFP_CLCC_STATUS_ACTIVE   = 0x30, // Active
+    BTP_HFP_CLCC_STATUS_HELD     = 0x31, // Held
+    BTP_HFP_CLCC_STATUS_DIALING  = 0x32, // Dialing (outgoing calls only)
+    BTP_HFP_CLCC_STATUS_ALERTING = 0x33, // Alerting (outgoing calls only)
+    BTP_HFP_CLCC_STATUS_INCOMING = 0x34, // Incoming (incoming calls only)
+    BTP_HFP_CLCC_STATUS_WAITING  = 0x35, // Waiting (incoming calls only)
+    BTP_HFP_CLCC_STATUS_CALLHELD = 0x36, // Call held by Response and Hold
+} BTP_HFP_CLCC_STATUS_ENUM;
 
 typedef enum
 {
@@ -87,7 +103,7 @@ typedef enum
 } BTP_HFP_HF_FEATURE_ENUM;
 
 typedef enum
-{                                             // HFP SPEC <AG supported features bitmap>
+{ // HFP SPEC <AG supported features bitmap>
     BTP_HFP_AG_FEATURE_THREE_WAY   = BIT(0),
     BTP_HFP_AG_FEATURE_ECNR        = BIT(1),
     BTP_HFP_AG_FEATURE_VRF         = BIT(2),  // Voice recognition function
@@ -104,6 +120,19 @@ typedef enum
     BTP_HFP_AG_FEATURE_VRT         = BIT(13), // Voice Recognition Text
                                               // BIT(14) - BIT(31) Reserved for future use
 } BTP_HFP_AG_FEATURE_ENUM;
+
+typedef struct
+{
+    uint8_t  index;
+    uint8_t  dir;
+    uint8_t  status;
+    uint8_t  mode;
+    uint8_t  mpty;
+    uint8_t  numbLen;
+    uint16_t resv;
+    uint8_t  type[4];
+    uint8_t  number[BTP_HFP_PHONE_NUMBER_MAX_LEN];
+} btp_hfp_callInfo_t;
 
 typedef int (*BtpHfpAgRecvCmdCB)(uint16_t aclHandle, uint8_t *pCmd, uint8_t cmdLen);
 typedef int (*BtpHfpHfRecvCmdCB)(uint16_t aclHandle, uint8_t *pCmd, uint8_t cmdLen);
@@ -184,7 +213,7 @@ extern uint btp_hfphf_getFeature(void);
  *     @feature[IN]--. Refer "HF supported features bitmap" in <HFP_v1.8.pdf>.
  * Return: None.
  *******************************************************************************/
-extern void btp_hfphf_setFeature(uint feature);
+extern void btp_hfphf_setFeature(uint16_t feature);
 
 /******************************************************************************
  * Function: btp_hfphf_enableThreeWayCall
@@ -229,7 +258,7 @@ extern uint8_t btp_hfphf_getMicVolume(void);
  * Return: Returning TLK_ENONE(0x00) means the send process success.
  *         If others value is returned means the send process fail.
  *******************************************************************************/
-extern int btp_hfphf_setSpkVolume(uint8_t spkVolume);
+extern int btp_hfphf_setSpkVolumeByHandle(uint16_t aclHandle, uint8_t spkVolume);
 
 /******************************************************************************
  * Function: HFP Trigger Set Mic Volume interface
@@ -624,4 +653,13 @@ extern uint16_t btp_hfp_getHfHandle(void);
 int btp_hfphf_codecConn(uint16_t aclHandle);
 
 extern uint8_t btp_hfp_getsBtpHfpNumber(void);
+
+bool       btp_hfp_isHfpHF(uint16_t aclHandle);
+bool       btp_hfp_isHfpAG(uint16_t aclHandle);
+extern int btp_hfpag_setMicVolumeByHandle(uint16_t aclHandle, uint8_t micVolume);
+extern int btp_hfpag_setSpkVolumeByHandle(uint16_t aclHandle, uint8_t spkVolume);
+
+extern uint8_t  btp_hfpag_getSpkVolumeByHandle(uint16_t aclHandle);
+extern uint8_t  btp_hfphf_getSpkVolumeByHandle(uint16_t aclHandle);
+extern uint32_t btp_hfpag_getPeerFeature(uint16_t aclHandle);
 #endif /* BTP_HFP_H */

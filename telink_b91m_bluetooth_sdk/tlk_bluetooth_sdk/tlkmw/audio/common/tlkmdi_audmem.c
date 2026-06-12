@@ -30,7 +30,7 @@
 #define TLKMW_AUDIO_MEMPOOL_INDEPENDENT 1
 #endif
 
-#ifndef TLKMW_AUDIO_MEMPOOL_RAM_SECTION 
+#ifndef TLKMW_AUDIO_MEMPOOL_RAM_SECTION
 #if (!MCU_CORE_TL752X_TEMP)
 #define TLKMW_AUDIO_MEMPOOL_RAM_SECTION
 #else
@@ -42,9 +42,9 @@
 
 #ifndef TLKMDI_AUDMEM_TOTAL_SIZE
 #if MCU_CORE_TL752X_TEMP
-    #define TLKMDI_AUDMEM_TOTAL_SIZE (256)
+#define TLKMDI_AUDMEM_TOTAL_SIZE (256)
 #else
-    #define TLKMDI_AUDMEM_TOTAL_SIZE (64 * 1024)
+#define TLKMDI_AUDMEM_TOTAL_SIZE (64 * 1024)
 #endif
 #endif
 
@@ -81,17 +81,6 @@ void *tlkmdi_audmem_malloc(uint32_t size)
 void *tlkmdi_audmem_calloc(uint32_t size)
 {
     return tlkmem1_calloc(sTlkMdiAudMemBuffer, size);
-}
-
-/**
- * @brief       This function reallocates a segment of memory to store the contents of existing memory
- * @param[in]   ptr - The first memory address that needs to be reallocated
- * @param[in]   size - The size to allocate
- * @return      The first address of memory allocated, NULL means failure
- */
-void *tlkmdi_audmem_realloc(void *ptr, uint32_t size)
-{
-    return tlkmem1_realloc(sTlkMdiAudMemBuffer, ptr, size);
 }
 
 /**

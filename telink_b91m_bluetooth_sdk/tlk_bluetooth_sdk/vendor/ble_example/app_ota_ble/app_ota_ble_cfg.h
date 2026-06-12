@@ -21,5 +21,5 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-
-#define TLK_MW_USER_CTRL_ENABLE       1
+#define TLK_MW_USER_CTRL_ENABLE (1)
+#define TLK_MW_OTA_ENABLE       (1 && TLK_MW_USER_CTRL_ENABLE)

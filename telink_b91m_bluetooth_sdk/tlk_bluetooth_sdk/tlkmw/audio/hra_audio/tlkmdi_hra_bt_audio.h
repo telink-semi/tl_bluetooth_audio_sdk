@@ -24,7 +24,7 @@
 #ifndef _TLKMDI_HRA_BT_AUDIO_H_
 #define _TLKMDI_HRA_BT_AUDIO_H_
 
-#define TLKMDI_HRA_MUSIC_MIC_EN     1
+#define TLKMDI_HRA_MUSIC_MIC_EN 1
 
 #define HRA_MUSIC_ID            IPC_DATA_PATH_0
 #define HRA_VOICE_ID            IPC_DATA_PATH_0

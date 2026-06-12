@@ -26,44 +26,49 @@
 
 #if TLKMW_INTERPHONE_EN
 
-#define MIC_FRAME_SIZE        (16*20)
-#define SPK_FRAME_SIZE        (48*20)
-#define INTERPHONE_I2S_SIZES  (MIC_FRAME_SIZE*6)
-#define SPK_SAMPLERATE_16K    0
-#define PLAY_STEREO_DATA      0
+#define MIC_FRAME_SIZE       (16 * 20)
+#define SPK_FRAME_SIZE       (48 * 20)
+#define INTERPHONE_I2S_SIZES (MIC_FRAME_SIZE * 6)
+#define SPK_SAMPLERATE_16K   0
+#define PLAY_STEREO_DATA     0
 
-typedef enum 
+extern uint8_t g_tlkmdi_interphone_i2s_rx_dma;
+extern uint8_t g_tlkmdi_interphone_i2s_tx_dma;
+#define INTERPHONE_I2S_RX_DMA g_tlkmdi_interphone_i2s_rx_dma
+#define INTERPHONE_I2S_TX_DMA g_tlkmdi_interphone_i2s_tx_dma
+
+typedef enum
 {
-    MCU_WAIT_RESP  = BIT(0),
-    MCU_RECV       = BIT(1),
-}interphone_mcu_dsp_state_e;
+    MCU_WAIT_RESP = BIT(0),
+    MCU_RECV      = BIT(1),
+} interphone_mcu_dsp_state_e;
 
 typedef struct
 {
-    uint16_t down_buff_wptr;
-    uint16_t down_buff_rptr;
-    uint16_t up_buff_wptr;
-    uint16_t up_buff_rptr;
-    uint16_t down_buff_len;
-    uint16_t up_buff_len;
-    uint32_t spk_samplerate;
-    uint32_t mic_samplerate;
-    uint32_t last_times_tick;
-    bool     queue_one_frame_data;
-    bool     dis_dsp_request;
-    uint8_t  send_seq;
-    uint8_t  recv_seq;
+    uint16_t                   down_buff_wptr;
+    uint16_t                   down_buff_rptr;
+    uint16_t                   up_buff_wptr;
+    uint16_t                   up_buff_rptr;
+    uint16_t                   down_buff_len;
+    uint16_t                   up_buff_len;
+    uint32_t                   spk_samplerate;
+    uint32_t                   mic_samplerate;
+    uint32_t                   last_times_tick;
+    bool                       queue_one_frame_data;
+    bool                       dis_dsp_request;
+    uint8_t                    send_seq;
+    uint8_t                    recv_seq;
     interphone_mcu_dsp_state_e data_state;
     // bool     bis_sync_flag;
     // bool     timer_big_alig_flag;
 } tlkmdi_interphone_ctl;
 
-typedef enum 
+typedef enum
 {
     INTERPHONE_MODE_MESH  = BIT(0),
     INTERPHONE_MODE_MUSIC = BIT(1),
     INTERPHONE_MODE_AG    = BIT(2),
-}interphone_mode_e;
+} interphone_mode_e;
 
 extern uint16_t one_frame_times;
 
@@ -101,7 +106,7 @@ void tlkmdi_mute_i2s_rx_buff(void);
  * @param[in]   len - Length of data
  * @return      None
  */
-void tlkmdi_interphone_fill_i2stx_buff(adc_int* data, uint16_t len);
+void tlkmdi_interphone_fill_i2stx_buff(adc_int *data, uint16_t len);
 
 /**
  * @brief       Set loop tick
@@ -425,6 +430,6 @@ void tlkmdi_interphone_sync_BtUpBuff(uint16_t sample);
  */
 void tlkmdi_interphone_dsp_msg_process_callback(uint8_t enc_buff_wptr, uint8_t type);
 #endif
-#endif//TLKMW_INTERPHONE_EN
+#endif //TLKMW_INTERPHONE_EN
 
 #endif

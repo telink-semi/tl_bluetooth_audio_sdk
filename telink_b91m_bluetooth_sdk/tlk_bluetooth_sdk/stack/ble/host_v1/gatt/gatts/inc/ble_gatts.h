@@ -47,4 +47,3 @@ void ble_gatts_calculate_database_hash(uint8_t database_hash[16]);
 void ble_gatts_calculate_database_hash_by_conn_handle(uint16_t conn_handle, uint8_t database_hash[16]);
 
 void ble_host_gatts_init(void);
-

@@ -34,7 +34,7 @@ typedef unsigned char  UWord8;
 typedef unsigned short UWord16;
 typedef unsigned int   UWord32;
 #else
-    #include <nds_math_types.h>
+#include <nds_math_types.h>
 typedef int8_t  Word8;
 typedef int16_t Word16;
 typedef int32_t Word32;

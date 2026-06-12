@@ -25,7 +25,7 @@
 #include "tlkapi/tlkapi.h"
 #include "tlkmw/audio/tlkmw_audio.h"
 
-int16_t  g_tone_buff[512] = {0};
+int16_t  g_tone_buff[300] = {0};
 int16_t *g_tone_buff_ptr;
 
 #if (TLKSTK_BT_TPS_ENABLE)
@@ -49,6 +49,10 @@ int16_t *g_tone_buff_ptr;
 extern bool tlkmdi_bt_tpt_isLeft();
 #endif
 
+#if TLKADU_MIDBUF_ENABLE
+#include "vendor/GameSir_Xiaoji/audio_mw/tlkaud_audio_mw.h"
+#endif
+
 #ifndef TICK_OF_BLOCK_SAMPLE_48k
 #define TICK_OF_BLOCK_SAMPLE_48k 24000
 #endif
@@ -59,7 +63,6 @@ extern bool tlkmdi_bt_tpt_isLeft();
 
 #define LL_AUDIO_PPM_ENABLE 1
 
-uint8_t                  tph_env_mode;
 tpsll_ultra_ll_context_t g_tpsll_ultra_ll_ctx   = {0};
 uint8_t                 *g_pcm_mix_dec_buff_ptr = NULL;
 
@@ -77,29 +80,22 @@ uint8_t                 *g_pcm_mix_dec_buff_ptr = NULL;
 #define TUS_MIC_ENC (2500)
 #else
 #if ULTRA_LOW_LATENCY_EN
-#define TUS_SPK_DEC (3000)
-#define TUS_MIC_ENC (3000)
+#define TUS_SPK_DEC (1600)
+#define TUS_MIC_ENC (4400)
 #else
 #define TUS_SPK_DEC (3500)
 #define TUS_MIC_ENC (2500)
 #endif
 #endif
 
-#define ULTRA_LL_TUS_MIC_ENC (2200)
+#if AUDIO_TWS_MODE
+#define ULTRA_LL_TUS_MIC_ENC (3860) //2200-->3860 for one more re-transmission
+#else
+#define ULTRA_LL_TUS_MIC_ENC (3200) //2200-->3200 for one more re-transmission
+#endif
 #define ULTRA_LL_TUS_SPK_DEC (1000)
 
 #define SL_APP_AUDIO_EN      SL_STACK_SCO_EN
-
-#ifndef APP_LOW_POWER_EN
-#define APP_LOW_POWER_EN 1
-#endif
-
-#ifndef BT_BLE_CALL_MUSIC_MIX_VOL
-/** bt_music_vol_table_android, 6 level */
-#define BT_BLE_CALL_MUSIC_MIX_VOL 150
-#endif
-
-uint8_t *g_ll_audio_dec_buf_ptr = NULL;
 
 uint8_t ll_audio_enc_mute_buff[ASYNC_AUDIO_LC3A_FRMAE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -114,6 +110,8 @@ extern int     spk_ppm;
 
 async_audio_context_t    async_audio_ctx;
 tpsll_enc_buff_context_t g_tpsll_enc_buf_ctx;
+
+int32_t g_ll_mic_mid_buf[MIC_BUF_CAP] = {0};
 
 /******************************* PPM ************************/
 #define KP_GAIN        2.5f
@@ -151,6 +149,10 @@ static int      s_ll_spk_ppm_int_ref = 17;
 uint32_t g_ppm_cnt        = 0;
 int32_t  g_ppm_sample_cnt = 0;
 
+#if DONGLE_VOICE_MIC_EN
+extern uint16_t g_ll_mic_mute_cnt;
+#endif
+
 void asrc_feedback_init(void)
 {
     s_integral_sum         = 0.0f;
@@ -164,7 +166,7 @@ void asrc_feedback_init(void)
 
 static uint8_t s_tph_mode = 0;
 
-#if (TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
+#if ((TLK_MW_DSP_COMM_ENABLE && !TLKADU_MIDBUF_ENABLE) && !TLK_CFG_HRA_ENABLE)
 extern int      ll_dsp_ret_data_buff[TLKALG_DSP_RET_NN_DATA_LEN_LL];
 extern uint16_t ll_dsp_wptr;
 extern uint16_t ll_dsp_rptr;
@@ -333,11 +335,7 @@ uint8_t ll_audio_get_ultra_low_latency_flag(void)
  */
 uint32_t ll_audio_get_tus_mic_enc(void)
 {
-#if AUDIO_TWS_MODE
     return (ll_audio_get_ultra_low_latency_flag() ? ULTRA_LL_TUS_MIC_ENC : TUS_MIC_ENC);
-#else
-    return (TUS_MIC_ENC);
-#endif
 }
 
 /**
@@ -347,11 +345,7 @@ uint32_t ll_audio_get_tus_mic_enc(void)
  */
 uint32_t ll_audio_get_tus_spk_dec(void)
 {
-#if AUDIO_TWS_MODE
     return (ll_audio_get_ultra_low_latency_flag() ? ULTRA_LL_TUS_SPK_DEC : TUS_SPK_DEC);
-#else
-    return (TUS_SPK_DEC);
-#endif
 }
 
 /**
@@ -361,11 +355,7 @@ uint32_t ll_audio_get_tus_spk_dec(void)
  */
 uint32_t ll_audio_get_frame_length(void)
 {
-#if AUDIO_TWS_MODE
     return (ll_audio_get_ultra_low_latency_flag() ? 5000 : 10000);
-#else
-    return (10000);
-#endif
 }
 
 /**
@@ -375,11 +365,17 @@ uint32_t ll_audio_get_frame_length(void)
  */
 uint16_t ll_audio_get_enc_frame_length(void)
 {
-#if AUDIO_TWS_MODE
     return (ll_audio_get_ultra_low_latency_flag() ? ASYNC_AUDIO_ULTRA_LL_DATA_LEN : ASYNC_AUDIO_DATA_LEN);
-#else
-    return (ASYNC_AUDIO_DATA_LEN);
-#endif
+}
+
+/**
+ * @brief Get headset encoder frame length.
+ * @param[in] none
+ * @return Encoder frame length.
+ */
+uint16_t ll_audio_get_headset_enc_frame_length(void)
+{
+    return (ll_audio_get_ultra_low_latency_flag() ? ULTRA_LL_5MS_MIC_LC3_DATA_LEN : LL_10MS_MIC_LC3_DATA_LEN);
 }
 
 /**
@@ -389,11 +385,7 @@ uint16_t ll_audio_get_enc_frame_length(void)
  */
 uint16_t ll_audio_get_samples_length(void)
 {
-#if AUDIO_TWS_MODE
     return (ll_audio_get_ultra_low_latency_flag() ? ULTRA_LL_SAMPLES : SAMPLES);
-#else
-    return SAMPLES;
-#endif
 }
 
 uint8_t async_dongle_is_in_scan_mode(void)
@@ -428,7 +420,11 @@ void ll_audio_set_mode(uint8_t mode)
 
 uint8_t app_tph_dongle_is_connected(void)
 {
+#if (TLK_STK_TPH_ENABLE)
     return (s_tph_mode & TPH_HOST_MODE_DONGLE_ACTIVE);
+#elif (TLK_STK_TPT_ENABLE)
+    return (s_tph_mode & TPT_HOST_MODE_DONGLE_ACTIVE);
+#endif
 }
 
 /**
@@ -481,7 +477,11 @@ uint8_t ll_audio_tone_is_playing(void)
 int8_t ll_audio_is_phone_mode(void)
 {
     int8_t ret = 0;
+#if (TLK_STK_TPH_ENABLE)
     if ((s_tph_mode & TPH_HOST_MODE_DONGLE_AUDIO) == TPH_HOST_MODE_DONGLE_PHONE) {
+#elif (TLK_STK_TPT_ENABLE)
+    if ((s_tph_mode & TPT_HOST_MODE_DONGLE_AUDIO) == TPT_HOST_MODE_DONGLE_PHONE) {
+#endif
         ret = 1;
     }
 
@@ -496,17 +496,12 @@ int8_t ll_audio_is_phone_mode(void)
 _attribute_ram_code_sec_ void ll_aud_gpio_toggle_test(uint8_t times)
 {
     for (uint8_t i = 0; i < times; i++) {
-#if TWS_AUDIO_PATH_GPIO_DEBUG
-        gpio_write(GPIO_PA2, 0);
-        gpio_write(GPIO_PA2, 1);
-        gpio_write(GPIO_PA2, 0);
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+        gpio_write(GPIO_PC1, 0);
+        gpio_write(GPIO_PC1, 1);
+        gpio_write(GPIO_PC1, 0);
 #endif
     }
-}
-
-uint8_t is_bt_audio_mode(void)
-{
-    return 0; //async_audio_bt_mode();
 }
 
 void ll_audio_enter_test_mode(void)
@@ -539,12 +534,10 @@ void tpsll_enc_buff_init(uint8_t *p_tpsll_audio_buff)
     tlkapi_printf(APP_AUDIO_LOG_EN, "tpsll enc buff init");
 
     uint16_t data_len = 0;
-#if AUDIO_TWS_MODE
+
     if (ll_audio_get_ultra_low_latency_flag()) {
         data_len = TPSLL_ULTRA_LL_ENC_BUFF_FRAME_SIZE;
-    } else
-#endif
-    {
+    } else {
         data_len = TPSLL_ENC_BUFF_FRAME_SIZE;
     }
 
@@ -765,9 +758,15 @@ _attribute_ram_code_sec_noinline_ uint8_t ll_audio_start_timer_encode_task(void)
         return 0;
     }
 
+#if (TLK_STK_TPH_ENABLE)
     if ((app_tph_headset_get_mode() & TPH_HOST_MODE_DONGLE_AUDIO) == TPH_HOST_MODE_DONGLE_PHONE) {
+#elif (TLK_STK_TPT_ENABLE)
+    if ((app_tph_headset_get_mode() & TPT_HOST_MODE_DONGLE_AUDIO) == TPT_HOST_MODE_DONGLE_PHONE) {
+#endif
         async_audio_ctx.tus_mic = 0;
-    } else {
+    }
+
+    else {
         async_audio_ctx.tus_mic = 0;
     }
 
@@ -802,6 +801,19 @@ _attribute_ram_code_sec_noinline_ uint8_t ll_audio_start_timer_encode_task(void)
     return ret;
 }
 
+_attribute_ram_code_sec_ void ll_aud_gpio_toggle_stimer_irq(uint8_t times)
+{
+    for (uint8_t i = 0; i < times; i++) {
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+        gpio_write(GPIO_PF4, 0);
+        gpio_write(GPIO_PF4, 1);
+        gpio_write(GPIO_PF4, 0);
+#endif
+    }
+}
+
+extern void ll_audio_mix_get_mic_data(void);
+
 /**
  * @brief Callback function for mailbox stimer start event.
  * @param[in] data - Event data.
@@ -813,10 +825,12 @@ _attribute_ram_code_ void tlk_mailbox_stimer_start_evt_callback(u8 *data)
     uint8_t bt_page_state     = (data[4] & 0x80) >> 7;
     uint8_t ultra_low_latency = (data[4] & 0x40) >> 6;
 
-#if TWS_AUDIO_PATH_GPIO_DEBUG
-    gpio_write(GPIO_PA0, 0);
-    gpio_write(GPIO_PA0, 1);
-    gpio_write(GPIO_PA0, 0);
+    ll_aud_gpio_toggle_stimer_irq(new_latency_mode);
+
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+    gpio_write(GPIO_PB6, 0);
+    gpio_write(GPIO_PB6, 1);
+    gpio_write(GPIO_PB6, 0);
 #endif
     ll_audio_set_ultra_low_latency_flag(ultra_low_latency);
 
@@ -829,12 +843,16 @@ _attribute_ram_code_ void tlk_mailbox_stimer_start_evt_callback(u8 *data)
     // gpio_set_high_level(GPIO_PC1);
     // gpio_set_low_level(GPIO_PC1);
 
-    async_audio_ctx.stimer_ll_mix_cnt = 0;
-    g_stimer_start_cnt++;
+    g_stimer_start_cnt = 0;
+    ;
     tmemcpy((uint8_t *)&async_audio_ctx.stimer_irq_tick, data, 4);
     async_audio_ctx.mix_tick = async_audio_ctx.stimer_irq_tick;
 
+#if (TLK_STK_TPH_ENABLE)
     if ((app_tph_headset_get_mode() & TPH_HOST_MODE_BT_VOICE) && tlkmdi_tpsll_audio_is_busy()) {
+#elif (TLK_STK_TPT_ENABLE)
+    if ((app_tph_headset_get_mode() & TPT_HOST_MODE_BT_VOICE) && tlkmdi_tpsll_audio_is_busy()) {
+#endif
         return;
     }
 
@@ -858,6 +876,9 @@ _attribute_ram_code_ void tlk_mailbox_stimer_start_evt_callback(u8 *data)
     async_audio_ctx.stimer_ref_wptr          = data[5] & 0x0f;
     async_audio_ctx.next_tpsll_rptr_and_flag = data[5];
     async_audio_ctx.sco_num_in_bt            = data[6];
+
+    async_audio_ctx.tpsll_uplink_enc_pkt_sent_cnt = 2;
+    async_audio_ctx.tpsll_mix_lc3_dec_cnt         = 0;
 
     ll_audio_start_timer_encode_task();
 
@@ -958,11 +979,17 @@ audio_ram_code void ll_audio_headset_post_pcm_data(codec_mono_int *p_pcm_left, c
         uint8_t channel = ALG_CHANNEL_STEREO;
 #endif
 
+#if LL_AUDIO_PATH_GPIO_DEBUG
+        gpio_write(GPIO_PC0, 1);
+#endif
         uint16_t length = ll_audio_spk_ppm_process((uint8_t *)pcm_stereo, (uint8_t *)pcm32_stereo_ppm, 48, channel);
         if (length != 48) {
             //tlkapi_trace(LL_AUDIO_DBG_FLAG, LL_AUDIO_DBG_SIGN, ">>>>>>>>>> ll aud ppm len: %d", length);
             g_ppm_cnt++;
         }
+#if LL_AUDIO_PATH_GPIO_DEBUG
+        gpio_write(GPIO_PC0, 0);
+#endif
         g_ppm_sample_cnt += length - 48;
 #else
         uint16_t length = num;
@@ -973,14 +1000,23 @@ audio_ram_code void ll_audio_headset_post_pcm_data(codec_mono_int *p_pcm_left, c
 
 #endif
 
+#if TLKALG_EQ_ENABLE
+        codec_mono_int         eq_out[48 * 2 + 20];
+        audio_alg_interface_t *p_audio_alg = audio_alg_get_interface_by_type(ALG_EQ);
+        p_audio_alg->audio_alg_process((uint8_t *)pcm32_stereo_ppm, (uint8_t *)eq_out, length, ALG_WIDTH_24, ALG_CHANNEL_STEREO);
+#endif
+
 #if 0 //CODEC_DAC_MONO_MODE
 		uint8_t channel = tlkmdi_bt_tpt_audio_getCurChannel();
 		tlkmdi_bt_tpt_audio_getMonoPcmData(pcm32_stereo_ppm, pcm32_mono_ppm, length, channel);
 		tlkdrv_codec_fillSpkBuff((uint8_t *)pcm32_mono_ppm, length * sizeof(codec_mono_int));
 #else
+#if TLKALG_EQ_ENABLE
+        tlkdrv_codec_fillSpkBuff((uint8_t *)eq_out, length * sizeof(codec_int));
+#else
         tlkdrv_codec_fillSpkBuff((uint8_t *)pcm32_stereo_ppm, length * sizeof(codec_int));
 #endif
-        //tlkdrv_codec_fillSpkBuff((uint8_t *)pcm_stereo, num * sizeof(codec_int));
+#endif
     }
 }
 
@@ -1016,11 +1052,19 @@ audio_ram_code void ll_audio_sync_samples(void)
 #if AUDIO_TWS_MODE
     int16_t ref = 180;
 #else
-    int16_t ref = 192; //250;
+    int16_t ref = 200; //250;
+#endif
+
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+    ref = 132;
 #endif
 
     if (ll_audio_get_ultra_low_latency_flag()) {
+#if AUDIO_TWS_MODE
         ref = 88;
+#else
+        ref = 120; //132;
+#endif
     }
 #endif
 
@@ -1182,9 +1226,15 @@ audio_ram_code void ll_audio_packet_check(uint8_t *p_src)
         return;
     }
 
+#if (TLK_STK_TPH_ENABLE)
     if (!(app_tph_headset_get_mode() & TPH_HOST_MODE_DONGLE_AUDIO)) {
+#elif (TLK_STK_TPT_ENABLE)
+    if (!(app_tph_headset_get_mode() & TPT_HOST_MODE_DONGLE_AUDIO)) {
+#endif
         async_audio_ctx.pkt_audio = 0;
-    } else if ((p_src[ASYNC_AUDIO_DATA_FLAG] & ASYNC_AUDIO_DATA_READY0)) {
+    }
+
+    else if ((p_src[ASYNC_AUDIO_DATA_FLAG] & ASYNC_AUDIO_DATA_READY0)) {
         async_audio_ctx.plc_num = 0;
 
         if (!async_audio_ctx.pkt_audio) {
@@ -1218,9 +1268,12 @@ audio_ram_code void ll_audio_packet_check(uint8_t *p_src)
 //			gpio_write(GPIO_PG1, 0);
 #endif
         }
-        async_audio_ctx.ll_rcvd = 0;
 
+#if (TLK_STK_TPH_ENABLE)
         if (!(app_tph_headset_get_mode() & TPH_HOST_MODE_DONGLE_AUDIO)) {
+#elif (TLK_STK_TPT_ENABLE)
+        if (!(app_tph_headset_get_mode() & TPT_HOST_MODE_DONGLE_AUDIO)) {
+#endif
             //async_audio_ctx.audio_per = 0;
             async_audio_ctx.pkt_audio = 0;
         } else if (async_audio_ctx.pkt_audio) {
@@ -1252,8 +1305,16 @@ __attribute__((noinline)) void ll_audio_open_codec(void)
     }
 
 #else
+#if TLKADU_MIDBUF_ENABLE
+    tlkaud_set_audio_mode(AUDIO_TPSLL_SPK);
+#else
     tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_SPK, TLKDRV_CODEC_CHANNEL_STEREO, TLKDRV_CODEC_BITDEPTH_24, 48000, 4096);
-    tlkdrv_codec_sync_speaker_samples(480 * 2);
+#endif
+    if (ll_audio_get_ultra_low_latency_flag()) {
+        tlkdrv_codec_sync_speaker_samples(480);
+    } else {
+        tlkdrv_codec_sync_speaker_samples(480 * 2);
+    }
 #endif
     //audio_ctl_set_audio_mode(ASYNC_FLOW_LL_AUDIO);
 }
@@ -1266,34 +1327,31 @@ __attribute__((noinline)) void ll_audio_open_codec(void)
 audio_ram_code uint8_t ll_codec_get_mic_data(int *p_des, uint16_t samples, int mode)
 {
     (void)mode;
-#if 0
-    adc_int mic_stereo_48k[480];
-    int     mic_mono_48k[480];
-    // short   mic_mono_48k_16bit[480];
-    // short   mic_mono_16k_16bit[160];
+#if TLKADU_MIDBUF_ENABLE
+    mic_buf_typ mic_data[samples];
+    adc_mono    mono_data[samples];
+    adc_mono   *psrc     = (adc_mono *)mic_data;
+    mic_chnl_e  mic_chnl = 0;
 
-    tlkdrv_codec_readMicData((uint8_t *)mic_stereo_48k, samples * 3 * sizeof(adc_int), 0); //stereo
-    int *psrc = (int *)mic_stereo_48k;
+    tlkaud_sidetone_get_mic_data_16k((mic_buf_typ *)mic_data, samples, &mic_chnl);
 
-    //tlkapi_printf(APP_AUDIO_LOG_EN, "mic src: %x %x %x %x", psrc[0], psrc[1], psrc[2], psrc[3]);
-
-    for (int i = 0; i < samples * 3; i++) { //stereo -> mono
-        mic_mono_48k[i] = psrc[2 * i];
+    if (mic_chnl == MIC_CHNL_STEREO) {
+        for (int i = 0; i < samples; i++) {
+            mono_data[i] = psrc[2 * i];
+        }
+        psrc = mono_data;
+    } else {
+        (void)mono_data;
     }
-#if 0
-    for (int j = 0; j < samples * 3; j++) { //24bit -> 16bit
-        mic_mono_48k_16bit[j] = (mic_mono_48k[j] >> 8) & 0x0000ffff;
-    }
-    audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16);
-    p_audio_alg_if->audio_alg_process((uint8_t *)mic_mono_48k_16bit, (uint8_t *)mic_mono_16k_16bit, samples * 3, 0, 0);
 
-    for (int k = 0; k < samples; k++) { //16bit -> 24bit
-        *p_des++ = (int)mic_mono_16k_16bit[k] << 8;
+    if (4 == sizeof(adc_mono)) {
+        tmemcpy(p_des, psrc, samples * 4);
+    } else if (2 == sizeof(adc_mono)) {
+        for (int i = 0; i < samples; i++) { //16bit -> 24bit
+            *p_des++ = (int32_t)(psrc[i] << 8);
+        }
     }
-#else
-    audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16_24BIT);
-    p_audio_alg_if->audio_alg_process((uint8_t *)mic_mono_48k, (uint8_t *)p_des, samples * 3, 0, 0);
-#endif
+
 #else
     adc_int mic_stereo_16k[160];
     //gpio_set_high_level(GPIO_CHN0);
@@ -1307,32 +1365,39 @@ audio_ram_code uint8_t ll_codec_get_mic_data(int *p_des, uint16_t samples, int m
     return TRUE;
 }
 
+extern uint32_t g_dbg_mic_avail_samples;
+extern uint8_t *ll_audio_mix_get_mic_buff(void);
+
 /**
  * @brief Low latency audio mic data process task, called by timer0 irq handler.
  * @param[in] idx - Mic ID.
  * @return none
  */
-audio_ram_code void ll_audio_mic_data_process_task_mcu(uint8_t idx)
+audio_ram_code uint8_t ll_audio_mic_data_process_task_mcu(uint8_t idx)
 {
     (void)idx;
-    uint8_t         enc_data[64];
-    int             pcm_24bit[200];
+    uint8_t         enc_data[64] = {0};
+    int32_t         pcm_24bit[200];
     static uint32_t tick_mute = 0;
 
-#if TLK_MW_DSP_COMM_ENABLE && DSP_NN_NS_BUFF_DISENABLE
+#if ((TLK_MW_DSP_COMM_ENABLE && !TLKADU_MIDBUF_ENABLE) && DSP_NN_NS_BUFF_DISENABLE)
     int     pcm_to_dsp[320 * 3];
     uint8_t pcm_ret = 0;
 #endif
 
-    int16_t  cur_ll_voice_mode = (app_tph_headset_get_mode() & TPH_HOST_MODE_DONGLE_PHONE) >> 5;
-    uint16_t data_len          = ll_audio_get_frame_length() / 1000 * 16;
+#if (TLK_STK_TPH_ENABLE)
+    int16_t cur_ll_voice_mode = (app_tph_headset_get_mode() & TPH_HOST_MODE_DONGLE_PHONE) >> 5;
+#elif (TLK_STK_TPT_ENABLE)
+    int16_t cur_ll_voice_mode = (app_tph_headset_get_mode() & TPT_HOST_MODE_DONGLE_PHONE) >> 5;
+#endif
+    uint16_t data_len = ll_audio_get_frame_length() / 1000 * 16;
 
     //configuration after mode changing
     if (s_ll_voice_mode != cur_ll_voice_mode) {
         //tlkapi_trace(LL_AUDIO_DBG_FLAG, LL_AUDIO_DBG_SIGN, "s_ll_voice_mode: %d, cur: %d %x", s_ll_voice_mode, cur_ll_voice_mode, app_tph_headset_get_mode());
         s_ll_voice_mode = cur_ll_voice_mode;
         if (s_ll_voice_mode) {
-#if (TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
+#if ((TLK_MW_DSP_COMM_ENABLE && !TLKADU_MIDBUF_ENABLE) && !TLK_CFG_HRA_ENABLE)
             tlkmw_dsp_resume();
             ipc_msg_register_data_process_done_cb(ll_voice_dsp_msg_process_callback, LL_VOICE, LL_VOICE_ID);
             ll_voice_clear_dsp_ret_buff_status();
@@ -1348,18 +1413,25 @@ audio_ram_code void ll_audio_mic_data_process_task_mcu(uint8_t idx)
                 tlkapi_trace(LL_AUDIO_DBG_FLAG, LL_AUDIO_DBG_SIGN, "[TPSLL VOICE] MIC OPEN: %x %d", app_tph_headset_get_mode(), idx);
 
                 async_audio_ctx.mic_state = 1;
-
+#if TLKADU_MIDBUF_ENABLE
+                tlkaud_set_audio_mode(AUDIO_TPSLL_MIC);
+#else
                 tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_MIC, TLKDRV_CODEC_CHANNEL_STEREO, TLKDRV_CODEC_BITDEPTH_24, 16000, 0);
 
-                tlkdrv_codec_sync_mic_samples(data_len);
+                tlkdrv_codec_sync_mic_samples(data_len * 2);
+#endif
             }
-            return;
+            return 0;
         } else {
             tlkapi_trace(LL_AUDIO_DBG_FLAG, LL_AUDIO_DBG_SIGN, "[TPSLL VOICE] MIC CLOSE");
+#if TLKADU_MIDBUF_ENABLE
+            tlkaud_clear_audio_mode(AUDIO_TPSLL_MIC);
+#else
             tlkdrv_codec_close(TLKDRV_CODEC_SUBDEV_MIC);
+#endif
             async_audio_ctx.mic_state = 0;
 
-#if TLK_MW_DSP_COMM_ENABLE
+#if (TLK_MW_DSP_COMM_ENABLE && !TLKADU_MIDBUF_ENABLE)
             // pm_set_dig_module_power_switch(FLD_PD_DSP_EN, PM_POWER_DOWN);
             if (tlkmdi_tpsll_audio_is_busy()) {
                 tlkmw_dsp_pause();
@@ -1369,15 +1441,29 @@ audio_ram_code void ll_audio_mic_data_process_task_mcu(uint8_t idx)
     }
 
     if (s_ll_voice_mode == 0) {
-        return;
+        return 0;
     }
 
-#if AUDIO_TWS_MODE && ULTRA_LOW_LATENCY_EN
+#if ULTRA_LOW_LATENCY_EN
     if (g_tpsll_ultra_ll_ctx.ultra_ll_mode_change) {
-        return;
+        tlkapi_trace(LL_AUDIO_DBG_FLAG, LL_AUDIO_DBG_SIGN, "[TPSLL ultra mode]");
+        return 0;
     }
 #endif
 
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+    gpio_write(GPIO_PA2, 1);
+#endif
+
+    async_audio_ctx.tpsll_enc_is_ongoing = 1;
+
+    uint8_t cur_state_is_mix_mode = 0;
+
+    if (ll_audio_is_in_mix_mode() && (tlkmdi_bt_music_is_busy() || tlkmdi_bt_voice_is_busy())) {
+        cur_state_is_mix_mode = 1;
+    } else {
+        cur_state_is_mix_mode = 0;
+    }
 
     // codec_get_sin_data(pcm, 120);  ll_codec_get_mic_data((int16_t *)pcm, 80, 1)
     // 5000us / 62.5us = 80 samples, 16K
@@ -1386,18 +1472,34 @@ audio_ram_code void ll_audio_mic_data_process_task_mcu(uint8_t idx)
 #if 0 //(TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
     if (ll_voice_dsp_dp_get_mic_data(pcm_24bit, 160)) {
 #else
-    if (ll_codec_get_mic_data(pcm_24bit, data_len, 0)) { //ll_codec_get_mic_data(pcm_24bit, 160, 0))
+    if (!cur_state_is_mix_mode) {
+        ll_codec_get_mic_data((int *)pcm_24bit, data_len, 0);
+    } else {
+        memcpy(pcm_24bit, g_ll_mic_mid_buf, data_len * sizeof(int));
+    }
+
+    {
 #endif
         if (s_ll_voice_mode) {
             if (tick_mute) {
                 //tmemset(pcm_24bit, 0, 160 * 2);
             }
-#if (TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
+
+#if TLKALG_LC3_24BIT_ENC_ENABLE
+            audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_24BIT_ENC);
+#elif TLKALG_LC3_PLUS_ENC_ENABLE
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_ENC);
+#else
+        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_DEFAULT);
+        (void)p_audio_alg_if;
+#endif
+
+#if ((TLK_MW_DSP_COMM_ENABLE && !TLKADU_MIDBUF_ENABLE) && !TLK_CFG_HRA_ENABLE)
             // gpio_set_high_level(GPIO_CHN0);
             app_dsp_context_t *p_dsp_app_ctx = d25f_get_dsp_app_ctx(LL_VOICE_ID);
             p_dsp_app_ctx->alg_type          = LL_VOICE;
 #if DSP_NN_NS_BUFF_DISENABLE
-            pcm_ret = d25f_get_ll_voice_available_nn_buff_len(pcm_24bit, pcm_to_dsp, 160);
+            pcm_ret = d25f_get_ll_voice_available_nn_buff_len((int *)pcm_24bit, pcm_to_dsp, data_len);
             if (pcm_ret == 1) {
                 //                gpio_set_high_level(GPIO_PB0);
                 d25f_send_audio_data_to_dsp((uint8_t *)pcm_to_dsp, 16 * 20 * 4, LL_VOICE_ID);
@@ -1433,16 +1535,11 @@ audio_ram_code void ll_audio_mic_data_process_task_mcu(uint8_t idx)
                 gpio_write(GPIO_PB0, 1);
 #endif
 
-#if TLKALG_LC3_24BIT_ENC_ENABLE
-                audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_24BIT_ENC);
-#elif TLKALG_LC3_PLUS_ENC_ENABLE
-                audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_ENC);
-#endif
+#if (!MCU_CORE_TL752X_TEMP && !MCU_CORE_TL753X_TEMP)
                 if (p_audio_alg_if->audio_alg_process) {
                     p_audio_alg_if->audio_alg_process((uint8_t *)pcm_24bit, (uint8_t *)enc_data, data_len, ALG_WIDTH_24, ALG_CHANNEL_LEFT);
                 }
-                //async_audio_ctx.mic_data_ready = 1;
-                ll_audio_post_audio_data_to_async_fifo(0, enc_data);
+#endif
 
 #if TWS_AUDIO_PATH_GPIO_DEBUG
                 gpio_write(GPIO_PB0, 0);
@@ -1451,45 +1548,61 @@ audio_ram_code void ll_audio_mic_data_process_task_mcu(uint8_t idx)
                 tlkapi_trace(LL_AUDIO_DBG_FLAG, LL_AUDIO_DBG_SIGN, "[LL AUD] ll voice have not enough dsp data");
             }
 #else
-#if TLKALG_LC3_24BIT_ENC_ENABLE
-        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_24BIT_ENC);
-#elif TLKALG_LC3_PLUS_ENC_ENABLE
-        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_ENC);
-#else
-        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_DEFAULT);
-#endif
         if (p_audio_alg_if->audio_alg_process) {
-#if 0
-                gpio_write(GPIO_PA2, 1);
-#endif
+            int32_t *p_mic_buf = g_ll_mic_mid_buf;
+            if (cur_state_is_mix_mode) {
+                p_mic_buf = g_ll_mic_mid_buf;
 
-            int ret = p_audio_alg_if->audio_alg_process((uint8_t *)pcm_24bit, (uint8_t *)enc_data, data_len, ALG_WIDTH_24, ALG_CHANNEL_LEFT);
+                if (g_ll_mic_mute_cnt < 300) {
+                    g_ll_mic_mute_cnt++;
+                    tmemset(p_mic_buf, 0, data_len * sizeof(int32_t));
+                }
+            } else {
+                p_mic_buf = pcm_24bit;
+            }
 
-#if 0
-            gpio_write(GPIO_PA2, 0);
-#endif
+            int ret = p_audio_alg_if->audio_alg_process((uint8_t *)p_mic_buf, (uint8_t *)enc_data, data_len, ALG_WIDTH_24, ALG_CHANNEL_LEFT);
             if (ret) {
                 //tlkapi_printf(APP_AUDIO_LOG_EN, "lc3 24bit enc, ret: %x", ret);
             }
 
-            // g_enc_lc3_24bit_data
-            ll_audio_post_audio_data_to_async_fifo(0, enc_data);
-            //async_audio_ctx.mic_data_ready = 1;
 
-            //              tlkapi_printf(APP_AUDIO_LOG_EN, "ret: %d, enc_data: %x %x %x %x",
-            //                            ret, enc_data[0], enc_data[1], enc_data[2], enc_data[3]);
+            // tlkapi_printf(APP_AUDIO_LOG_EN, "mic_avail_samples: %d, enc:%d",
+            //               g_dbg_mic_avail_samples,
+            //               ll_audio_mix_enc_buff_available());
         }
 #endif
+            if (cur_state_is_mix_mode) {
+                uint8_t *p_enc_buff   = ll_audio_mix_get_enc_buff_ptr();
+                uint8_t  enc_data_len = ll_audio_get_headset_enc_frame_length();
+                tmemcpy(p_enc_buff, enc_data, enc_data_len);
+                ll_audio_mix_update_enc_buff_wptr();
+            } else {
+                ll_audio_post_audio_data_to_async_fifo(0, enc_data);
+            }
         }
     }
+
+    async_audio_ctx.tpsll_enc_is_ongoing = 0;
+    async_audio_ctx.tpsll_mix_bt_dec_cnt = 0;
+
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
+    gpio_write(GPIO_PA2, 0);
+#endif
+
+    return 1;
 }
 
-/**
+/**#if (!MCU_CORE_TL752X_TEMP && !MCU_CORE_TL753X_TEMP)
  * @brief  tpsll audio decoder task
  * @param  p_audio: pointer to audio data
  * @return none
  */
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio, int times)
+#else
 audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
+#endif
 {
     uint16_t i;
     uint8_t  mute = 0;
@@ -1499,7 +1612,11 @@ audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
     int32_t  pcm_24bit_left[SAMPLES];
     int32_t  pcm_24bit_right[SAMPLES];
 #endif
-    int32_t  pcm_24bit_stereo[SAMPLES * 2 + 96];
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+    int32_t pcm_24bit_stereo[SAMPLES + 96];
+#else
+    int32_t pcm_24bit_stereo[SAMPLES * 2 + 96];
+#endif
     uint8_t *p_lc3_data;
     uint8_t  plc_en = 0;
 
@@ -1516,7 +1633,11 @@ audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
     data_ready0 = p_audio[ASYNC_AUDIO_DATA_FLAG];
 
     /* check number of samples in playback buffer */
+#if (TLK_STK_TPH_ENABLE)
     if (!(app_tph_headset_get_mode() & TPH_HOST_MODE_DONGLE_AUDIO) || !async_audio_ctx.pkt_audio) {
+#elif (TLK_STK_TPT_ENABLE)
+    if (!(app_tph_headset_get_mode() & TPT_HOST_MODE_DONGLE_AUDIO) || !async_audio_ctx.pkt_audio) {
+#endif
         if (s_ll_pkt_audio_last != async_audio_ctx.pkt_audio) {
             tlkdrv_codec_muteSpkBuff();
             async_audio_ctx.audio_mute = 1;
@@ -1535,7 +1656,7 @@ audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
     p_audio = p_audio + 2;
 
     if (!app_tph_dongle_is_connected()
-#if AUDIO_TWS_MODE && ULTRA_LOW_LATENCY_EN
+#if ULTRA_LOW_LATENCY_EN
         || g_tpsll_ultra_ll_ctx.ultra_ll_mode_change
 #endif
     ) {
@@ -1545,10 +1666,10 @@ audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
 
         tmemset(pcm_24bit_stereo, 0, sizeof(pcm_24bit_stereo));
     } else {
-#if AUDIO_TWS_MODE
-        uint16_t data_len = ll_audio_get_enc_frame_length();
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+        uint16_t data_len = ASYNC_AUDIO_DATA_LEN; //ll_audio_get_enc_frame_length()
 #else
-        uint16_t data_len = ASYNC_AUDIO_DATA_LEN;
+        uint16_t data_len = ll_audio_get_enc_frame_length();
 #endif
         if ((data_ready0 & ASYNC_AUDIO_DATA_NULL0) || (data_ready0 == 0)) {
             if (!(async_audio_ctx.plc_num & BIT(2))) {
@@ -1565,10 +1686,10 @@ audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
 #elif TLKALG_LC3_PLUS_DEC_ENABLE
         audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_DEC);
 #else
-        audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_DEFAULT);
+    audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_DEFAULT);
 #endif
         if (p_audio_alg_if->audio_alg_process) {
-#if TWS_AUDIO_PATH_GPIO_DEBUG
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
             gpio_write(GPIO_PC0, 1);
 #endif
 
@@ -1578,7 +1699,11 @@ audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
             if (tlkmdi_bt_tpt_isLeft()) {
                 p_lc3_data = p_audio;
             } else {
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+                p_lc3_data = p_audio + data_len / 2;
+#else
                 p_lc3_data = p_audio + data_len;
+#endif
             }
 #else
             uint8_t channel = ALG_CHANNEL_STEREO;
@@ -1589,13 +1714,16 @@ audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
 #ifdef SL01_ll_audio_dec
             log_task_begin_irq(SL_LL_AUDIO_LOG_EN, SL01_ll_audio_dec);
 #endif
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+            int ret = p_audio_alg_if->audio_alg_process(p_lc3_data + times * data_len, (uint8_t *)pcm_24bit_stereo, data_len / 2, ALG_WIDTH_24, channel);
+#else
             int ret = p_audio_alg_if->audio_alg_process(p_lc3_data, (uint8_t *)pcm_24bit_stereo, data_len, ALG_WIDTH_24, channel);
-
+#endif
 #ifdef SL01_ll_audio_dec
             log_task_end_irq(SL_LL_AUDIO_LOG_EN, SL01_ll_audio_dec);
 #endif
 
-#if TWS_AUDIO_PATH_GPIO_DEBUG
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
             gpio_write(GPIO_PC0, 0);
 #endif
             (void)ret;
@@ -1626,6 +1754,12 @@ audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
             ll_audio_headset_post_pcm_data((codec_mono_int *)pcm_24bit_left + i, (codec_mono_int *)pcm_24bit_right + i, 48);
         }
     } else {
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+        tmemcpy(pcm_24bit_left, pcm_data, SAMPLES / 2 * sizeof(codec_mono_int));
+        for (i = 0; i < SAMPLES / 2; i += 48) {
+            ll_audio_headset_post_pcm_data((codec_mono_int *)pcm_24bit_left + i, (codec_mono_int *)pcm_24bit_right + i, 48);
+        }
+#else
         tmemcpy(pcm_24bit_left, pcm_data, SAMPLES * sizeof(codec_mono_int));
         ll_audio_headset_post_pcm_data((codec_mono_int *)pcm_24bit_left, (codec_mono_int *)pcm_24bit_right, 48);
         ll_audio_headset_post_pcm_data((codec_mono_int *)pcm_24bit_left + 48, (codec_mono_int *)pcm_24bit_right + 48, 48);
@@ -1633,16 +1767,33 @@ audio_ram_code void ll_audio_decoder_task_mcu(uint8_t *p_audio)
         for (i = 0; i < 384; i += 48) {
             ll_audio_headset_post_pcm_data((codec_mono_int *)pcm_24bit_left + 96 + i, (codec_mono_int *)pcm_24bit_right + 96 + i, 48);
         }
+#endif
     }
 #else
-    codec_mono_int *p_pcm_24bit_left  = pcm_24bit_stereo;
-    codec_mono_int *p_pcm_24bit_right = pcm_24bit_stereo + SAMPLES;
+    codec_mono_int *p_pcm_24bit_left = pcm_24bit_stereo;
+    codec_mono_int *p_pcm_24bit_right; // = pcm_24bit_stereo + SAMPLES;
 
-    ll_audio_headset_post_pcm_data((codec_mono_int *)p_pcm_24bit_left, (codec_mono_int *)p_pcm_24bit_right, 48);
-    ll_audio_headset_post_pcm_data((codec_mono_int *)p_pcm_24bit_left + 48, (codec_mono_int *)p_pcm_24bit_right + 48, 48);
+    if (ll_audio_get_ultra_low_latency_flag()) {
+        p_pcm_24bit_right = pcm_24bit_stereo + ULTRA_LL_SAMPLES;
+        for (i = 0; i < ULTRA_LL_SAMPLES; i += 48) {
+            ll_audio_headset_post_pcm_data((codec_mono_int *)p_pcm_24bit_left + i, (codec_mono_int *)p_pcm_24bit_right + i, 48);
+        }
+    } else {
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+        p_pcm_24bit_left  = pcm_24bit_stereo;
+        p_pcm_24bit_right = pcm_24bit_stereo + SAMPLES / 2;
+        for (i = 0; i < SAMPLES / 2; i += 48) {
+            ll_audio_headset_post_pcm_data((codec_mono_int *)p_pcm_24bit_left + i, (codec_mono_int *)p_pcm_24bit_right + i, 48);
+        }
+#else
+        p_pcm_24bit_right = pcm_24bit_stereo + SAMPLES;
+        ll_audio_headset_post_pcm_data((codec_mono_int *)p_pcm_24bit_left, (codec_mono_int *)p_pcm_24bit_right, 48);
+        ll_audio_headset_post_pcm_data((codec_mono_int *)p_pcm_24bit_left + 48, (codec_mono_int *)p_pcm_24bit_right + 48, 48);
 
-    for (i = 0; i < 384; i += 48) {
-        ll_audio_headset_post_pcm_data((codec_mono_int *)p_pcm_24bit_left + 96 + i, (codec_mono_int *)p_pcm_24bit_right + 96 + i, 48);
+        for (i = 0; i < 384; i += 48) {
+            ll_audio_headset_post_pcm_data((codec_mono_int *)p_pcm_24bit_left + 96 + i, (codec_mono_int *)p_pcm_24bit_right + 96 + i, 48);
+        }
+#endif
     }
 #endif
 }
@@ -1660,8 +1811,8 @@ audio_ram_code void ll_audio_main(void)
 
     uint32_t ref_tus_spk_dec = ll_audio_get_tus_spk_dec();
     uint16_t stimer_ref_us   = ll_audio_get_frame_length();
-#ifdef TWS_AUDIO_PATH_GPIO_DEBUG
-//    gpio_write(GPIO_PC0, 1);
+#ifdef LL_AUDIO_PATH_GPIO_DEBUG
+    gpio_write(GPIO_PA0, 1);
 #endif
 
 #ifdef SL01_audio_task
@@ -1804,15 +1955,21 @@ audio_ram_code void ll_audio_main(void)
         }
 
         ll_audio_packet_check(p_src);
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+        ll_audio_decoder_task_mcu(p_src, 0);
+        if (!ll_audio_get_ultra_low_latency_flag()) {
+            ll_audio_decoder_task_mcu(p_src, 1);
+        }
+#else
         ll_audio_decoder_task_mcu(p_src);
-
+#endif
         p_src[ASYNC_AUDIO_DATA_FLAG] = 0;
         uint16_t enc_frame_length    = ll_audio_get_enc_frame_length();
         tmemset(p_src, 0, enc_frame_length * 2 + 2);
     }
 
-#ifdef TWS_AUDIO_PATH_GPIO_DEBUG
-//    gpio_write(GPIO_PC0, 0);
+#ifdef LL_AUDIO_PATH_GPIO_DEBUG
+    gpio_write(GPIO_PA0, 0);
 #endif
 
 #ifdef SL01_audio_task

@@ -24,6 +24,9 @@
 
 #include "drivers.h"
 #include "tlkapi/tlkapi.h"
+#include "../tlkalg_audio_cfg.h"
+
+
 #include "tlkalg_nn_ns_vad_interface.h"
 
 #if (TLKALG_NN_NS_VAD_ENABLE)
@@ -33,8 +36,12 @@ NN_NS_PARA_STRU g_nn_ns_vad_para    = {
        .n_fft          = 1024,
        .n_framesize    = 320,
        .n_target_level = target_unlimited,
-       .n_vad_level    = vad_066,
+       .n_vad_level    = vad_056,
 };
+
+int   nn_ns_vad_size          = 0;
+int   nn_ns_vad_scratch_size  = 0;
+void *g_nn_ns_vad_src_buf_ptr = NULL;
 
 /**
  * @brief       This function calculates the required buffer size for the neural network noise suppression and voice activity detection algorithm.
@@ -45,11 +52,13 @@ uint16_t tlkalg_nn_ns_get_size(uint8_t channel)
 {
     (void)channel;
 
-    uint16_t size = tlka_nn_ns_get_size();
-    size          = (size + 3) / 4 * 4; //4 Byte align
+    nn_ns_vad_size = tlka_nn_ns_get_size();
+    nn_ns_vad_size = (nn_ns_vad_size + 3) / 4 * 4; //4 Byte align
 
-    tlkapi_trace(0xFFFFFFFF, "[TEST]", "NN_NS size %d", size);
-    return size;
+    nn_ns_vad_scratch_size = (tlka_nn_ns_get_scratch_buf_size() + 3) / 4 * 4;
+
+    //	tlkapi_trace(0xFFFFFFFF, "[TEST]", "NN_NS size %d,scratch_size= %d", nn_ns_vad_size, nn_ns_vad_scratch_size);
+    return nn_ns_vad_size;
 }
 
 /**
@@ -122,18 +131,28 @@ int tlkalg_nn_ns_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, 
     (void)width;
     (void)channel;
     (void)len;
+    int ret = 0xff;
 
     if (ps == NULL) {
         tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_nn_ns_process:PS null");
         return 0;
     }
 
-    if (g_nn_ns_vad_buf_ptr == NULL) {
-        tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_nn_ns_process:struct null");
-        return 0;
-    }
+#if (TLKALG_AUD_SCRATCH_BUF_POS == TLKALG_AUD_SCRATCH_BUF_USE_STACK)
+    uint8_t srcatch_buff[nn_ns_vad_scratch_size];
+    g_nn_ns_vad_src_buf_ptr = (void *)srcatch_buff;
 
-    int ret = tlka_nn_ns_process_frame((NN_NS_STRU *)g_nn_ns_vad_buf_ptr, (short *)ps, (int *)pd);
+    ret = tlka_nn_ns_process_frame((NN_NS_STRU *)g_nn_ns_vad_buf_ptr, (short *)ps, (int *)pd, g_nn_ns_vad_src_buf_ptr);
+//		tlkapi_trace(0xFFFFFFFF, "[TEST]", "srcatch_buff:%x,ret:%d,VAD;%d",g_nn_ns_vad_src_buf_ptr,ret,*pd);
+#elif (TLKALG_AUD_SCRATCH_BUF_POS == TLKALG_AUD_SCRATCH_BUF_USE_HEAP)
+    g_nn_ns_vad_src_buf_ptr = tlkalg_malloc_func(nn_ns_vad_scratch_size);
+    if (g_nn_ns_vad_src_buf_ptr != NULL) {
+        ret = tlka_nn_ns_process_frame((NN_NS_STRU *)g_nn_ns_vad_buf_ptr, (short *)ps, (int *)pd, g_nn_ns_vad_src_buf_ptr);
+        tlkalg_free_func(g_nn_ns_vad_src_buf_ptr);
+    } else {
+        tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_nn_ns_process:struct null");
+    }
+#endif
 
     return ret;
 }

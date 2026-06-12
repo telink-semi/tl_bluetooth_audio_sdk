@@ -24,9 +24,12 @@
 #include <stdio.h>
 #include "stack/ble/ble.h"
 #include "driver.h"
-#include "tlkmw/ble/le_audio/inc/lea_device.h"
-#include "tlkmw/ble/le_audio/inc/lea_us_tws.h"
+
+#include "tlkmw/ble/le_audio/inc/lea_us.h"
+
 #include "../app_example.h"
+#include "../app_key.h"
+
 #define LEA_US_HEADSET     0
 #define LEA_US_TWS         1
 #define LEA_US_DEVICE_TYPE LEA_US_HEADSET
@@ -57,7 +60,8 @@ static uint8_t app_lea_us_get_device_type(void)
         tlk_printf("[APP] Device type is already set: %d", s_device_type);
         return s_device_type;
     }
-    uint32_t read_type_addr = TLK_CFG_FLASH_USER_USBID_ADDR + flash_full_size - 0x100000;
+    uint32_t tlkhal_flash_get_size(void);
+    uint32_t read_type_addr = TLK_CFG_FLASH_USER_USBID_ADDR + tlkhal_flash_get_size() - 0x100000;
     flash_read_page(read_type_addr, 1, (uint8_t *)&s_device_type);
     if (s_device_type != TWS_LEFT_EAR_BUD && s_device_type != TWS_RIGHT_EAR_BUD) {
         s_device_type = TWS_LEFT_EAR_BUD;
@@ -68,8 +72,9 @@ static uint8_t app_lea_us_get_device_type(void)
 
 static void app_ble_get_device_sirk(uint8_t *sirk)
 {
-    uint8_t  s_sirk[16]     = {0};
-    uint32_t read_sirk_addr = TLK_CFG_FLASH_LE_TWS_SIRK_ADDR + flash_full_size - 0x100000;
+    uint8_t  s_sirk[16] = {0};
+    uint32_t tlkhal_flash_get_size(void);
+    uint32_t read_sirk_addr = TLK_CFG_FLASH_LE_TWS_SIRK_ADDR + tlkhal_flash_get_size() - 0x100000;
     flash_read_page(read_sirk_addr, 16, s_sirk);
     int i = 0;
     for (; i < 16; i++) {
@@ -86,19 +91,34 @@ static void app_ble_get_device_sirk(uint8_t *sirk)
 }
 #endif
 
+static void app_reconnect_timeout(void)
+{
+    tlk_printf("[APP] Reconnect timeout, stopping advertising and notifying callback");
+}
+
+static void app_key_reconnect_peer_device(void)
+{
+    lea_unicast_server_reconnect_all_paired_devices(10, app_reconnect_timeout);
+}
+
+static void app_key_start_advertising(void)
+{
+    lea_unicast_server_start_advertising();
+}
+
 int INIT(APP_BLE_LEA_DEVICE)(void)
 {
 #if (LEA_US_DEVICE_TYPE == LEA_US_TWS)
     static struct lea_us_tws_param s_le_tws_param = {
-        .device_name = "app_lea_us_tws",
+        .device_name = "app_lea_us_device_tws",
         .interval    = 50,
         .volume      = 150,
     };
     s_le_tws_param.ear_type = app_lea_us_get_device_type();
     app_ble_get_device_sirk(s_le_tws_param.sirk);
-    lea_unicast_server_tws_initial(&s_le_tws_param);
+    lea_device_tws_initial(&s_le_tws_param);
 #elif (LEA_US_DEVICE_TYPE == LEA_US_HEADSET)
-    static struct lea_device_param s_le_headset_param = {
+    static struct tlk_mw_lea_cap_headset_param s_le_headset_param = {
         .device_name = "app_lea_us_device",
         .interval    = 50,
         .volume      = 120,
@@ -107,6 +127,9 @@ int INIT(APP_BLE_LEA_DEVICE)(void)
 #endif
     blc_svc_calculateDatabaseHash();
     ble_host_acl_conn_register_user_data(BLE_HOST_APP_DATA2_USER_ID, &s_app_acl_callbacks);
+
+    app_key_register_callback(0, app_key_reconnect_peer_device);
+    app_key_register_callback(1, app_key_start_advertising);
     return 0;
 }
 

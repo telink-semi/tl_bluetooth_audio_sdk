@@ -27,6 +27,7 @@
 #include "tlkmw/bt/tlkmw_bt.h"
 
 #include "stack/bt/host/btp/btp_stdio.h"
+#include "stack/bt/host/bth/bth_l2cap.h"
 #include "tlkmw/tlkmw.h"
 
 static const btp_gattItem_t scTlkMdiBtAttItems[];
@@ -47,6 +48,21 @@ int tlkmdi_btatt_otaSendData(uint32_t taskID, uint8_t *pData, uint16_t dataLen, 
     return btp_att_sendHandleValueNtf1(handle, chnID, TLKMDI_BTATT_OTA_CMD_OUT_DP_H, NULL, 0, pData, dataLen);
 }
 
+uint32_t tlkmdi_btatt_get_ota_param(uint32_t taskID, uint8_t param_type, void *UserArg)
+{
+    (void)taskID;
+    (void)UserArg;
+
+    if (param_type == TLKMW_OTA_PARAM_MTU_SIZE) {
+        bth_l2cap_channel_t *pChannel = bth_l2cap_getConnChannelByPsm(taskID & 0xFFFF, BTP_PSMID_ATT);
+        if (pChannel != NULL) {
+            return pChannel->mtuSize;
+        }
+    }
+
+    return 0;
+}
+
 /**
  * @brief       This function initializes the BT ATT module
  * @param[in]   none.
@@ -55,7 +71,15 @@ int tlkmdi_btatt_otaSendData(uint32_t taskID, uint8_t *pData, uint16_t dataLen, 
 int tlkmdi_btatt_init(void)
 {
     btp_attsrv_setTable(scTlkMdiBtAttItems, TLKMDI_BTATT_HANDLE_MAX);
-    tlkmw_ota_register_chn_send_interface(TLKMW_OTA_TRANS_CHN_BT_ATT, tlkmdi_btatt_otaSendData);
+
+    sTlkMwUnitIntf_t interface = {
+        .channel       = TLKMW_OTA_TRANS_CHN_BT_ATT,
+        .send          = tlkmdi_btatt_otaSendData,
+        .recv          = NULL,
+        .get_ota_param = tlkmdi_btatt_get_ota_param,
+    };
+
+    tlkmw_ota_register_chn_interface(&interface);
     return TLK_ENONE;
 }
 
@@ -69,7 +93,7 @@ int tlkmdi_btatt_init(void)
  */
 static uint8_t tlkmdi_btatt_otaWriteCB(uint16_t handle, uint16_t chnID, uint8_t *pData, uint16_t dataLen)
 {
-    tlkmw_userctrl_pushDataToTask(handle | (chnID << 16), pData, dataLen);
+    tlkmw_userctrl_pushDataToTask(handle | (chnID << 16), 0, pData, dataLen);
     return BTP_ATT_ECODE_NONE;
 }
 

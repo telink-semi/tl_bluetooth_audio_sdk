@@ -25,32 +25,48 @@
 
 /******************do not modify this file start****************************/
 #ifdef PROJ_BLUETOOTH_CONTROLLER
-    #include "vendor/bluetooth_controller/app_config.h"
+#include "vendor/bluetooth_controller/app_config.h"
 #endif
 #ifdef PROJ_BTBLE_HEADSET
-    #include "vendor/btble_headset/app_config.h"
+#include "vendor/btble_headset/app_config.h"
 #endif
 #ifdef PROJ_BTBLE_AUDIO_SOURCE
-    #include "vendor/btble_audio_source/app_config.h"
+#include "vendor/btble_audio_source/app_config.h"
 #endif
 #ifdef PROJ_BTTPSLL_HEADSET
-    #include "vendor/bttpsll_headset/app_config.h"
+#include "vendor/bttpsll_headset/app_config.h"
 #endif
 #ifdef PROJ_BTTPSLL_TWS
-    #include "vendor/bttpsll_tws/app_config.h"
+#include "vendor/bttpsll_tws/app_config.h"
 #endif
 #ifdef PROJ_BTBLE_A2DP_TO_BIS
-    #include <vendor/btble_a2dp_to_bis/app_config.h>
+#include <vendor/btble_a2dp_to_bis/app_config.h>
 #endif
 #ifdef PROJ_CONTROLLER
-    #include "vendor/controller/app_config.h"
+#include "vendor/controller/app_config.h"
 #endif
 #ifdef PROJ_TPSLL_AUDIO_DONGLE
-    #include "vendor/tpsll_audio_dongle/app_config.h"
+#include "vendor/tpsll_audio_dongle/app_config.h"
 #endif
 #ifdef PROJ_BLE_EXAMPLE
-     #include "vendor/ble_example/app_config.h"
+#include "vendor/ble_example/app_config.h"
+#endif
+#ifdef PROJ_GAMESIR_XIAOJI
+#include "vendor/GameSir_Xiaoji/app_config.h"
 #endif
 
-/******************do not modify this file end****************************/
+#ifdef PROJ_RECORDING_CARD
+#include "vendor/recording_card/app_config.h"
+#endif
 
+#ifdef PROJ_BT_1_TO_2_AUDIO_FORWARDING
+#include "vendor/bt_1_to_2_audio_forwarding/app_config.h"
+#endif
+#ifdef PROJ_RUIMO_BTBLE_DONGLE
+#include "vendor/ruimo_btble_dongle/app_config.h"
+#endif
+
+#ifdef PROJ_BT_INTERPHONE
+#include "vendor/bt_interphone/app_config.h"
+#endif
+/******************do not modify this file end****************************/

@@ -28,12 +28,22 @@
 #if (TLK_MW_AUDIO_ENABLE)
 
 #if TLK_SPI_DEBUG_ENABLE
-#define SPI_ENABLE     0
-#define SPI_CLK        4000000
-#define SPI_TX_DMA_CHN DMA8
+#define SPI_ENABLE 1
+#define SPI_CLK    24000000
 
 #if SPI_ENABLE
 #if (MCU_CORE_TYPE == MCU_CORE_TL751X || MCU_CORE_TYPE == MCU_CORE_TL752X)
+#if (TLKMW_RECORDING_CARD_EN)
+lspi_pin_config_t lspi_pin_config = {
+    .spi_csn_pin      = GPIO_FC_PA6,
+    .spi_clk_pin      = GPIO_FC_PA5,
+    .spi_mosi_io0_pin = GPIO_FC_PB0,
+    .spi_miso_io1_pin = 0, //3line mode is required, otherwise it is NONE_PIN.
+    .spi_io2_pin      = 0, //quad  mode is required, otherwise it is NONE_PIN.
+    .spi_io3_pin      = 0, //quad  mode is required, otherwise it is NONE_PIN.
+};
+
+#else
 lspi_pin_config_t lspi_pin_config = {
     .spi_csn_pin      = GPIO_FC_PA0,
     .spi_clk_pin      = GPIO_FC_PA1,
@@ -42,6 +52,7 @@ lspi_pin_config_t lspi_pin_config = {
     .spi_io2_pin      = 0, //quad  mode is required, otherwise it is NONE_PIN.
     .spi_io3_pin      = 0, //quad  mode is required, otherwise it is NONE_PIN.
 };
+#endif
 #elif (MCU_CORE_TYPE == MCU_CORE_B92)
 lspi_pin_config_t lspi_pin_config = {
     .spi_csn_pin      = LSPI_CSN_PE0_PIN,
@@ -52,6 +63,16 @@ lspi_pin_config_t lspi_pin_config = {
     .spi_io3_pin      = LSPI_IO3_PE5_PIN,      //quad  mode is required, otherwise it is NONE_PIN.
 };
 #elif (MCU_CORE_TYPE == MCU_CORE_TL721X)
+#if (TLKMW_RECORDING_CARD_EN)
+lspi_pin_config_t lspi_pin_config = {
+    .spi_csn_pin      = LSPI_CSN_PE6_PIN,
+    .spi_clk_pin      = LSPI_CLK_PE1_PIN,
+    .spi_mosi_io0_pin = LSPI_MOSI_IO0_PE2_PIN,
+    .spi_miso_io1_pin = 0, //3line mode is required, otherwise it is NONE_PIN.
+    .spi_io2_pin      = 0, //quad  mode is required, otherwise it is NONE_PIN.
+    .spi_io3_pin      = 0, //quad  mode is required, otherwise it is NONE_PIN.
+};
+#else
 lspi_pin_config_t lspi_pin_config = {
     .spi_csn_pin      = LSPI_CSN_PE0_PIN,
     .spi_clk_pin      = LSPI_CLK_PE1_PIN,
@@ -62,6 +83,7 @@ lspi_pin_config_t lspi_pin_config = {
 };
 #endif
 #endif
+#endif
 
 /**
  * @brief       This function serves to initialize spi log for audio debug.
@@ -70,7 +92,6 @@ lspi_pin_config_t lspi_pin_config = {
  */
 static void spi_log_init(void)
 {
-#if 1
 #if !SPI_ENABLE
     gpio_function_en(GPIO_CHN0);
     gpio_output_en(GPIO_CHN0);
@@ -83,7 +104,6 @@ static void spi_log_init(void)
     gpio_function_en(GPIO_CHN4);
     gpio_output_en(GPIO_CHN4);
     gpio_set_low_level(GPIO_CHN4);
-#endif
 
     gpio_function_en(GPIO_CHN2);
     gpio_output_en(GPIO_CHN2);
@@ -109,6 +129,7 @@ static void spi_log_init(void)
     gpio_output_en(GPIO_CHN9);
     gpio_set_low_level(GPIO_CHN9);
 #endif
+
 #if SPI_ENABLE
     uint8_t send_data[] = {0, 1, 2, 3, 4, 5, 6, 7};
 #if (MCU_CORE_TYPE == MCU_CORE_TL751X || MCU_CORE_TYPE == MCU_CORE_TL752X)
@@ -116,7 +137,7 @@ static void spi_log_init(void)
 #else //elif (MCU_CORE_TYPE == MCU_CORE_TL721X)
     spi_master_init(0, sys_clk.pll_clk * 1000000 / SPI_CLK, SPI_MODE0);
 #endif
-    spi_set_tx_dma_config(0, SPI_TX_DMA_CHN);
+    spi_set_tx_dma_config(0, tlkhal_dma_malloc());
     lspi_set_pin(&lspi_pin_config);
     spi_master_config(0, SPI_NORMAL);
 
@@ -161,7 +182,7 @@ audio_i2s_input_output_t audio_i2s_output = {
     .data_width    = I2S_BIT_24_DATA,
     .i2s_ch_sel    = I2S_CHANNEL_LEFT,
     .fifo_chn      = FIFO2,
-    .dma_num       = DMA7,
+    .dma_num       = 0,
     .data_buf      = AUDIO_BUFF,
     .data_buf_size = sizeof(AUDIO_BUFF),
 };
@@ -177,6 +198,7 @@ static void tlkmdi_audio_i2s_init(void)
     /**** i2s config init ****/
     audio_i2s_config_init(&audio_i2s_config1);
     /**** i2s output init ****/
+    audio_i2s_output.dma_num = tlkhal_dma_malloc();
     audio_i2s_output_init(&audio_i2s_output);
     /**** setting the codec clock of audio as the current mclk clock****/
     // audio_set_codec_clk_as_mclk(GPIO_FC_PC6); //only set i2s as master mclk=24*/2=12M
@@ -210,7 +232,7 @@ static void tlkmdi_audio_asyn_print(void)
  */
 void tlkmdi_audio_debug_init(void)
 {
-#if TWS_AUDIO_PATH_GPIO_DEBUG
+#if BT_TPSLL_MIX_AUDIO_GPIO_DEBUG
     gpio_function_en(GPIO_PA0);
     gpio_output_en(GPIO_PA0);
 
@@ -231,6 +253,9 @@ void tlkmdi_audio_debug_init(void)
 
     gpio_function_en(GPIO_PF4);
     gpio_output_en(GPIO_PF4);
+
+    gpio_function_en(GPIO_PF5);
+    gpio_output_en(GPIO_PF5);
 
     gpio_function_en(GPIO_PB5);
     gpio_output_en(GPIO_PB5);

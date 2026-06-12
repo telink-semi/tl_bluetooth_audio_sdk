@@ -53,7 +53,7 @@ enum
 };
 
 static uint8_t s_lea_uac_state = LEA_UAC_STATE_IDLE;
-extern uint8_t  gLeaPpmStatus;
+extern uint8_t gLeaPpmStatus;
 
 #if TLK_USB_UAC_ENABLE
 extern uint32_t ppm_tick_last;
@@ -223,7 +223,7 @@ bool lea_codec_input_get_audio_data(int16_t *left_data, int16_t *right_data, uin
         } else {
         }
 #else
-        if (lea_codec_input_sample_rate == 16000) {//refer LEA_SELECT_SAMPLING_FREQ_16000_HZ  = 3,  // 16000 Hz
+        if (lea_codec_input_sample_rate == 16000) { //refer LEA_SELECT_SAMPLING_FREQ_16000_HZ  = 3,  // 16000 Hz
             // audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16);
             audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16_16BIT);
             p_audio_alg_if->audio_alg_process((uint8_t *)usb_uac_data, (uint8_t *)pcm_stereo_16K, sample_num, 0, 0);
@@ -552,7 +552,7 @@ bool lea_codec_input_get_audio_data(int16_t *left_data, int16_t *right_data, uin
         } else {
         }
 #else
-        if (lea_codec_input_sample_rate == 16000) {//refer LEA_SELECT_SAMPLING_FREQ_16000_HZ  = 3,  // 16000 Hz
+        if (lea_codec_input_sample_rate == 16000) { //refer LEA_SELECT_SAMPLING_FREQ_16000_HZ  = 3,  // 16000 Hz
             // audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16);
             audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16_16BIT);
             p_audio_alg_if->audio_alg_process((uint8_t *)usb_uac_data, (uint8_t *)pcm_stereo_16K, sample_num, 0, 0);
@@ -617,6 +617,7 @@ void lea_codec_output_stream_init(void)
     p_audio_alg_if->audio_alg_init(s_alg_voice_asrc_buff, ALG_CHANNEL_LEFT);
 #endif
 }
+
 /**
  * @brief       Deinitialize output stream.
  * @return      none.

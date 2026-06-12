@@ -26,11 +26,9 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#include "tlkapi/tlkapi.h"
-#include "stack/bt/host/bth/bth_stdio.h"
-#include "stack/bt/host/btp/btp_stdio.h"
-#include "tlkstk.h"
-#include "stack/bt/host//bt_hci.h"
+#include "stack/bt/host/bth/bth.h"
+#include "stack/bt/host/btp/btp.h"
+#include "tlkstk_mem.h"
 
 void tlkstk_init(void)
 {
@@ -40,4 +38,3 @@ void tlkstk_init(void)
     btp_init();
 #endif
 }
-

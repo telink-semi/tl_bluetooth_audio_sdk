@@ -27,60 +27,60 @@
 #if MCU_CORE_TYPE == CHIP_TYPE_TL721X
 
 #ifndef FLASH_CAP_VALUE_ADDR_64K
-    #define FLASH_CAP_VALUE_ADDR_64K 0xe000
+#define FLASH_CAP_VALUE_ADDR_64K 0xe000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_128K
-    #define FLASH_CAP_VALUE_ADDR_128K 0x1e000
+#define FLASH_CAP_VALUE_ADDR_128K 0x1e000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_512K
-    #define FLASH_CAP_VALUE_ADDR_512K 0x7e000
+#define FLASH_CAP_VALUE_ADDR_512K 0x7e000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_1M
-    #define FLASH_CAP_VALUE_ADDR_1M 0xfe000
+#define FLASH_CAP_VALUE_ADDR_1M 0xfe000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_2M
-    #define FLASH_CAP_VALUE_ADDR_2M 0x1fe000
+#define FLASH_CAP_VALUE_ADDR_2M 0x1fe000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_4M
-    #define FLASH_CAP_VALUE_ADDR_4M 0x3fe000
+#define FLASH_CAP_VALUE_ADDR_4M 0x3fe000
 #endif
 
 #ifndef FLASH_CAP_VALUE_ADDR_16M
-    #define FLASH_CAP_VALUE_ADDR_16M 0xffe000
+#define FLASH_CAP_VALUE_ADDR_16M 0xffe000
 #endif
 
 /********************IEEE ADDRESS IN FLASH***********************/
 #ifndef FLASH_IEEE_ADDR_LOCATION_64K
-    #define FLASH_IEEE_ADDR_LOCATION_64K 0xf000
+#define FLASH_IEEE_ADDR_LOCATION_64K 0xf000
 #endif
 
 #ifndef FLASH_IEEE_ADDR_LOCATION_128K
-    #define FLASH_IEEE_ADDR_LOCATION_128K 0x1f000
+#define FLASH_IEEE_ADDR_LOCATION_128K 0x1f000
 #endif
 
 #ifndef FLASH_IEEE_ADDR_LOCATION_512K
-    #define FLASH_IEEE_ADDR_LOCATION_512K 0x7f000
+#define FLASH_IEEE_ADDR_LOCATION_512K 0x7f000
 #endif
 
 #ifndef FLASH_IEEE_ADDR_LOCATION_1M
-    #define FLASH_IEEE_ADDR_LOCATION_1M 0xff000
+#define FLASH_IEEE_ADDR_LOCATION_1M 0xff000
 #endif
 
 #ifndef FLASH_IEEE_ADDR_LOCATION_2M
-    #define FLASH_IEEE_ADDR_LOCATION_2M 0x1ff000
+#define FLASH_IEEE_ADDR_LOCATION_2M 0x1ff000
 #endif
 
 #ifndef FLASH_IEEE_ADDR_LOCATION_4M
-    #define FLASH_IEEE_ADDR_LOCATION_4M 0x3ff000
+#define FLASH_IEEE_ADDR_LOCATION_4M 0x3ff000
 #endif
 
 #ifndef FLASH_IEEE_ADDR_LOCATION_16M
-    #define FLASH_IEEE_ADDR_LOCATION_16M 0xfff000
+#define FLASH_IEEE_ADDR_LOCATION_16M 0xfff000
 #endif
 
 typedef enum
@@ -113,7 +113,6 @@ unsigned char user_calib_freq_offset(unsigned int addr);
  * @return     ieee_addr_source_e
  */
 ieee_addr_source_e user_get_ieee_addr(unsigned int addr, unsigned char *mac_addr_buf);
-
 
 /**
  * @brief      This function serves to update rf frequency offset.
@@ -257,7 +256,6 @@ ieee_addr_source_e user_get_ieee_addr(unsigned int addr, unsigned char *buf)
         }
     }
 }
-
 
 
 #endif

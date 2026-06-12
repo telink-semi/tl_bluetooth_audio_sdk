@@ -29,132 +29,176 @@
 #define APP_LOG_EN 0
 #endif
 
-#if BLE_INTERNAL_EN//BLE_INTERNAL
-#define TLKMDI_ACL_PERIPHR_EN              1
-#define TLKMDI_LE_LEGACY_ADV_EN            1
+#if BLE_INTERNAL_EN //BLE_INTERNAL
+#define TLKMDI_ACL_PERIPHR_EN   1
+#define TLKMDI_LE_LEGACY_ADV_EN 1
 #if MCU_CORE_TL752X_TEMP //?????
-#define TLKMDI_LE_EXTENDED_ADV_EN 		   1
-#define TLKMDI_LE_CIS_PERIPHR_EN           0
-#define TLKMDI_LE_PERIODIC_ADV_EN          1
-#define TLKMDI_ISOCHRONOUS_BROADCASTER_EN  1
+#define TLKMDI_LE_EXTENDED_ADV_EN              1
+#define TLKMDI_LE_CIS_PERIPHR_EN               0
+#define TLKMDI_LE_PERIODIC_ADV_EN              1
+#define TLKMDI_ISOCHRONOUS_BROADCASTER_EN      1
 
-#define TLKMDI_LE_EXTENDED_SCAN_EN         1
-#define TLKMDI_LE_EXTENDED_INIT_EN         1
+#define TLKMDI_LE_EXTENDED_SCAN_EN             1
+#define TLKMDI_LE_EXTENDED_INIT_EN             1
 #define TLKMDI_ISOCHRONOUS_BROADCASTER_SYNC_EN 1
 
-#define TLKMDI_ACL_CENTRAL_EN              1
-#define TLKMDI_LE_LEGACY_SCAN_EN           1
-#define TLKMDI_LE_LEGACY_INIT_EN           1
-#define TLKMDI_PAST_EN                     0
+#define TLKMDI_ACL_CENTRAL_EN                  1
+#define TLKMDI_LE_LEGACY_SCAN_EN               1
+#define TLKMDI_LE_LEGACY_INIT_EN               1
+#define TLKMDI_PAST_EN                         0
 #endif
 #endif
 
-#if BLE_A2DP_TO_BIS_CONTROLLER_EN//A2DP_TO_BIS
-#define TLKMDI_ACL_PERIPHR_EN              1
-#define TLKMDI_LE_LEGACY_ADV_EN            1 //TODO: test pm for ble example, remove latter
-#define TLKMDI_LE_EXTENDED_ADV_EN          1
-#define TLKMDI_LE_PERIODIC_ADV_EN          1
-#define TLKMDI_LE_EXTENDED_SCAN_EN         1
+#if BLE_A2DP_TO_BIS_CONTROLLER_EN //A2DP_TO_BIS
+#define TLKMDI_ACL_PERIPHR_EN                  1
+#define TLKMDI_LE_LEGACY_ADV_EN                1 //TODO: test pm for ble example, remove latter
+#define TLKMDI_LE_EXTENDED_ADV_EN              1
+#define TLKMDI_LE_PERIODIC_ADV_EN              1
+#define TLKMDI_LE_EXTENDED_SCAN_EN             1
 
-#define TLKMDI_ISOCHRONOUS_BROADCASTER_EN  1
+#define TLKMDI_ISOCHRONOUS_BROADCASTER_EN      1
 #define TLKMDI_ISOCHRONOUS_BROADCASTER_SYNC_EN 1
-#define TLKMDI_PAST_EN                     1
+#define TLKMDI_PAST_EN                         1
 #endif
 
-#if BLE_HEADSET_CONTROLLER_EN//BTBLE_Headset
-#define TLKMDI_ACL_PERIPHR_EN              1
-#define TLKMDI_LE_LEGACY_ADV_EN            1
-#define TLKMDI_LE_EXTENDED_ADV_EN          1
-#define TLKMDI_LE_CIS_PERIPHR_EN           1
+#if BLE_HEADSET_CONTROLLER_EN //BTBLE_Headset
+#define TLKMDI_ACL_PERIPHR_EN     1
+#define TLKMDI_LE_LEGACY_ADV_EN   1
+#define TLKMDI_LE_EXTENDED_ADV_EN 1
+#define TLKMDI_LE_CIS_PERIPHR_EN  1
+#define TLKMW_ACL_PERIPHR_MAX_NUM 1
+#define EXT_ADV_SETS_NUMBER       1
+#define CIS_CENTRAL_NUMBER        0
+#define CIS_RX_MAX_PDU            240
+#define CIS_TX_MAX_PDU            120
 #endif
 
 #if BLE_SPORTS_WALKIE_TALKIE_EN // sports_walkie_talkie
-#define TLKMDI_ACL_PERIPHR_EN              1
-#define TLKMDI_ACL_CENTRAL_EN              1
-#define TLKMDI_LE_LEGACY_ADV_EN            1
-#define TLKMDI_LE_LEGACY_SCAN_EN           1
-#define TLKMDI_LE_LEGACY_INIT_EN           1
+#define TLKMDI_ACL_PERIPHR_EN    1
+#define TLKMDI_ACL_CENTRAL_EN    1
+#define TLKMDI_LE_LEGACY_ADV_EN  1
+#define TLKMDI_LE_LEGACY_SCAN_EN 1
+#define TLKMDI_LE_LEGACY_INIT_EN 1
 #endif
 
+#if PROJ_BLE_AUDIO_LL
+#if IS_DEMO_SELECTED(APP_BLE_LEA_LL_US)
+#define TLKMDI_ACL_PERIPHR_EN     1
+#define TLKMDI_LE_EXTENDED_ADV_EN 1
+#define TLKMDI_LE_CIS_PERIPHR_EN  1
+
+#define CIS_RX_MAX_PDU            20
+#define CIS_TX_MAX_PDU            150
+
+#define TLKMW_ACL_CENTRAL_MAX_NUM 0
+#define TLKMW_ACL_PERIPHR_MAX_NUM 1
+#else
+#define TLKMDI_ACL_PERIPHR_EN                  1
+#define TLKMDI_ACL_CENTRAL_EN                  1
+#define TLKMDI_LE_LEGACY_ADV_EN                1
+#define TLKMDI_LE_EXTENDED_ADV_EN              1
+#define TLKMDI_LE_PERIODIC_ADV_EN              1
+#define TLKMDI_LE_CIS_PERIPHR_EN               1
+#define TLKMDI_LE_CIS_CENTRAL_EN               1
+
+#define TLKMDI_LE_LEGACY_SCAN_EN               1
+#define TLKMDI_LE_LEGACY_INIT_EN               1
+#define TLKMDI_LE_EXTENDED_SCAN_EN             1
+#define TLKMDI_LE_EXTENDED_INIT_EN             1
+
+#define TLKMDI_ISOCHRONOUS_BROADCASTER_EN      1
+#define TLKMDI_ISOCHRONOUS_BROADCASTER_SYNC_EN 1
+#define TLKMDI_PAST_EN                         1
+#endif
+#endif
 #if PROJ_BLE_EXAMPLE
 // default ble example configuration.
-#define TLKMDI_ACL_PERIPHR_EN              1
-#define TLKMDI_ACL_CENTRAL_EN              1
-#define TLKMDI_LE_LEGACY_ADV_EN            1
-#define TLKMDI_LE_EXTENDED_ADV_EN          1
-#define TLKMDI_LE_PERIODIC_ADV_EN          1
-#define TLKMDI_LE_CIS_PERIPHR_EN           1
-#define TLKMDI_LE_CIS_CENTRAL_EN           1
+#define TLKMDI_ACL_PERIPHR_EN                  1
+#define TLKMDI_ACL_CENTRAL_EN                  1
+#define TLKMDI_LE_LEGACY_ADV_EN                1
+#define TLKMDI_LE_EXTENDED_ADV_EN              1
+#define TLKMDI_LE_PERIODIC_ADV_EN              1
+#define TLKMDI_LE_CIS_PERIPHR_EN               1
+#define TLKMDI_LE_CIS_CENTRAL_EN               1
 
-#define TLKMDI_LE_LEGACY_SCAN_EN           1
-#define TLKMDI_LE_LEGACY_INIT_EN           1
-#define TLKMDI_LE_EXTENDED_SCAN_EN         1
-#define TLKMDI_LE_EXTENDED_INIT_EN         1
+#define TLKMDI_LE_LEGACY_SCAN_EN               1
+#define TLKMDI_LE_LEGACY_INIT_EN               1
+#define TLKMDI_LE_EXTENDED_SCAN_EN             1
+#define TLKMDI_LE_EXTENDED_INIT_EN             1
 
-#define TLKMDI_ISOCHRONOUS_BROADCASTER_EN  1
+#define TLKMDI_ISOCHRONOUS_BROADCASTER_EN      1
 #define TLKMDI_ISOCHRONOUS_BROADCASTER_SYNC_EN 1
-#define TLKMDI_PAST_EN                     1
+#define TLKMDI_PAST_EN                         1
 #endif
 
-#if BLE_DONGLE_CONTROLLER_EN//BTBLE_Dongle
-#define TLKMDI_ACL_CENTRAL_EN              1
-#define TLKMDI_LE_LEGACY_INIT_EN           1
-#define TLKMDI_LE_EXTENDED_SCAN_EN         1
-#define TLKMDI_LE_EXTENDED_INIT_EN         1
-#define TLKMDI_LE_CIS_CENTRAL_EN           1
+#if BLE_DONGLE_CONTROLLER_EN //BTBLE_Dongle
+#define TLKMDI_ACL_CENTRAL_EN      1
+#define TLKMDI_LE_LEGACY_INIT_EN   1
+#define TLKMDI_LE_EXTENDED_SCAN_EN 1
+#define TLKMDI_LE_EXTENDED_INIT_EN 1
+#define TLKMDI_LE_CIS_CENTRAL_EN   1
 
-#define TLKMW_ACL_CENTRAL_MAX_NUM 2
-#define ACL_CONN_MAX_RX_OCTETS 40
-#define ACL_CENTRAL_MAX_TX_OCTETS 40
+#define TLKMW_ACL_CENTRAL_MAX_NUM  2
+#define ACL_CONN_MAX_RX_OCTETS     40
+#define ACL_CENTRAL_MAX_TX_OCTETS  40
 #endif
 
 #if BLE_GAME_PAD_CONTROLLER_EN // Game_Pad
-#define TLKMDI_ACL_PERIPHR_EN              1
-#define TLKMDI_LE_LEGACY_ADV_EN            1
-#define TLKMDI_LE_CIS_PERIPHR_EN           1
+#define TLKMDI_ACL_PERIPHR_EN    1
+#define TLKMDI_LE_LEGACY_ADV_EN  1
+#define TLKMDI_LE_CIS_PERIPHR_EN 1
 #endif
 
-#if HM_PARTY_LIGHTING_EN//HM Party lighting
-#define TLKMDI_ACL_PERIPHR_EN              1
-#define TLKMDI_LE_EXTENDED_ADV_EN          1
-#define TLKMDI_LE_PERIODIC_ADV_EN          1
+#if HM_PARTY_LIGHTING_EN //HM Party lighting
+#define TLKMDI_ACL_PERIPHR_EN     1
+#define TLKMDI_LE_EXTENDED_ADV_EN 1
+#define TLKMDI_LE_PERIODIC_ADV_EN 1
 
-#define EXT_ADV_SETS_NUMBER 			   2
+#define EXT_ADV_SETS_NUMBER       2
 #endif
 
-#if BLE_FEATURE_ALL_EN//ALL Feature
+#if BLE_FEATURE_ALL_EN //ALL Feature
 
-#define TLKMDI_LE_LEGACY_ADV_EN                 1
-#define TLKMDI_ACL_PERIPHR_EN                   1
+#define TLKMDI_LE_LEGACY_ADV_EN 1
+#define TLKMDI_ACL_PERIPHR_EN   1
 #if MCU_CORE_TYPE != MCU_CORE_TL322X
 
-#define TLKMDI_ACL_CENTRAL_EN              		1
-#define TLKMDI_LE_EXTENDED_ADV_EN          		1
-#define TLKMDI_LE_CIS_PERIPHR_EN           		1
-#define TLKMDI_LE_EXTENDED_SCAN_EN        		1
-#define TLKMDI_LE_EXTENDED_INIT_EN         		1
-#define TLKMDI_LE_LEGACY_SCAN_EN                1
-#define TLKMDI_LE_LEGACY_INIT_EN                1
-#define TLKMDI_LE_CIS_CENTRAL_EN           		1
-#define TLKMDI_ISOCHRONOUS_BROADCASTER_EN  		1
-#define TLKMDI_ISOCHRONOUS_BROADCASTER_SYNC_EN 	1
-#define TLKMDI_PAST_EN                     		1
-#define TLKMDI_LE_PERIODIC_ADV_EN          		1
-#define TLKMDI_POWER_CONTROL			   		0
-#define TLKMDI_LE_EXTENDED_SCAN_RSP_EN			1
+#define TLKMDI_ACL_CENTRAL_EN                  1
+#define TLKMDI_LE_EXTENDED_ADV_EN              1
+#define TLKMDI_LE_CIS_PERIPHR_EN               1
+#define TLKMDI_LE_EXTENDED_SCAN_EN             1
+#define TLKMDI_LE_EXTENDED_INIT_EN             1
+#define TLKMDI_LE_LEGACY_SCAN_EN               1
+#define TLKMDI_LE_LEGACY_INIT_EN               1
+#define TLKMDI_LE_CIS_CENTRAL_EN               1
+#define TLKMDI_ISOCHRONOUS_BROADCASTER_EN      1
+#define TLKMDI_ISOCHRONOUS_BROADCASTER_SYNC_EN 1
+#define TLKMDI_PAST_EN                         1
+#define TLKMDI_LE_PERIODIC_ADV_EN              1
+#define TLKMDI_POWER_CONTROL                   0
+#define TLKMDI_LE_EXTENDED_SCAN_RSP_EN         1
 #endif
 #endif
 
 #if RECORDING_CARD_EN
 
-#define ACL_CONN_MAX_RX_OCTETS              64
-#define ACL_PERIPHR_MAX_TX_OCTETS           64
+#define ACL_CONN_MAX_RX_OCTETS    251
+#define ACL_PERIPHR_MAX_TX_OCTETS 251
 
-#define TLKMW_ACL_CENTRAL_MAX_NUM			0
+#define TLKMW_ACL_CENTRAL_MAX_NUM 0
 
-#define TLKMDI_ACL_PERIPHR_EN               1
-#define TLKMDI_LE_LEGACY_ADV_EN             1
-#define TLKMW_ACL_PERIPHR_MAX_NUM           1
+#define TLKMDI_ACL_PERIPHR_EN     1
+#define TLKMDI_LE_LEGACY_ADV_EN   1
+#define TLKMW_ACL_PERIPHR_MAX_NUM 1
+#endif
+
+#if BT_1_TO_2_AUDIO_EN
+
+#define TLKMW_ACL_CENTRAL_MAX_NUM 0
+
+#define TLKMDI_ACL_PERIPHR_EN     1
+#define TLKMDI_LE_LEGACY_ADV_EN   1
+#define TLKMW_ACL_PERIPHR_MAX_NUM 1
 #endif
 
 //BLE Stack Configuration end//

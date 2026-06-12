@@ -31,6 +31,18 @@
 /******************************************************************************
                            private code begin
 ******************************************************************************/
+#ifndef TLKMDI_TINYSQL_SAVE_DELAY_TIME
+#define TLKMDI_TINYSQL_SAVE_DELAY_TIME (5 * 1000 * 1000)
+#endif
+
+typedef struct
+{
+    uint8_t needSave;   // Flag indicating which disks need to be saved
+    uint8_t saveEnable; // Flag to enable/disable saving
+} tlkmdi_tinysql_t;
+
+static tlkmdi_tinysql_t sTlkmdiTinysql          = {0};
+static TlkApiTimer_t    sTlkmdiTinySqlSaveTimer = {0};
 
 /**
  * @brief   Calculates the actual save address in flash.
@@ -40,13 +52,8 @@
  */
 inline unsigned int tlkmdi_tinySql_getSaveAddr(unsigned int offset)
 {
-    extern unsigned int flash_full_size;
-    return offset + flash_full_size - 0x100000;
+    return offset + tlkhal_flash_get_size() - 0x100000;
 }
-
-static uint8_t sSqlIsNeedSaveToFlash = 0;  // Flag indicating which disks need to be saved
-static uint8_t sSqlIsSaveEnable = 1;       // Flag to enable/disable saving
-static uint8_t sSqlCritical = 0;           // Critical section counter
 
 /**
  * @brief   Requests a save operation for a specific disk.
@@ -55,7 +62,7 @@ static uint8_t sSqlCritical = 0;           // Critical section counter
  */
 inline void tlkmdi_tinySql_requestSave(uint8_t whichDisk)
 {
-    sSqlIsNeedSaveToFlash |= 1 << whichDisk;
+    sTlkmdiTinysql.needSave |= 1 << whichDisk;
     tlksys_task_setEvt(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_SQL_SAVE);
 }
 
@@ -66,7 +73,7 @@ inline void tlkmdi_tinySql_requestSave(uint8_t whichDisk)
  */
 static bool tlkmdi_tinySql_checkSaveRequest(uint8_t whichDisk)
 {
-    if (sSqlIsNeedSaveToFlash & (1 << whichDisk)) {
+    if (sTlkmdiTinysql.needSave & (1 << whichDisk)) {
         return true;
     }
     return false;
@@ -74,21 +81,45 @@ static bool tlkmdi_tinySql_checkSaveRequest(uint8_t whichDisk)
 
 // Array of disk interfaces
 const tinySqlDisk_t *const tlkmdi_tinySql_disks[tinySql_maxSaveIndex] = {
-    [tinySql_macSaveIndex] = &tinySql_mac_disk,
     [tinySql_userSettingsSaveIndex] = &tinySql_userSetting_disk,
-    #if TLK_STK_BT_ENABLE
+#if TLK_STK_BT_ENABLE
     [tinySql_pairingDevicesSaveIndex] = &tinySql_pairingDevice_disk,
-    #endif
-    #if TLKBTP_CFG_PBAP_ENABLE
+#endif
+#if TLKBTP_CFG_PBAP_ENABLE
     [tinySql_pbapSaveIndex] = &tinySql_pbap_disk,
-    #endif
-    #if TLK_STK_BLE_ENABLE
+#endif
+#if TLK_STK_BLE_ENABLE
     [tinySql_leSaveIndex] = &tinySql_le_disk,
-    #endif
-    #if TLKALG_EQ_ENABLE
-    [tinySql_audioSaveIndex] = &tinySql_audio_disk,
-    #endif
+#endif
 };
+
+/**
+ * @brief       Timer callback function to save flash data.
+ * @param[in]   pTimer    - Pointer to the timer handle.
+ * @param[in]   userArg   - User-defined argument.
+ * @return      none.
+ */
+static void tlkmdi_tinySql_saveTimer(TlkApiTimerHandle_t pTimer, void *userArg)
+{
+    (void)pTimer;
+    (void)userArg;
+    if (tlkmdi_tinySql_isRequestSave()) {
+        tlkmdi_tinySql_save();
+    }
+}
+
+/**
+ * @brief       Handles flash saving requests.
+ * @param[in]   none.
+ * @return      none.
+ */
+static void tlkmdi_tinySql_flashHandler(void)
+{
+    if (tlkmdi_tinySql_isRequestSave() == false) {
+        return;
+    }
+    tlksys_timer_reStart(TLKSYS_TASKID_SYSTEM, &sTlkmdiTinySqlSaveTimer);
+}
 
 /******************************************************************************
                            private code end
@@ -114,12 +145,15 @@ void tlkmdi_tinySql_mutex_operate(uint8_t isLocked)
  */
 void tlkmdi_tinySql_init(void)
 {
+    sTlkmdiTinysql.saveEnable = 1;
     for (int i = 0; i < tinySql_maxSaveIndex; i++) {
         if (tlkmdi_tinySql_disks[i] == NULL) {
             continue;
         }
         tlkmdi_tinySql_disks[i]->init();
     }
+    tlksys_timer_createStatic(TLKSYS_TASKID_SYSTEM, &sTlkmdiTinySqlSaveTimer, TLKMDI_TINYSQL_SAVE_DELAY_TIME, false, tlkmdi_tinySql_saveTimer, NULL);
+    tlksys_task_regEvtCB(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_SQL_SAVE, tlkmdi_tinySql_flashHandler);
 }
 
 /**
@@ -129,10 +163,10 @@ void tlkmdi_tinySql_init(void)
  */
 int tlkmdi_tinySql_save(void)
 {
-    if (sSqlIsSaveEnable == 0 || sSqlCritical) {
+    if (sTlkmdiTinysql.saveEnable == 0) {
         return -TLK_ENOREADY;
     }
-    if (sSqlIsNeedSaveToFlash == 0) {
+    if (sTlkmdiTinysql.needSave == 0) {
         return TLK_ENONE;
     }
     for (int i = 0; i < tinySql_maxSaveIndex; i++) {
@@ -145,7 +179,7 @@ int tlkmdi_tinySql_save(void)
             tlkmdi_tinySql_disks[i]->save();
         }
         tlkos_debug_ioCtrl(TLKOS_DEBUG_IO_FLASH_WRITE_OR_TICKLESS, 0);
-        sSqlIsNeedSaveToFlash &= ~(1 << i);
+        sTlkmdiTinysql.needSave &= ~(1 << i);
         tlksys_leave_critical();
         tlkapi_printf(TLKMDI_TINYSQL_LOG_ENABLE, "[SQL]<TRACE> disk:%d saved", i);
     }
@@ -172,7 +206,7 @@ void tlkmdi_tinySql_restoreFactorySettings(void)
  */
 bool tlkmdi_tinySql_isRequestSave(void)
 {
-    if (sSqlIsNeedSaveToFlash == 0) {
+    if (sTlkmdiTinysql.needSave == 0) {
         return false;
     }
     return true;
@@ -185,31 +219,7 @@ bool tlkmdi_tinySql_isRequestSave(void)
  */
 void tlkmdi_tinySql_setSaveEnable(uint8_t en)
 {
-    sSqlIsSaveEnable = en;
+    sTlkmdiTinysql.saveEnable = en;
 }
 
-/**
- * @brief   Suspends saving functionality.
- * @note    This function increments the critical section counter to prevent saving.
- */
-void tlkmdi_tinySql_suspendSave(void)
-{
-    tlksys_enter_critical();
-    sSqlCritical++;
-    tlksys_leave_critical();
-}
-
-/**
- * @brief   Resumes saving functionality.
- * @note    This function decrements the critical section counter and may trigger a save if needed.
- */
-void tlkmdi_tinySql_resumeSave(void)
-{
-    tlksys_enter_critical();
-    sSqlCritical--;
-    if (sSqlCritical == 0 && sSqlIsNeedSaveToFlash) {
-        tlksys_task_setEvt(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_SQL_SAVE);
-    }
-    tlksys_leave_critical();
-}
 #endif // TLK_MW_TINYSQL_ENABLE

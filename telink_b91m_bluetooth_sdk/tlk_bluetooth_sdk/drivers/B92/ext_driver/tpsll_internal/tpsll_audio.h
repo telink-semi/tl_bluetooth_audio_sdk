@@ -37,14 +37,14 @@ typedef enum
 /////////////////////////////////////////////////////////////////////////
 #define EXTERNAL_CODEC_ENABLE 0
 #if EXTERNAL_CODEC_ENABLE
-    /* sampling rate = 192M * (76 / 235) / (2 * 11) / 64 = 44.1K */
-    /* 44.100580270793 */
-    /* (1000 / 44.100580270793) * 24 * 57 = 31,020.00000000003 */
-    #define TICK_OF_BLOCK_SAMPLE_44k     31020
-    #define NUM_OF_SAMPLES_PER_BLOCK_44K 57
+/* sampling rate = 192M * (76 / 235) / (2 * 11) / 64 = 44.1K */
+/* 44.100580270793 */
+/* (1000 / 44.100580270793) * 24 * 57 = 31,020.00000000003 */
+#define TICK_OF_BLOCK_SAMPLE_44k     31020
+#define NUM_OF_SAMPLES_PER_BLOCK_44K 57
 #else
-    #define TICK_OF_BLOCK_SAMPLE_44k     26122
-    #define NUM_OF_SAMPLES_PER_BLOCK_44K 48
+#define TICK_OF_BLOCK_SAMPLE_44k     26122
+#define NUM_OF_SAMPLES_PER_BLOCK_44K 48
 #endif
 
 #define TICK_OF_BLOCK_SAMPLE_48k     24000

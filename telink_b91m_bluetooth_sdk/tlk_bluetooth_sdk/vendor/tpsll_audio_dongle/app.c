@@ -48,9 +48,7 @@ extern void app_key_defaultConfig_initial(void);
  * @return      none.
  * @note    
  */
-extern void tpd_controller_init(void);
-
-
+extern void tlk_tpsll_tpd_controller_init(void);
 
 /**
  * @brief      User initialization when MCU power on or wake_up from deepSleep mode
@@ -60,22 +58,18 @@ extern void tpd_controller_init(void);
  */
 int tlkapp_init(void)
 {
-
-           //////////////////////////// basic hardware Initialization  Begin //////////////////////////////////
+    //////////////////////////// basic hardware Initialization  Begin //////////////////////////////////
     /* random number generator must be initiated here(in the beginning of user initialization).
 	 * When deepSleep retention wakeUp, no need initialize again */
     trng_init();
 
-    /* read flash and configure parameter automatically*/
-    tlk_readFlashSize_autoConfigCustomFlashSector();
-
     /* initialize some basic MCU hardware */
-    tlksdk_init_mcu_hardware();
+    tlk_sys_init_mcu_hardware();
 
     //////////////////////////// basic hardware Initialization  End /////////////////////////////////
-    tlksdk_sch_init();
+    tlk_sch_init();
 
-    tlksdk_sch_set_base_interval(PLAN_INTERVAL_10MS);
+    tlk_sch_plan_set_base_interval(PLAN_INTERVAL_10MS);
 
 
     return TLK_ENONE;
@@ -89,10 +83,9 @@ int tlkapp_init(void)
  */
 _attribute_no_inline_ void tlkapp_main_loop(void)
 {
-    tlksdk_main_loop();
+    tlk_sys_main_loop();
 
     tlksys_handler();
-
 }
 
 /**
@@ -108,7 +101,7 @@ _attribute_no_inline_ void tlkapp_main_loop(void)
  * @return      none.
  * @note    
  */
-extern void tpd_pwm_irq_handler(void);
+extern void tlk_tpsll_tpd_pwm_irq_handler(void);
 
 /**
  * @brief       This function handles the PWM IRQ for tpsll.
@@ -121,7 +114,7 @@ _attribute_retention_code_ void tpsll_pwm_irq_handler(void)
     tlkstk_tpsll_simu_pwm_irq_handler();
 #else
     DBG_CHN10_HIGH;
-    tpd_pwm_irq_handler();
+    tlk_tpsll_tpd_pwm_irq_handler();
     DBG_CHN10_LOW;
 #endif
 }

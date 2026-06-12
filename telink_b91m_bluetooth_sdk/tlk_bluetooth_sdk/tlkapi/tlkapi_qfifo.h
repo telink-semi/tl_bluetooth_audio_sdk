@@ -42,18 +42,18 @@
 #define tlkapi_qfifo_setWptr(pFifo, value) ((pFifo)->wptr = (value))
 
 
-#define tlkapi_qfifo_getBase(pFifo) ((pFifo)->pBuff)
+#define tlkapi_qfifo_getBase(pFifo)        ((pFifo)->pBuff)
 
 typedef struct
 {
-    uint8_t   full;
-    uint8_t   temp;
-    uint16_t  resv;
-    uint16_t  numb;
-    uint16_t  size;
-    uint16_t  wptr;
-    uint16_t  rptr;
-    uint8_t  *pBuff;
+    uint8_t  full;
+    uint8_t  temp;
+    uint16_t resv;
+    uint16_t numb;
+    uint16_t size;
+    uint16_t wptr;
+    uint16_t rptr;
+    uint8_t *pBuff;
 } tlkapi_qfifo_t;
 
 /**

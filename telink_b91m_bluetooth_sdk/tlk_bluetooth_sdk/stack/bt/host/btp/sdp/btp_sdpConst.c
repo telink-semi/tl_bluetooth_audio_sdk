@@ -70,12 +70,32 @@ const int  gcBthSdpHfpHfFeature       = 0x3F;
 const int  gcBthSdpHfpAgFeature       = 0x3F;
 
 #if (TLKBTP_CFG_AVRCP_BROWSING_ENABLE)
+#if (TLKBTP_CFG_AVRC_COVER_ART_ENABLE)
+const int gcBthSdpAvrcpCtFeature = 0x1C1; // Supports browsing and coverArt.
+#else
 const int gcBthSdpAvrcpCtFeature = 0xC1; // Supports browsing.
+#endif
 const int gcBthSdpAvrcpTgFeature = 0x02;
 #else
+#if (TLKBTP_CFG_AVRC_COVER_ART_ENABLE)
+const int gcBthSdpAvrcpCtFeature = 0x101; // Supports coverArt.
+#else
 const int gcBthSdpAvrcpCtFeature = 0x01;
+#endif
 const int gcBthSdpAvrcpTgFeature = 0x02;
 #endif
+/*  Bit 0 = Category 1
+    Bit 1 = Category 2
+    Bit 2 = Category 3
+    Bit 3 = Category 4
+    Bit 4-5 = RFA
+    Bit 6 = Supports browsing
+    Bit 7 = Supports Cover Art GetImageProperties feature
+    Bit 8 = Supports Cover Art GetImage feature
+    Bit 9 = Supports Cover Art GetLinkedThumbnail feature
+    Bit 10-15 = RFA
+    The bits for supported featuresare set to 1. Others are set to 0.*/
+
 const char gcBthSdpAvrcpCtProviderName[] = "Telink";
 const char gcBthSdpAvrcpTgProviderName[] = "Telink";
 const char gcBthSdpAvrcpCtServiceName[]  = "AVRCP CT";

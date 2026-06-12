@@ -27,33 +27,35 @@
 #include "controller_config.h"
 
 #if (CONTROLLER_MODE == MAILBOX)
-    #include "mailbox/app_config.h"
+#include "mailbox/app_config.h"
 #elif (CONTROLLER_MODE == BTBLE_TPSLL_HEADSET)
-    #include  "btble_tpsll_headset/app_config.h"
+#include "btble_tpsll_headset/app_config.h"
 #elif (CONTROLLER_MODE == BTTPSLL_TWS)
-    #include "bttpsll_tws/app_config.h"
+#include "bttpsll_tws/app_config.h"
 #elif (CONTROLLER_MODE == BTBLETPSLL)
-    #include "btbletpsll/app_config.h"
+#include "btbletpsll/app_config.h"
 #elif (CONTROLLER_MODE == BLE_TEST)
-    #include "ble_test/app_config.h"
+#include "ble_test/app_config.h"
 #elif (CONTROLLER_MODE == BLE_CIS_CENTRAL)
-    #include "ble_cis_central/app_config.h"
+#include "ble_cis_central/app_config.h"
 #elif (CONTROLLER_MODE == BLE_CIS_PERIPHERAL)
-    #include "ble_cis_peripheral/app_config.h"
-#elif (CONTROLLER_MODE == BLE_CONTROLLER)
-    #include "ble_controller/app_config.h"
+#include "ble_cis_peripheral/app_config.h"
+#elif (CHECK_BLE_CONTROLLER)
+#include "ble_controller/app_config.h"
 #elif (CONTROLLER_MODE == BT)
-    #include "bt/app_config.h"
+#include "bt/app_config.h"
 #elif (CONTROLLER_MODE == BTBLE_HEADSET)
-    #include "btble_headset/app_config.h"
+#include "btble_headset/app_config.h"
 #elif (CONTROLLER_MODE == BTBLE_A2DP_TO_BIS)
-    #include "btble_a2dp_to_bis/app_config.h"
+#include "btble_a2dp_to_bis/app_config.h"
 #elif (CONTROLLER_MODE == BTBLE_AUDIO_SOURCE)
-    #include "btble_audio_source/app_config.h"
+#include "btble_audio_source/app_config.h"
 #elif (CONTROLLER_MODE == BLETPSLL_TWS)
-    #include "bletpsll_tws/app_config.h"
+#include "bletpsll_tws/app_config.h"
+#elif (CONTROLLER_MODE == RUIMO_BTBLE_DONGLE)
+#include "ruimo_btble_dongle/app_config.h"
 #else
-    #error "must select test mode."
+#error "must select test mode."
 #endif
 
 #endif /* VENDOR_CONTROLLER_APP_CONFIG_H_ */

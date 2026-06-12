@@ -106,5 +106,24 @@ typedef void (*ial_sdu_pop_callback_t)(const sdu_packet_t *);
 
 void blc_ial_register_sdu_pop_callback(ial_sdu_pop_callback_t callback);
 
+/**
+ * @brief      used to identify and create the isochronous data path between the Host and the Controller for a CIS, CIS configuration,
+ * 			   or BIS identified by the Connection_Handle parameter. This command can also be used to configure a codec for each data path.
+ * @param[in]  cmdPara - Command Parameters buffer pointer
+ * @param[out] pRetParam - Command Parameters buffer pointer
+ * @return     status, 0x00:  succeed
+ * 					   other: failed
+ */
+ble_sts_t blc_hci_le_setupIsoDataPath(hci_le_setupIsoDataPath_cmdParam_t *pCmdPara, hci_le_setupIsoDataPath_retParam_t *pRetParam);
+
+/**
+ * @brief      used to remove the input and/or output data path(s) associated with a CIS, CIS configuration, or BIS
+			   identified by the Connection_Handle parameter.
+ * @param[in]  cmdPara - Command Parameters buffer pointer
+ * @param[out] pRetParam - Command Parameters buffer pointer
+ * @return     status, 0x00:  succeed
+ * 					   other: failed
+ */
+ble_sts_t blc_hci_le_removeIsoDataPath(hci_le_rmvIsoDataPath_cmdParam_t *cmdPara, hci_le_rmvIsoDataPath_retParam_t *retPara);
 
 #endif

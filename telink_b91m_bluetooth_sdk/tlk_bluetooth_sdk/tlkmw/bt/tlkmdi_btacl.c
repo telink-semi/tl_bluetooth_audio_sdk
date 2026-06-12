@@ -44,6 +44,8 @@ static int tlkmdi_btacl_disconnEvt(uint8_t *pData, uint16_t dataLen);
 static int tlkmdi_btacl_encryptEvt(uint8_t *pData, uint16_t dataLen);
 static int tlkmdi_btacl_authenCompletedEvt(uint8_t *pData, uint16_t dataLen);
 static int tlkmdi_btacl_getAfhCompletedEvt(uint8_t *pData, uint16_t dataLen);
+static int tlkmdi_btacl_getRemoteNameEvt(uint8_t *pData, uint16_t dataLen);
+
 
 static int tlkmdi_btacl_profileServiceEvt(uint8_t *pData, uint16_t dataLen);
 static int tlkmdi_btacl_profileChannelEvt(uint8_t *pData, uint16_t dataLen);
@@ -52,22 +54,13 @@ static int tlkmdi_btacl_profileConnectEvt(uint8_t *pData, uint16_t dataLen);
 static int tlkmdi_btacl_profileDisconnEvt(uint8_t *pData, uint16_t dataLen);
 static int tlkmdi_btacl_searchAddProtoEvt(uint8_t *pData, uint16_t dataLen);
 static int tlkmdi_btacl_linkeyNotifyEvt(uint8_t *pData, uint16_t dataLen);
-static int tlkmdi_btacl_requestLinkKey(uint8_t *addr, uint8_t *linkkey);
 static int tlkmw_btacl_btModeChangeEvt(uint8_t *pData, uint16_t dataLen);
 
 #define TLKMDI_BTACL_DBG_FLAG ((TLK_MAJOR_DBGID_MDI_BT << 24) | (TLK_MINOR_DBGID_MDI_BT_ACL << 16) | TLK_DEBUG_DBG_FLAG_ALL)
 #define TLKMDI_BTACL_DBG_SIGN "[MDI]"
 
 
-static tlkmdi_btacl_ctrl_t            sTlkMdiBtAclCtrl;
-static TlkMdiBtAclConnCallback        sTlkMdiBtAclConnCB;
-static TlkMdiBtAclDiscCallback        sTlkMdiBtAclDiscCB;
-static TlkMdiBtAclCrypCallback        sTlkMdiBtAclCrypCB;
-static TlkMdiBtAclProfConnCallback    sTlkMdiBtAclProfConnCB;
-static TlkMdiBtAclProfDiscCallback    sTlkMdiBtAclProfDiscCB;
-static TlkMdiBtAclAfhCallback         sTlkMdiBtAclGetAfhCB;
-static TlkMdiBtAclConnRequsetCallback sTlkMdiBtAclConnReqCB;
-static TlkMdiBtAclSetConnRoleCallback sTlkMdiBtAclSetConnRoleCB;
+static tlkmdi_btacl_ctrl_t sTlkMdiBtAclCtrl;
 
 BTH_EVT_REGISTER(BTH_EVTID_SET_SCAN_CMD_COMPLETE, tlkmdi_btSetScan_hciCmdEvt_cb);
 BTH_EVT_REGISTER(BTH_EVTID_LINKKEY_NOTIFY, tlkmdi_btacl_linkeyNotifyEvt);
@@ -78,6 +71,7 @@ BTH_EVT_REGISTER(BTH_EVTID_ACLDISC_COMPLETE, tlkmdi_btacl_disconnEvt);
 BTH_EVT_REGISTER(BTH_EVTID_AUTHEN_COMPLETE, tlkmdi_btacl_authenCompletedEvt);
 BTH_EVT_REGISTER(BTH_EVTID_ACL_GETAFH_REPORT, tlkmdi_btacl_getAfhCompletedEvt);
 BTH_EVT_REGISTER(BTH_EVTID_MODE_CHANGED, tlkmw_btacl_btModeChangeEvt);
+BTH_EVT_REGISTER(BTH_EVTID_ACL_GETNAME_REPORT, tlkmdi_btacl_getRemoteNameEvt);
 
 BTP_EVT_REGISTER(BTP_EVTID_PROFILE_SERVICE, tlkmdi_btacl_profileServiceEvt);
 BTP_EVT_REGISTER(BTP_EVTID_PROFILE_CHANNEL, tlkmdi_btacl_profileChannelEvt);
@@ -85,6 +79,96 @@ BTP_EVT_REGISTER(BTP_EVTID_PROFILE_REQUEST, tlkmdi_btacl_profileRequestEvt);
 BTP_EVT_REGISTER(BTP_EVTID_PROFILE_CONNECT, tlkmdi_btacl_profileConnectEvt);
 BTP_EVT_REGISTER(BTP_EVTID_PROFILE_DISCONN, tlkmdi_btacl_profileDisconnEvt);
 BTP_EVT_REGISTER(BTP_EVTID_SDP_SEARCH_ADD_PROTOCOL, tlkmdi_btacl_searchAddProtoEvt);
+
+__attribute__((weak)) int TLKMW_BT_CONNECT_REQUEST_FUNC(uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    return TLK_ENONE;
+}
+
+__attribute__((weak)) int TLKMW_BT_CONNECT_COMPLETE_FUNC(uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    return TLK_ENONE;
+}
+
+__attribute__((weak)) int TLKMW_BT_DISCONNECT_COMPLETE_FUNC(uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    return TLK_ENONE;
+}
+
+__attribute__((weak)) int TLKMW_BT_ENCRYPTION_COMPLETE_FUNC(uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    return TLK_ENONE;
+}
+
+__attribute__((weak)) int TLKMW_BT_PROFILE_CONNECT_FUNC(uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    return TLK_ENONE;
+}
+
+__attribute__((weak)) int TLKMW_BT_PROFILE_DISCONNECT_FUNC(uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    return TLK_ENONE;
+}
+
+__attribute__((weak)) int TLKMW_BT_AFH_NOTIFY_FUNC(uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    return TLK_ENONE;
+}
+
+__attribute__((weak)) int TLKMW_BT_SET_LOCAL_ROLE_FUNC(uint8_t *pData, uint16_t dataLen)
+{
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_set_local_role_format)) {
+        return -TLK_EPARAM;
+    }
+    tlkmdi_bt_set_local_role_format *event     = (tlkmdi_bt_set_local_role_format *)pData;
+    uint8_t                          isRequest = *((uint8_t *)event->param);
+    if (isRequest) {
+        return bth_acl_setInitRole(event->pBtAddr, tlkmdi_btacl_getRole(event->devClass));
+    } else {
+        return bth_acl_connect(event->pBtAddr, event->devClass, tlkmdi_btacl_getRole(event->devClass), event->timeout);
+    }
+}
+
+static tlkmw_bt_event_func const sTlkmwBtEventFunc[TLKMW_BT_EVENT_ID_MAX] = {
+    TLKMW_BT_CONNECT_REQUEST_FUNC, TLKMW_BT_CONNECT_COMPLETE_FUNC,   TLKMW_BT_DISCONNECT_COMPLETE_FUNC, TLKMW_BT_ENCRYPTION_COMPLETE_FUNC,
+    TLKMW_BT_PROFILE_CONNECT_FUNC, TLKMW_BT_PROFILE_DISCONNECT_FUNC, TLKMW_BT_AFH_NOTIFY_FUNC,          TLKMW_BT_SET_LOCAL_ROLE_FUNC,
+};
+
+int tlkmw_bt_send_event(uint8_t event_id, uint8_t *pData, uint16_t dataLen)
+{
+    if (event_id > TLKMW_BT_EVENT_ID_MAX || sTlkmwBtEventFunc[event_id] == NULL) {
+        return -TLK_ENOSUPPORT;
+    }
+
+    return sTlkmwBtEventFunc[event_id](pData, dataLen);
+}
+
+void tlkmdi_btacl_ota_status_notifyEvt(void *pData, uint8_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    if (dataLen < sizeof(sTlkMwNotifyEvent_t)) {
+        return;
+    }
+    sTlkMwNotifyEvent_t *pEvent    = (sTlkMwNotifyEvent_t *)pData;
+    uint16_t             aclHandle = pEvent->taskID & 0xFFFF;
+    bth_acl_leaveSniff(aclHandle, 60000);
+    tlkapi_array(0xffffffff, "[OTA-STATUS]", "tlkmdi_btacl_ota_status_notifyEvt", pData, dataLen);
+}
 
 /**
  * @brief       This function initializes the ACL control block and register the callback
@@ -94,7 +178,7 @@ BTP_EVT_REGISTER(BTP_EVTID_SDP_SEARCH_ADD_PROTOCOL, tlkmdi_btacl_searchAddProtoE
 int tlkmdi_btacl_init(void)
 {
     tmemset(&sTlkMdiBtAclCtrl, 0, sizeof(tlkmdi_btacl_ctrl_t));
-    bth_acl_modifyLinkkeyRequestFunc(tlkmdi_btacl_requestLinkKey);
+    tlkmw_ota_register_notify_callback(TLKSYS_TASKID_HOST, tlkmdi_btacl_ota_status_notifyEvt);
 
     return TLK_ENONE;
 }
@@ -216,6 +300,26 @@ bool tlkmdi_btacl_isFindIap(uint16_t handle)
 }
 
 /**
+ * @brief       This function checks bip whether used or not
+ * @param[in]   handle    - The acl handle
+ * @return      Return true is used, false is unused
+ */
+bool tlkmdi_btacl_isFindBip(uint16_t handle)
+{
+    tlkmdi_btacl_item_t *pItem;
+
+    pItem = tlkmdi_btacl_getConnItem(handle);
+    if (pItem == NULL || pItem->state != TLK_STATE_CONNECT) {
+        return false;
+    }
+    if (pItem->bipChannel != 0 || pItem->avrcpCoverArtPsm != 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
  * @brief       This function cancels the acl link setup procedure
  * @param[in]   pBtAddr    - The bt address
  * @return      Return TLK_ENONE is success, other value is failure
@@ -266,7 +370,6 @@ int tlkmdi_btacl_cancel(uint8_t *pBtAddr)
  */
 int tlkmdi_btacl_connect(uint8_t *pBtAddr, uint32_t devClass, uint32_t timeout)
 {
-    int                  ret;
     tlkmdi_btacl_item_t *pItem;
 
     tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_btacl_connect: 0x%x 0x%x %d", *(uint32_t *)pBtAddr, devClass, timeout);
@@ -303,13 +406,17 @@ int tlkmdi_btacl_connect(uint8_t *pBtAddr, uint32_t devClass, uint32_t timeout)
     tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "p->initRole: initRole-%d", tlkmdi_btacl_getRole(devClass));
 
     // Initiating an ACL connection
-    if (sTlkMdiBtAclSetConnRoleCB != NULL) {
-        ret = sTlkMdiBtAclSetConnRoleCB(pBtAddr, devClass, timeout, NULL);
-    } else {
-        ret = bth_acl_connect(pBtAddr, devClass, tlkmdi_btacl_getRole(devClass), timeout);
-    }
-    if (ret != TLK_ENONE) {
-        tlkapi_error(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_btacl_connect: failure -- %d", -ret);
+    uint8_t isRequest = false;
+
+    tlkmdi_bt_set_local_role_format set_role_event = {
+        .devClass = devClass,
+        .pBtAddr  = pBtAddr,
+        .timeout  = timeout,
+        .param    = &isRequest,
+    };
+
+    if (tlkmw_bt_send_event(TLKMW_BT_SET_LOCAL_ROLE, (uint8_t *)&set_role_event, sizeof(tlkmdi_bt_set_local_role_format)) != TLK_ENONE) {
+        tlkapi_error(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_btacl_connect: failure");
         return -TLK_EBUSY;
     }
 
@@ -577,86 +684,6 @@ int tlkmdi_btacl_getRole(uint32_t devClass)
 }
 
 /**
- * @brief       This function registers acl link connection request callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regConnectRequsetCB(TlkMdiBtAclConnRequsetCallback callback)
-{
-    sTlkMdiBtAclConnReqCB = callback;
-}
-
-/**
- * @brief       This function registers acl link connection callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regConnectCB(TlkMdiBtAclConnCallback callback)
-{
-    sTlkMdiBtAclConnCB = callback;
-}
-
-/**
- * @brief       This function registers acl link encryption callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regEncryptCB(TlkMdiBtAclCrypCallback callback)
-{
-    sTlkMdiBtAclCrypCB = callback;
-}
-
-/**
- * @brief       This function registers acl link disconnection callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regDisconnCB(TlkMdiBtAclDiscCallback callback)
-{
-    sTlkMdiBtAclDiscCB = callback;
-}
-
-/**
- * @brief       This function registers acl link profile connection callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regProfileConnectCB(TlkMdiBtAclProfConnCallback callback)
-{
-    sTlkMdiBtAclProfConnCB = callback;
-}
-
-/**
- * @brief       This function registers acl link profile disconnection callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regProfileDisconnCB(TlkMdiBtAclProfDiscCallback callback)
-{
-    sTlkMdiBtAclProfDiscCB = callback;
-}
-
-/**
- * @brief       This function registers afh channel map callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regAfhChnMapCB(TlkMdiBtAclAfhCallback callback)
-{
-    sTlkMdiBtAclGetAfhCB = callback;
-}
-
-/**
- * @brief       This function registers acl link connection role callback
- * @param[in]   callback    - The callback function
- * @return      none.
- */
-void tlkmdi_btacl_regConnectRoleCB(TlkMdiBtAclSetConnRoleCallback callback)
-{
-    sTlkMdiBtAclSetConnRoleCB = callback;
-}
-
-/**
  * @brief       This function handles the ACL connection request event
  * @param[in]   pData    - the event data containing peer device information
  * @param[in]   dataLen  - the length of the event data
@@ -681,18 +708,24 @@ static int tlkmdi_btacl_requestEvt(uint8_t *pData, uint16_t dataLen)
     }
     tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_btacl_requestEvt: {devClass - 0x%x}", pEvt->devClass);
 
-    if (sTlkMdiBtAclConnReqCB != NULL) {
-        int res = sTlkMdiBtAclConnReqCB(pEvt->devClass, pEvt->peerMac);
-        if (res != TLK_ENONE) {
-            return -TLK_EFAIL;
-        }
+    tlkmdi_bt_conn_request_evt_format event = {
+        .dev_class = pEvt->devClass,
+        .pBtAddr   = pEvt->peerMac,
+    };
+
+    if (tlkmw_bt_send_event(TLKMW_BT_CONNECT_REQUEST, (uint8_t *)&event, sizeof(tlkmdi_bt_conn_request_evt_format)) != TLK_ENONE) {
+        return -TLK_EFAIL;
     }
 
-    if (sTlkMdiBtAclSetConnRoleCB != NULL) {
-        sTlkMdiBtAclSetConnRoleCB(pEvt->peerMac, 0, 0, NULL);
-    } else {
-        bth_acl_setInitRole(pEvt->peerMac, tlkmdi_btacl_getRole(pEvt->devClass));
-    }
+    uint8_t isRequest = true;
+
+    tlkmdi_bt_set_local_role_format set_role_event = {
+        .devClass = pEvt->devClass,
+        .pBtAddr  = pEvt->peerMac,
+        .param    = &isRequest,
+    };
+
+    tlkmw_bt_send_event(TLKMW_BT_SET_LOCAL_ROLE, (uint8_t *)&set_role_event, sizeof(tlkmdi_bt_set_local_role_format));
 
     // Record the initiation status and start the timeout timer
     pItem->state = TLK_STATE_CONNING;
@@ -704,6 +737,10 @@ static int tlkmdi_btacl_requestEvt(uint8_t *pData, uint16_t dataLen)
     tmemcpy(pItem->btaddr, pEvt->peerMac, 6);
     tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &pItem->timer, TLKMDI_BTACL_TIMEOUT, false, tlkmdi_btacl_timer, pItem);
     tlksys_timer_reStart(TLKSYS_TASKID_HOST, &pItem->timer);
+#if TLKMW_BT_1_TO_2_FORWARD_EN
+    uint8_t pincode[4] = {'1', '1', '2', '3'};
+    bth_acl_setPinCode(pEvt->peerMac, pincode, 4);
+#endif
     return TLK_ENONE;
 }
 
@@ -737,14 +774,20 @@ static int tlkmdi_btacl_connectEvt(uint8_t *pData, uint16_t dataLen)
     tlkmdi_tinySql_getPairingDeviceRfcChid(pItem->btaddr, &hfp_ChId, TLKMDI_BT_RFC_CHID_HFP);
     dtype = bth_devClassToDevType(pItem->devClass);
 
+    tlkmdi_bt_connect_evt_format event = {
+        .aclHandle   = pEvt->handle,
+        .dtype       = dtype,
+        .hfp_channel = hfp_ChId,
+        .pBtAddr     = pEvt->peerMac,
+        .status      = pEvt->status,
+    };
+
+    tlkmw_bt_send_event(TLKMW_BT_CONNECT_COMPLETE, (uint8_t *)&event, sizeof(tlkmdi_bt_connect_evt_format));
+
     if (pEvt->status != TLK_ENONE) {
         tlkapi_error(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_btacl_connectEvt: failure -- %d", pEvt->status);
+
         tlkmdi_btacl_resetItem(pItem);
-        if (sTlkMdiBtAclConnCB) {
-            sTlkMdiBtAclConnCB(pEvt->handle, pEvt->status, pEvt->peerMac, dtype, hfp_ChId);
-        } else {
-            tlkapi_error(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "sTlkMdiBtAclConnCB: null ");
-        }
         return TLK_ENONE;
     }
 
@@ -768,28 +811,23 @@ static int tlkmdi_btacl_connectEvt(uint8_t *pData, uint16_t dataLen)
     pItem->busys |= TLKMDI_BTACL_WAIT_DISC_ACL;
     pItem->idleTime = TLKMDI_BTACL_IDLE_DEF_TIMEOUT;
 
-    if (bth_handle_getConnScoCount() > 0) {
-        // bth_hci_sendSetMaxSlotCmd(pItem->handle, 0x01);
-    }
+#if (TLKBTP_CFG_HFPAG_ENABLE)
+    if (dtype == BTH_REMOTE_DTYPE_HEADSET) {
+        uint8_t volume = TLKBTP_HFP_DEFAULT_VOL;
 
-    if (sTlkMdiBtAclConnCB) {
-        sTlkMdiBtAclConnCB(pEvt->handle, TLK_ENONE, pEvt->peerMac, dtype, hfp_ChId);
-    } else {
-        tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "sTlkMdiBtAclConnCB: null - %d", pEvt->status);
+        tlkmdi_tinySql_getPairingDeviceVolume(pItem->btaddr, false, &volume, NULL);
+        btp_hfpag_setSpkVolumeByHandle(pEvt->handle, volume);
     }
+#endif
+
 #if (TLKBTP_CFG_HFPHF_ENABLE)
-    {
+    if (dtype != BTH_REMOTE_DTYPE_HEADSET) {
         uint8_t isIos  = 0;
         uint8_t volume = TLKBTP_HFP_DEFAULT_VOL;
         tlkmdi_tinySql_getPairingDeviceVolume(pEvt->peerMac, false, &volume, &isIos);
         btp_hfphf_setDefaultSpkVolumeByHandle(pEvt->handle, volume);
     }
 #endif
-    tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "sTlkMdiBtAclConnCB: active[%d] isEncrypt[%d]", pItem->active, pEvt->isEncrypt);
-    pEvt->isEncrypt = true; // TODO: There's a problem here in next.
-    if (!pEvt->isEncrypt) {
-        btp_sdpclt_connect(pItem->handle);
-    }
     return TLK_ENONE;
 }
 
@@ -845,6 +883,17 @@ static int tlkmdi_btacl_encryptEvt(uint8_t *pData, uint16_t dataLen)
     tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "hfp_ChId[0x%x],sppChannel[0x%x],iapChannel[0x%x],pbapChannel[0x%x], bipChannel[0x%x], avrcpCoverArtPsm[0x%x]",
                  hfp_ChId, pItem->sppChannel, pItem->iapChannel, pItem->pbapChannel, pItem->bipChannel, pItem->avrcpCoverArtPsm);
 
+    tlkmdi_bt_encryption_evt_format event = {
+        .aclHandle   = pEvt->handle,
+        .enable      = pEvt->enable,
+        .dtype       = dtype,
+        .hfp_channel = hfp_ChId,
+        .pBtAddr     = pItem->btaddr,
+        .status      = pEvt->status,
+    };
+
+    tlkmw_bt_send_event(TLKMW_BT_ENCRYPTION_COMPLETE, (uint8_t *)&event, sizeof(tlkmdi_bt_encryption_evt_format));
+
     if (pEvt->status != TLK_ENONE) {
         uint8_t btaddr[6];
         tmemcpy(btaddr, pItem->btaddr, 6);
@@ -852,10 +901,10 @@ static int tlkmdi_btacl_encryptEvt(uint8_t *pData, uint16_t dataLen)
         pItem->handle = 0; // Important
         tlkmdi_btacl_resetItem(pItem);
         bth_acl_disconn(pEvt->handle, 0x00);
-        if (sTlkMdiBtAclCrypCB) {
-            sTlkMdiBtAclCrypCB(pEvt->handle, TLK_EENCRYPT, btaddr, dtype, hfp_ChId);
-        }
-#if (!PROJ_BTTPSLL_TWS || DEBUG_BT_SNIFF_ENABLE) //TODO: temp close sniff in tws ,will open when controller is ok.
+
+#if (DEBUG_BT_SNIFF_ENABLE) //TODO: temp close sniff in tws ,will open when controller is ok.
+        bth_acl_enableSniff(pEvt->handle, true);
+#else
         bth_acl_enableSniff(pEvt->handle, false);
 #endif
         return TLK_ENONE;
@@ -868,10 +917,9 @@ static int tlkmdi_btacl_encryptEvt(uint8_t *pData, uint16_t dataLen)
 
     tlksys_timer_reStart(TLKSYS_TASKID_HOST, &pItem->timer);
 
-    if (sTlkMdiBtAclCrypCB) {
-        sTlkMdiBtAclCrypCB(pItem->handle, TLK_ENONE, pItem->btaddr, dtype, hfp_ChId);
-    }
-#if (!PROJ_BTTPSLL_TWS || DEBUG_BT_SNIFF_ENABLE) //TODO: temp close sniff in tws ,will open when controller is ok.
+#if (DEBUG_BT_SNIFF_ENABLE) //TODO: temp close sniff in tws ,will open when controller is ok.
+    bth_acl_enableSniff(pEvt->handle, true);
+#else
     bth_acl_enableSniff(pEvt->handle, false);
 #endif
     return TLK_ENONE;
@@ -900,18 +948,26 @@ static int tlkmdi_btacl_disconnEvt(uint8_t *pData, uint16_t dataLen)
         pEvt->reason = 0x13;
     }
 
+    uint8_t dtype;
+    dtype = bth_devClassToDevType(pItem->devClass); // get peer devClass
+
     btp_destroy(pItem->handle);
     bth_destroy(pItem->handle);
 
     tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_btacl_disconnEvt: success-0x%x addr-%x", pEvt->handle, pEvt->peerMac);
+
     pItem->handle = 0; // Important
     tlkmdi_btacl_resetItem(pItem);
-    if (sTlkMdiBtAclDiscCB) {
-        tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_btacl_disconnEvt ");
-        sTlkMdiBtAclDiscCB(pEvt->handle, pEvt->reason, pEvt->peerMac);
-    } else {
-        tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "sTlkMdiBtAclDiscCB: null ");
-    }
+
+    tlkmdi_bt_disconnect_evt_format event = {
+        .aclHandle = pEvt->handle,
+        .dtype     = dtype,
+        .pBtAddr   = pEvt->peerMac,
+        .reason    = pEvt->reason,
+    };
+
+    tlkmw_bt_send_event(TLKMW_BT_DISCONNECT_COMPLETE, (uint8_t *)&event, sizeof(tlkmdi_bt_disconnect_evt_format));
+
     tlkmw_host_linkmgr_delLink(TLKMDI_HOST_LINK_TYPE_BT, pEvt->handle);
     return TLK_ENONE;
 }
@@ -961,9 +1017,10 @@ static int tlkmdi_btacl_getAfhCompletedEvt(uint8_t *pData, uint16_t dataLen)
     bth_aclGetAfhReportEvt_t *evt = (bth_aclGetAfhReportEvt_t *)pData;
     if (evt->status == BTH_HCI_ERROR_NONE) {
         tlkapi_array(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "AFH_CHN-MAP: ", evt->map, 10);
-        if (sTlkMdiBtAclGetAfhCB != NULL) {
-            sTlkMdiBtAclGetAfhCB(evt->conhdl, evt->map, sizeof(evt->map));
-        }
+
+        tlkmdi_bt_afh_notify_evt_format event = {.aclHandle = evt->conhdl, .pData = evt->map, .dataLen = sizeof(evt->map)};
+
+        tlkmw_bt_send_event(TLKMW_BT_AFH_NOTIFY, (uint8_t *)&event, sizeof(tlkmdi_bt_afh_notify_evt_format));
     }
 
     return TLK_ENONE;
@@ -1152,7 +1209,7 @@ static int tlkmdi_btacl_profileConnectEvt(uint8_t *pData, uint16_t dataLen)
         }
 #endif
 #if (TLKBTP_CFG_HFPHF_ENABLE)
-        if (pEvt->ptype == BTP_PTYPE_HFP) {
+        if (pEvt->ptype == BTP_PTYPE_HFP && pEvt->usrID == BTP_USRID_CLIENT) {
             uint8_t isIos  = 0;
             uint8_t volume = TLKBTP_HFP_DEFAULT_VOL;
 
@@ -1161,6 +1218,18 @@ static int tlkmdi_btacl_profileConnectEvt(uint8_t *pData, uint16_t dataLen)
 
             tlkmdi_tinySql_getPairingDeviceVolume(pItem->btaddr, false, &volume, &isIos);
             btp_hfphf_setDefaultSpkVolumeByHandle(pEvt->handle, volume);
+        }
+#endif
+
+#if (TLKBTP_CFG_HFPAG_ENABLE)
+        if (pEvt->ptype == BTP_PTYPE_HFP && pEvt->usrID == BTP_USRID_SERVER) {
+            uint8_t volume = TLKBTP_HFP_DEFAULT_VOL;
+
+            tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "!!! set hfpag default vol:0x%x,addr:0x%x,pEvt->handle:0x%x", volume, *(uint32_t *)pItem->btaddr,
+                         pEvt->handle);
+
+            tlkmdi_tinySql_getPairingDeviceVolume(pItem->btaddr, false, &volume, NULL);
+            btp_hfpag_setSpkVolumeByHandle(pEvt->handle, volume);
         }
 #endif
 
@@ -1176,10 +1245,22 @@ static int tlkmdi_btacl_profileConnectEvt(uint8_t *pData, uint16_t dataLen)
             }
         }
 #endif
+        if (pEvt->ptype == BTP_PTYPE_ATT) {
+            tlkmdi_tinySql_setPairingDeviceRfcChid(pItem->btaddr, 0x01, TLKMDI_BT_RFC_GATT_SUPPORT);
+        }
     }
-    if (sTlkMdiBtAclProfConnCB != NULL) {
-        sTlkMdiBtAclProfConnCB(pEvt->handle, pEvt->status, pEvt->ptype, pEvt->usrID, pItem->btaddr, isFirstProfile);
-    }
+
+    tlkmdi_bt_profile_connect_evt_format event = {
+        .aclHandle     = pEvt->handle,
+        .status        = pEvt->status,
+        .ptype         = pEvt->ptype,
+        .usrID         = pEvt->usrID,
+        .pBtAddr       = pItem->btaddr,
+        .is_first_prof = isFirstProfile,
+    };
+
+    tlkmw_bt_send_event(TLKMW_BT_PROFILE_CONNECT, (uint8_t *)&event, sizeof(tlkmdi_bt_profile_connect_evt_format));
+
     if (isFirstProfile) {
         tlkmw_host_linkmgr_addLink(TLKMDI_HOST_LINK_TYPE_BT, pEvt->handle);
     }
@@ -1218,9 +1299,16 @@ static int tlkmdi_btacl_profileDisconnEvt(uint8_t *pData, uint16_t dataLen)
 
     tlkapi_trace(TLKMDI_BTACL_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_btacl_profileDisconnEvt: {ptype-%d,usrID-%d,handle-0x%x,connFlag-0x%x}", pEvt->ptype, pEvt->usrID,
                  pEvt->handle, pItem->connFlag);
-    if (sTlkMdiBtAclProfDiscCB != NULL) {
-        sTlkMdiBtAclProfDiscCB(pItem->handle, 0, pEvt->ptype, pEvt->usrID, pItem->btaddr);
-    }
+
+    tlkmdi_bt_profile_disconnect_evt_format event = {
+        .aclHandle = pItem->handle,
+        .pBtAddr   = pItem->btaddr,
+        .ptype     = pEvt->ptype,
+        .reason    = 0,
+        .usrID     = pEvt->usrID,
+    };
+
+    tlkmw_bt_send_event(TLKMW_BT_PROFILE_DISCONNECT, (uint8_t *)&event, sizeof(tlkmdi_bt_profile_disconnect_evt_format));
 
     connFlag = pItem->connFlag;
     connFlag &= ~BTP_PFLAG_RFC;
@@ -1252,6 +1340,10 @@ static int tlkmdi_btacl_linkeyNotifyEvt(uint8_t *pData, uint16_t dataLen)
     (void)dataLen;
     bth_linkKeyNotifyEvt_t *evt = (bth_linkKeyNotifyEvt_t *)pData;
     tlkmdi_tinySql_updatePairingDevice(evt->peerMac, &evt->devClass, evt->linkKey, NULL);
+
+    void tlkmw_btble_key_derivation_store_link_key(uint8_t bd_addr[6], uint8_t link_key[16], uint8_t key_type);
+    tlkmw_btble_key_derivation_store_link_key(evt->peerMac, evt->linkKey, evt->keyType);
+
     return 0;
 }
 
@@ -1280,6 +1372,7 @@ static int tlkmdi_btacl_searchAddProtoEvt(uint8_t *pData, uint16_t dataLen)
     if (pEvt->search_uuid == BTP_SDP_SRVCLASS_ID_AV_REMOTE_TARGET) {
         if (pEvt->psm_base_uuid == 0x0008) { // BTP_SDP_PROTOCOL_OBEX_UUID
             pItem->avrcpCoverArtPsm = pEvt->psm;
+            tlkmdi_tinySql_setPairingDeviceRfcChid(pItem->btaddr, pItem->avrcpCoverArtPsm, TLKMDI_BT_AVRCP_ArtPsm);
 #if (TLKBTP_CFG_AVRC_COVER_ART_ENABLE)
             if ((pItem->connFlag & BTP_PFLAG_AVRCP) && pItem->avrcpCoverArtPsm != 0) {
                 btp_coverArt_connect(pEvt->handle, BTP_USRID_CLIENT, pItem->avrcpCoverArtPsm, true);
@@ -1291,15 +1384,9 @@ static int tlkmdi_btacl_searchAddProtoEvt(uint8_t *pData, uint16_t dataLen)
     return TLK_ENONE;
 }
 
-/**
- * @brief       Requests the link key for a Bluetooth device.
- * @param[in]   addr    - Pointer to the Bluetooth device address.
- * @param[out]  linkkey - Pointer to store the retrieved link key.
- * @return      Returns the result of tlkmdi_tinySql_getPairingDeviceByAddr.
- */
-static int tlkmdi_btacl_requestLinkKey(uint8_t *addr, uint8_t *linkkey)
+int bth_acl_linkkey_request_for_user(uint8_t *pAddr, uint8_t *pLinkkey)
 {
-    return tlkmdi_tinySql_getPairingDeviceByAddr(addr, NULL, linkkey, NULL);
+    return tlkmdi_tinySql_getPairingDeviceByAddr(pAddr, NULL, pLinkkey, NULL);
 }
 
 /**
@@ -1513,7 +1600,17 @@ static bool tlkmdi_btacl_profileConnDeal(tlkmdi_btacl_item_t *pItem, tlkmdi_btac
         dtype = bth_devClassToDevType(pItem->devClass); // get peer devClass
         if (dtype == BTH_REMOTE_DTYPE_HEADSET) {
             if (pItem->hfChannel != 0) {
+#if (TLK_CHECK_REMOTE_DEV)
+                bth_aclGetNameReportEvt_t *info = (bth_aclGetNameReportEvt_t *)tlkmdi_btacl_get_remote_dev();
+                if (info->isCustomerDev) {
+                    ret = btp_hfp_connect(pItem->handle, BTP_USRID_CLIENT, pItem->hfChannel);
+                } else {
+                    ret = btp_hfp_connect(pItem->handle, BTP_USRID_SERVER, pItem->hfChannel);
+                }
+
+#else
                 ret = btp_hfp_connect(pItem->handle, BTP_USRID_SERVER, pItem->hfChannel);
+#endif
             }
         } else if (dtype == BTH_REMOTE_DTYPE_COMPUTER || dtype == BTH_REMOTE_DTYPE_PHONE) {
             if (pItem->agChannel != 0) {
@@ -1561,6 +1658,15 @@ static bool tlkmdi_btacl_profileConnDeal(tlkmdi_btacl_item_t *pItem, tlkmdi_btac
     } else if (pProf->ptype == BTP_PTYPE_AVRCP) {
 #if (TLKBTP_CFG_AVRCP_ENABLE)
         ret = btp_avrcp_connect(pItem->handle, pProf->usrID);
+#endif
+    } else if (pProf->ptype == BTP_PTYPE_COVERART) {
+#if (TLKBTP_CFG_COVERARTCLT_ENABLE)
+        if (pItem->bipChannel != 0) {
+            /*based on rfcomm, TODO:yating*/
+        } else if (pItem->avrcpCoverArtPsm != 0) {
+            /*based on l2cap.*/
+            btp_coverArt_connect(pItem->handle, BTP_USRID_CLIENT, pItem->avrcpCoverArtPsm, true);
+        }
 #endif
     }
 
@@ -1638,13 +1744,25 @@ void tlkmdi_btacl_resetItem(tlkmdi_btacl_item_t *pItem)
         return;
     }
 
+    uint8_t dtype;
+    dtype = bth_devClassToDevType(pItem->devClass); // get peer devClass
+
     handle = pItem->handle;
     tmemcpy(btaddr, pItem->btaddr, 6);
     tlksys_timer_stop(TLKSYS_TASKID_HOST, &pItem->timer);
     tmemset(pItem, 0, sizeof(tlkmdi_btacl_item_t));
-    if (handle != 0 && sTlkMdiBtAclDiscCB != NULL) {
-        sTlkMdiBtAclDiscCB(handle, 0, btaddr);
+
+    if (handle != 0) {
+        tlkmdi_bt_disconnect_evt_format event = {
+            .aclHandle = handle,
+            .dtype     = dtype,
+            .pBtAddr   = btaddr,
+            .reason    = 0,
+        };
+
+        tlkmw_bt_send_event(TLKMW_BT_DISCONNECT_COMPLETE, (uint8_t *)&event, sizeof(tlkmdi_bt_disconnect_evt_format));
     }
+
     tlkmw_host_linkmgr_delLink(TLKMDI_HOST_LINK_TYPE_BT, handle);
 }
 
@@ -1855,6 +1973,34 @@ bool tlkmdi_btacl_isIOS_device(uint16_t handle)
         return pItem->iapChannel == 0 ? false : true;
     }
     return false;
+}
+
+/**
+ * @brief     Provides a hook function to customer deal remote device info.
+ * @param[in] None.
+ * @returns   None
+ */
+__attribute__((weak)) void tlkmdi_btacl_getRemoteNameChange(uint8_t *pData)
+{
+    (void)pData;
+}
+
+__attribute__((weak)) void tlkmdi_btacl_set_remote_dev(uint8_t *pData, uint8_t isTrue)
+{
+    (void)pData;
+    (void)isTrue;
+}
+
+__attribute__((weak)) void *tlkmdi_btacl_get_remote_dev(void)
+{
+    return NULL;
+}
+
+static int tlkmdi_btacl_getRemoteNameEvt(uint8_t *pData, uint16_t dataLen)
+{
+    (void)dataLen;
+    tlkmdi_btacl_getRemoteNameChange(pData);
+    return 0;
 }
 
 #else

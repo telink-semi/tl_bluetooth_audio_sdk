@@ -131,29 +131,8 @@ static int tlkapp_sys_serialSendMsgDeal(uint8_t *pData, uint16_t dataLen)
  */
 static void tlkapp_sys_recvGetVersionCmdDeal(void)
 {
-    uint8_t  buffLen;
-    uint8_t  buffer[12];
-    uint16_t prtVersion;
-    uint32_t libVersion;
-    uint32_t appVersion;
-
-    libVersion = TLK_LIB_VERSION;
-    prtVersion = TLK_PRT_VERSION;
-    appVersion = TLK_APP_VERSION;
-
-    buffLen           = 0;
-    buffer[buffLen++] = (libVersion & 0xFF000000) >> 24;
-    buffer[buffLen++] = (libVersion & 0x00FF0000) >> 16;
-    buffer[buffLen++] = (libVersion & 0x0000FF00) >> 8;
-    buffer[buffLen++] = (libVersion & 0x000000FF);
-    buffer[buffLen++] = (prtVersion & 0x0000FF00) >> 8;
-    buffer[buffLen++] = (prtVersion & 0x000000FF);
-    buffer[buffLen++] = (appVersion & 0xFF000000) >> 24;
-    buffer[buffLen++] = (appVersion & 0x00FF0000) >> 16;
-    buffer[buffLen++] = (appVersion & 0x0000FF00) >> 8;
-    buffer[buffLen++] = (appVersion & 0x000000FF);
-
-    tlkapp_sys_sendCommRsp(TLKSYS_SYS_MSGID_VERSION, TLKPRT_COMM_RSP_STATUE_SUCCESS, TLK_ENONE, buffer, buffLen);
+    uint8_t buffer[10] = {0};
+    tlkapp_sys_sendCommRsp(TLKSYS_SYS_MSGID_VERSION, TLKPRT_COMM_RSP_STATUE_SUCCESS, TLK_ENONE, buffer, sizeof(buffer));
 }
 
 /**
@@ -216,6 +195,41 @@ static void tlkapp_sys_recvSetUSBModeCmdDeal(uint8_t *pData, uint8_t dataLen)
 #endif
 }
 
+#if (TLK_CFG_SUSPEND_ENABLE)
+typedef struct
+{
+    uint32_t pm_state; // 0 -- exit PM     1 -- enter PM
+    uint32_t pm_enter_tick;
+    uint32_t pm_exit_tick;
+} tlkapp_sysPmCtrl_t;
+
+tlkapp_sysPmCtrl_t sTlkappSysPmCtrl = {0};
+
+static void tlkapp_sys_recvPmStateChangeDeal(uint8_t *pData, uint16_t dataLen)
+{
+    (void)dataLen;
+
+    if (pData[0] == false) {
+        uint32_t exit_tick            = 0;
+        exit_tick                     = (pData[1] << 24) | (pData[2] << 16) | (pData[3] << 8) | pData[4];
+        sTlkappSysPmCtrl.pm_exit_tick = exit_tick;
+        sTlkappSysPmCtrl.pm_state     = false;
+    } else {
+        uint32_t enter_tick            = 0;
+        enter_tick                     = (pData[1] << 24) | (pData[2] << 16) | (pData[3] << 8) | pData[4];
+        sTlkappSysPmCtrl.pm_enter_tick = enter_tick;
+        sTlkappSysPmCtrl.pm_state      = true;
+    }
+}
+
+static void tlkapp_sys_recvClearUsbSuspendDeal(uint8_t *pData, uint16_t dataLen)
+{
+    (void)dataLen;
+    (void)pData;
+    // tlkusb_core_clearSuspend(pData[0]);
+}
+#endif
+
 /**
  * @brief       Handles key action events.
  * @param[in]   pData    - Pointer to the data buffer.
@@ -232,6 +246,19 @@ static void tlkapp_sys_recvKeyActionDeal(uint8_t *pData, uint16_t dataLen)
     uint8_t       evtID               = pData[1];
     keyConfigs_t *sApp_key_cur_config = NULL;
     tlkmdi_tinySql_getKeyCofnig(&sApp_key_cur_config);
+
+#if (TLK_CFG_SUSPEND_ENABLE && (PROJ_GAMESIR_XIAOJI || PROJ_TPSLL_AUDIO_DONGLE)) //TODO: ZEWEN CRAZY CODE,NEED CLEAN
+    /* In suspend mode, there is no need to keep tpsll/BT/LE link. 
+       When a key is used as the wake-up src, the app logic of the key is not execute. */
+    if (!sTlkappSysPmCtrl.pm_state && sTlkappSysPmCtrl.pm_exit_tick != 0xFFFFFFFF) {
+        uint16_t diff_ms = (clock_time() - sTlkappSysPmCtrl.pm_exit_tick) / SYSTEM_TIMER_TICK_1MS;
+        if (diff_ms < 1000) {
+            sTlkappSysPmCtrl.pm_exit_tick = 0xFFFFFFFF;
+            return;
+        }
+    }
+#endif
+
     if (sApp_key_cur_config != NULL) {
         if (sApp_key_cur_config->EvtModes[keyID - 1][evtID] != KEY_EVT_MODE_NONE) {
 #if (TLK_DEV_KEY_ENABLE)
@@ -283,6 +310,16 @@ int tlkapp_system_msgHandle(uint8_t msgID, uint8_t *pData, uint16_t dataLen)
         break;
     case TLKSYS_SYS_MSGID_KEY_VENDOR_CONFIG ... TLKSYS_SYS_MSGID_KEY_VENDOR_CONFIG_END - 1:
         tlkapp_sys_recvKeyVendorConfig(msgID - TLKSYS_SYS_MSGID_KEY_VENDOR_CONFIG);
+        break;
+    case TLKSYS_SYS_MSGID_PM_STATE_CHANGE:
+#if (TLK_CFG_SUSPEND_ENABLE)
+        tlkapp_sys_recvPmStateChangeDeal(pData, dataLen);
+#endif
+        break;
+    case TLKSYS_SYS_MSGID_PM_CLEAR_USB_SUSPEND:
+#if (TLK_CFG_SUSPEND_ENABLE)
+        tlkapp_sys_recvClearUsbSuspendDeal(pData, dataLen);
+#endif
         break;
     default:
         return -TLK_ENOSUPPORT;

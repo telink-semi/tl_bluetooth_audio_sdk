@@ -55,14 +55,9 @@ void tlkhal_uart_open(const tlkhal_uart_cfg_t *const pCfg)
     plic_interrupt_disable(irqNum);
 
     if (txPin != rxPin) {
-        /* 
-            uint32_t gGroup = 0;
-            gGroup = ((uint32_t)txPin & 0xFF00) >> 8;
-            uart_set_pin(gGroup, txPin, rxPin, GPIO_ALTERNATE_FUNC_2);
-            // TODO: ZEWEN  after Platform group drv updated, doing this
-        */
-        uart_set_pin(GPIO_PORT_A, txPin, rxPin, GPIO_ALTERNATE_FUNC_2);
-
+        uint32_t gGroup = 0;
+        gGroup          = ((uint32_t)txPin & 0xFF00) >> 8;
+        uart_set_pin(gGroup, GPIO_PIN_((txPin & 0x7F)), GPIO_PIN_((rxPin & 0x7F)), GPIO_ALTERNATE_FUNC_2);
     } else {
         // TODO: ZEWEN one IO achieve RTX function by software.
     }
@@ -204,7 +199,7 @@ __attribute__((always_inline)) inline void tlkhal_uart_clrRxDoneStatus(uint8_t p
  * @param[in] port : UART port number
  * @returns  None.
 */
-_attribute_ram_code_sec_ static void tlkhal_uart_RxDoneCallback(uart_handle_t *huart)
+static void tlkhal_uart_RxDoneCallback(uart_handle_t *huart)
 {
     uint8_t port = 0;
     if (sTlkhalNoDmaRxDoneCB != NULL) {
@@ -218,7 +213,7 @@ _attribute_ram_code_sec_ static void tlkhal_uart_RxDoneCallback(uart_handle_t *h
  * @param[in] port : UART port number
  * @returns  None.
 */
-_attribute_ram_code_sec_ static void tlkhal_uart_TxDoneCallback(uart_handle_t *huart)
+static void tlkhal_uart_TxDoneCallback(uart_handle_t *huart)
 {
     (void)huart;
 }
@@ -228,7 +223,7 @@ _attribute_ram_code_sec_ static void tlkhal_uart_TxDoneCallback(uart_handle_t *h
  * @param[in] port : UART port number
  * @returns  None.
 */
-_attribute_ram_code_sec_ static void tlkhal_uart_dmaTxDoneCallback(uart_handle_t *huart)
+static void tlkhal_uart_dmaTxDoneCallback(uart_handle_t *huart)
 {
     uint8_t port = 0;
     if (sTlkhalDmaTxDoneCB != NULL) {
@@ -242,7 +237,7 @@ _attribute_ram_code_sec_ static void tlkhal_uart_dmaTxDoneCallback(uart_handle_t
  * @param[in] port : UART port number
  * @returns  None.
 */
-_attribute_ram_code_sec_ static void tlkhal_uart_dmaRxDoneCallback(uart_handle_t *huart)
+static void tlkhal_uart_dmaRxDoneCallback(uart_handle_t *huart)
 {
     uint8_t port = 0;
     if (sTlkhalDmaRxDoneCB != NULL) {

@@ -59,6 +59,7 @@ typedef enum
     BTP_EVTID_HFPHF_STATUS_CHANGED,
     BTP_EVTID_HFPHF_STATUS_INQUIRY,
     BTP_EVTID_HFPHF_CALL_STATUS_CHANGED,
+    BTP_EVTID_HFPHF_SIGNAL_CHANGED,
     BTP_EVTID_HFPHF_NUMBER_INQUIRY,
     BTP_EVTID_HFPHF_VOLUME_CHANGED,
     BTP_EVTID_HFPAG_STATUS_CHANGED,
@@ -177,12 +178,29 @@ typedef struct
 
 typedef struct
 {
-    uint8_t  state; // Inquiry State: 0-Start, 1-continue, 2-Stop
     uint16_t handle;
+    uint8_t  value;
+    uint8_t  idx; // refer to BTP_HFP_CALL_STATUS_TYPE
+} btp_hfpSignalChangedEvt_t;
+
+typedef struct
+{
+    uint8_t  index;
+    uint8_t  dir;
     uint8_t  status;
-    uint8_t  callDir;
+    uint8_t  mode;
+    uint8_t  mpty;
+    uint8_t  type[4];
     uint8_t  numbLen;
     uint8_t *pNumber;
+} btp_hfp_clcc_evt_t;
+
+typedef struct
+{
+    uint8_t             state; // Inquiry State: 0-Start, 1-continue, 2-Stop
+    uint8_t             resv;
+    uint16_t            handle;
+    btp_hfp_clcc_evt_t *clcc_info;
 } btp_hfpNumberInquiryEvt_t;
 
 typedef struct
@@ -219,6 +237,7 @@ typedef struct
 {
     uint16_t handle;
     uint8_t  volume;
+    uint8_t  isControl;
 } btp_avrcpVolumeChangeEvt_t;
 
 typedef struct
@@ -303,10 +322,11 @@ int btp_send_hfpagCodecChangedEvt(uint16_t aclHandle, uint8_t codec);
 int btp_send_hfphfVolumeChangedEvt(uint16_t aclHandle, uint8_t type, uint8_t volume);
 int btp_send_hfpagVolumeChangedEvt(uint16_t aclHandle, uint8_t type, uint8_t volume);
 int btp_send_hfphfCallStatusChangedEvt(uint16_t aclHandle, uint8_t status, uint8_t status_type);
+int btp_send_hfphfSignalChangedEvt(uint16_t aclHandle, uint8_t idx, uint8_t value);
 int btp_send_hfphfStatusChangedEvt(uint16_t aclHandle, uint8_t status, uint8_t callDir, uint8_t *pNumber, uint8_t numbLen);
 int btp_send_hfpagStatusChangedEvt(uint16_t aclHandle, uint8_t status, uint8_t callDir, uint8_t *pNumber, uint8_t numbLen);
 int btp_send_hfphfStatusInquiryEvt(uint16_t aclHandle, uint8_t state, uint8_t setup);
-int btp_send_hfphfNumberInquiryEvt(uint16_t aclHandle, uint8_t state, uint8_t status, uint8_t callDir, uint8_t *pNumber, uint8_t numbLen);
+int btp_send_hfphfNumberInquiryEvt(uint16_t aclHandle, uint8_t state, btp_hfp_clcc_evt_t *clcc_info);
 
 
 int btp_send_a2dpSrcCodecChangedEvt(uint16_t aclHandle, uint8_t chnMode, uint8_t codecType, uint32_t frequence, uint32_t bitRate, uint8_t objType);
@@ -335,7 +355,7 @@ int btp_send_avrcpKeyChangedEvt(uint16_t aclHandle, uint8_t keyID, uint8_t isPre
  * Return:Returning TLK_ENONE(0x00) means the send process success.
  *         If others value is returned means the send process fail.
  *******************************************************************************/
-int btp_send_avrcpVolumeChangedEvt(uint16_t aclHandle, uint8_t volume);
+int btp_send_avrcpVolumeChangedEvt(uint16_t aclHandle, uint8_t volume, uint8_t isNotify);
 /******************************************************************************
  * Function: btp_send_avrcpStatusChangedEvt
  * Descript: Send events to the user layer.

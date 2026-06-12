@@ -24,13 +24,13 @@
 #ifndef TLKHAL_UART_TL752X_H_
 #define TLKHAL_UART_TL752X_H_
 
-typedef void (*tlkhal_uart_dmaRxDoneCB) (unsigned char port, unsigned char param);
-typedef void (*tlkhal_uart_dmaTxDoneCB) (unsigned char port);
-typedef void (*tlkhal_uart_noDmaRxDoneCB) (unsigned char port);
+typedef void (*tlkhal_uart_dmaRxDoneCB)(unsigned char port, unsigned char param);
+typedef void (*tlkhal_uart_dmaTxDoneCB)(unsigned char port);
+typedef void (*tlkhal_uart_noDmaRxDoneCB)(unsigned char port);
 
-void tlkhal_uart_dmaRxDoneRegister(tlkhal_uart_dmaRxDoneCB cb);
-void tlkhal_uart_dmaTxDoneRegister(tlkhal_uart_dmaTxDoneCB cb);
-void tlkhal_uart_noDmaRxDoneRegister(tlkhal_uart_noDmaRxDoneCB cb);
+void    tlkhal_uart_dmaRxDoneRegister(tlkhal_uart_dmaRxDoneCB cb);
+void    tlkhal_uart_dmaTxDoneRegister(tlkhal_uart_dmaTxDoneCB cb);
+void    tlkhal_uart_noDmaRxDoneRegister(tlkhal_uart_noDmaRxDoneCB cb);
 uint8_t tlkhal_uart_getUartPort(uart_handle_t *huart);
 
 #endif /* TLKHAL_UART_TL752X_H_ */

@@ -61,7 +61,7 @@
  *********************************************************************************************************************/
 
 #ifndef BT_AUTO_PWR_DFT
-    #define BT_AUTO_PWR_DFT 0x28 // slice
+#define BT_AUTO_PWR_DFT 0x28 // slice
 #endif
 
 
@@ -79,30 +79,30 @@
 #define BT_RADIO_SYNC_OFFSET   0
 
 #if NORMAL_SETTLE_MODE_ENABLE
-#define BT_RADIO_RX_POWER_UP   87//45//53 //60//(100 - BT_RADIO_RX_PATH_DELAY)		//CEVA bug
+#define BT_RADIO_RX_POWER_UP 87 //45//53 //60//(100 - BT_RADIO_RX_PATH_DELAY)		//CEVA bug
 #else
-#define BT_RADIO_RX_POWER_UP   45
+#define BT_RADIO_RX_POWER_UP 45
 #endif
 
-#define BT_RADIO_RX_PATH_DELAY 9  //20
+#define BT_RADIO_RX_PATH_DELAY 9 //20
 
 #if ramp_on
-    #define BT_RADIO_EDR_TX_POWER_UP   55
-    #define BT_RADIO_EDR_TX_PATH_DELAY 10
-    #define BT_RADIO_EDR_POWER_DOWN    21
+#define BT_RADIO_EDR_TX_POWER_UP   55
+#define BT_RADIO_EDR_TX_PATH_DELAY 10
+#define BT_RADIO_EDR_POWER_DOWN    21
 
-    #define BT_RADIO_BR_TX_POWER_UP    56
-    #define BT_RADIO_BR_TX_PATH_DELAY  9
-    #define BT_RADIO_BR_POWER_DOWN     19
+#define BT_RADIO_BR_TX_POWER_UP    56
+#define BT_RADIO_BR_TX_PATH_DELAY  9
+#define BT_RADIO_BR_POWER_DOWN     19
 #else
 
 #if NORMAL_SETTLE_MODE_ENABLE
-    #define BT_RADIO_TX_POWER_UP   87//43//57-8-6
+#define BT_RADIO_TX_POWER_UP 87 //43//57-8-6
 #else
-	#define BT_RADIO_TX_POWER_UP   43
+#define BT_RADIO_TX_POWER_UP 43
 #endif
-    #define BT_RADIO_TX_PATH_DELAY 13
-    #define BT_RADIO_POWER_DOWN    23
+#define BT_RADIO_TX_PATH_DELAY 13
+#define BT_RADIO_POWER_DOWN    23
 #endif
 
 
@@ -205,9 +205,9 @@ typedef struct
 {
     unsigned char slice;
     unsigned char scale;
-    signed char dbm;
+    signed char   dbm;
 } __attribute__((__packed__)) ext_btrf_expwr_t;
-#elif(MCU_CORE_TYPE == MCU_CORE_TL751X)
+#elif (MCU_CORE_TYPE == MCU_CORE_TL751X)
 typedef struct
 {
     unsigned char slice;
@@ -218,8 +218,8 @@ typedef struct
 
 void ext_btrf_init(void);
 
-bool ext_btrf_txpwr_inc(uint8_t link_id,uint8_t mode);
-bool ext_btrf_txpwr_dec(uint8_t link_id,uint8_t mode);
+bool ext_btrf_txpwr_inc(uint8_t link_id, uint8_t mode);
+bool ext_btrf_txpwr_dec(uint8_t link_id, uint8_t mode);
 void ext_btrf_txpwr_max(uint8_t link_id);
 
 void ext_btrf_setTxPower(EXT_BTRF_POWER_INDEX_ENUM index);
@@ -236,6 +236,6 @@ void ext_btrf_rxCalibtration(void);
 
 void ext_btrf_brManualInit(void);
 
-int8_t ext_btrf_rssi_convert(uint8_t rssi);
+int8_t  ext_btrf_rssi_convert(uint8_t rssi);
 uint8_t ext_btrf_pwr_dbm_get(uint8_t tx_pwr, uint8_t mod);
 #endif //EXT_BT_RF_H

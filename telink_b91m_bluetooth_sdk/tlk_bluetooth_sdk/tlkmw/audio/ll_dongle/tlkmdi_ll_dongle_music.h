@@ -24,7 +24,7 @@
 #ifndef TLKMDI_LL_DONGLE_MUSIC_H_
 #define TLKMDI_LL_DONGLE_MUSIC_H_
 
-#define APP_AUDIO_LOG_EN         (1)
+#define APP_AUDIO_LOG_EN (1)
 
 /**
  * @brief       Switch the music status for a given handle.

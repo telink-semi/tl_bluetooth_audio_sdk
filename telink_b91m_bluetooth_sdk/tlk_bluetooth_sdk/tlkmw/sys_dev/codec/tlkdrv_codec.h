@@ -26,6 +26,10 @@
 #include "common/types.h"
 #include "vendor/common/user_config.h"
 
+#ifndef CODEC_CFG_TEST_MODE_EN
+#define CODEC_CFG_TEST_MODE_EN 0
+#endif
+
 
 #if (AUDIO_PATH_24BITS_EN)
 #if CODEC_DAC_MONO_MODE
@@ -41,6 +45,7 @@ typedef int32_t adc_mono_int;
 
 #else
 
+typedef int64_t adc_4ch_int;
 typedef int32_t codec_int;
 typedef int32_t adc_int;
 typedef int16_t codec_mono_int;
@@ -50,14 +55,25 @@ typedef int16_t adc_mono_int;
 
 #if (TLK_DEV_CODEC_ENABLE)
 
+extern uint8_t gTlkdrvCodecSpkDmaChn;
+extern uint8_t gTlkdrvCodecMicDmaChn;
+#if (PROJ_RECORDING_CARD && TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN)
+extern uint8_t gTlkdrvCodecMic1DmaChn;
+#endif
+
 #define TLKDRV_CODEC_DBG_FLAG ((TLK_MAJOR_DBGID_MW << 24) | (TLK_MINOR_DBGID_MW_CODEC << 16) | TLK_DEBUG_DBG_FLAG_ALL)
 #define TLKDRV_CODEC_DBG_SIGN "[CODEC]"
 
-
+#ifndef CODEC_SPK_FIFO_SAMPLES
 #if (TLKMW_INTERPHONE_EN)
 #define CODEC_SPK_FIFO_SAMPLES 4096
 #else
+#if (TLKALG_AAC_DEC_ENABLE)
 #define CODEC_SPK_FIFO_SAMPLES 2048
+#else
+#define CODEC_SPK_FIFO_SAMPLES 2048
+#endif
+#endif
 #endif
 
 #ifndef CODEC_MIC_FIFO_SAMPLES
@@ -67,14 +83,21 @@ typedef int16_t adc_mono_int;
 #if TLKALG_ANC_ENABLE
 extern codec_int g_codec_spk_buff[CODEC_SPK_FIFO_SAMPLES + 256];
 #else
-#if (!PROJ_RECORDING_CARD)
 extern codec_int g_codec_spk_buff[CODEC_SPK_FIFO_SAMPLES];
-#endif
 #endif
 #if (!PROJ_RECORDING_CARD)
 extern adc_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
 #else
-extern adc_mono_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+#if (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN)
+extern _attribute_iram_data_ adc_4ch_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+extern _attribute_iram_data_ adc_int     g_codec_mic2_buff[CODEC_MIC_FIFO_SAMPLES];
+#elif (TLKALG_BBF_ENABLE == TLKALG_BBF_4CH_EN)
+extern _attribute_iram_data_ adc_4ch_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+#elif (TLKALG_BBF_ENABLE == TLKALG_BBF_2CH_EN)
+extern adc_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+#else
+extern _attribute_iram_data_ adc_mono_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
+#endif
 #endif
 
 ///This macro defines the codec input mode
@@ -85,16 +108,22 @@ extern adc_mono_int g_codec_mic_buff[CODEC_MIC_FIFO_SAMPLES];
      TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A110_V1_0)
 #if (TLK_AUDIO_TEST_MODE)
 #define CODEC_INPUT_MODE CODEC_INPUT_LINEIN //CODEC_INPUT_DMIC //0:line_in; 1:AMIC; 2:DMIC
+#elif (TLKMW_RECORDING_CARD_EN)
+#define CODEC_INPUT_MODE CODEC_INPUT_DMIC //CODEC_INPUT_DMIC //0:line_in; 1:AMIC; 2:DMIC
 #else
 #define CODEC_INPUT_MODE CODEC_INPUT_AMIC //CODEC_INPUT_DMIC //0:line_in; 1:AMIC; 2:DMIC
 #endif
 #elif (MCU_CORE_TYPE == MCU_CORE_TL322X)
 #define CODEC_INPUT_MODE CODEC_INPUT_DMIC
 #elif (MCU_CORE_TYPE == MCU_CORE_TL721X)
+#if PROJ_BLE_AUDIO_LL
+#define CODEC_INPUT_MODE CODEC_INPUT_LINEIN
+#else
 #define CODEC_INPUT_MODE CODEC_INPUT_DMIC
-#elif (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0)
+#endif
+#elif (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0 || TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_2)
 #define CODEC_INPUT_MODE CODEC_INPUT_DMIC
-#elif (TLKHW_TYPE == TLKHW_TL752X_96PIN)
+#elif (TLKHW_TYPE == TLKHW_TL752X_96PIN || TLKHW_TYPE == TLKHW_TL752X_52PIN)
 #define CODEC_INPUT_MODE CODEC_INPUT_AMIC
 #else
 #define CODEC_INPUT_MODE CODEC_INPUT_DMIC
@@ -205,18 +234,24 @@ typedef struct
 
 typedef struct
 {
-    uint8_t             spkIsMute;
-    uint8_t             spkIsForceMute;
-    uint8_t             majorDev;
-    uint8_t             minorDev;
-    uint16_t            spkOffset;
-    uint16_t            micOffset;
+    uint8_t  spkIsMute;
+    uint8_t  spkIsForceMute;
+    uint8_t  majorDev;
+    uint8_t  minorDev;
+    uint16_t spkOffset;
+    uint16_t micOffset;
+#if ((TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN) && (PROJ_RECORDING_CARD))
+    uint16_t spkOffset_1;
+    uint16_t micOffset_1;
+#endif
     tlkdrv_codec_fade_t fadeCtrl;
 } tlkdrv_codec_ctrl_t;
 
-extern volatile int g_sys_work_mode;
-extern volatile int g_sys_power_on_codec_dis;
 extern volatile int audio_hd_anc_enable;
+
+void tlkdrv_codec_test_mode_en(uint8_t en);
+
+uint8_t tlkdrv_codec_is_in_test_mode(void);
 
 ///ANC option
 /**
@@ -416,6 +451,9 @@ uint tlkdrv_codec_getSpkDataLen(void);
  * @return Data length in bytes
  */
 uint tlkdrv_codec_getMicDataLen(void);
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN))
+uint tlkdrv_codec_getMicDataLen_1(void);
+#endif
 
 /**
  * @brief Read microphone data from buffer
@@ -425,6 +463,10 @@ uint tlkdrv_codec_getMicDataLen(void);
  * @return True if successful, false otherwise
  */
 bool tlkdrv_codec_readMicData(uint8_t *pBuffer, uint16_t buffLen, uint16_t *pOffset);
+#if ((PROJ_RECORDING_CARD) && (TLKALG_BBF_ENABLE == TLKALG_BBF_6CH_EN))
+void tlkdrv_codec_between_sync(int frame_len, int codec0_chn, int codec1_chn);
+bool tlkdrv_codec_readMicData_1(uint8_t *pBuffer, uint16_t buffLen, uint16_t *pOffset);
+#endif
 
 /**
  * @brief Mute speaker buffer

@@ -65,26 +65,15 @@ typedef struct
     uint8_t play_fifo_rptr;
     int16_t volume;
 
-    int16_t len;
-    int16_t offset;
+    int32_t len;
+    int32_t offset;
 
-    uint32_t addr;
     uint8_t *buff;
-    uint8_t frame_size;
-    uint8_t hold;
+    uint8_t  frame_size;
+    uint8_t  hold;
 } tone_cfg_t;
 
 extern tone_cfg_t g_tone_cfg;
-
-/**
- * @brief  set tone address
- * @param[in]  addr: tone address
- * @returns none
- */
-static inline void tone_set_address(uint32_t addr)
-{
-    g_tone_cfg.addr = addr;
-}
 
 /**
  * @brief  whether tone is playing

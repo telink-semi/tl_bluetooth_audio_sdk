@@ -29,11 +29,24 @@
 #include "tlkmw/tlkmw.h"
 
 /**
+ * @brief      Force save SQL information
+ * @param[in]  none
+ * @return     none
+ * @note       Enables saving, saves data, then disables saving again
+ */
+static void app_sql_info_force_save(void)
+{
+    tlkmdi_tinySql_setSaveEnable(1);
+    tlkmdi_tinySql_save();
+    tlkmdi_tinySql_setSaveEnable(0);
+}
+
+/**
  * @brief       This function processes USB debug shell data.
  * @param[in]   pData   - pointer to the data received from USB.
  * @param[in]   dataLen - length of the data received.
  * @return      none.
- * @note    
+ * @note
  */
 __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t dataLen)
 {
@@ -44,6 +57,25 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
     }
 
     switch (pData[2]) {
+    case 0x01:
+        tlkapi_printf(1, "Compile Time %s", __TIME__);
+        break;
+    case 0x02:
+    {
+        tlkapi_printf(1, "tlkmdi_bt_tph_pair_start: Urtal-low-latency");
+        tlkmdi_bt_tph_pair_start(TPH_HOST_DISCONNECT_REASON_HEADSET_ENTER_ULTRA_LOW_LATENCY);
+    } break;
+    case 0x03:
+    {
+        tlkapi_printf(1, "tlkmdi_bt_tph_exitLowLatencyMode: Exit Urtal-low-latency");
+        tlkmdi_bt_tph_exitLowLatencyMode();
+    } break;
+
+    case 0x10:
+    {
+        app_sql_info_force_save();
+    } break;
+
     case 0x30: // TPSLL HCI TEST
     {
         if (pData[3] == TPSLL_HCI_CONNECT_CMD_OPCODE) {
@@ -86,10 +118,10 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
     case 0x60:
     {
         if (pData[3] == 0x01) {
-            g_sys_work_mode = 0x80; //attention : not thread safe
+            tlkdrv_codec_test_mode_en(1);
             tlkapi_trace(0xffffffff, "****Audio Test Mode****", "Audio Test Stat:Open");
         } else if (pData[3] == 0x00) {
-            g_sys_work_mode = 0x00; //attention : not thread safe
+            tlkdrv_codec_test_mode_en(0);
             tlkapi_trace(0xffffffff, "****Audio Test Mode****", "Audio Test Stat:Close");
         }
     } break;
@@ -116,4 +148,12 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
     default:
         break;
     }
+}
+
+void tlkapp_audio_taskInitCompletedHook(void)
+{
+#if (TLK_USB_UAC_ENABLE)
+    extern int tlkapp_audioUac_init(void);
+    tlkapp_audioUac_init();
+#endif
 }

@@ -385,6 +385,8 @@ int bth_hci_sendRoleDiscoveryCmd(uint16_t connHandle);
  *******************************************************************************/
 int bth_hci_sendSwitchRoleReqCmd(uint8_t mac[6], uint8_t role);
 
+int bth_hci_sendWriteDefaultLinkPolicy(uint16_t default_policy_settings);
+
 /******************************************************************************
  * Function: bth_hci_sendWriteLinkPolicy
  * Descript: Set the link governor policy.
@@ -558,6 +560,13 @@ int bth_hci_sendWriteSimpleDebugModeCmd(uint8_t debugMode);
 int bth_hci_sendReadSecureConnHostSupportCmd(void);
 
 /******************************************************************************
+ * Function: bth_hci_sendReadTcfInfoCmd
+ * Descript: Run the HCI command to enable the low-level security connection function.
+ * Params: None.
+ * Return: TLK_ENONE is success, other value is failure.
+ *******************************************************************************/
+int bth_hci_sendReadTcfInfoCmd(uint16_t aclHandle);
+/******************************************************************************
  * Function: bth_hci_sendWriteSecureConnHostSupportCmd
  * Descript: Run the HCI command to control whether the underlying security
  *           connection function is enabled.
@@ -566,6 +575,8 @@ int bth_hci_sendReadSecureConnHostSupportCmd(void);
  * Return: TLK_ENONE is success, other value is failure.
  *******************************************************************************/
 int bth_hci_sendWriteSecureConnHostSupportCmd(uint8_t isSupport);
+
+int bth_hci_sendWriteLeHostSupportCmd(uint8_t isSupport);
 
 /******************************************************************************
  * Function: bth_hci_sendReadRssiCmd
@@ -619,10 +630,18 @@ int bth_hci_sendSetMoreDataModeCmd(uint16_t conn_handle, uint8_t more_data_mode,
 /******************************************************************************
  * Function: bth_hci_sendSetLinkMaxNbCmd
  * Descript: bt link max number
- *        @ link_max_nb
+ *        @ link_max_nb bit0-bit3: acl number, bit4-bit7: sco number
  * Return: TLK_ENONE is success, other value is failure.
 *******************************************************************************/
 int bth_hci_sendSetLinkMaxNbCmd(uint8_t link_max_nb);
+
+/******************************************************************************
+ * Function: bth_hci_sendSetLeFeatSuppCmd
+ * Descript: set controller LE supported feature reporting.
+ *        @ le_feat_supp[IN]--0:disable, 1:enable.
+ * Return: TLK_ENONE is success, other value is failure.
+********************************************************************************/
+int bth_hci_sendSetLeFeatSuppCmd(uint8_t le_feat_supp);
 
 
 /******************************************************************************
@@ -702,5 +721,22 @@ int bth_hci_sendSetIncPeerPwrMaxCmd(uint16_t conn_handle, uint8_t inc_peer_pwr_e
  * Return: TLK_ENONE is success, other value is failure.
 *******************************************************************************/
 int bth_hci_sendSetAfhHostChnClassiFicationCmd(uint8_t *pAfhChn, uint8_t dataLen);
+
+/******************************************************************************
+ * Function: bth_hci_sendWriteInquiryScanTypeCmd
+ * Descript: send Write Inquiry Scan Type command.
+ * Params: none.
+ * Return: TLK_ENONE is success, other value is failure.
+*******************************************************************************/
+int bth_hci_sendWriteInquiryScanTypeCmd(uint8_t type);
+
+
+/******************************************************************************
+ * Function: int bth_hci_sendWritePageScanTypeCmd
+ * Descript: send Write Page Scan Type command.
+ * Params: none.
+ * Return: TLK_ENONE is success, other value is failure.
+*******************************************************************************/
+int bth_hci_sendWritePageScanTypeCmd(uint8_t type);
 
 #endif // BTH_HCICMD_H

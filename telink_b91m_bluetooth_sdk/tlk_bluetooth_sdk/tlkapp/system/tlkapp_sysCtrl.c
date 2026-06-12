@@ -28,30 +28,9 @@
 #include "tlkmw/tlkmw.h"
 #include "tlkapp/tlkapp.h"
 
-
-#define TLKAPP_SYS_FLASH_SAVE_DELAY_TIME (5 * 1000 * 1000)
-
 static uint8_t                    sTlkAppSysUIHandleCnt = 0;
 static uint8_t                    sTlkAppSysUIState     = 0;
-static TlkApiTimer_t              sTlkAppSysSaveTimer;
 static tlkapp_sysUI_handleState_t sTlkAppSysUIHandleState[TLKAPP_UI_HANDLE_MAX_NUM];
-
-/**
- * @brief       Timer callback function to save flash data.
- * @param[in]   pTimer    - Pointer to the timer handle.
- * @param[in]   userArg   - User-defined argument.
- * @return      none.
- */
-static void tlkapp_sysCtrl_flashSaveTimer(TlkApiTimerHandle_t pTimer, void *userArg)
-{
-    (void)pTimer;
-    (void)userArg;
-#ifndef TL753X_ADAPT
-    if (tlkmdi_tinySql_isRequestSave()) {
-        tlkmdi_tinySql_save();
-    }
-#endif
-}
 
 /**
  * @brief       Initializes the system control module.
@@ -63,21 +42,7 @@ int tlkapp_sys_ctrlInit(void)
     sTlkAppSysUIState     = 0;
     sTlkAppSysUIHandleCnt = 0;
     tlkmdi_tinySql_init();
-    tlksys_timer_createStatic(TLKSYS_TASKID_SYSTEM, &sTlkAppSysSaveTimer, TLKAPP_SYS_FLASH_SAVE_DELAY_TIME, false, tlkapp_sysCtrl_flashSaveTimer, NULL);
     return TLK_ENONE;
-}
-
-/**
- * @brief       Handles flash saving requests.
- * @param[in]   none.
- * @return      none.
- */
-void tlkapp_sys_flashHandler(void)
-{
-    if (tlkmdi_tinySql_isRequestSave() == false) {
-        return;
-    }
-    tlksys_timer_reStart(TLKSYS_TASKID_SYSTEM, &sTlkAppSysSaveTimer);
 }
 
 /**

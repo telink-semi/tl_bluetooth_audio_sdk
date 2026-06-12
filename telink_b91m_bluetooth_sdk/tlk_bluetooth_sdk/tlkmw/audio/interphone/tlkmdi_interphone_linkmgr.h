@@ -29,7 +29,7 @@
  * @param[in]   isStart - Start flag
  * @return      None
  */
-typedef void (*TlkmdiInterPhoneMusicCtrlCB)(uint16_t handle,uint8_t isStart);
+typedef void (*TlkmdiInterPhoneMusicCtrlCB)(uint16_t handle, uint8_t isStart);
 
 /**
  * @brief       Initialize interphone link manager

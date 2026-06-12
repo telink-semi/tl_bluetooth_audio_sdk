@@ -36,7 +36,7 @@
  */
 bool tlkmdi_audio_hostif_tone_isNeedRefuse(uint8_t tone_id)
 {
-    (void) tone_id;
+    (void)tone_id;
     //not in ear,so refuse play tone
     return !tlkmdi_bt_tpt_isInEar();
 }
@@ -50,9 +50,9 @@ bool tlkmdi_audio_hostif_tone_isNeedRefuse(uint8_t tone_id)
  */
 bool tlkmdi_audio_hostif_tone_isSupportActivePlay(uint8_t tone_id)
 {
-    (void) tone_id;
+    (void)tone_id;
 #if TLKSTK_BTTPSLL_TWS_ENABLE
-    if(tlkmdi_bt_tpt_isSlave()){
+    if (tlkmdi_bt_tpt_isSlave()) {
         return false;
     }
 #endif
@@ -83,7 +83,7 @@ bool tlkmdi_audio_hostif_tone_isNeedSyncPlay(void)
  */
 int tlkmdi_audio_hostif_tone_requestSyncPlay(uint8_t tone_id)
 {
-    (void) tone_id;
+    (void)tone_id;
 #if TLKSTK_BTTPSLL_TWS_ENABLE
     return tlkmdi_bt_tpt_requestToneSync(tone_id);
 #else
@@ -100,7 +100,7 @@ int tlkmdi_audio_hostif_tone_requestSyncPlay(uint8_t tone_id)
  */
 int tlkmdi_audio_hostif_tone_regSyncCB(TlkMdiAudHostifToneSyncCB cb)
 {
-    (void) cb;
+    (void)cb;
 #if TLKSTK_BTTPSLL_TWS_ENABLE
     return tlkmdi_bt_tpt_regToneSyncCB(cb);
 #else

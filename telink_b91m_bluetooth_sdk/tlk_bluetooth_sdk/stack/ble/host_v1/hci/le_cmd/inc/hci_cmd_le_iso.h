@@ -90,3 +90,13 @@ int ble_host_hci_le_iso_read_test_counters(const struct ble_hci_le_iso_read_test
  * @return int Returns 0 on success, or an error code on failure.
  */
 int ble_host_hci_le_iso_test_end(const struct ble_hci_le_iso_test_end_cp *p_test_end_cp, struct ble_hci_le_iso_test_end_rp *p_test_end_rp);
+
+/**
+ * @brief Reads the ISO TX sync for the host.
+ *
+ * @param[in] p_read_iso_tx_sync_cp Pointer to the structure containing the read ISO TX sync parameters.
+ * @param[out] p_read_iso_tx_sync_rp Pointer to the structure to store the response parameters.
+ *
+ * @return int Returns 0 on success, or an error code on failure.
+ */
+int ble_host_hci_le_read_iso_tx_sync(const struct ble_hci_le_read_iso_tx_sync_cp *p_read_iso_tx_sync_cp, struct ble_hci_le_read_iso_tx_sync_rp *p_read_iso_tx_sync_rp);

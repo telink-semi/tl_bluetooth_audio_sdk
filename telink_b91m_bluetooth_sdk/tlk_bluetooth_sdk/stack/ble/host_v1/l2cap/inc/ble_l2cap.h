@@ -62,30 +62,25 @@ enum ble_host_l2cap_error_code
     BLE_L2CAP_ERR_SMP_NVS_FAILED,
     BLE_L2CAP_ERR_SMP_INVALID_MAX_BOUND_NUM,
     BLE_L2CAP_ERR_SMP_ALREADY_INITIALIZED,
+    BLE_L2CAP_ERR_SIGNALING_BUSY,
+    BLE_L2CAP_ERR_COC_INVALID_CID,
+    BLE_L2CAP_ERR_COC_INVALID_MTU,
+    BLE_L2CAP_ERR_COC_INVALID_MPS,
+    BLE_L2CAP_ERR_COC_INVALID_SPSM,
+    BLE_L2CAP_ERR_COC_CREATE_BUSY,
+    BLE_L2CAP_ERR_COC_NO_EMPTY_CID,
 };
 
-typedef void (*l2cap_ctrl_callback_t)(struct ble_host_conn *conn, uint8_t event, const void *param);
-typedef void (*l2cap_data_callback_t)(struct ble_host_conn *conn, uint16_t len, uint8_t *p_packet);
+typedef void (*l2cap_ctrl_callback_t)(struct ble_host_conn *conn, uint8_t event);
+typedef void (*l2cap_data_callback_t)(struct ble_host_conn *conn, uint16_t len, const uint8_t *p_packet);
 
-typedef void (*l2cap_cid_ctrl_callback_t)(struct ble_host_conn *conn, uint16_t cid, uint8_t event, const void *param);
-typedef void (*l2cap_cid_data_callback_t)(struct ble_host_conn *conn, uint16_t cid, uint16_t len, uint8_t *p_packet);
+typedef void (*l2cap_cid_data_callback_t)(struct ble_host_conn *conn, uint16_t cid, uint16_t len, const uint8_t *p_packet);
 
 struct ble_l2cap_pdu_format
 {
     uint16_t pdu_length;      /** < PDU Length*/
     uint16_t cid;             /** < Channel ID */
     uint8_t  info_payload[0]; /** < Information payload range 0 to 65535 octets */
-};
-
-typedef void (*ble_l2cap_tx_complete_cb)(uint16_t conn_handle, void *arg, uint16_t status);
-
-struct ble_host_l2cap_tx_packet
-{
-    uint16_t                 channel_id;
-    uint16_t                 data_length;
-    const uint8_t           *p_data; // pointer to the data buffer, global memory.
-    ble_l2cap_tx_complete_cb tx_complete_cb;
-    void                    *cb_arg;
 };
 
 /**
@@ -114,50 +109,4 @@ void ble_host_l2cap_register_callbacks(uint8_t cid, l2cap_ctrl_callback_t ctrl_c
  *
  *   @return none.
  */
-void ble_host_l2cap_register_cid_data_callback(l2cap_cid_ctrl_callback_t ctrl_callback, l2cap_cid_data_callback_t data_callback);
-
-/**
- *   @brief this function is used to send L2CAP data.
- *
- *   @param[in] conn: pointer to the connection object.
- *   @param[in] tx_packet: pointer to the L2CAP TX packet.
- *
- *   @return BLE_L2CAP_ERR_INVALID_PARAMS if the input parameter is invalid.
- *           BLE_L2CAP_ERR_INSUFFICIENT_RESOURCES if there is no memory to allocate the TX node.
- *           BLE_HOST_ERR_SUCC if the data is sent successfully.
- */
-int ble_host_l2cap_send_l2cap_data(struct ble_host_conn *conn, struct ble_host_l2cap_tx_packet *tx_packet);
-
-/**
- *   @brief this function is used to send L2CAP data by connection handle.
- *
- *   @param[in] conn_handle: connection handle.
- *   @param[in] tx_packet: pointer to the L2CAP TX packet.
- *
- *   @return BLE_L2CAP_ERR_INVALID_CONN_HANDLE if the conn_handle is invalid.
- *           BLE_HOST_ERR_SUCC if the data is sent successfully.
- */
-int ble_host_l2cap_send_l2cap_data_by_conn_handle(uint16_t conn_handle, struct ble_host_l2cap_tx_packet *tx_packet);
-
-/**
- *   @brief this function is used to send L2CAP data synchronously.
- *
- *   @param[in] conn: pointer to the connection object.
- *   @param[in] tx_packet: pointer to the L2CAP TX packet.
- *
- *   @return BLE_L2CAP_ERR_INVALID_PARAMS if the input parameter is invalid.
- *           BLE_L2CAP_ERR_INSUFFICIENT_RESOURCES if there is no memory to allocate the TX node.
- *           BLE_HOST_ERR_SUCC if the data is sent successfully.
- */
-int ble_host_l2cap_send_l2cap_data_sync(struct ble_host_conn *conn, struct ble_host_l2cap_tx_packet *tx_packet);
-
-/**
- *   @brief this function is used to send L2CAP data by connection handle.
- *
- *   @param[in] conn_handle: connection handle.
- *   @param[in] tx_packet: pointer to the L2CAP TX packet.
- *
- *   @return BLE_L2CAP_ERR_INVALID_CONN_HANDLE if the conn_handle is invalid.
- *           BLE_HOST_ERR_SUCC if the data is sent successfully.
- */
-int ble_host_l2cap_send_l2cap_data_sync_by_conn_handle(uint16_t conn_handle, struct ble_host_l2cap_tx_packet *tx_packet);
+void ble_host_l2cap_register_cid_data_callback(l2cap_ctrl_callback_t ctrl_callback, l2cap_cid_data_callback_t data_callback);

@@ -29,9 +29,9 @@
  * @param[in] cfg : Pointer to timer configuration structure
  * @returns  None.
  */
-__attribute__((always_inline)) inline void tlkhal_timer_start(const tlkhal_timer_cfg_t* cfg)
+__attribute__((always_inline)) inline void tlkhal_timer_start(const tlkhal_timer_cfg_t *cfg)
 {
-     (void)cfg;
+    (void)cfg;
     TLKHAL_ASSERT(cfg->chn <= TIMER1);
 
     switch (cfg->chn) {
@@ -41,18 +41,19 @@ __attribute__((always_inline)) inline void tlkhal_timer_start(const tlkhal_timer
         break;
     case TIMER1:
         // reg_tmr_ctrl0 |= FLD_TMR1_EN;
-         timer_start(TIMER1);
+        timer_start(TIMER1);
         break;
     default:
         break;
     }
 }
+
 /**
  * @brief  Stop timer
  * @param[in] cfg : Pointer to timer configuration structure
  * @returns  None.
  */
-__attribute__((always_inline)) inline void tlkhal_timer_stop(const tlkhal_timer_cfg_t* cfg)
+__attribute__((always_inline)) inline void tlkhal_timer_stop(const tlkhal_timer_cfg_t *cfg)
 {
     (void)cfg;
     TLKHAL_ASSERT(cfg->chn <= TIMER1);
@@ -70,29 +71,30 @@ __attribute__((always_inline)) inline void tlkhal_timer_stop(const tlkhal_timer_
         break;
     }
 }
+
 /**
  * @brief  Set timer mode
  * @param[in] cfg : Pointer to timer configuration structure
  * @returns  None.
  */
-__attribute__((always_inline)) inline void tlkhal_timer_set_mode(const tlkhal_timer_cfg_t* cfg)
+__attribute__((always_inline)) inline void tlkhal_timer_set_mode(const tlkhal_timer_cfg_t *cfg)
 {
     (void)cfg;
     TLKHAL_ASSERT(cfg->chn <= TIMER1);
-    TLKHAL_ASSERT(cfg->mode<= TIMER_MODE_TICK);
+    TLKHAL_ASSERT(cfg->mode <= TIMER_MODE_TICK);
 
     switch (cfg->chn) {
     case TIMER0:
         // reg_tmr_sta = FLD_TMR_STA_TMR0; //clear irq status
         // reg_tmr_ctrl0 &= (~FLD_TMR0_MODE);
         // reg_tmr_ctrl0 |= cfg->mode;
-        timer_set_mode(TIMER0,cfg->mode);
+        timer_set_mode(TIMER0, cfg->mode);
         break;
     case TIMER1:
         // reg_tmr_sta = FLD_TMR_STA_TMR1; //clear irq status
         // reg_tmr_ctrl0 &= (~FLD_TMR1_MODE);
         // reg_tmr_ctrl0 |= (cfg->mode << 4);
-        timer_set_mode(TIMER0,cfg->mode);
+        timer_set_mode(TIMER0, cfg->mode);
         break;
     default:
         break;

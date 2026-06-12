@@ -25,7 +25,7 @@
 #define TLKMDI_BTAG_H
 
 
-#define TLKMDI_BTAG_TIMEOUT         100000                       // us
+#define TLKMDI_BTAG_TIMEOUT         1000000                      // us
 #define TLKMDI_BTAG_TIMEOUT_MS      (TLKMDI_BTAG_TIMEOUT / 5000) // 20ms
 #define TLKMDI_BTAG_RING_TIMEOUT    (3000000 / (TLKMDI_BTAG_TIMEOUT / 2))
 
@@ -35,12 +35,11 @@
 
 typedef struct
 {
-    uint8_t         state;
-    uint8_t         busys;
-    uint8_t         pBtAddr[6];
-    uint32_t         feature;
-    TlkApiTimer_t  timer;
-
+    uint8_t       state;
+    uint8_t       busys;
+    uint8_t       pBtAddr[6];
+    uint32_t      feature;
+    TlkApiTimer_t timer;
 } tlkmdi_btag_ctrl_t;
 
 typedef enum
@@ -199,7 +198,7 @@ typedef enum
 
 typedef struct
 {
-    uint8_t status;    // Refer TLKMDI_HFP_CLCC_STATUS_ENUM.
+    uint8_t status; // Refer TLKMDI_HFP_CLCC_STATUS_ENUM.
     uint8_t numbLen;
     uint8_t callDir;   // Refer TLKMDI_HFP_CLCC_DIR_ENUM.
     uint8_t callSetup; // Refer TLKMDI_HFP_CALL_SETUP_ENUM.
@@ -210,11 +209,11 @@ typedef struct
 
 typedef struct
 {
-    uint16_t              busys;
-    uint8_t              callHold;  // Refer TLKMDI_HFP_CALL_HOLD_ENUM.
-    uint8_t              callState; // Refer TLKMDI_HFP_CALL_STATE_ENUM.
-    bool                disc_active;//Whether to initiate a hang up call.
-    uint8_t              resv[3];
+    uint16_t            busys;
+    uint8_t             callHold;    // Refer TLKMDI_HFP_CALL_HOLD_ENUM.
+    uint8_t             callState;   // Refer TLKMDI_HFP_CALL_STATE_ENUM.
+    bool                disc_active; //Whether to initiate a hang up call.
+    uint8_t             resv[3];
     tlkmdi_hfpag_unit_t unit[TLKMDI_PHONE_SETUP_MAX_NUMB];
     TlkApiTimer_t       timer;
 } tlkmdi_hfpag_ctrl_t;
@@ -270,30 +269,6 @@ int tlkmdi_bthfpag_reset(void);
  * @return      TLK_ENONE is success, others is failure.
  */
 int tlkmdi_bthfpag_sendMute(uint8_t *pBtAddr, uint8_t micSpk, uint8_t enable);
-
-/**
- * @brief       Set the microphone gain by bluetooth address
- * @param[in]   pBtAddr     - The bluetooth device address.
- * @param[in]   volume      - The volume level(0-15).
- * @return      TLK_ENONE is success, others is failure.
- */
-int tlkmdi_bthfpag_setVgm(uint8_t *pBtAddr, uint8_t volume);
-
-/**
- * @brief       Set the microphone gain by ACL handle
- * @param[in]   aclHandle   - The ACL connection handle.
- * @param[in]   volume      - The volume level(0-15).
- * @return      TLK_ENONE is success, others is failure.
- */
-int tlkmdi_bthfpag_setVgmbyHandle(uint16_t aclHandle, uint8_t volume);
-
-/**
- * @brief       Set the speaker gain by bluetooth address
- * @param[in]   pBtAddr     - The bluetooth device address.
- * @param[in]   volume      - The volume level(0-15).
- * @return      TLK_ENONE is success, others is failure.
- */
-int tlkmdi_bthfpag_setVgs(uint8_t *pBtAddr, uint8_t volume);
 
 /**
  * @brief       Insert a call
@@ -356,5 +331,24 @@ int tlkmdi_bthfpag_hungUpActiveAndResumeHold(uint16_t aclHandle);
  * @return      none.
  */
 void tlkmdi_bthfag_scoActive(uint16_t aclHandle, uint16_t scoHandle, bool isConn);
+
+/**
+ * @brief       Send CIEV command
+ * @param[in]   aclHandle   - The ACL connection handle.
+ * @param[in]   indicators  - Indicator index.
+ * @param[in]   indValue    - Indicator value.
+ * @return      true is success, false is failure.
+ */
+bool tlkmdi_bthfpag_sendCievCmd(uint16_t aclHandle, uint8_t indicators, uint8_t indValue);
+
+void tlkmdi_bthfpag_recvBCSCmdDeal(uint16_t aclHandle, uint8_t *pData, uint16_t dataLen);
+
+bool tlkmdi_hfpag_recvClccCmdDeal(uint16_t aclHandle);
+bool tlkmdi_bthfpag_recvAtaCmdDeal(uint16_t aclHandle);
+bool tlkmdi_bthfpag_recvChupCmdDeal(uint16_t aclHandle);
+bool tlkmdi_hfpag_recvBVRACmdDeal(uint16_t aclHandle, uint8_t *pData, uint16_t dataLen);
+bool tlkmdi_hfpag_recvBLDNCmdDeal(uint16_t aclHandle);
+
+tlkmdi_hfpag_ctrl_t *tlkmdi_hfpag_getItem(uint16_t handle);
 
 #endif // TLKMDI_BTHFP_H

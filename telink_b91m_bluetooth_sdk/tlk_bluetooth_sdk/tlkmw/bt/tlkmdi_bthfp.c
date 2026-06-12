@@ -56,8 +56,8 @@ int tlkmdi_bthfp_init(void)
  */
 void tlkmdi_bthfp_destroy(uint16_t aclHandle)
 {
-#if (TLKBTP_CFG_HFPAG_ENABLE)
     (void)aclHandle;
+#if (TLKBTP_CFG_HFPAG_ENABLE)
     tlkmdi_bthfpag_reset();
 #endif
 #if (TLKBTP_CFG_HFPHF_ENABLE)

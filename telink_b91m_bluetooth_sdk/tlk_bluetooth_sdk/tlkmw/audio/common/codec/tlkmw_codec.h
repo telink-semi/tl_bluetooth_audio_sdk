@@ -29,4 +29,3 @@
  * @returns none
  */
 void tlkmw_codec_init(void);
-

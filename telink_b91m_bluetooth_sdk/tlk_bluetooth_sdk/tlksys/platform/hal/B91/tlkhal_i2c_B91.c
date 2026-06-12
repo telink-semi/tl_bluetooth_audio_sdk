@@ -29,7 +29,7 @@
  * @param[in] pCfg : Pointer to I2C configuration structure
  * @returns  None.
  */
-void tlkhal_i2c_set_pin(const tlkhal_i2c_cfg_t * const pCfg)
+void tlkhal_i2c_set_pin(const tlkhal_i2c_cfg_t *const pCfg)
 {
     i2c_set_pin((i2c_sda_pin_e)pCfg->sda_pin, (i2c_scl_pin_e)pCfg->scl_pin);
 }

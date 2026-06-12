@@ -25,7 +25,7 @@
 #define BTC_DBG_H
 
 #ifndef BT_DIAG_DEBUG_VCD
-    #define BT_DIAG_DEBUG_VCD 1
+#define BT_DIAG_DEBUG_VCD 0
 #endif
 
 //LOOPBACK or not
@@ -33,15 +33,15 @@
 
 
 #ifdef TEDEBUG_TRX_EN
-#define DEBUG_PORT_TX_EN_PIN            GPIO_PA3
-#define DEBUG_PORT_RX_EN_PIN            GPIO_PA2
+#define DEBUG_PORT_TX_EN_PIN GPIO_PA3
+#define DEBUG_PORT_RX_EN_PIN GPIO_PA2
 
 
 #else
-#define DEBUG_PORT_TX_EN_PIN            GPIO_PA0
-#define DEBUG_PORT_RX_EN_PIN            GPIO_PA1
+#define DEBUG_PORT_TX_EN_PIN   GPIO_PA0
+#define DEBUG_PORT_RX_EN_PIN   GPIO_PA1
 
-#define DEBUG_PORT_RX_SYNC_PIN          GPIO_PA3
+#define DEBUG_PORT_RX_SYNC_PIN GPIO_PA3
 #endif
 
 /**

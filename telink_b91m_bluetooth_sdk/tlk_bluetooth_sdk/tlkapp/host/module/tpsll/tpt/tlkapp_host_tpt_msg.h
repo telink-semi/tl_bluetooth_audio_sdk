@@ -31,4 +31,3 @@
  * @return      Returns TLK_ENONE on success, or an error code on failure.
  */
 int tlkapp_host_tpt_msgHandle(uint16_t msgID, uint8_t *pData, uint16_t dataLen);
-

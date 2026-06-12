@@ -24,6 +24,8 @@
 #ifndef TLKMDI_LEA_UNICAST_SERVER_COMMON_H
 #define TLKMDI_LEA_UNICAST_SERVER_COMMON_H
 
+#define LEA_TRANS_PLAY_DATA_INTVAL 2000
+
 struct lea_config
 { // refer to struct lea_bmr_config,
     uint8_t  blocks;

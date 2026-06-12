@@ -35,23 +35,6 @@ enum
     BINX_MAX,
 };
 
-typedef union
-{
-    uint32_t crc32;
-    uint8_t  sha256[20];
-    uint8_t  resv[32];
-} BinInfoLabelNum_t1;
-
-typedef struct
-{
-    uint32_t           dfu_bin_addr;
-    uint32_t           dfu_bin_size;
-    BinInfoLabelNum_t1 dfu_bin_crc;
-    uint32_t           dfu_bin_offset;
-    uint32_t           dfu_bin_trs_end;
-    uint32_t           dfu_wait_reboot;
-} dfuOutImgCtrl_t;
-
 /**
  * @brief      Get the startup address of N22 core from flash
  * @param[in]  none

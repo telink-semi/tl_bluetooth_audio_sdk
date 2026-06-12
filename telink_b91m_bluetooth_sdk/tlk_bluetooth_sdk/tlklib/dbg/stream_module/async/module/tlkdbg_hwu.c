@@ -36,10 +36,7 @@
 
 #define TLKDBG_HWU_LOG_SEND_BUFFER_SIZE 128
 
-#ifndef TLKDEV_SERIAL0_TX_DMA
-#define TLKDEV_SERIAL0_TX_DMA 0
-#endif
-#define TLKDEV_SERIAL0_QFIFO_NUM 4
+#define TLKDEV_SERIAL0_QFIFO_NUM        4
 
 static uint16_t s_tlkdbg_hwu_send_len = 0;
 
@@ -53,7 +50,7 @@ __attribute__((aligned(4))) static uint8_t sTlkDbgHwuLogSendBuff[TLKDEV_SERIAL0_
 void tlkdbg_hwu_init(void)
 {
 #if (TLK_DEV_SERIAL_ENABLE)
-    tlkdrv_serial_mount(TLKDBG_HWULOG_UART_PORT, TLKDBG_HWULOG_UART_BAUDRATE, TLKDEV_SERIAL0_TX_PIN, 0, TLKDEV_SERIAL0_TX_DMA, 0);
+    tlkdrv_serial_mount(TLKDBG_HWULOG_UART_PORT, TLKDBG_HWULOG_UART_BAUDRATE, TLKDEV_SERIAL0_TX_PIN, 0, tlkhal_dma_malloc_ex(1), 0);
     tlkdrv_serial_setTxQFifo(TLKDBG_HWULOG_UART_PORT, TLKDEV_SERIAL0_QFIFO_NUM, TLKDBG_HWU_LOG_SEND_BUFFER_SIZE + 4, sTlkDbgHwuLogSendBuff,
                              TLKDEV_SERIAL0_QFIFO_NUM * (TLKDBG_HWU_LOG_SEND_BUFFER_SIZE + 4));
     tlkdrv_serial_open(TLKDBG_HWULOG_UART_PORT);

@@ -28,6 +28,8 @@
 
 #include "app_config.h"
 #include "tlkapp/system/tlkapp_sysLed.h"
+/*for debug, will remove later.*/
+#include "tlkmw/tpsll/tlkmdi_tpsll_audio_dongle.h"
 
 /**
  * @brief     This function servers to process usb input data.
@@ -45,26 +47,26 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(unsigned char *p, uint16_
     switch (p[2]) {
     case 0x02:
     {
-        tpd_dongle_set_setup_ac_chn(TPD_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPD_HOST_DONGLE_SETUP_COMMON_CHN);
-        uint8_t state = tpd_host_dongle_start_connection_scan();
-        tlkapi_send_string_data(APP_LOG_EN, "[APP] tpd_host_dongle_start_connection_scan", &state, 1);
+        tlk_tpsll_tpd_host_dongle_set_setup_ac_chn(TPD_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPD_HOST_DONGLE_SETUP_COMMON_CHN);
+        uint8_t state = tlk_tpsll_tpd_host_dongle_start_connection_scan();
+        tlkapi_send_string_data(APP_LOG_EN, "[APP] tlk_tpsll_tpd_host_dongle_start_connection_scan", &state, 1);
     } break;
     case 0x20:
     {
         u8 dongle_state = 0;
-        tlkapi_send_string_data(APP_LOG_EN, "app tph_dongle_start_connection_setup ", &dongle_state, 1);
+        tlkapi_send_string_data(APP_LOG_EN, "app tlk_tpsll_tph_dongle_start_connection_setup ", &dongle_state, 1);
     } break;
 
     case 0x21:
     {
         u8 dongle_state = 0;
-        tlkapi_send_string_data(APP_LOG_EN, "tph_dongle_exit_connection_setup ", &dongle_state, 1);
+        tlkapi_send_string_data(APP_LOG_EN, "tlk_tpsll_tph_dongle_exit_connection_setup ", &dongle_state, 1);
     } break;
 
     case 0x22:
     {
-        if (tpd_dongle_is_connected()) {
-            u8 state = tpd_host_start_dongle_sco_setup(p[2]);
+        if (tlk_tpsll_tpd_dongle_is_connected()) {
+            u8 state = tlk_tpsll_tpd_host_start_dongle_sco_setup(p[2]);
             if (p[3] == TPD_HOST_DG_SCO_AUDIO_MODE_SPEAKER) {
                 tlkapi_sendData(APP_LOG_EN, "tpd_dongle_start_sco_setup: TPD_DG_SCO_AUDIO_MODE_SPEAKER", &state, 1);
             } else if (p[3] == TPD_HOST_DG_SCO_AUDIO_MODE_MIC) {
@@ -97,18 +99,57 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(unsigned char *p, uint16_
             tlkapi_sendData(APP_LOG_EN, "tpd_dongle reduce tx power ", &p[3], 1);
         } else if (p[3] == 0x03) {
             //            rf_set_power_level_index(p[4]);/*TPSLL_TX_POWER_INDEX*/
-            tpd_host_set_power_index(p[4]);
+            tlk_tpsll_tpd_host_set_power_index(p[4]);
             tlkapi_sendData(APP_LOG_EN, "tpd_dongle set tx power index", &p[4], 1);
         }
     } break;
     case 0x33:
     {
         if (p[3] == 0x01) {
-            tpd_host_sniff_request();
+            tlk_tpsll_tpd_host_sniff_request();
             tlkapi_sendData(APP_LOG_EN, "tpd sniff request", &p[3], 1);
         } else if (p[3] == 0x00) {
-            tpd_host_unsniff_request();
+            tlk_tpsll_tpd_host_unsniff_request();
             tlkapi_sendData(APP_LOG_EN, "tpd unsniff request", &p[3], 1);
+        }
+    } break;
+
+    case 0x34:
+    {
+        tlk_tpsll_tpd_dongle_start_disconnection(TPD_DISCONNECT_REASON_USB_ENTER_SUSPEND);
+        tlkapi_sendData(APP_LOG_EN, "tpd start disconnection because usb spd", 0, 0);
+    } break;
+
+    case 0x35:
+    {
+        tlkmdi_tpsll_audio_dongle_ReconHeadset_fromSuspend();
+        tlkapi_sendData(APP_LOG_EN, "tpd start ReconHeadset from suspend", 0, 0);
+    } break;
+
+    case 0x36:
+    {
+        u8            acl_mtu        = tlk_tpsll_tpd_host_get_acl_mtu();
+        unsigned char s_acl_pdu[180] = {0};
+        for (unsigned char i = 0; i < 180; i++) {
+            s_acl_pdu[i] = i;
+        }
+        tlk_tpsll_tpd_host_send_acl_data(TPD_HOST_MSG_PDU_ACL_CMD_APP, &s_acl_pdu[0], 180, NULL);
+        tlkapi_sendData(APP_LOG_EN, "tpd send acl data to headset, to test acl mtu", &acl_mtu, 1);
+    } break;
+
+    case 0x37:
+    {
+        tlk_tpsll_tpd_host_per_statistics_ctrl(p[3]);
+        tlkapi_sendData(APP_LOG_EN, "tpd set per state", &p[3], 1);
+    } break;
+
+    case 0x38:
+    {
+        tlkapi_sendData(APP_LOG_EN, "tpd GIP Certification", &p[3], 1);
+        if (p[3]) {
+            tlk_tpsll_tpd_host_start_gip_mode();
+        } else {
+            tlk_tpsll_tpd_host_exit_gip_mode();
         }
     } break;
 

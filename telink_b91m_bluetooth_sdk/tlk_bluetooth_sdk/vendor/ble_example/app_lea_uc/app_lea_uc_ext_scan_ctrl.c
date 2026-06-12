@@ -34,7 +34,7 @@ void app_extend_scan_ctrl_init(void)
     ble_host_gap_ext_scan_set_param(BLE_HOST_GAP_EXT_SCAN_PARAM_BASIC_UNFILTERED, BLE_HOST_GAP_PASSIVE_SCAN(100, 100));
     struct ble_host_gap_scan_filter_param filter_param = {
         .filter_non_conn_non_scan = true,
-        .filter_scannable = true,
+        .filter_scannable         = true,
     };
     ble_host_gap_scan_set_filter(&filter_param);
 }
@@ -54,4 +54,3 @@ void app_extend_scan_ctrl_stop(void)
 {
     ble_host_gap_ext_scan_disable();
 }
-

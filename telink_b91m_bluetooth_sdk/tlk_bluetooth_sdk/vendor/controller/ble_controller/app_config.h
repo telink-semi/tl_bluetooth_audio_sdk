@@ -24,45 +24,62 @@
 
 #include "core/mcu_type.h"
 #include "../controller_config.h"
-#if (CONTROLLER_MODE == BLE_CONTROLLER)
+#if (CHECK_BLE_CONTROLLER)
 
 #if (MCU_CORE_TYPE == MCU_CORE_TL751X)
-#define TLKHW_TYPE        TLKHW_TL751X_EVK_C1T368A20_V1_0
+#define TLKHW_TYPE TLKHW_TL751X_EVK_C1T368A20_V1_0
 #else
 #error "config hardware !!!"
 #endif
 
-    /**********************LED DEFINE**************************/
-    #define PB5_OUTPUT_ENABLE             1
-    #define PB6_OUTPUT_ENABLE             1
-    #define PB7_OUTPUT_ENABLE             1
-    #define PC0_OUTPUT_ENABLE             1
-    #define PB5_FUNC                      AS_GPIO
-    #define PB6_FUNC                      AS_GPIO
-    #define PB7_FUNC                      AS_GPIO
-    #define PC0_FUNC                      AS_GPIO
+#if (GET_BLE_CONTROLLER_MODE == BLE_MODE_RECORDING_CARD)
+#define BLE_ACL_SINGLE_RATE_OPTIMIZE 1
+#define ACL_CONN_MAX_RX_OCTETS       251
+#define ACL_PERIPHR_MAX_TX_OCTETS    251
+#define ACL_PERIPHR_TX_FIFO_NUM      9
+#endif
 
-    #define LED_GREEN                     GPIO_PB5
-    #define LED_BLUE                      GPIO_PB6
-    #define LED_RED                       GPIO_PB7
-    #define LED_WHITE                     GPIO_PC0
+/**********************LED DEFINE**************************/
+#define PB5_OUTPUT_ENABLE 1
+#define PB6_OUTPUT_ENABLE 1
+#define PB7_OUTPUT_ENABLE 1
+#define PC0_OUTPUT_ENABLE 1
+#ifndef PB5_FUNC
+#define PB5_FUNC AS_GPIO
+#endif
+#ifndef PB6_FUNC
+#define PB6_FUNC AS_GPIO
+#endif
+#ifndef PB7_FUNC
+#define PB7_FUNC AS_GPIO
+#endif
+#ifndef PC0_FUNC
+#define PC0_FUNC AS_GPIO
+#endif
 
-    //Power Management Configuration//
-    #define TLK_CFG_SUSPEND_ENABLE  0 //1: enable suspend + wfi module
+#define LED_GREEN GPIO_PB5
+#define LED_BLUE  GPIO_PB6
+#define LED_RED   GPIO_PB7
+#define LED_WHITE GPIO_PC0
+
+//Power Management Configuration//
+#define TLK_CFG_SUSPEND_ENABLE 1 //1: enable suspend + wfi module
 
 
-    #define APP_LOG_EN                    1
-    #define APP_HOST_EVT_LOG_EN           0
-    #define APP_PAIR_LOG_EN               0
-    #define APP_KEY_LOG_EN                0
-    #define APP_CIS_LOG_EN                0
-    #define TLK_SM_LOG_ENABLE     1
+#define APP_LOG_EN             1
+#define APP_HOST_EVT_LOG_EN    0
+#define APP_PAIR_LOG_EN        0
+#define APP_KEY_LOG_EN         0
+#define APP_CIS_LOG_EN         0
+#define TLK_SM_LOG_ENABLE      1
 
-	#define BLE_FEATURE_ALL_EN 1
-	#define ACL_CONN_MAX_RX_OCTETS 40
-	#define ACL_CENTRAL_MAX_TX_OCTETS 40
+#define BLE_FEATURE_ALL_EN     1
+#ifndef ACL_CONN_MAX_RX_OCTETS
+#define ACL_CONN_MAX_RX_OCTETS 40
+#endif
+#define ACL_CENTRAL_MAX_TX_OCTETS 40
 //LE Feature Configuration
 
-    #include "vendor/common/default_config.h"
+#include "vendor/common/default_config.h"
 
 #endif

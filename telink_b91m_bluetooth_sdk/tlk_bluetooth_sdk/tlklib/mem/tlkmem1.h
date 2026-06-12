@@ -72,20 +72,6 @@ void *tlkmem1_malloc(void *mem, uint32_t size);
 void *tlkmem1_calloc(void *mem, uint32_t size);
 
 /**
- * @brief       A segment of memory that is used to store the contents of existing memory.
- * @param[in]   mem - Memory pool head address.
- * @param[in]   ptr - The first memory address that needs to be reallocated.
- * @param[in]   size - The size to allocate.
- * @return      The first address of memory allocated, NULL means failure.
- * @note        
- *              1. Cannot be invoked across threads or processes.
- *              2. If allocation fails, the original memory address remains unchanged.
- *              3. If the allocation is successful, the existing memory is freed.
- *              4. If the allocation is successful, the contents of existing memory are copied into the new memory.
- */
-void *tlkmem1_realloc(void *mem, void *ptr, uint32_t size);
-
-/**
  * @brief       Return the occupied memory to the memory manager.
  * @param[in]   mem - Memory pool head address.
  * @param[in]   ptr - The first memory address that needs to be freed.
@@ -93,5 +79,3 @@ void *tlkmem1_realloc(void *mem, void *ptr, uint32_t size);
  * @note        Cannot be invoked across threads or processes.
  */
 int tlkmem1_free(void *mem, void *ptr);
-
-

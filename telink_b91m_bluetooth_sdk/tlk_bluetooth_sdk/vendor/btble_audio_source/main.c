@@ -39,10 +39,6 @@ const tlksys_hal_platform_init_cfg_t *tlksys_hal_port_getPlatformInitCfg(void)
 {
     static const tlksys_hal_platform_init_cfg_t cfg = {
         .clockLevel = TLK_CFG_AUDIO_CLOCK_LEVEL,
-        
-        #if (TLK_CFG_FLASH_PROT_ENABLE)
-        .flashProtectEn = 1,
-        #endif
     };
     return &cfg;
 }
@@ -56,27 +52,22 @@ const tlksys_hal_platform_init_cfg_t *tlksys_hal_port_getPlatformInitCfg(void)
 void tlksys_initFinishedHook(void)
 {
 #if (BLE_CONTROLLER_INITIAL_EN) /*bt controller initial*/
-#if (!MCU_DUAL_CORE_ENABLE && (MCU_CORE_TYPE == CHIP_TYPE_TL751X) ||  (MCU_CORE_TYPE == CHIP_TYPE_TL322X))
-	sys_n22_init(0x20100000);
+#if (!MCU_DUAL_CORE_ENABLE && (MCU_CORE_TYPE == CHIP_TYPE_TL751X) || (MCU_CORE_TYPE == CHIP_TYPE_TL322X))
+    sys_n22_init(0x20100000);
 #endif
     rf_module_init();
     //////////////////////////// basic hardware Initialization  Begin //////////////////////////////////
     /* random number generator must be initiated here(in the beginning of user initialization).
     * When deepSleep retention wakeUp, no need initialize again */
     trng_init();
-#ifndef TL753X_ADAPT
-    /* read flash and configure parameter automatically*/
-    tlk_readFlashSize_autoConfigCustomFlashSector();
-
-#endif
     /* initialize some basic MCU hardware */
-    tlksdk_init_mcu_hardware();
+    tlk_sys_init_mcu_hardware();
 
     /*initialize BR/EDR core*/
     controller_init(BT_BLE, HCI_TR_SOC, NULL, NULL);
     //////////////////////////// basic hardware Initialization  End /////////////////////////////////
 
-    tlksdk_sch_init();
+    tlk_sch_init();
 #endif
 }
 
@@ -92,9 +83,9 @@ int main(void)
 
 #if (!TLK_CFG_RTOS_ENABLE)
     while (1) {
-    #if (!MCU_DUAL_CORE_ENABLE)
-        tlksdk_main_loop();
-    #endif
+#if (!MCU_DUAL_CORE_ENABLE)
+        tlk_sys_main_loop();
+#endif
         tlksys_handler();
     }
 #endif

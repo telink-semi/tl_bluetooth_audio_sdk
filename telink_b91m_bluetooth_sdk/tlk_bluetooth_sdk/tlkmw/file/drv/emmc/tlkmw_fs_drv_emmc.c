@@ -22,9 +22,17 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if TLK_CFG_FS_ENABLE && MCU_CORE_TYPE == CHIP_TYPE_TL751X
-#include "drivers.h"
 #include "../tlkmw_fs_diskio.h"
+#if TLK_CFG_FS_ENABLE && TLKMW_FS_DISK_IO_SELECT == TLKMW_FS_DISK_IO_EMMC
+#include "drivers.h"
+
+#define TLK_CFG_EMMC_HIGH_SPEED_READ_MODE 0
+
+#if TLK_CFG_EMMC_HIGH_SPEED_READ_MODE
+#define TLK_CFG_EMMC_CLK_MHZ 48 //max 48m
+#else
+#define TLK_CFG_EMMC_CLK_MHZ 12 //max 48m
+#endif
 
 typedef enum
 {
@@ -92,7 +100,7 @@ typedef struct
 
 static sdmmc_bus_clk_t sdmmc_bus_clk = {
     .clock_src = XTAL_48M,
-    .clock_div = SDMMC_BUS_CLK_DIV4,
+    .clock_div = 48 / TLK_CFG_EMMC_CLK_MHZ,
 };
 
 static sdmmc_sampe_edge_t sdmmc_sampe_edge = {
@@ -104,7 +112,7 @@ static sdmmc_sampe_edge_t sdmmc_sampe_edge = {
 
 static sdmmc_pin_config_t sdmmc_emmc_pin_config = {
 
-#if (TLKHW_TYPE != TLKHW_TL751X_EVK_C1T368A87_V1_0)
+#if (TLKHW_TYPE != TLKHW_TL751X_EVK_C1T368A87_V1_0 && TLKHW_TYPE != TLKHW_TL751X_EVK_C1T368A87_V1_2)
     .sdmmc_clk_pin  = GPIO_FC_PA0,
     .sdmmc_cmd_pin  = GPIO_FC_PA1,
     .sdmmc_rst_pin  = GPIO_FC_PB6,
@@ -135,7 +143,7 @@ static sdmmc_pin_config_t sdmmc_emmc_pin_config = {
 };
 
 static sdmmc_timerout_config_t timerout_config = {
-    .clk_num       = 24,
+    .clk_num       = TLK_CFG_EMMC_CLK_MHZ * 2,
     .base_clk_unit = BASE_CLOCK_UNIT_1MHZ,
 };
 
@@ -204,11 +212,11 @@ static mmc_data_config_t cmd17_data_config = {
     .cmd_index  = HOST_READ_SINGLE_BLOCK,
 };
 
-//static mmc_data_config_t cmd18_data_config = {
-//    .cmd_info = mmc_cmd_table,
-//    .data_trans = &mmc_data_trans,
-//    .cmd_index = HOST_READ_MULTIPLE_BLOCK,
-//};
+static mmc_data_config_t cmd18_data_config = {
+    .cmd_info   = mmc_cmd_table,
+    .data_trans = &mmc_data_trans,
+    .cmd_index  = HOST_READ_MULTIPLE_BLOCK,
+};
 
 static uint8_t             ecsd_buf[EXT_CSD_NUM] = {0x00};
 static mmc_ext_csd_t       s_mmc_ext_csd;
@@ -223,7 +231,7 @@ static volatile uint8_t    sTlkmwFsEmmcTransDone = 0;
  */
 static void emmc_power_on(void)
 {
-#if (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0)
+#if (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0 || TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_2)
     gpio_function_en(GPIO_PF4);
     gpio_output_en(GPIO_PF4);
     gpio_input_dis(GPIO_PF4);
@@ -240,7 +248,7 @@ static void emmc_power_on(void)
  */
 static void emmc_power_down(void)
 {
-#if (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0)
+#if (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0 || TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_2)
     gpio_set_low_level(GPIO_PF4);
     gpio_set_up_down_res(GPIO_PF4, GPIO_PIN_PULLDOWN_100K);
 #endif
@@ -383,6 +391,7 @@ static void tlkmw_fs_drv_emmc_init(void)
     // eMMC init
     mmc_cmd_info_table_init(mmc_cmd_table);
     mmc_cmd_init(&cmd_config);
+    delay_ms(5);
     mmc_get_all_ecsd(&cmd8_data_config, (unsigned int *)ecsd_buf);
 
     // Change to high speed
@@ -401,7 +410,8 @@ static void tlkmw_fs_drv_emmc_init(void)
  */
 static void tlkmw_fs_drv_emmc_sleep(void)
 {
-#if (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0)
+    (void)emmc_power_down;
+#if (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0 || TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_2)
     mmc_cmd_table[HOST_SEND_STATUS]->argument.arg = 1 << 16;
     sdmmc_cmd_transfer(mmc_cmd_table[HOST_SEND_STATUS]);
 
@@ -424,11 +434,55 @@ static void tlkmw_fs_drv_emmc_sleep(void)
  */
 static void tlkmw_fs_drv_emmc_awake(void)
 {
-#if (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0)
+#if (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0 || TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_2)
     tlkmw_fs_drv_emmc_init();
     delay_us(200);
 #endif
 }
+
+#if TLK_CFG_EMMC_HIGH_SPEED_READ_MODE
+
+#define TLK_CFG_EMMC_READ_CHAHE_NUM 32
+static uint32_t sTlkmwFsEmmcCacheIndex                              = 0XFFFFFFFF;
+static uint8_t  sTlkmwFsEmmcCache[TLK_CFG_EMMC_READ_CHAHE_NUM][512] = {0};
+
+/**
+ * @brief       This function writes data to the eMMC device.
+ * @param[in]   buff    - pointer to data buffer to write.
+ * @param[in]   lba     - logical block address to write to.
+ * @param[in]   cnt     - number of blocks to write.
+ * @return      Returns 0 on success.
+ */
+static int tlkmw_fs_drv_emmc_write(uint8_t *buff, uint32_t lba, uint32_t cnt)
+{
+    if (sTlkmwFsEmmcCacheIndex != 0XFFFFFFFF) {
+        sTlkmwFsEmmcCacheIndex = 0XFFFFFFFF;
+        mmc_set_block_num(&cmd_config, 1);
+    }
+    mmc_write_block_buf(&cmd24_data_config, (unsigned int *)buff, (unsigned int *)lba, cnt);
+    return 0;
+}
+
+/**
+ * @brief       This function reads data from the eMMC device.
+ * @param[out]  buff    - pointer to buffer to store read data.
+ * @param[in]   lba     - logical block address to read from.
+ * @param[in]   cnt     - number of blocks to read.
+ * @return      Returns 0 on success.
+ */
+static int tlkmw_fs_drv_emmc_read(uint8_t *buff, uint32_t lba, uint32_t cnt)
+{
+    (void)cnt;
+    (void)cmd17_data_config;
+    if (0XFFFFFFFF == sTlkmwFsEmmcCacheIndex || sTlkmwFsEmmcCacheIndex + TLK_CFG_EMMC_READ_CHAHE_NUM <= lba || sTlkmwFsEmmcCacheIndex > lba) {
+        mmc_set_block_num(&cmd_config, TLK_CFG_EMMC_READ_CHAHE_NUM);
+        mmc_read_block_buf(&cmd18_data_config, (unsigned int *)sTlkmwFsEmmcCache, (unsigned int *)lba, TLK_CFG_EMMC_READ_CHAHE_NUM);
+        sTlkmwFsEmmcCacheIndex = lba;
+    }
+    memcpy(buff, sTlkmwFsEmmcCache[lba - sTlkmwFsEmmcCacheIndex], 512);
+    return 0;
+}
+#else
 
 /**
  * @brief       This function writes data to the eMMC device.
@@ -452,9 +506,11 @@ static int tlkmw_fs_drv_emmc_write(uint8_t *buff, uint32_t lba, uint32_t cnt)
  */
 static int tlkmw_fs_drv_emmc_read(uint8_t *buff, uint32_t lba, uint32_t cnt)
 {
+    (void)cmd18_data_config;
     mmc_read_block_buf(&cmd17_data_config, (unsigned int *)buff, (unsigned int *)lba, cnt);
     return 0;
 }
+#endif
 
 /**
  * @brief       This function gets the sector size of the eMMC device.
@@ -476,6 +532,13 @@ static uint32_t tlkmw_fs_drv_emmc_get_sector_num(void)
     return s_mmc_ext_csd.sec_count;
 }
 
+#if (TLKHW_TYPE != TLKHW_TL751X_EVK_C1T368A87_V1_0 && TLKHW_TYPE != TLKHW_TL751X_EVK_C1T368A87_V1_2)
+static const tlkmw_fs_parm_cfg_t sTlkmwFsDiskIoEmmcParm = {
+    .clusterSize = 32 * 1024,
+    .fmt         = 0x07, //FM_ANY
+};
+#endif
+
 const tlkmw_fs_diskio_t gTlkmwFsDiskIoEmmc = {
     .init          = tlkmw_fs_drv_emmc_init,
     .sleep         = tlkmw_fs_drv_emmc_sleep,
@@ -484,6 +547,9 @@ const tlkmw_fs_diskio_t gTlkmwFsDiskIoEmmc = {
     .read          = tlkmw_fs_drv_emmc_read,
     .getSectorSize = tlkmw_fs_drv_emmc_get_sector_size,
     .getSectorNum  = tlkmw_fs_drv_emmc_get_sector_num,
+#if (TLKHW_TYPE != TLKHW_TL751X_EVK_C1T368A87_V1_0 && TLKHW_TYPE != TLKHW_TL751X_EVK_C1T368A87_V1_2)
+    .fsParmCfg = &sTlkmwFsDiskIoEmmcParm,
+#endif
 };
 
 #endif

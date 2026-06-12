@@ -26,7 +26,7 @@
 #include "drivers.h"
 #include "stack/btble.h"
 #include "tlkapi/tlkapi.h"
-#if (CONTROLLER_MODE == BLE_CONTROLLER)
+#if (CHECK_BLE_CONTROLLER)
 extern void user_init(void);
 extern void main_loop(void);
 

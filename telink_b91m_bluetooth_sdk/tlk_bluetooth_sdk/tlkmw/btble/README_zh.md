@@ -14,6 +14,9 @@ Btsnoop是一种记录蓝牙协议栈数据交换的通信协议，在分析蓝�
 
 Python 3.7+ 需要的一些必要的依赖，需要自行安装，如果遇到问题可以参考官方文档或者咨询AI。
 
+必须模块安装依赖：
+python -m pip install pyserial
+python -m pip install construct
 
 ## 软件配置
 

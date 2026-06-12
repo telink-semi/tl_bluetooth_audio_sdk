@@ -23,11 +23,11 @@
  *******************************************************************************************************/
 #pragma once
 
-typedef struct 
+typedef struct
 {
     void (*init)(void);
     void (*send)(uint8_t type, void *pData, uint16_t dataLen);
-}tlkdbg_sync_stream_t;
+} tlkdbg_sync_stream_t;
 
 /**
  * @brief       Send log message from N22 core to shared memory
@@ -38,4 +38,4 @@ typedef struct
  */
 void tlkdbg_n22core_write(uint8_t type, void *pData, uint16_t dataLen);
 
-
+void tlkdbg_gsu_write(uint8_t type, void *pData, uint16_t dataLen);

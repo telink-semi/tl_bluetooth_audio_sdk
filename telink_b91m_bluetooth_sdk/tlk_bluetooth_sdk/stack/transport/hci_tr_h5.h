@@ -33,11 +33,11 @@
 #include "common/fifo.h"
 #if (HCI_TR_MODE == HCI_TR_H5)
 
-    /*! H5 transport buffer config macro. */ //4 dma length
-    #define HCI_H5_TR_RX_BUF_SIZE MEM_SIZE_ALIGN16(4 + 2 + (HCI_H5_HEAD_LEN + HCI_TR_RX_BUF_SIZE + HCI_H5_CRC_LEN) * 2) * 2
-    #define HCI_H5_TR_RX_BUF_NUM  4
+/*! H5 transport buffer config macro. */ //4 dma length
+#define HCI_H5_TR_RX_BUF_SIZE MEM_SIZE_ALIGN16(4 + 2 + (HCI_H5_HEAD_LEN + HCI_TR_RX_BUF_SIZE + HCI_H5_CRC_LEN) * 2) * 2
+#define HCI_H5_TR_RX_BUF_NUM  4
 
-    #define HCI_H5_FLUSH_TO       1000 /*! in ms*/
+#define HCI_H5_FLUSH_TO       1000 /*! in ms*/
 
 /**
  * @brief : H5 transport initialization.

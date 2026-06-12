@@ -27,24 +27,31 @@
 typedef struct
 {
     // word 0
-    uint8_t         tpsll_ch;
-    uint8_t         cur_status;
-    uint16_t         timeout;
+    uint8_t  tpsll_ch;
+    uint8_t  cur_status;
+    uint16_t timeout;
     // word 1
-    uint8_t         local_addr[6];
-    uint8_t         addr_paired_dongle[6];
+    uint8_t local_addr[6];
+    uint8_t addr_paired_dongle[6];
     // word 5
-    uint8_t         dongleIsConn :4;
-    uint8_t         isForceIdleing :4;
-    uint8_t         disReason;
-    uint16_t         startPairing;
+    uint8_t  dongleIsConn   : 4;
+    uint8_t  isForceIdleing : 4;
+    uint8_t  disReason;
+    uint16_t startPairing;
     // word 7
-    uint32_t         tpsll_ac;
+    uint32_t tpsll_ac;
+    // word 8
+    uint32_t dongle_ver;
+    // word 9
+    uint16_t acl_mtu;
+    uint8_t  ota_intv;
+    uint8_t  resv;
+
     tlkmdi_tph_force_idle_finished_cb idleCB;
-    TlkApiTimer_t  timer;
+    TlkApiTimer_t                     timer;
 } tlkmdi_bt_tph_ctrl_t; // 60bytes
 
-extern tlkmdi_bt_tph_ctrl_t gTlkMdiHeadsetCtrl;
+extern tlkmdi_bt_tph_ctrl_t       gTlkMdiHeadsetCtrl;
 extern tlkmdi_tph_state_change_cb gInnerTlkMdiBtTphStateChgCB;
 
 #endif

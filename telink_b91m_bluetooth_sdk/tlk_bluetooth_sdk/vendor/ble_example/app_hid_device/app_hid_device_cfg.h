@@ -22,10 +22,10 @@
  *
  *******************************************************************************************************/
 
-#define APP_HID_DEVICE_MODE_KEYBOARD        0x01
-#define APP_HID_DEVICE_MODE_MOUSE           0x02
+#define APP_HID_DEVICE_MODE_KEYBOARD 0x01
+#define APP_HID_DEVICE_MODE_MOUSE    0x02
 
-#define APP_HID_DEVICE_SELECT_MODE          APP_HID_DEVICE_MODE_KEYBOARD
+#define APP_HID_DEVICE_SELECT_MODE   APP_HID_DEVICE_MODE_KEYBOARD
 
 #if (APP_HID_DEVICE_SELECT_MODE == APP_HID_DEVICE_MODE_KEYBOARD)
 #include "stack/ble/host_v1/services/svc_hid/hid_demo/keyboard_cfg.h"
@@ -36,7 +36,7 @@
 #endif
 
 // PnP ID Information.
-#define DIS_PNP_ID_VENDOR_ID_SOURCE   0x02
-#define DIS_PNP_ID_VENDOR_ID          0x248A
-#define DIS_PNP_ID_PRODUCT_ID         0x6666
-#define DIS_PNP_ID_PRODUCT_VERSION    0x0002
+#define DIS_PNP_ID_VENDOR_ID_SOURCE 0x02
+#define DIS_PNP_ID_VENDOR_ID        0x248A
+#define DIS_PNP_ID_PRODUCT_ID       0x6666
+#define DIS_PNP_ID_PRODUCT_VERSION  0x0002

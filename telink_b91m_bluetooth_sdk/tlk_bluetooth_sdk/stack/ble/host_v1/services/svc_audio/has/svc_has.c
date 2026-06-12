@@ -47,32 +47,24 @@
 
 #define HAS_START_HDL SERVICE_HEARING_ACCESS_HDL
 
-_attribute_ble_data_retention_ uint8_t hasHearingAidFeaturesValue    = 0x00;
-static const uint16_t                  hasHearingAidFeaturesValueLen = 1;
-
-#if LE_AUDIO_HAS_HEARING_AID_PRESET_CONTROL_POINT
-_attribute_ble_data_retention_ uint8_t hasActivePresetIndexValue    = 0x00;
-static const uint16_t                  hasActivePresetIndexValueLen = 1;
-#endif
-
 /*
  * @brief the structure for default HAS service List.
  */
 static const struct atts_attribute hasList[] = {
-    ATTS_PRIMARY_SERVICE(serviceHearingAccessUuid),
+    ATTS_PRIMARY_SERVICE(serviceHearingAccessAttUuid),
 
     //Hearing Aid Features
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicHearingAidFeaturesUuid, hasHearingAidFeaturesValue),
-    ATTS_COMMON_CCC_DEFINE,
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicHearingAidFeaturesAttUuid),
+    ATTS_COMMON_CCC_DEFINE_CB,
 
 #if LE_AUDIO_HAS_HEARING_AID_PRESET_CONTROL_POINT
     //Hearing Aid Preset Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteIndicate, characteristicHearingAidPresetControlPointUuid),
-    ATTS_COMMON_CCC_DEFINE,
+    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteIndicate, characteristicHearingAidPresetControlPointAttUuid),
+    ATTS_COMMON_CCC_DEFINE_CB,
 
     //Active Preset Index
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicActivePresetIndexUuid, hasActivePresetIndexValue),
-    ATTS_COMMON_CCC_DEFINE,
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicActivePresetIndexAttUuid),
+    ATTS_COMMON_CCC_DEFINE_CB,
 #endif
 };
 

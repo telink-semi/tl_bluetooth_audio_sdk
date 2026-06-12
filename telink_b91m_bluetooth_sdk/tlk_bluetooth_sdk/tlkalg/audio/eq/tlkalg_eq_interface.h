@@ -25,12 +25,12 @@
 #define __TLKALG_EQ_INTERFACE_H__
 #include "tlkalg/audio/audio_alg_interface.h"
 
-#define EQ_SAMPLE_NUM_MAX               512
+#define EQ_SAMPLE_NUM_MAX       512
 
-#define EQ_FILTER_STAGE_MAX             9
-#define EQ_NSTAGE_MUSIC_SPK_MAX         9
-#define EQ_NSTAGE_VOICE_SPK_MAX         4
-#define EQ_NSTAGE_VOICE_MIC_MAX         4
+#define EQ_FILTER_STAGE_MAX     10
+#define EQ_NSTAGE_MUSIC_SPK_MAX 10
+#define EQ_NSTAGE_VOICE_SPK_MAX 4
+#define EQ_NSTAGE_VOICE_MIC_MAX 4
 
 typedef enum
 {
@@ -58,17 +58,17 @@ typedef struct _eq_mode_header
 
 typedef struct _eq_mode
 {
-    eq_mode_header_t eq_header;                     /**< refer to eq_mode_header_t 4 bytes*/
-    eq_mode_para_t   eq_para[EQ_FILTER_STAGE_MAX];  /**< refer to eq_mode_para_t 8*9 bytes*/
-    int32_t          CRC;                           /**< reserved 4 bytes*/
+    eq_mode_header_t eq_header;                    /**< refer to eq_mode_header_t 4 bytes*/
+    eq_mode_para_t   eq_para[EQ_FILTER_STAGE_MAX]; /**< refer to eq_mode_para_t 8*9 bytes*/
+    int32_t          CRC;                          /**< reserved 4 bytes*/
 } eq_mode_t;
 
 typedef struct _eq_para
 {
-    uint32_t            samplerate;
-    e_eq_type_e         eq_type;
-    ALG_CHANNEL_IDX     channel;
-    ALG_BITDEPTH        width;
+    uint32_t        samplerate;
+    e_eq_type_e     eq_type;
+    ALG_CHANNEL_IDX channel;
+    ALG_BITDEPTH    width;
 } eq_para_t;
 
 /**

@@ -29,93 +29,93 @@
 #define BT_CLASSIC_DBG_INT_H
 
 #ifndef DUMP_HCI_MSG
-    #define DUMP_HCI_MSG 1
+#define DUMP_HCI_MSG 1
 #endif
 
 #ifndef DUMP_ACL_MSG
-    #define DUMP_ACL_MSG 1
+#define DUMP_ACL_MSG 1
 #endif
 
 #if BT_ERROR_CODE
-    /// LM task hci cmd handler log enable
-    #ifndef BREDR_CTRL_LM_HCI_LOG_EN
-        #define BREDR_CTRL_LM_HCI_LOG_EN 1
-    #endif
+/// LM task hci cmd handler log enable
+#ifndef BREDR_CTRL_LM_HCI_LOG_EN
+#define BREDR_CTRL_LM_HCI_LOG_EN 1
+#endif
 
-    /// LM task hci cmd handler vcd enable
-    #ifndef BREDR_CTRL_LM_HCI_VCD_EN
-        #define BREDR_CTRL_LM_HCI_VCD_EN 0
-    #endif
+/// LM task hci cmd handler vcd enable
+#ifndef BREDR_CTRL_LM_HCI_VCD_EN
+#define BREDR_CTRL_LM_HCI_VCD_EN 0
+#endif
 
-    /// LC task hci cmd handler log enable
-    #ifndef BREDR_CTRL_LC_HCI_LOG_EN
-        #define BREDR_CTRL_LC_HCI_LOG_EN 1
-    #endif
+/// LC task hci cmd handler log enable
+#ifndef BREDR_CTRL_LC_HCI_LOG_EN
+#define BREDR_CTRL_LC_HCI_LOG_EN 1
+#endif
 
-    /// LC task hci cmd handler vcd enable
-    #ifndef BREDR_CTRL_LC_HCI_VCD_EN
-        #define BREDR_CTRL_LC_HCI_VCD_EN 0
-    #endif
+/// LC task hci cmd handler vcd enable
+#ifndef BREDR_CTRL_LC_HCI_VCD_EN
+#define BREDR_CTRL_LC_HCI_VCD_EN 0
+#endif
 
-    /// LC task lmp msg handler log enable
-    #ifndef BREDR_CTRL_LC_LMP_LOG_EN
-        #define BREDR_CTRL_LC_LMP_LOG_EN 1
-    #endif
+/// LC task lmp msg handler log enable
+#ifndef BREDR_CTRL_LC_LMP_LOG_EN
+#define BREDR_CTRL_LC_LMP_LOG_EN 1
+#endif
 
-    /// LC task lmp msg handler vcd enable
-    #ifndef BREDR_CTRL_LC_LMP_VCD_EN
-        #define BREDR_CTRL_LC_LMP_VCD_EN 0
-    #endif
+/// LC task lmp msg handler vcd enable
+#ifndef BREDR_CTRL_LC_LMP_VCD_EN
+#define BREDR_CTRL_LC_LMP_VCD_EN 0
+#endif
 
-    /// LD log enable
-    #ifndef BREDR_CTRL_LD_LOG_EN
-        #define BREDR_CTRL_LD_LOG_EN 1
-    #endif
+/// LD log enable
+#ifndef BREDR_CTRL_LD_LOG_EN
+#define BREDR_CTRL_LD_LOG_EN 1
+#endif
 
-    /// LD vcd enable
-    #ifndef BREDR_CTRL_LD_VCD_EN
-        #define BREDR_CTRL_LD_VCD_EN 1
-    #endif
+/// LD vcd enable
+#ifndef BREDR_CTRL_LD_VCD_EN
+#define BREDR_CTRL_LD_VCD_EN 1
+#endif
 #else
-    /// LM task hci cmd handler log enable
-    #ifndef BREDR_CTRL_LM_HCI_LOG_EN
-        #define BREDR_CTRL_LM_HCI_LOG_EN 0
-    #endif
+/// LM task hci cmd handler log enable
+#ifndef BREDR_CTRL_LM_HCI_LOG_EN
+#define BREDR_CTRL_LM_HCI_LOG_EN 0
+#endif
 
-    /// LM task hci cmd handler vcd enable
-    #ifndef BREDR_CTRL_LM_HCI_VCD_EN
-        #define BREDR_CTRL_LM_HCI_VCD_EN 0
-    #endif
+/// LM task hci cmd handler vcd enable
+#ifndef BREDR_CTRL_LM_HCI_VCD_EN
+#define BREDR_CTRL_LM_HCI_VCD_EN 0
+#endif
 
-    /// LC task hci cmd handler log enable
-    #ifndef BREDR_CTRL_LC_HCI_LOG_EN
-        #define BREDR_CTRL_LC_HCI_LOG_EN 0
-    #endif
+/// LC task hci cmd handler log enable
+#ifndef BREDR_CTRL_LC_HCI_LOG_EN
+#define BREDR_CTRL_LC_HCI_LOG_EN 0
+#endif
 
-    /// LC task hci cmd handler vcd enable
-    #ifndef BREDR_CTRL_LC_HCI_VCD_EN
-        #define BREDR_CTRL_LC_HCI_VCD_EN 0
-    #endif
+/// LC task hci cmd handler vcd enable
+#ifndef BREDR_CTRL_LC_HCI_VCD_EN
+#define BREDR_CTRL_LC_HCI_VCD_EN 0
+#endif
 
-    /// LC task lmp msg handler log enable
-    #ifndef BREDR_CTRL_LC_LMP_LOG_EN
-        #define BREDR_CTRL_LC_LMP_LOG_EN 0
-    #endif
+/// LC task lmp msg handler log enable
+#ifndef BREDR_CTRL_LC_LMP_LOG_EN
+#define BREDR_CTRL_LC_LMP_LOG_EN 0
+#endif
 
-    /// LC task lmp msg handler vcd enable
-    #ifndef BREDR_CTRL_LC_LMP_VCD_EN
-        #define BREDR_CTRL_LC_LMP_VCD_EN 0
-    #endif
+/// LC task lmp msg handler vcd enable
+#ifndef BREDR_CTRL_LC_LMP_VCD_EN
+#define BREDR_CTRL_LC_LMP_VCD_EN 0
+#endif
 
-    /// LD log enable
-    #ifndef BREDR_CTRL_LD_LOG_EN
-        #define BREDR_CTRL_LD_LOG_EN 0
-    #endif
+/// LD log enable
+#ifndef BREDR_CTRL_LD_LOG_EN
+#define BREDR_CTRL_LD_LOG_EN 0
+#endif
 
-    /// LD vcd enable
-    #ifndef BREDR_CTRL_LD_VCD_EN
-        #define BREDR_CTRL_LD_VCD_EN 1
-    #endif
+/// LD vcd enable
+#ifndef BREDR_CTRL_LD_VCD_EN
+#define BREDR_CTRL_LD_VCD_EN 1
+#endif
 #endif
 
 #endif /* BT_CLASSIC_DBG_INT_H */

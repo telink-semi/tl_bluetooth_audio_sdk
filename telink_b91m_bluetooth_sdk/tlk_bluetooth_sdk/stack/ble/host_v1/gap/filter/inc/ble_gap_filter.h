@@ -27,8 +27,8 @@
  *******************************************************************************************************/
 
 // Macros for address type
-#define BLE_HOST_GAP_FILTER_ADDR_TYPE_PUBLIC     0x00    /** < Public Device address */
-#define BLE_HOST_GAP_FILTER_ADDR_TYPE_RANDOM     0x01    /** < Random Device address */
+#define BLE_HOST_GAP_FILTER_ADDR_TYPE_PUBLIC 0x00 /** < Public Device address */
+#define BLE_HOST_GAP_FILTER_ADDR_TYPE_RANDOM 0x01 /** < Random Device address */
 
 /**
  *   @brief Initialize the filter module.

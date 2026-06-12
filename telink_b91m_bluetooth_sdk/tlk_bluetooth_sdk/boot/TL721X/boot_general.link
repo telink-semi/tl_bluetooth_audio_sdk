@@ -26,7 +26,7 @@ ENTRY(_RESET_ENTRY)
 SECTIONS
 {
     NDS_SAG_LMA_FLASH = 0x20000000 ;
-    . = DEFINED(TLK_MW_USER_CTRL_ENABLE_VALUE) ? 0x20013040 : 0x20000000; 
+    . = DEFINED(TLK_MW_OTA_ENABLE_VALUE) ? 0x20013040 : 0x20000000; 
     PROVIDE (BIN_BEGIN = .);
     .vectors        : { KEEP(*(.vectors )) }
     .flash_code        : { KEEP(*(.flash_code )) }
@@ -49,7 +49,7 @@ SECTIONS
     
     . = ALIGN(8);
     .ram_code   : AT( ALIGN(LOADADDR (.retention_data) + SIZEOF (.retention_data),8)) 
-        { KEEP(*(.ram_code )) KEEP(*libgcc.a:save-restore.o) KEEP(*(.exec.itable)) }
+        { KEEP(*(.ram_code)) KEEP(*libgcc.a:save-restore.o) KEEP(*(.exec.itable)) }
     PROVIDE (_RAMCODE_VMA_START = ADDR(.ram_code));
     PROVIDE (_RAMCODE_LMA_START = LOADADDR(.ram_code));
     
@@ -60,6 +60,10 @@ SECTIONS
         	KEEP(*(.opus_ram_code))
         	KEEP(*(.opus_data))
         	KEEP(*(.lc3_ram_code))
+            KEEP(*(.lc3_ram_code1))
+            KEEP(*(.lc3_ram_code2))
+            KEEP(*(.lc3_ram_code3))
+        	KEEP(*(.bbf_ram_code))
         }
     PROVIDE (_RAMCODE_VMA_END = .);
     PROVIDE (_RAMCODE_SIZE = SIZEOF (.alg_ram_code) + SIZEOF (.ram_code)); 
@@ -81,7 +85,8 @@ SECTIONS
     .text           : AT(ALIGN(LOADADDR (.alg_ram_code) + SIZEOF (.alg_ram_code), 8)) 
         { *(.text .stub .text.* .gnu.linkonce.t.* ) KEEP(*(.text.*personality* )) *(.gnu.warning )  }
     .rodata         : AT(ALIGN(LOADADDR (.text) + SIZEOF (.text), ALIGNOF(.rodata))) 
-        { *(.rodata .rodata.* .gnu.linkonce.r.* )}
+        { *(.rodata .rodata.* .gnu.linkonce.r.* )
+        *(.srodata.cst16 ) *(.srodata.cst8 ) *(.srodata.cst4 ) *(.srodata.cst2 ) *(.srodata .srodata.* )}
     .eh_frame_hdr   : AT(ALIGN(LOADADDR (.rodata) + SIZEOF (.rodata), ALIGNOF(.eh_frame_hdr)))
         { *(.eh_frame_hdr ) }
     . = ALIGN(0x20);
@@ -93,14 +98,14 @@ SECTIONS
 
     .data   : AT(ALIGN(LOADADDR (.eh_frame) + SIZEOF (.eh_frame),  ALIGNOF(.data)))
         { *(.data .data.* .gnu.linkonce.d.* ) KEEP(*(.gnu.linkonce.d.*personality* )) SORT(CONSTRUCTORS) 
-          *(.srodata.cst16 ) *(.srodata.cst8 ) *(.srodata.cst4 ) *(.srodata.cst2 ) *(.srodata .srodata.* ) *(.sdata .sdata.* .gnu.linkonce.s.* ) *(.sdata2 .sdata2.* .gnu.linkonce.s.* )
+          *(.sdata .sdata.* .gnu.linkonce.s.* ) *(.sdata2 .sdata2.* .gnu.linkonce.s.* )
         }
     PROVIDE (_DATA_VMA_START = ADDR(.data));
     PROVIDE (_DATA_LMA_START = LOADADDR(.data));
     
     .alg_data   : AT(ALIGN(LOADADDR (.data) + SIZEOF (.data),  ALIGNOF(.alg_data)))
         { 
-	        ;KEEP(*(.opus_data))
+            ;KEEP(*(.opus_data))
          	KEEP(*(.ram_data_nn_ns))
          	KEEP(*(.lc3_data))
         }

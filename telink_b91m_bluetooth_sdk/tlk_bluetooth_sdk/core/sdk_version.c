@@ -22,5 +22,10 @@
  *
  *******************************************************************************************************/
 #include "sdk_version.h"
+#include "vendor/common/user_config.h"
 
+#ifndef TLK_CFG_CUSTOMER_SDK_VERSION
 volatile __attribute__((section(".sdk_version"))) unsigned char sdk_version[] = {SDK_VERSION(SDK_VERSION_NUM)};
+#else
+volatile __attribute__((section(".sdk_version"))) unsigned char sdk_version[] = {TLK_CFG_CUSTOMER_SDK_VERSION};
+#endif

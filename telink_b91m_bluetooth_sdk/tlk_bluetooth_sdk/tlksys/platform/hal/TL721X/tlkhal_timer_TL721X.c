@@ -31,7 +31,7 @@
  * @param[in] cfg : Pointer to timer configuration structure
  * @returns  None.
  */
-__attribute__((always_inline)) inline void tlkhal_timer_start(const tlkhal_timer_cfg_t* cfg)
+__attribute__((always_inline)) inline void tlkhal_timer_start(const tlkhal_timer_cfg_t *cfg)
 {
     TLKHAL_ASSERT(cfg->chn <= TIMER1);
 
@@ -46,12 +46,13 @@ __attribute__((always_inline)) inline void tlkhal_timer_start(const tlkhal_timer
         break;
     }
 }
+
 /**
  * @brief  Stop timer
  * @param[in] cfg : Pointer to timer configuration structure
  * @returns  None.
  */
-__attribute__((always_inline)) inline void tlkhal_timer_stop(const tlkhal_timer_cfg_t* cfg)
+__attribute__((always_inline)) inline void tlkhal_timer_stop(const tlkhal_timer_cfg_t *cfg)
 {
     TLKHAL_ASSERT(cfg->chn <= TIMER1);
 
@@ -66,15 +67,16 @@ __attribute__((always_inline)) inline void tlkhal_timer_stop(const tlkhal_timer_
         break;
     }
 }
+
 /**
  * @brief  Set timer mode
  * @param[in] cfg : Pointer to timer configuration structure
  * @returns  None.
  */
-__attribute__((always_inline)) inline void tlkhal_timer_set_mode(const tlkhal_timer_cfg_t* cfg)
+__attribute__((always_inline)) inline void tlkhal_timer_set_mode(const tlkhal_timer_cfg_t *cfg)
 {
     TLKHAL_ASSERT(cfg->chn <= TIMER1);
-    TLKHAL_ASSERT(cfg->mode<= TIMER_MODE_TICK);
+    TLKHAL_ASSERT(cfg->mode <= TIMER_MODE_TICK);
 
     switch (cfg->chn) {
     case TIMER0:

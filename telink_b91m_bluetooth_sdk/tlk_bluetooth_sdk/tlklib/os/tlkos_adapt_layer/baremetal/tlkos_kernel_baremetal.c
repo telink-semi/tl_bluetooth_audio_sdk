@@ -129,6 +129,7 @@ _attribute_ram_code_sec_noinline_ void tlkos_leave_critical(void)
  */
 void tlkos_init(void)
 {
+    tlkos_mem_init();
     tlkos_timer_init_inner();
 }
 

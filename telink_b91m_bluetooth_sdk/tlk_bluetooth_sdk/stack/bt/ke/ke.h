@@ -84,7 +84,7 @@ enum KE_STATUS
  *
  ****************************************************************************************
  */
-void ke_init(void);
+void tlk_bt_ctrl_ke_init(void);
 
 /**
  ****************************************************************************************
@@ -93,7 +93,7 @@ void ke_init(void);
  *
  ****************************************************************************************
  */
-void ke_flush(void);
+void tlk_bt_ctrl_ke_flush(void);
 
 /**
  ****************************************************************************************
@@ -102,7 +102,7 @@ void ke_flush(void);
  * @return      True if sleep is allowed, false otherwise
  ****************************************************************************************
  */
-bool ke_sleep_check(void);
+bool tlk_bt_ctrl_ke_sleep_check(void);
 
 #if (KE_PROFILING)
 /**
@@ -115,7 +115,7 @@ bool ke_sleep_check(void);
  * @param[out]   max_heap_used     Max heap used
  ****************************************************************************************
  */
-enum KE_STATUS ke_stats_get(uint8_t *max_msg_sent, uint8_t *max_msg_saved, uint8_t *max_timer_used, uint16_t *max_heap_used);
+enum KE_STATUS tlk_bt_ctrl_ke_stats_get(uint8_t *max_msg_sent, uint8_t *max_msg_saved, uint8_t *max_timer_used, uint16_t *max_heap_used);
 #endif //KE_PROFILING
 
 /// @} KE

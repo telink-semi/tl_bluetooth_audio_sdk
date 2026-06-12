@@ -436,7 +436,7 @@ static int tlkdrv_iisslv_enable(uint8_t bitDepth, uint8_t channel, uint32_t samp
             .data_width    = dataWdith,
             .i2s_ch_sel    = drvChannel,
             .fifo_chn      = TLKDRV_CODEC_MIC_FIFO,
-            .dma_num       = TLKDRV_CODEC_MIC_DMA,
+            .dma_num       = gTlkdrvCodecMicDmaChn,
             .data_buf      = gpTlkDrvCodecMicBuffer,
             .data_buf_size = gTlkDrvCodecMicBuffLen,
         };
@@ -454,7 +454,7 @@ static int tlkdrv_iisslv_enable(uint8_t bitDepth, uint8_t channel, uint32_t samp
             .data_width    = dataWdith,
             .i2s_ch_sel    = drvChannel,
             .fifo_chn      = TLKDRV_CODEC_SPK_FIFO,
-            .dma_num       = TLKDRV_CODEC_SPK_DMA,
+            .dma_num       = gTlkdrvCodecSpkDmaChn,
             .data_buf      = gpTlkDrvCodecSpkBuffer,
             .data_buf_size = gTlkDrvCodecSpkBuffLen,
         };
@@ -482,8 +482,8 @@ static void tlkdrv_iisslv_disable(void)
     tlkapi_trace(TLKDRV_CODEC_DBG_FLAG, TLKDRV_CODEC_DBG_SIGN, "tlkdrv_iisslv_disable: 001");
 
     audio_power_down();
-    audio_rx_dma_dis(TLKDRV_CODEC_MIC_DMA);
-    audio_tx_dma_dis(TLKDRV_CODEC_SPK_DMA);
+    audio_rx_dma_dis(gTlkdrvCodecMicDmaChn);
+    audio_tx_dma_dis(gTlkdrvCodecSpkDmaChn);
     i2s_reset_pin(&pinConfig);
 }
 

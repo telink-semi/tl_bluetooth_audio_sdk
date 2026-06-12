@@ -24,30 +24,38 @@
 #ifndef VENDOR_CONTROLLER_CONTROLLER_H_
 #define VENDOR_CONTROLLER_CONTROLLER_H_
 
-#define MAILBOX                   1
+#define MAILBOX                 1
 
-#define BT	                      10
+#define BT                      10
 
-#define BTBLE_TPSLL_HEADSET       21
-#define BTBLETPSLL		          22
-#define BTTPSLL_TWS               23
+#define BTBLE_TPSLL_HEADSET     21
+#define BTBLETPSLL              22
+#define BTTPSLL_TWS             23
 
-#define BLE_CONTROLLER            33
+#define BLE_CONTROLLER          0x8000
+#define BLE_MODE_RECORDING_CARD 0x0001
 
-#define BTBLE_HEADSET             40
+#define BTBLE_HEADSET           40
 
-#define BTBLE_A2DP_TO_BIS         41
+#define BTBLE_A2DP_TO_BIS       41
 
-#define BTBLE_AUDIO_SOURCE     	      42
+#define BTBLE_AUDIO_SOURCE      42
 
-#define BLETPSLL_TWS              50
+#define BLETPSLL_TWS            50
 
-#define BT_INTERPHONE             BTBLE_HEADSET
+#define RUIMO_BTBLE_DONGLE      55
 
-#define RECARDING_CARD            BLE_CONTROLLER
+#define BT_INTERPHONE           BTBLE_HEADSET
 
-#define HEARING_AID               BTTPSLL_TWS
+#define RECORDING_CARD          (BLE_CONTROLLER | BLE_MODE_RECORDING_CARD)
 
-#define CONTROLLER_MODE           BTBLE_HEADSET
+#define HEARING_AID             BTTPSLL_TWS
+#define GAMESIR_XIAOJI          BTBLE_TPSLL_HEADSET
 
-#endif                                /* VENDOR_CONTROLLER_CONTROLLER_H_ */
+#define CONTROLLER_MODE         BTBLE_A2DP_TO_BIS
+
+
+#define CHECK_BLE_CONTROLLER    (CONTROLLER_MODE & BLE_CONTROLLER)
+#define GET_BLE_CONTROLLER_MODE (CONTROLLER_MODE & (BLE_CONTROLLER - 1))
+
+#endif /* VENDOR_CONTROLLER_CONTROLLER_H_ */

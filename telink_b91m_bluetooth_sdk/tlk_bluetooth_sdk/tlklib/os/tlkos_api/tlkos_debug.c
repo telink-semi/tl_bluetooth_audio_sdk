@@ -40,9 +40,9 @@ extern const char *tlkos_debug_getCoreInfo(void);
 static void tlkos_crash_startAPI(void)
 {
     tlkusb_hal_disable_eventMode();
-    for (uint32_t i = 0; i < 1000; i++) {
+    uint32_t time = clock_time();
+    while (!(clock_time_exceed(time, 1000 * 1000))) {
         tlk_udb_usb_handle_irq();
-        delay_ms(1);
     } //print pre logs in fifo;
 }
 
@@ -54,9 +54,9 @@ static void tlkos_crash_startAPI(void)
 static void tlkos_crash_printAPI(const char *log)
 {
     tlkapi_printf(TLKOS_CFG_DEBUG_ENABLE, log);
-    for (uint32_t i = 0; i < 20; i++) {
+    uint32_t time = clock_time();
+    while (!(clock_time_exceed(time, 100 * 1000))) {
         tlk_udb_usb_handle_irq();
-        delay_ms(1);
     }
 }
 
@@ -118,8 +118,8 @@ void tlkos_debug_ioInit(void)
 #if TLKOS_CFG_DEBUG_IO_ENABLE
     gpio_function_en(GPIO_PF4 | GPIO_PF5);
     gpio_output_en(GPIO_PF4 | GPIO_PF5);
-    gpio_function_en(GPIO_PA0 | GPIO_PA1 | GPIO_PA2 | GPIO_PA3 | GPIO_PA5);
-    gpio_output_en(GPIO_PA0 | GPIO_PA1 | GPIO_PA2 | GPIO_PA3 | GPIO_PA5);
+    gpio_function_en(GPIO_PA0 | GPIO_PA1 | GPIO_PA2 | GPIO_PA3);
+    gpio_output_en(GPIO_PA0 | GPIO_PA1 | GPIO_PA2 | GPIO_PA3);
     gpio_function_en(GPIO_PB5 | GPIO_PB6 | GPIO_PB0);
     gpio_output_en(GPIO_PB5 | GPIO_PB6 | GPIO_PB0);
     gpio_function_en(GPIO_PC0 | GPIO_PC1);
@@ -131,7 +131,7 @@ void tlkos_debug_ioInit(void)
 _attribute_data_retention_sec_ static uint16_t tlkos_debug_ioTab[TLKOS_DEBUG_IO_NUM] = {
     [TLKOS_DEBUG_IO_MTI] = GPIO_PA0,         [TLKOS_DEBUG_IO_MSI] = GPIO_PA1,         [TLKOS_DEBUG_IO_EXCEPT] = GPIO_PB6,       [TLKOS_DEBUG_IO_FLASH_WRITE_OR_TICKLESS] = GPIO_PB5,
     [TLKOS_DEBUG_IO_SYS_THREAD] = GPIO_PA2,  [TLKOS_DEBUG_IO_HOST_THREAD] = GPIO_PC0, [TLKOS_DEBUG_IO_AUD_M_THREAD] = GPIO_PC1, [TLKOS_DEBUG_IO_AUD_IRQ_THREAD] = GPIO_PB0,
-    [TLKOS_DEBUG_IO_GET_MAILBOX] = GPIO_PF4, [TLKOS_DEBUG_IO_SWITCH_TASK] = GPIO_PF5, [TLKOS_DEBUG_IO_TIMER_THREAD] = GPIO_PA3, [TLKOS_DEBUG_IO_AUD_HIGHEST_THREAD] = GPIO_PA5,
+    [TLKOS_DEBUG_IO_GET_MAILBOX] = GPIO_PF4, [TLKOS_DEBUG_IO_SWITCH_TASK] = GPIO_PF5, [TLKOS_DEBUG_IO_TIMER_THREAD] = GPIO_PA3,
 };
 #endif
 

@@ -36,7 +36,7 @@
  * @brief	Telink defined LinkLayer Event Callback
  */
 typedef void (*user_irq_handler_cb_t)(void);
-extern user_irq_handler_cb_t usr_irq_handler_cb;
+extern user_irq_handler_cb_t gp_tlk_ble_usr_irq_handler_cb;
 
 /**
  * @brief	irq_handler for BLE stack, process system tick interrupt and RF interrupt
@@ -126,6 +126,8 @@ ble_sts_t blc_hci_reset(void);
  */
 void blc_ll_setCustomizedAdvertisingScanningChannel(u8 chn0, u8 chn1, u8 chn2);
 
+uint32_t blt_calc_single_pdu_us(uint16_t payload_len, le_phy_type_t phy, bool encrypted);
+uint32_t blt_calc_tx_rx_exchange_us(uint16_t tx_payload_len, le_phy_type_t tx_phy, uint16_t rx_payload_len, le_phy_type_t rx_phy, bool encrypted);
 
 #define blc_ll_initBasicMCU()
 

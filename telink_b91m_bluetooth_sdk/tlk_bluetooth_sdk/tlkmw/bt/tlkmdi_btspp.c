@@ -39,7 +39,7 @@
  */
 __attribute__((weak)) void tlkmdi_btspp_recv_data(uint16_t aclHandle, uint8_t rfcHandle, uint8_t *pData, uint16_t dataLen)
 {
-    tlkmw_userctrl_pushDataToTask(aclHandle | (rfcHandle << 16), pData, dataLen);
+    tlkmw_userctrl_pushDataToTask(aclHandle | (rfcHandle << 16), 0, pData, dataLen);
 }
 
 /**
@@ -56,6 +56,21 @@ int tlkmdi_btspp_otaSendData(uint32_t taskID, uint8_t *pData, uint16_t dataLen, 
     return btp_spp_sendData(taskID & 0xFFFF, NULL, 0, pData, dataLen);
 }
 
+uint32_t tlkmdi_btspp_get_ota_param(uint32_t taskID, uint8_t param_type, void *UserArg)
+{
+    (void)taskID;
+    (void)UserArg;
+
+    if (param_type == TLKMW_OTA_PARAM_MTU_SIZE) {
+        btp_spp_item_t *pItem = btp_spp_getConnItem(taskID & 0xFFFF);
+        if (pItem != NULL) {
+            return pItem->mtuSize;
+        }
+    }
+
+    return 0;
+}
+
 /**
  * @brief       This function is used to initialize the SPP module
  * @param       none.
@@ -63,7 +78,13 @@ int tlkmdi_btspp_otaSendData(uint32_t taskID, uint8_t *pData, uint16_t dataLen, 
  */
 int tlkmdi_btspp_init(void)
 {
-    tlkmw_ota_register_chn_send_interface(TLKMW_OTA_TRANS_CHN_BT_SPP, tlkmdi_btspp_otaSendData);
+    sTlkMwUnitIntf_t interface = {
+        .channel       = TLKMW_OTA_TRANS_CHN_BT_SPP,
+        .send          = tlkmdi_btspp_otaSendData,
+        .recv          = NULL,
+        .get_ota_param = tlkmdi_btspp_get_ota_param,
+    };
+    tlkmw_ota_register_chn_interface(&interface);
     btp_spp_regDataCB(tlkmdi_btspp_recv_data);
 
     tlkmdi_bt_sppTestInit(); //TODO: need clean.

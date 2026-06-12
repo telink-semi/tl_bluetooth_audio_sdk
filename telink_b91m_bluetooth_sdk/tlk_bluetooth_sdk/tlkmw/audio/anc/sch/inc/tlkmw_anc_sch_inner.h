@@ -81,7 +81,7 @@ void tlkmw_anc_sch_tpsll_init(void);
  * @param[in]   isStart - Start flag
  * @return      None
  */
-void tlkmw_anc_sch_request_update(uint8_t type,uint16_t handle,uint8_t isStart);
+void tlkmw_anc_sch_request_update(uint8_t type, uint16_t handle, uint8_t isStart);
 
 /**
  * @brief       Accept UI call request

@@ -30,7 +30,9 @@
 #include "tlkmdi_interphone_handler.h"
 
 #if TLKMW_INTERPHONE_EN
-tlkmdi_interphone_env_t s_tlk_mdi_interphone_env = {0};
+tlkmdi_interphone_env_t s_tlk_mdi_interphone_env       = {0};
+uint8_t                 g_tlkmdi_interphone_i2s_rx_dma = 0;
+uint8_t                 g_tlkmdi_interphone_i2s_tx_dma = 0;
 
 /**
  * @brief     Receive a2dp frame.
@@ -50,7 +52,12 @@ void tlkmdi_interphone_rcv_a2dp_frame(uint16_t aclHandle, uint8_t *p_data, uint1
         // tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "btif_receive_a2dp_frame, cur_handle != aclHandle");
         return;
     }
-
+#if (TLK_CHECK_REMOTE_DEV)
+    extern uint8_t tlkapp_get_remote_dev_istrue(void);
+    if (tlkapp_get_remote_dev_istrue()) {
+        return;
+    }
+#endif
     bt_music_receive_a2dp_frames(p_data, len);
     return;
 }
@@ -93,7 +100,7 @@ static void tlkmdi_interphone_voice_control(uint16_t acl_handle, uint8_t is_star
 
     if (is_start) {
         // gpio_set_high_level(GPIO_CHN1);
-        btif_set_hfp_codec(codec);
+        btif_set_hfp_codec(SCO_ENC_QUEUE_ID_HF, codec);
 
         int ret = bt_voice_audio_path_init();
         if (!ret) {
@@ -187,9 +194,11 @@ static void tlkmdi_interphone_bt_music_control(uint16_t handle, uint8_t isStart)
         s_tlk_mdi_interphone_env.codec_type = SEPID_SBC;
         one_frame_times                     = 1000;
     }
-    bt_audio_set_music_vol_percent_by_handle(handle);
-    bt_music_audio_path_init();
     tlkmdi_interphone_btmusic_alg_init();
+    bt_audio_set_music_vol_percent_by_handle(handle);
+    tlkmw_audio_btif_inform_host_audio_en(handle, true);
+    bt_music_audio_path_init(handle);
+
 #if (TLKBTP_CFG_A2DPSNK_ENABLE)
     btp_a2dpsnk_regRecvDataCB(tlkmdi_interphone_rcv_a2dp_frame);
 #endif
@@ -198,7 +207,6 @@ static void tlkmdi_interphone_bt_music_control(uint16_t handle, uint8_t isStart)
     // tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, tlkmdi_interphone_mainloop); //3ms loop onetime
     tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, tlkmdi_interphone_timer_irq);
     bt_audio_task_register_run_cb(NULL, 1);
-    tlkmw_audio_btif_inform_host_audio_en(handle, true);
 
     tlkmdi_interphone_set_looptick();
     audio_codec_flag_set(CODEC_FLAG_MUSIC, 1);
@@ -218,6 +226,8 @@ static void tlkmdi_interphone_bt_music_control(uint16_t handle, uint8_t isStart)
  */
 int tlkmdi_interphone_init(void)
 {
+    g_tlkmdi_interphone_i2s_rx_dma = tlkhal_dma_malloc();
+    g_tlkmdi_interphone_i2s_tx_dma = tlkhal_dma_malloc();
     tlkapi_printf(APP_LOG_EN, "tlkmdi_interphone_init");
 
     tlkmdi_interphone_linkmgr_init(tlkmdi_interphone_bt_music_control);

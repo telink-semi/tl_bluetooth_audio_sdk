@@ -25,8 +25,8 @@
 #include "tlkapi/tlkapi.h"
 #if (TLK_MW_DSP_COMM_ENABLE)
 
-    #include "tlkmw/audio/tlkmw_audio.h"
-    #include "tlkmw/audio/audio_mw_manager.h"
+#include "tlkmw/audio/tlkmw_audio.h"
+#include "tlkmw/audio/audio_mw_manager.h"
 
 audio_buffer_context_t g_audio_buf_ctx[IPC_DATA_PATH_MAX];
 
@@ -90,7 +90,7 @@ audio_ram_code void audio_buff_init(uint8_t *p_audio_buff)
     p_audio_buf_ctx->audio_data_mode     = AUDIO_BIT_24_DATA;
     p_audio_buf_ctx->audio_channel_type  = AUDIO_STEREO;
 
-    #if 1
+#if 1
     p_audio_buf_ctx = get_audio_buff_context_ptr(IPC_SET_PARAM_PATH_2);
 
     // IPC data path 2 buffer
@@ -112,9 +112,9 @@ audio_ram_code void audio_buff_init(uint8_t *p_audio_buff)
     p_audio_buf_ctx->pcm_buff_num        = IPC_DATA_PATH2_PCM_BUFFER_NUM;
     p_audio_buf_ctx->pcm_buff_wptr       = 0;
     p_audio_buf_ctx->pcm_buff_rptr       = 0;
-    p_audio_buf_ctx->audio_data_mode    = AUDIO_BIT_24_DATA;
-    p_audio_buf_ctx->audio_channel_type = AUDIO_STEREO;
-    #endif
+    p_audio_buf_ctx->audio_data_mode     = AUDIO_BIT_24_DATA;
+    p_audio_buf_ctx->audio_channel_type  = AUDIO_STEREO;
+#endif
 }
 
 /**
@@ -123,7 +123,7 @@ audio_ram_code void audio_buff_init(uint8_t *p_audio_buff)
  */
 void ipc_update_audio_buff_config(uint8_t mode)
 {
-    #if 0
+#if 0
     switch (mode) {
     case DSP_BT_MUSIC_AAC_MODE:
     {
@@ -162,9 +162,9 @@ void ipc_update_audio_buff_config(uint8_t mode)
     default:
         break;
     }
-    #else
+#else
     (void)mode;
-    #endif
+#endif
 }
 
 /**
@@ -261,6 +261,7 @@ audio_ram_code uint8_t *d25f_get_pcm_buff(uint16_t *pcm_data_len, uint8_t id)
 
     p_data        = p_audio_buf_ctx->p_pcm_buff + offset;
     *pcm_data_len = p_audio_buf_ctx->pcm_data_len[p_audio_buf_ctx->pcm_buff_wptr];
+    //    tlkapi_trace(DSP_DBG_FLAG, DSP_DBG_SIGN, "output share addre: %x,%d\n", p_data,*pcm_data_len);
     return p_data;
 }
 
@@ -411,7 +412,7 @@ audio_ram_code void d25f_post_sin_audio_data(uint8_t *p_data, uint8_t id)
     uint8_t                 data[6]         = {0, 0, 0, 0, 0, 0};
     audio_buffer_context_t *p_audio_buf_ctx = get_audio_buff_context_ptr(id);
 
-    data[0] = 0;                                    // mode
+    data[0] = 0; // mode
 
     data[1] = p_audio_buf_ctx->enc_audio_buff_wptr; // wptr
     data[2] = p_audio_buf_ctx->enc_audio_buff_frame_size & 0xff;

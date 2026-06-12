@@ -100,7 +100,7 @@ bool blc_ll_clr1stSduSyncRefTicks(u8 big_handle);
 u32 blc_ll_getLatestBigBcstSyncApTick4FutMoments(u8 big_handle);
 
 typedef void (*big_bcst_1st_sdu_ref_ap_cb)(u32 *pSduRefApTicks);
-extern big_bcst_1st_sdu_ref_ap_cb big_bcst_1st_sdu_ref_ap;
+extern big_bcst_1st_sdu_ref_ap_cb gp_tlk_ble_big_bcst_1st_sdu_ref_ap;
 
 /**
  * @brief       This function is used to register the callback function to get the
@@ -109,7 +109,35 @@ extern big_bcst_1st_sdu_ref_ap_cb big_bcst_1st_sdu_ref_ap;
  */
 __INLINE void blc_ll_regBigBcstGetSduRefApCallback(big_bcst_1st_sdu_ref_ap_cb cb)
 {
-    big_bcst_1st_sdu_ref_ap = cb;
+    gp_tlk_ble_big_bcst_1st_sdu_ref_ap = cb;
 }
+
+/**
+ * @brief      be used to create a BIG with one or more BISes.All BISes in a BIG have the same value for all parameters.
+ * @param[in]  pCmdParam - command parameters, refer to "[Vol 4] Part E,7.8.103 LE Create BIG command"
+ * @return     status, 0x00:  succeed
+ * 					   other: failed
+ */
+ble_sts_t blc_hci_le_createBigParams(hci_le_createBigParams_t *pCmdParam);
+
+
+/**
+ * @brief      only be used for testing purposes
+ * @param[in]  pCmdParam - command parameters, refer to "[Vol 4] Part E,7.8.104 LE Create BIG Test command"
+ * @return     status, 0x00:  succeed
+ * 					   other: failed
+ */
+ble_sts_t blc_hci_le_createBigParamsTest(hci_le_createBigParamsTest_t *pCmdParam);
+
+/**
+ * @brief      be used to terminate a BIG identified by the BIG_Handle parameter. also terminate the transmission of all BISes of the BIG.
+ *             destroys the associated connection handles of the BISes in the BIG and removes the data paths for all BISes in the BIG
+ *             refer to "[Vol 4] Part E,7.8.105 LE Terminate BIG command"
+ * @param[in]  pCmdParam - big_handle: Used to identify the BIG
+ *                       - reason: is used to indicate the reason why the BIG is to be terminated
+ * @return     status, 0x00:  succeed
+ * 					   other: failed
+ */
+ble_sts_t blc_hci_le_terminateBig(hci_le_terminateBigParams_t *pCmdParam);
 
 #endif /* BIS_BCST_H_ */

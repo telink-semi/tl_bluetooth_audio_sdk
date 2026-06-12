@@ -1,9 +1,9 @@
 /********************************************************************************************************
  * @file    error_handler.h
  *
- * @brief   This is the header file for TLSR/TL
+ * @brief   This is the header file for B92
  *
- * @author  Bluetooth Group
+ * @author  Driver Group
  * @date    2024
  *
  * @par     Copyright (c) 2024, Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")

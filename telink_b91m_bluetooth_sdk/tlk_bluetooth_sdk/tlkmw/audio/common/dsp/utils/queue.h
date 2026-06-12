@@ -40,7 +40,7 @@ typedef struct
  * @param[in]   buffer - Buffer pointer
  * @param[in]   size - Buffer size
  */
-void     queue_init(Queue_t *queue, uint32_t *buffer, uint16_t size);
+void queue_init(Queue_t *queue, uint32_t *buffer, uint16_t size);
 
 /**
  * @brief       Put buffer data into queue

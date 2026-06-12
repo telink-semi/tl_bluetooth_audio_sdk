@@ -26,47 +26,47 @@
 
 #include "common/types.h"
 #if ((MCU_CORE_TYPE == MCU_CORE_TL751X) || (MCU_CORE_TYPE == MCU_CORE_TL752X) || MCU_CORE_TYPE == MCU_CORE_TL753X)
-#define TLK_CFG_USB_NUMB        2
-#define TLK_CFG_USB_UDB_INDEX   1
-#define TLK_CFG_USB_UAC_INDEX   0
-#define TLK_CFG_USB_MSC_INDEX   0
-#elif(MCU_CORE_TYPE == MCU_CORE_TL322X)
-#define TLK_CFG_USB_NUMB        2
-#define TLK_CFG_USB_UDB_INDEX   1
-#define TLK_CFG_USB_UAC_INDEX   0
-#define TLK_CFG_USB_MSC_INDEX   (TLK_CFG_USB_NUMB + 1)  //default noused
+#define TLK_CFG_USB_NUMB      2
+#define TLK_CFG_USB_UDB_INDEX 1
+#define TLK_CFG_USB_UAC_INDEX 0
+#define TLK_CFG_USB_MSC_INDEX 0
+#elif (MCU_CORE_TYPE == MCU_CORE_TL322X)
+#define TLK_CFG_USB_NUMB      2
+#define TLK_CFG_USB_UDB_INDEX 1
+#define TLK_CFG_USB_UAC_INDEX 0
+#define TLK_CFG_USB_MSC_INDEX (TLK_CFG_USB_NUMB + 1) //default noused
 #else
-#define TLK_CFG_USB_NUMB        1
-#define TLK_CFG_USB_UDB_INDEX   0
-#define TLK_CFG_USB_UAC_INDEX   0
-#define TLK_CFG_USB_MSC_INDEX   0
+#define TLK_CFG_USB_NUMB      1
+#define TLK_CFG_USB_UDB_INDEX 0
+#define TLK_CFG_USB_UAC_INDEX 0
+#define TLK_CFG_USB_MSC_INDEX 0
 #endif
 
 #if ((MCU_CORE_TYPE == MCU_CORE_B91) || (MCU_CORE_TYPE == MCU_CORE_B92) || (MCU_CORE_TYPE == MCU_CORE_TL721X))
-#define TLK_USB0_DP_PIN         GPIO_PA6
-#define TLK_USB0_DM_PIN         GPIO_PA5
-#define TLK_USB1_DP_PIN         0 //Do not support.
-#define TLK_USB1_DM_PIN         0
+#define TLK_USB0_DP_PIN GPIO_PA6
+#define TLK_USB0_DM_PIN GPIO_PA5
+#define TLK_USB1_DP_PIN 0 //Do not support.
+#define TLK_USB1_DM_PIN 0
 #elif (MCU_CORE_TYPE == MCU_CORE_TL751X)
-#define TLK_USB0_DP_PIN         GPIO_PF3
-#define TLK_USB0_DM_PIN         GPIO_PF2
-#define TLK_USB1_DP_PIN         GPIO_PF1 //used for dbg
-#define TLK_USB1_DM_PIN         GPIO_PF0 //used for dbg
+#define TLK_USB0_DP_PIN GPIO_PF3
+#define TLK_USB0_DM_PIN GPIO_PF2
+#define TLK_USB1_DP_PIN GPIO_PF1 //used for dbg
+#define TLK_USB1_DM_PIN GPIO_PF0 //used for dbg
 #elif (MCU_CORE_TYPE == MCU_CORE_TL752X)
-#define TLK_USB0_DP_PIN         0
-#define TLK_USB0_DM_PIN         0
-#define TLK_USB1_DP_PIN         ((2<<8)+8)//PC08 //used for dbg
-#define TLK_USB1_DM_PIN         ((2<<8)+9)//PC09 //used for dbg
+#define TLK_USB0_DP_PIN 0
+#define TLK_USB0_DM_PIN 0
+#define TLK_USB1_DP_PIN GPIO_PC8 //PC08 //used for dbg
+#define TLK_USB1_DM_PIN GPIO_PC9 //PC09 //used for dbg
 #elif (MCU_CORE_TYPE == MCU_CORE_TL753X)
-#define TLK_USB0_DP_PIN         GPIO_PF3
-#define TLK_USB0_DM_PIN         GPIO_PF2
-#define TLK_USB1_DP_PIN         GPIO_PF1 //used for dbg
-#define TLK_USB1_DM_PIN         GPIO_PF0 //used for dbg
-#elif(MCU_CORE_TYPE == MCU_CORE_TL322X)
-#define TLK_USB0_DP_PIN         GPIO_PA4 //used for audio
-#define TLK_USB0_DM_PIN         GPIO_PA3 //used for audio
-#define TLK_USB1_DP_PIN         GPIO_PA6 //used for dbg
-#define TLK_USB1_DM_PIN         GPIO_PA5 //used for dbg
+#define TLK_USB0_DP_PIN GPIO_PF3
+#define TLK_USB0_DM_PIN GPIO_PF2
+#define TLK_USB1_DP_PIN GPIO_PF1 //used for dbg
+#define TLK_USB1_DM_PIN GPIO_PF0 //used for dbg
+#elif (MCU_CORE_TYPE == MCU_CORE_TL322X)
+#define TLK_USB0_DP_PIN GPIO_PA4 //used for audio
+#define TLK_USB0_DM_PIN GPIO_PA3 //used for audio
+#define TLK_USB1_DP_PIN GPIO_PA6 //used for dbg
+#define TLK_USB1_DM_PIN GPIO_PA5 //used for dbg
 #endif
 
 /**
@@ -204,7 +204,7 @@ uint16_t tlkusb_hal_get_ep_ptr(uint8_t index, uint32_t ep);
  * @param[in] len  - write length.
  * @returns    none
  */
-void tlkusb_hal_read_ep_data(uint8_t index, uint32_t ep,uint8_t * buffer, uint16_t length);
+void tlkusb_hal_read_ep_data(uint8_t index, uint32_t ep, uint8_t *buffer, uint16_t length);
 
 /**
  * @brief     This function servers to enable usb event mode(irq).

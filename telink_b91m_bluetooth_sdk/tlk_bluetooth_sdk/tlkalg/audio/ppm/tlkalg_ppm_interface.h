@@ -27,9 +27,9 @@
 #include "tl_common.h"
 #include "tlkalg/audio/audio_alg_interface.h"
 #if (TLK_ALG_PPM_ENABLE && (MCU_CORE_TYPE == MCU_CORE_TL721X))
-    #include "tlka_ppm_multi_ch_api.h"
+#include "tlka_ppm_multi_ch_api.h"
 #else
-    #include "tlka_ppm_asrc_api.h"
+#include "tlka_ppm_asrc_api.h"
 #endif
 
 /**
@@ -45,7 +45,7 @@ uint16_t tlkalg_ppm_spk_get_size(uint8_t channel);
  * @param[in]   param - Pointer to parameter value
  * @return      0 on success
  */
-uint8_t  tlkalg_ppm_spk_param_set(uint8_t type, void *param);
+uint8_t tlkalg_ppm_spk_param_set(uint8_t type, void *param);
 
 /**
  * @brief       Initialize the speaker PPM module
@@ -53,13 +53,13 @@ uint8_t  tlkalg_ppm_spk_param_set(uint8_t type, void *param);
  * @param[in]   channel - Channel configuration
  * @return      0 on success
  */
-int8_t   tlkalg_ppm_spk_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_ppm_spk_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       Deinitialize the speaker PPM module
  * @return      0 on success
  */
-int8_t   tlkalg_ppm_spk_deinit(void);
+int8_t tlkalg_ppm_spk_deinit(void);
 
 /**
  * @brief       Process the speaker PPM data
@@ -70,7 +70,7 @@ int8_t   tlkalg_ppm_spk_deinit(void);
  * @param[in]   channel - Channel configuration
  * @return      Number of processed frames
  */
-int      tlkalg_ppm_spk_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_ppm_spk_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 /**
  * @brief       Get the size required for the microphone PPM buffer
@@ -85,7 +85,7 @@ uint16_t tlkalg_ppm_mic_get_size(uint8_t channel);
  * @param[in]   param - Pointer to parameter value
  * @return      0 on success
  */
-uint8_t  tlkalg_ppm_mic_param_set(uint8_t type, void *param);
+uint8_t tlkalg_ppm_mic_param_set(uint8_t type, void *param);
 
 /**
  * @brief       Initialize the microphone PPM module
@@ -93,13 +93,13 @@ uint8_t  tlkalg_ppm_mic_param_set(uint8_t type, void *param);
  * @param[in]   channel - Channel configuration
  * @return      0 on success
  */
-int8_t   tlkalg_ppm_mic_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_ppm_mic_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       Deinitialize the microphone PPM module
  * @return      0 on success
  */
-int8_t   tlkalg_ppm_mic_deinit(void);
+int8_t tlkalg_ppm_mic_deinit(void);
 
 /**
  * @brief       Process the microphone PPM data
@@ -110,6 +110,6 @@ int8_t   tlkalg_ppm_mic_deinit(void);
  * @param[in]   channel - Channel configuration
  * @return      Number of processed frames
  */
-int      tlkalg_ppm_mic_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_ppm_mic_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 #endif

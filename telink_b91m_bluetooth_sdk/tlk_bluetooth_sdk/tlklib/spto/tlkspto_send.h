@@ -24,14 +24,12 @@
 #ifndef TLKSPTO_SEND_H
 #define TLKSPTO_SEND_H
 
-void tlkspto_send_setBuffer(uint8_t *pBuffer, uint16_t buffLen);
-
 /**
  * @brief       Get buffer size.
  * @param[in]   none.
  * @return      Buffer size.
  */
-int  tlkspto_send_getBufferSize(void);
+int tlkspto_send_getBufferSize(void);
 
 /**
  * @brief       Register send callback function.

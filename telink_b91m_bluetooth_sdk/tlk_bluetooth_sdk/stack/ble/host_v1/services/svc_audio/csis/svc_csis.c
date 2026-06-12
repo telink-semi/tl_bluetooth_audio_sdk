@@ -88,32 +88,32 @@ static const uint16_t csisCoordinatedSetNameValueLen = sizeof(csisCoordinatedSet
  * @brief the structure for default CSIS service List.
  */
 static const struct atts_attribute csisList[] = {
-    ATTS_PRIMARY_SERVICE(serviceCoordinatedSetIdentificationUuid),
+    ATTS_PRIMARY_SERVICE(serviceCoordinatedSetIdentificationAttUuid),
 
     //Set Identity Resolving Key
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicSetIdentityResolvingKeyUuid, csisSIRKValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicSetIdentityResolvingKeyAttUuid, csisSIRKValue),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_CSIS_COORDINATED_SET_SIZE
     //Coordinated Set Size
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicCoordinatedSetSizeUuid, csisCSSizeValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicCoordinatedSetSizeAttUuid, csisCSSizeValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_CSIS_SET_MEMBER_LOCK
     //Set Member Lock
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicSetMemberLockUuid, csisSetMemberLockValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicSetMemberLockAttUuid, csisSetMemberLockValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_CSIS_SET_MEMBER_RANK
     //Set Member Rank
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropRead, characteristicSetMemberRankUuid, csisSetMemberRankValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropRead, characteristicSetMemberRankAttUuid, csisSetMemberRankValue),
 #endif
 
 #if LE_AUDIO_CSIS_COORDINATED_SET_NAME
     //Coordinated Set Name
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicCoordinatedSetNameUuid, csisCoordinatedSetNameValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicCoordinatedSetNameAttUuid, csisCoordinatedSetNameValue),
 #endif
 
 };

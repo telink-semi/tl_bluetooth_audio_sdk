@@ -27,7 +27,7 @@
 #if (TLK_MW_DSP_COMM_ENABLE)
 
 #if (MCU_CORE_TYPE == MCU_CORE_TL752X)
-#include "hal_mailbox.h"
+#include "hal/hal_mailbox.h"
 #else
 #include "mailbox.h"
 #endif
@@ -41,6 +41,8 @@
 __attribute__((section(".dsp_share_mem_anc_mic"))) int anc_mic_buff[ANC_RECORD_BUFF_SIZE];
 __attribute__((section(".dsp_share_mem_anc_spk"))) int anc_spk_buff[ANC_PLAY_BUFF_SIZE];
 #define _attribute_dsp_share_mem_sec_ __attribute__((section(".dsp_share_mem_d25f1")))
+#elif ((!TLKALG_BBF_PATH_SEL) && TLKMW_RECORDING_CARD_EN)
+#define _attribute_dsp_share_mem_sec_ __attribute__((section(".dsp_share_mem_d25f")))
 #else
 #define _attribute_dsp_share_mem_sec_ __attribute__((section(".dsp_share_mem")))
 #endif
@@ -160,6 +162,32 @@ bool tlkmw_dsp_isWorking(void)
     return tlkdrv_dsp_isWorking();
 }
 
+void tlkmw_dsp_alg_common_para(int para)
+{
+#if (MCU_CORE_TL752X_TEMP && !DETERMINE_PROCESSOR_GENUS_EN)
+    int retn = 0;
+#else
+    extern unsigned int determine_processor_genus(unsigned int data);
+    int                 retn = determine_processor_genus(para);
+#endif
+    set_param_t             set_param;
+    uint8_t                *p_mcu_2_dsp_buff = d25f_get_enc_buff_ptr(IPC_SET_PARAM_PATH_2);
+    int                    *pdata            = (int *)p_mcu_2_dsp_buff;
+    audio_buffer_context_t *p_audio_buf_ctx  = get_audio_buff_context_ptr(IPC_SET_PARAM_PATH_2);
+
+    p_audio_buf_ctx->enc_audio_data_len = sizeof(retn);
+    pdata[0]                            = retn;
+
+    set_param.buff_wptr = p_audio_buf_ctx->enc_audio_buff_wptr;
+    set_param.data_len  = p_audio_buf_ctx->enc_audio_data_len;
+    set_param.para_type = COMMON_PARA;
+
+    d25f_update_enc_buff_wptr(IPC_SET_PARAM_PATH_2);
+    d25f_send_request_to_dsp(IPC_D25F2DSP_SET_PARAM, (uint8_t *)&set_param, IPC_MSG_PAYLOAD_LEN);
+
+    tlkapi_trace(DSP_DBG_FLAG, DSP_DBG_SIGN, "dsp send num %x, mcu cal num %x\n", para, retn);
+}
+
 /**
  * @brief       Get PCM data from DSP
  * @param[out]  data_len - Pointer to store data length
@@ -217,6 +245,7 @@ audio_ram_code uint8_t d25f_send_audio_data_to_dsp(uint8_t *p_data, uint16_t len
         len = p_audio_buf_ctx->enc_audio_buff_frame_size;
     }
     tmemcpy(p_enc_buff, p_data, len);
+    //    tlkapi_trace(DSP_DBG_FLAG, DSP_DBG_SIGN, "input share addre: %x,%d\n", p_enc_buff,len);
 
     //    uint16_t pcm_buff_avail = d25f_get_number_of_pcm_buff_available(id);
     //uint16_t enc_buff_free = d25f_get_number_of_enc_buff_free(id);
@@ -318,8 +347,7 @@ uint8_t d25f_get_bt_voice_available_nn_buff_len(int16_t *ps, int16_t *pd, uint16
             *pd++ = bt_voice_mic_data[voice_rptr++];
             voice_rptr %= VOICE_MIC_DATA_LEN;
         }
-        gpio_set_high_level(GPIO_PA0);
-        gpio_set_low_level(GPIO_PA0);
+
         return 1;
     } else {
         return 0;

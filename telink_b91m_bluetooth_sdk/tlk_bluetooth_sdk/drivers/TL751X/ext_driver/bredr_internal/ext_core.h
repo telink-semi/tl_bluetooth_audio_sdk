@@ -25,10 +25,10 @@
 #define EXT_CORE_H
 
 #ifndef TICK_PER_US
-    #define TICK_PER_US SYSTEM_TIMER_TICK_1US
+#define TICK_PER_US SYSTEM_TIMER_TICK_1US
 #endif
 #ifndef TICK_PER_HALF_US
-    #define TICK_PER_HALF_US (TICK_PER_US / 2)
+#define TICK_PER_HALF_US (TICK_PER_US / 2)
 #endif
 
 typedef enum
@@ -41,12 +41,12 @@ typedef enum
     SYS_CHIP_CLOCK_16M  = 6,
 } SYS_CHIP_CLOCK_ENUM;
 
-void btc_context_store(void);
+void tlk_bt_ctrl_context_store(void);
 
-void btc_context_restore(void);
+void tlk_bt_ctrl_btc_context_restore(void);
 
-void tlk_bredr_clock_init(void);
+void tlk_bt_ctrl_clock_init(void);
 
-_attribute_bt_ram_code_ uint32_t tlk_bredr_irq_type_get(void);
-
+_attribute_bt_ram_code_ uint32_t tlk_bt_ctrl_irq_type_get(void);
+_attribute_bt_ram_code_ void     tlk_bt_ctrl_timer_irq_handler(void);
 #endif //EXT_CORE_H

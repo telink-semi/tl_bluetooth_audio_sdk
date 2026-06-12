@@ -29,33 +29,34 @@
 #define BTP_COVERART_H
 
 #if (TLKBTP_CFG_COVERART_ENABLE)
-    #include "../../obex/btp_obex.h"
+#include "../../obex/btp_obex.h"
 
-    #define IMAGE_HANDLE_LEN_MAX 32 // temp for 32
-    #define IMAGE_TITLE_LEN_MAX  128
-    #define IMAGE_ARTIST_LEN_MAX 128
+#define IMAGE_HANDLE_LEN_MAX 8
+#define IMAGE_TITLE_LEN_MAX  128
+#define IMAGE_ARTIST_LEN_MAX 128
 
 typedef struct
 {
-    uint8_t imgHandleLen;
+    uint8_t  imgHandleLen;
     uint32_t totalLen;
-    uint8_t imgTitle[IMAGE_TITLE_LEN_MAX];
-    uint8_t imgArtist[IMAGE_ARTIST_LEN_MAX];
-    uint8_t imgHandle[IMAGE_HANDLE_LEN_MAX];
+    uint8_t  imgTitle[IMAGE_TITLE_LEN_MAX];
+    uint8_t  imgArtist[IMAGE_ARTIST_LEN_MAX];
+    uint8_t  imgAblum[IMAGE_ARTIST_LEN_MAX];
+    uint8_t  imgHandle[IMAGE_HANDLE_LEN_MAX];
 } btp_coverArt_unit_t;
 
 typedef struct
 {
-    uint8_t              state;
-    uint8_t              usrID;
-    uint8_t              active;
-    uint8_t              errRsp;
-    uint16_t              busys;
-    uint16_t              flags;
-    uint8_t              enAuth;
-    uint8_t              rspWait; // For Test
-    uint16_t              timeout;
-    uint8_t              isReport;
+    uint8_t             state;
+    uint8_t             usrID;
+    uint8_t             active;
+    uint8_t             errRsp;
+    uint16_t            busys;
+    uint16_t            flags;
+    uint8_t             enAuth;
+    uint8_t             rspWait; // For Test
+    uint16_t            timeout;
+    uint8_t             isReport;
     btp_obex_t          obex;
     TlkApiTimer_t       timer;
     btp_coverArt_unit_t unit;

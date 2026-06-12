@@ -383,8 +383,7 @@ static void tlkmdi_pbap_saveBookOver(bool isSucc)
     if (!sTlkMdiPhoneBookCtrl.isBusy) {
         return;
     }
-    sTlkMdiPhoneBookCtrl.isBusy    = false;
-    sTlkMdiPhoneBookCtrl.aclHandle = 0;
+    sTlkMdiPhoneBookCtrl.isBusy = false;
     if (!isSucc) {
         sTlkMdiPhoneBookCtrl.isReady = false;
         tlkmdi_pbap_phoneBookCleanInfo(sTlkMdiPhoneBookCtrl.btAddr);
@@ -393,6 +392,7 @@ static void tlkmdi_pbap_saveBookOver(bool isSucc)
         sTlkMdiPhoneBookCtrl.isReady = true;
     }
     btp_pbap_disconn(sTlkMdiPhoneBookCtrl.aclHandle, 3); //3 BTP_USRID_CLIENT
+    sTlkMdiPhoneBookCtrl.aclHandle = 0;
 }
 
 void tlkmdi_pbap_printBook(btp_pbap_info_t *pInfo)

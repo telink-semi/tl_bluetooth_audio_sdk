@@ -27,9 +27,9 @@
 #include "tlkmw/tlkmw.h"
 #include "stack/bt/host/bth/bth_stdio.h"
 #include "stack/bt/host/btp/btp_stdio.h"
-#if (TLKALG_EQ_ENABLE && !TLKMW_INTERPHONE_EN)
-#include "tlkalg/audio/eq/tlkalg_eq_interface.h"
-#endif
+// #if (TLKALG_EQ_ENABLE && !TLKMW_INTERPHONE_EN)
+// #include "tlkalg/audio/eq/tlkalg_eq_interface.h"
+// #endif
 
 #if (TLKBTP_CFG_A2DPSNK_ENABLE)
 
@@ -247,6 +247,17 @@ _attribute_ram_code_sec_ void gpio_toggle_test(uint8_t times)
 }
 
 /**
+ * @brief  Notify bt music status to others.
+ * @param[in]  pData - data pointer
+ * @param[in]  dataLen - data length
+ * @returns    None
+ */
+__attribute__((weak)) void tlkmdi_bt_music_status_notify(uint8_t status)
+{
+    (void)status;
+}
+
+/**
  * @brief  switch bt music state
  * @param[in]  handle - connection handle
  * @param[in]  status - switch status
@@ -262,7 +273,9 @@ bool tlkmdi_bt_music_switch(uint16_t handle, uint8_t status)
 
     if (status == TLK_STATE_OPENED) {
         g_bt_music_enable_flag = 1;
+#if (!TLKADU_MIDBUF_ENABLE)
         bt_music_close_codec();
+#endif
         s_tlk_mdi_bt_music_env.acl_handle = handle;
         s_tlk_mdi_bt_music_env.enable     = true;
 #if TLK_CFG_HRA_ENABLE
@@ -275,6 +288,10 @@ bool tlkmdi_bt_music_switch(uint16_t handle, uint8_t status)
         bt_music_close_codec();
         tlkmdi_btmusic_switch_out(handle);
     }
+
+#if (TLKMW_BT_1_TO_2_FORWARD_EN)
+    tlkmdi_bt_music_status_notify(status == TLK_STATE_OPENED ? 1 : 0);
+#endif
 
     return true;
 }

@@ -41,15 +41,19 @@
 
 tlkmdi_bt_tph_ctrl_t gTlkMdiHeadsetCtrl;
 
-static int tlkmdi_bt_tph_dongle_macUpdateHandler(uint8_t *pData, uint16_t dataLen);
-static int tlkmdi_bt_tph_dongle_connectHandler(uint8_t *pData, uint16_t dataLen);
-static int tlkmdi_bt_tph_dongle_disconnHandler(uint8_t *pData, uint16_t dataLen);
+static int  tlkmdi_bt_tph_dongle_macUpdateHandler(uint8_t *pData, uint16_t dataLen);
+static int  tlkmdi_bt_tph_dongle_connectHandler(uint8_t *pData, uint16_t dataLen);
+static int  tlkmdi_bt_tph_dongle_disconnHandler(uint8_t *pData, uint16_t dataLen);
+static int  tlkmdi_bt_tph_headset_recvAclDataHandler(uint8_t *pData, uint16_t dataLen);
+static void tlkmdi_bt_tph_reconBt(uint8_t retryNum);
+
 
 tlkmdi_tph_state_change_cb gInnerTlkMdiBtTphStateChgCB = NULL;
 
 TPSLL_EVT_REGISTER(TPSLL_EVTID_DONGLE_MAC_UPDATE, tlkmdi_bt_tph_dongle_macUpdateHandler);
 TPSLL_EVT_REGISTER(TPSLL_EVTID_DONGLE_CONNECT, tlkmdi_bt_tph_dongle_connectHandler);
 TPSLL_EVT_REGISTER(TPSLL_EVTID_DONGLE_DISCONNECT, tlkmdi_bt_tph_dongle_disconnHandler);
+TPSLL_EVT_REGISTER(TPSLL_EVTID_HEADSET_ACL_MSG_DEAL, tlkmdi_bt_tph_headset_recvAclDataHandler);
 
 /**
  * @brief       Initializes the Bluetooth TPH module.
@@ -59,17 +63,21 @@ TPSLL_EVT_REGISTER(TPSLL_EVTID_DONGLE_DISCONNECT, tlkmdi_bt_tph_dongle_disconnHa
  */
 void tlkmdi_bt_tph_init(void)
 {
+    tlksys_pm_regChn(TLK_PM_BUSY_CHN_USB);
+    tlksys_pm_setChn(TLK_PM_BUSY_CHN_USB, 0, 1);
+
     tlk_d25f_register_hci_receive_cb(TLK_SHARE_MEMORY_MESSAGE_TYPE_TPSLL, tlktpsll_hci_recvC2HData);
-    memset(&gTlkMdiHeadsetCtrl, 0, sizeof(tlkmdi_bt_tph_ctrl_t));
+    tlk_d25f_register_sync_receive_cb(TLK_SHARE_MEMORY_MESSAGE_TYPE_TPSLL, tlktpsll_hci_sco_recvC2HData);
+    tmemset(&gTlkMdiHeadsetCtrl, 0, sizeof(tlkmdi_bt_tph_ctrl_t));
 
     tlkmdi_tinySql_getTpsAddr(gTlkMdiHeadsetCtrl.local_addr);
-    tlkmdi_bt_tph_key_init();
+    tlkmdi_bt_tpsll_key_init();
     tlkmdi_bt_tph_pair_init();
-
+    tpsll_hci_startTpsllTaskCmd(0, NULL);
     tph_host_hal_set_local_mac(gTlkMdiHeadsetCtrl.local_addr);
     tph_host_hal_get_ac_chn_from_mac(gTlkMdiHeadsetCtrl.local_addr, (uint8_t *)&gTlkMdiHeadsetCtrl.tpsll_ac, (uint8_t *)&gTlkMdiHeadsetCtrl.tpsll_ch);
 
-    gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_IDLE;
+    gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_RECONNECTING;
 }
 
 /**
@@ -79,22 +87,27 @@ void tlkmdi_bt_tph_init(void)
  * @note        This function sets up the pairing process, cleans previous pairing data if refactory,
  *              and initiates a disconnection before starting the pairing timer.
  */
-void tlkmdi_bt_tph_pair_start(bool isRefactory)
+void tlkmdi_bt_tph_pair_start(uint8_t isRefactory)
 {
-    uint8_t reason = TPH_HOST_DISCONNECT_REASON_HEADSET_START_3S_SETUP;
+    uint8_t reason = isRefactory;
 
     tlkapi_trace(TLKMDI_BT_TPSLL_HEADSET_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_bt_tph_pair_start: factory_flag %d cur_status %d dongleIsConn %d", isRefactory,
                  gTlkMdiHeadsetCtrl.cur_status, gTlkMdiHeadsetCtrl.dongleIsConn);
 
     gTlkMdiHeadsetCtrl.startPairing = true;
-    if (isRefactory) {
+    if (reason == TPH_HOST_DISCONNECT_REASON_HEADSET_START_10S_SETUP) {
         tmemset(gTlkMdiHeadsetCtrl.addr_paired_dongle, 0, 6);
         gTlkMdiHeadsetCtrl.tpsll_ac = 0;
         gTlkMdiHeadsetCtrl.tpsll_ch = 0;
         tlkmdi_tinySql_cleanPairingDevices();
-        reason = TPH_HOST_DISCONNECT_REASON_HEADSET_START_10S_SETUP;
     }
     gTlkMdiHeadsetCtrl.disReason = reason;
+    if (gTlkMdiHeadsetCtrl.disReason == TPH_HOST_DISCONNECT_REASON_HEADSET_ENTER_ULTRA_LOW_LATENCY) {
+        if (gTlkMdiHeadsetCtrl.dongleIsConn == false) {
+            tlk_printf("tlkmdi_bt_tph_pair_start: lowLatency, dongle isn't exist!!!");
+            return;
+        }
+    }
     tph_host_hal_start_disconn(gTlkMdiHeadsetCtrl.disReason);
     // if 3s paring, start timer to wait for 3s dongle disconnect.
     gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_PAIRING_ASYNC_DISCON_WAITING;
@@ -132,8 +145,28 @@ void tlkmdi_bt_tph_handler(void)
     tlkmdi_bt_tph_pairing_handler();
 }
 
+tlkmdi_bt_tph_appUsbSuspendCallback sTlkmdiAppUsbsuspendCb = NULL;
+
+void tlkmdi_bt_tph_appUsbSuspend_register(tlkmdi_bt_tph_appUsbSuspendCallback cb)
+{
+    sTlkmdiAppUsbsuspendCb = cb;
+}
+
 /**
- * @brief       This function handles the update of the dongle MAC address. 
+ * @brief       This function handles the change of the usb suspend state at headset.
+ * @param[in]   pData - usb suspend state.
+ * @return      none.
+ * @note        none.
+ */
+void tlkmdi_bt_tph_usb_suspend_handler(void *pData, uint8_t dataLen)
+{
+    if (sTlkmdiAppUsbsuspendCb != NULL) {
+        sTlkmdiAppUsbsuspendCb(pData, dataLen);
+    }
+}
+
+/**
+ * @brief       This function handles the update of the dongle MAC address.
  *              When dongle is connected, this event will be triggered.
  * @param[in]   pData   - pointer to the data containing the new MAC address.
  * @param[in]   dataLen - length of the data.
@@ -171,7 +204,7 @@ static int tlkmdi_bt_tph_dongle_macUpdateHandler(uint8_t *pData, uint16_t dataLe
 }
 
 /**
- * @brief       This function handles the connection of the dongle. 
+ * @brief       This function handles the connection of the dongle.
  * @param[in]   pData   - pointer to the data.
  * @param[in]   dataLen - length of the data.
  * @return      TLK_ENONE on success.
@@ -182,12 +215,14 @@ static int tlkmdi_bt_tph_dongle_connectHandler(uint8_t *pData, uint16_t dataLen)
 {
     (void)dataLen;
     (void)pData;
+    gTlkMdiHeadsetCtrl.acl_mtu = pData[0];
+    tlkapi_trace(TLKMDI_BT_TPSLL_HEADSET_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_bt_tph_dongle_connHandler, acl_mtu %d", gTlkMdiHeadsetCtrl.acl_mtu);
 
     if (gInnerTlkMdiBtTphStateChgCB != NULL) {
         gInnerTlkMdiBtTphStateChgCB(TLKMDI_TPSLL_STATE_CHANGE_CB_CONNECT);
     }
     gTlkMdiHeadsetCtrl.dongleIsConn = true;
-    /* 10s pairing mode clear ac,ch and pair a new dongle, if immediately 3s pairing and BT first connect�?
+    /* 10s pairing mode clear ac,ch and pair a new dongle, if immediately 3s pairing and BT first connect�?????
        when reconnect dongle the ac and ch used 0, reconnect dongle fail. */
     tph_host_hal_get_ac_chn_from_mac(gTlkMdiHeadsetCtrl.local_addr, (uint8_t *)&gTlkMdiHeadsetCtrl.tpsll_ac, (uint8_t *)&gTlkMdiHeadsetCtrl.tpsll_ch);
     return TLK_ENONE;
@@ -223,7 +258,8 @@ static int tlkmdi_bt_tph_dongle_disconnHandler(uint8_t *pData, uint16_t dataLen)
 
     /* only headset active pair have 3/10s setup reason,
        dongle active paring the reason is "dongle_setup - 5"*/
-    if (reason == TPH_HOST_DISCONNECT_REASON_HEADSET_START_3S_SETUP || reason == TPH_HOST_DISCONNECT_REASON_HEADSET_START_10S_SETUP) {
+    if (reason == TPH_HOST_DISCONNECT_REASON_HEADSET_START_3S_SETUP || reason == TPH_HOST_DISCONNECT_REASON_HEADSET_START_10S_SETUP ||
+        reason == TPH_HOST_DISCONNECT_REASON_HEADSET_ENTER_ULTRA_LOW_LATENCY) {
         if (gTlkMdiHeadsetCtrl.timeout == 0) {
             // if 10s pairing timeout, don't care.
             tlkmdi_bt_tph_dongle_reconnStart();
@@ -235,9 +271,72 @@ static int tlkmdi_bt_tph_dongle_disconnHandler(uint8_t *pData, uint16_t dataLen)
         }
     }
 
-    if (reason == TPH_HOST_DISCONNECT_REASON_DONGLE_LINKSUPERVISION_TIMEOUT) {
+    if (reason == TPH_HOST_DISCONNECT_REASON_DONGLE_LINKSUPERVISION_TIMEOUT || reason == TPH_HOST_DISCONNECT_REASON_HEADSET_EXIT_ULTRA_LOW_LATENCY ||
+        reason == TPH_HOST_DISCONNECT_REASON_DONGLE_USB_ENTER_SUSPEND) {
+        if (gTlkMdiHeadsetCtrl.cur_status == TLKMDI_TPSLL_BT_STATUS_MSW_WAITING) {
+            gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_IDLE;
+        }
         tlkmdi_bt_tph_dongle_reconnStart();
     }
+    return TLK_ENONE;
+}
+
+/**
+ * @brief       This function handles the reception of ACL data from the dongle.
+ * @param[in]   pData   - pointer to the data.
+ * @param[in]   dataLen - length of the data.
+ * @return      TLK_ENONE on success.
+ */
+static int tlkmdi_bt_tph_headset_recvAclDataHandler(uint8_t *pData, uint16_t dataLen)
+{
+    if (pData == NULL || dataLen < 4) {
+        return -TLK_EPARAM;
+    }
+
+    uint8_t dst_id;
+    uint8_t msg_id;
+    uint8_t cmd;
+    uint8_t len;
+
+    dst_id = pData[0]; // tph_msg_dst_id_for_host_t
+    msg_id = pData[1]; // tph_msg_id_for_host_t
+    cmd    = pData[2]; // tph_pdu_cmd_acl_for_host_e
+    len    = pData[3]; // dongle acl max MTU is 180 Bytes
+    // tlkapi_array(TLKMDI_BT_TPSLL_HEADSET_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "### Recv Dongle Acl Data:", pData, dataLen);
+    (void)msg_id;
+    (void)len;
+    if (dst_id & TPH_HOST_MSG_LINK_ID_HEADSET_ALL) {
+        switch (cmd) {
+        case TPH_HOST_MSG_PDU_ACL_CMD_DFU:
+        {
+            //relay dfu data
+            tlkmw_ota_common_send_data(pData + 4, dataLen - 4, NULL);
+        } break;
+        case TPH_HOST_MSG_PDU_ACL_CMD_APP:
+        {
+            if (dataLen < 5) {
+                return -TLK_EPARAM;
+            }
+            uint8_t app_cmd = pData[4];
+            if (app_cmd == TLK_MDI_APP_VERSION_SYNC) {
+                ARRAY_TO_UINT32L(pData, 5, gTlkMdiHeadsetCtrl.dongle_ver);
+                if (gTlkMdiHeadsetCtrl.cur_status == TLKMDI_TPSLL_WAIT_VERSION_SYNC) {
+                    gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_CONNECTED;
+                    gTlkMdiHeadsetCtrl.timeout    = 0;
+                }
+            } else if (app_cmd == TLK_MDI_APP_DFU_STATUS_NOTIFY) {
+                if (len < (sizeof(sTlkMwNotifyEvent_t) + 1)) {
+                    return -TLK_EPARAM;
+                }
+                sTlkMwNotifyEvent_t *pEvent = (sTlkMwNotifyEvent_t *)(pData + 5);
+                tlk_printf("TLK_MDI_APP_DFU_STATUS_NOTIFY ots status[%d]", pEvent->status); //refer to TLK_FIRMWARE_OTA_STATUS_ENUM;
+            }
+        } break;
+        default:
+            break;
+        }
+    }
+
     return TLK_ENONE;
 }
 
@@ -279,7 +378,7 @@ void tlkmdi_bt_tph_forceToIdle(tlkmdi_tph_force_idle_finished_cb cb)
 /**
  * @brief       This function restarts the BT TPH module.
  * @return      none.
- * @note        The function initiates a restart of the BT TPH module,      
+ * @note        The function initiates a restart of the BT TPH module,
  *              setting up necessary parameters and starting reconnection.
  */
 void tlkmdi_bt_tph_restart(void)
@@ -293,4 +392,70 @@ void tlkmdi_bt_tph_restart(void)
     tlkmdi_bt_tph_dongle_reconnStart();
 }
 
+/**
+ * @brief       This function attempts to reconnect to the last paired Bluetooth device.
+ *              If the last paired device is successfully retrieved, it initiates the
+ *              reconnection process; otherwise, it enables scanning mode to discover
+ *              new devices.
+ * @param[in]   retryNum - Number of reconnect attempts
+ *
+ * Note:        The actual reconnection is only performed when the TLK_MW_BTREC_ENABLE
+ *              macro is enabled, otherwise only the scanning mode is set.
+ */
+static void tlkmdi_bt_tph_reconBt(uint8_t retryNum)
+{
+    uint32_t devClass;
+    uint8_t  devAddr[6];
+
+    int ret = tlkmdi_tinySql_getLastPairingDevice(devAddr, &devClass, NULL, NULL);
+    if (ret == TLK_ENONE) {
+#if TLK_MW_BTREC_ENABLE
+        tlkmdi_btRecon_start(devAddr, devClass, retryNum);
+#endif
+    } else {
+        tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_BOTH_SCAN, 120);
+    }
+}
+
+/**
+ * @brief       This function handles the event when peer device exits low latency mode.
+ *              It updates the connection status and triggers reconnection if needed.
+ * @param[in]   data    - pointer to received data
+ * @param[in]   dataLen - length of received data
+ * @return      none.
+ * @note
+ */
+void tlkmdi_bt_tph_exitLowLatencyMode(void)
+{
+    if (gTlkMdiHeadsetCtrl.disReason != TPH_HOST_DISCONNECT_REASON_HEADSET_ENTER_ULTRA_LOW_LATENCY) {
+        return;
+    }
+
+    /* Check if dongle is connected and no BT ACL link exists */
+    if (gTlkMdiHeadsetCtrl.dongleIsConn != true) {
+        tlkapi_error(TLKMDI_BT_TPSLL_HEADSET_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_bt_tph_exitLowLatencyMode: dongle not exist!");
+        return;
+    }
+
+    tlkapi_trace(TLKMDI_BT_TPSLL_HEADSET_DBG_FLAG, TLKMDI_BTACL_DBG_SIGN, "tlkmdi_bt_tph_exitLowLatencyMode: cur_status %d", gTlkMdiHeadsetCtrl.cur_status);
+
+    /* Set mode to idle and status to mode switch waiting */
+    gTlkMdiHeadsetCtrl.disReason  = TPH_HOST_DISCONNECT_REASON_HEADSET_EXIT_ULTRA_LOW_LATENCY;
+    gTlkMdiHeadsetCtrl.cur_status = TLKMDI_TPSLL_BT_STATUS_MSW_WAITING;
+
+    tph_host_hal_start_disconn(gTlkMdiHeadsetCtrl.disReason);
+    tlkmdi_bt_tph_reconBt(TLKMDI_BTRECON_RETRY_NUM_POWERON);
+}
+
+/**
+ * @brief       This function handles the OTA data from to phone and send to dongle.
+ * @param[in]   data    - pointer to received data
+ * @param[in]   dataLen - length of received data
+ * @return      none.
+ * @note
+ */
+void tlkmdi_bt_tph_send_dfu_data(uint8_t *pData, uint8_t dataLen)
+{
+    tph_host_hal_send_pdu_msg(TPH_HOST_MSG_PDU_ACL_CMD_DFU, pData, dataLen, NULL);
+}
 #endif // #if (TLK_STK_BT_TPSLL_ENABLE)

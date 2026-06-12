@@ -489,6 +489,53 @@ struct gattc_characteristic_value_write_info
  */
 int ble_host_gattc_read_characteristic_value_write(uint16_t conn_handle, uint16_t cid, uint16_t handle, const struct gattc_characteristic_value_write_info *param);
 
+/** @brief Structure for read or read long or read multiple or read multiple variable length characteristic value procedure. */
+struct gattc_read_characteristic_value_finish
+{
+    uint16_t       handle;    /** < attribute handle of the characteristic value to be read */
+    uint16_t       length;    /** < length of the data to be read */
+    const uint8_t *buffer;    /** < buffer to store the read data */
+    void          *user_data; /** < user data to be passed to the callback */
+};
+
+/**
+ *  @brief  Typedef for a function pointer to a callback function for read characteristic value finish procedure.
+ *
+ *  @param[out] conn_handle: Connection handle.
+ *  @param[out] cid: Channel ID.
+ *  @param[out] err refer to enum ble_err_code.
+ *  @param[out] param: Pointer to the structure containing the read characteristic value procedure parameters.
+ *
+ *  @return none.
+ */
+typedef void (*ble_host_gattc_read_value_finish_callback)(uint16_t conn_handle, uint16_t cid, uint32_t err, const struct gattc_read_characteristic_value_finish *param);
+
+/** < @brief Structure for read characteristic value finish. */
+struct gattc_characteristic_value_finish_info
+{
+    void *user_data; /** < user data to be passed to the callback */
+    /** < callback function to be called when the procedure is updated */
+    ble_host_gattc_read_value_finish_callback callback;
+};
+
+/**
+ *   @brief GATT client start read characteristic value procedure, and read finish callback.
+ *
+ *   @param[in] conn_handle Connection handle to be used for the procedure.
+ *   @param[in] cid Channel ID.
+ *   @param[in] handle Attribute handle of the characteristic value to be read.
+ *   @param[in] param Pointer to the structure containing the read characteristic value parameters.
+ *
+ *   @return BLE_HOST_ERR_SUCC if the request is sent successfully, otherwise an error code.
+ *            - BLE_GATT_ERR_INVALID_CONN_HANDLE if the connection handle is invalid.
+ *            - BLE_GATT_ERR_INVALID_PARAM if the parameter is invalid.
+ *            - BLE_GATT_ERR_INVALID_ATTR_HANDLE if the attribute handle is invalid.
+ *            - BLE_GATT_ERR_INSUFFICIENT_RESOURCES if there are insufficient resources to start the procedure.
+ *
+ *   @note This procedure is used to read a characteristic value, and write data into buffer,
+ */
+int ble_host_gattc_read_characteristic_value_finish(uint16_t conn_handle, uint16_t cid, uint16_t handle, struct gattc_characteristic_value_finish_info *param);
+
 /** @brief Structure for read Using Characteristic UUID procedure. */
 struct gattc_read_using_characteristic_uuid_param
 {

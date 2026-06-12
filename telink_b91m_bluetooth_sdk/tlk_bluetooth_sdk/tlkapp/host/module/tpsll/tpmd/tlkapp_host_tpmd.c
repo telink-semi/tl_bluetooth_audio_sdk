@@ -37,7 +37,7 @@
 static void tlkapp_host_tpmd_stateChgCB(uint8_t state)
 {
     tlkapi_printf(1, "tlkapp_host_tpmd_stateChgCB: %d", state);
-    if(state == TLKMDI_TPMD_STATE_CHANGE_CB_CONNECT){
+    if (state == TLKMDI_TPMD_STATE_CHANGE_CB_CONNECT) {
         tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_TPSLL, 0xFFF0, TLKAPP_UI_STATE_CONNECTED);
         tlkapp_audioScheduler_taskInfo_t info = {
             .audioType = TLKAPP_AUDIO_SCHEDULER_AUDIO_TYPE_MUSIC_AND_VOICE,
@@ -48,16 +48,15 @@ static void tlkapp_host_tpmd_stateChgCB(uint8_t state)
 
         uint32_t taskID = 0xFFF0 + ((uint32_t)TLKAUD_TYPE_TPD_AUDIO << 16);
         tlkapp_audioScheduler_updateTaskSafe(taskID, info, 0);
-    }else if(state == TLKMDI_TPMD_STATE_CHANGE_CB_DISCONNECT){
+    } else if (state == TLKMDI_TPMD_STATE_CHANGE_CB_DISCONNECT) {
         tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_TPSLL, 0xFFF0, TLKAPP_UI_STATE_IDLE);
 
         uint32_t taskID = 0xFFF0 + ((uint32_t)TLKAUD_TYPE_TPD_AUDIO << 16);
         tlkapp_audioScheduler_deleteTaskSafe(taskID);
-    }else if(state == TLKMDI_TPMD_STATE_CHANGE_CB_PAIR){
+    } else if (state == TLKMDI_TPMD_STATE_CHANGE_CB_PAIR) {
         tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_SYS, 0, TLKAPP_UI_STATE_PARING);
     }
 }
-
 
 /**
  * @brief       Initializes the Tpsll Mesh Dongle module.
@@ -66,7 +65,7 @@ static void tlkapp_host_tpmd_stateChgCB(uint8_t state)
  */
 static void tlkapp_host_tpmd_init(void)
 {
-//    tpd_controller_init();
+    //    tpd_controller_init();
     tlkmdi_mesh_audio_dongle_init();
     tlkmdi_tpmd_regStateChgCB(tlkapp_host_tpmd_stateChgCB);
 }
@@ -98,14 +97,14 @@ static int tlkapp_host_tpmd_input(uint16_t msgID, uint8_t *pData, uint16_t dataL
         return TLK_ENONE;
     } else if (msgID == TLKSYS_TPMD_MSGID_SWITCH_USB_MODE) {
         extern uint8_t tlkusb_get_curMode(uint8_t index);
-        uint8_t mode = tlkusb_get_curMode(TLK_CFG_USB_UDB_INDEX);
+        uint8_t        mode = tlkusb_get_curMode(TLK_CFG_USB_UDB_INDEX);
 
         tlkusb_close(TLK_CFG_USB_UDB_INDEX);
         delay_ms(30);
 
         if (mode == TLKUSB_MODTYPE_UDB) {
             tlkusb_setModule(TLK_CFG_USB_UDB_INDEX, TLKUSB_MODTYPE_UAC);
-        } else if (mode == TLKUSB_MODTYPE_UAC){
+        } else if (mode == TLKUSB_MODTYPE_UAC) {
             tlkusb_setModule(TLK_CFG_USB_UDB_INDEX, TLKUSB_MODTYPE_UDB);
         }
         tlkapi_printf(1, "mesh dongle usb mode switch to %d", !mode);
@@ -119,13 +118,13 @@ static int tlkapp_host_tpmd_input(uint16_t msgID, uint8_t *pData, uint16_t dataL
  * @param[in]   none.
  * @return      Returns a pointer to the Tpsll Mesh Dongle module.
  */
-TlkAppHostModule_t* tlkapp_host_tpmd_getModule(void)
+TlkAppHostModule_t *tlkapp_host_tpmd_getModule(void)
 {
     static const TlkAppHostModuleCfg_t cfgs = {
         .hostType = TLKSYS_MSG_HOST_TYPE_TPMD,
-        .init    = tlkapp_host_tpmd_init,
-        .start   = tlkapp_host_tpmd_start,
-        .input   = tlkapp_host_tpmd_input,
+        .init     = tlkapp_host_tpmd_init,
+        .start    = tlkapp_host_tpmd_start,
+        .input    = tlkapp_host_tpmd_input,
     };
     static TlkAppHostModule_t module = {
         .cfgs = &cfgs,

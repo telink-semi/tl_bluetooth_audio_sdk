@@ -33,7 +33,7 @@
  * @param[in]  user_data   - User data to be passed to callback function
  * @return     bool - true if timer creation is successful, false otherwise
  */
-bool tlk_ota_timer_porting_create(tlk_ota_timer_handle_t *timer, uint32_t timeout_ms, timer_callback_t callback, void *user_data) 
+bool tlk_ota_timer_porting_create(tlk_ota_timer_handle_t *timer, uint32_t timeout_ms, timer_callback_t callback, void *user_data)
 {
     int ret = tlksys_timer_create(TLKSYS_TASKID_SYSTEM, timer, timeout_ms * 1000, true, callback, user_data);
     return ret == TLK_ENONE;
@@ -44,7 +44,7 @@ bool tlk_ota_timer_porting_create(tlk_ota_timer_handle_t *timer, uint32_t timeou
  * @param[in]  timer - Timer handle to start
  * @return     bool - true if timer start is successful, false otherwise
  */
-bool tlk_ota_timer_porting_start(tlk_ota_timer_handle_t timer) 
+bool tlk_ota_timer_porting_start(tlk_ota_timer_handle_t timer)
 {
     int ret = tlksys_timer_start(TLKSYS_TASKID_SYSTEM, timer);
     return ret == TLK_ENONE;
@@ -55,7 +55,7 @@ bool tlk_ota_timer_porting_start(tlk_ota_timer_handle_t timer)
  * @param[in]  timer - Timer handle to stop
  * @return     bool - true if timer stop is successful, false otherwise
  */
-bool tlk_ota_timer_porting_stop(tlk_ota_timer_handle_t timer) 
+bool tlk_ota_timer_porting_stop(tlk_ota_timer_handle_t timer)
 {
     int ret = tlksys_timer_stop(TLKSYS_TASKID_SYSTEM, timer);
     return ret == TLK_ENONE;
@@ -67,7 +67,7 @@ bool tlk_ota_timer_porting_stop(tlk_ota_timer_handle_t timer)
  * @param[in]  new_timeout_ms - New timeout value in milliseconds
  * @return     bool - true if timer reset is successful, false otherwise
  */
-bool tlk_ota_timer_porting_reset_timeout(tlk_ota_timer_handle_t timer, uint32_t new_timeout_ms) 
+bool tlk_ota_timer_porting_reset_timeout(tlk_ota_timer_handle_t timer, uint32_t new_timeout_ms)
 {
     int ret = tlksys_timer_setPeriod(TLKSYS_TASKID_SYSTEM, timer, new_timeout_ms * 1000);
     return ret == TLK_ENONE;
@@ -78,7 +78,7 @@ bool tlk_ota_timer_porting_reset_timeout(tlk_ota_timer_handle_t timer, uint32_t 
  * @param[in]  timer - Timer handle to destroy
  * @return     bool - true if timer destruction is successful, false otherwise
  */
-bool tlk_ota_timer_porting_destroy(tlk_ota_timer_handle_t timer) 
+bool tlk_ota_timer_porting_destroy(tlk_ota_timer_handle_t timer)
 {
     int ret = tlksys_timer_destroy(TLKSYS_TASKID_SYSTEM, timer);
     return ret == TLK_ENONE;
@@ -90,7 +90,7 @@ bool tlk_ota_timer_porting_destroy(tlk_ota_timer_handle_t timer)
  * @return     bool - true if timer is running, false otherwise
  * @note       Currently not implemented, always returns false
  */
-bool tlk_ota_timer_porting_is_running(tlk_ota_timer_handle_t timer) 
+bool tlk_ota_timer_porting_is_running(tlk_ota_timer_handle_t timer)
 {
     (void)timer;
     return false;

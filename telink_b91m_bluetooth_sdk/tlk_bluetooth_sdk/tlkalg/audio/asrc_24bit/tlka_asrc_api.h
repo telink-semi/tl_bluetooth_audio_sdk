@@ -29,13 +29,13 @@
 #endif
 
 #define ASRC_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
-#define ASRC_VERSION ASRC_VERSION_INT(0, 10, 0)
+#define ASRC_VERSION                          ASRC_VERSION_INT(0, 10, 0)
 
 /** src **/
-#define ASRC_FRAME_LEN_MAX 480  //10ms@48khz
+#define ASRC_FRAME_LEN_MAX 480 //10ms@48khz
 
 // old algo only
-#define ASRC_DATA_LEN_MAX (ASRC_FRAME_LEN_MAX * 4)
+#define ASRC_DATA_LEN_MAX   (ASRC_FRAME_LEN_MAX * 4)
 #define ASRC_FILTER_LEN_MAX (48 * 8)
 
 // hp algo
@@ -73,7 +73,7 @@ typedef enum
     TLKA_ASRC_192_TO_8,
     TLKA_ASRC_8_TO_16,
     TLKA_ASRC_16_TO_8,
-    TLKA_ASRC_SFO,		//only ppm compensation
+    TLKA_ASRC_SFO, //only ppm compensation
     TLKA_ASRC_FLAG_END
 } TLKA_ASRC_FLAGS;
 
@@ -87,8 +87,8 @@ typedef enum
 
 typedef enum
 {
-    TLKA_ASRC_OK = 0,
-    TLKA_ASRC_INVALID_TAG = -1,
+    TLKA_ASRC_OK              = 0,
+    TLKA_ASRC_INVALID_TAG     = -1,
     TLKA_ASRC_INVALID_CHANNEL = -2
 } TLKA_ASRC_ERROR;
 
@@ -97,18 +97,18 @@ typedef struct TLKA_ASRC_PARAM
 {
     unsigned int num_rate;
     unsigned int den_rate;
-    int int_advance;
-    int frac_advance;
-    float cutoff;
-    int filter_len;
+    int          int_advance;
+    int          frac_advance;
+    float        cutoff;
+    int          filter_len;
     unsigned int oversample;
-    int initialised;
-    int started;
-    int stereo;
+    int          initialised;
+    int          started;
+    int          stereo;
 
     TLKA_ASRC_FLAGS asrc_tag;
     // TLKA_ASRC_CHANNEL channel_mode;
-    int last_sample;
+    int          last_sample;
     unsigned int samp_frac_num;
 
     // short *src_buf_left;
@@ -119,7 +119,6 @@ typedef struct TLKA_ASRC_PARAM
 
     // resampler_basic_func resampler_ptr;
 } tlka_asrc_param;
-
 
 /* data struct */
 #if 0 //24-bit fast asrc disabled
@@ -171,12 +170,12 @@ typedef struct TLKA_ASRC_16_BIT_HP_PARAM
     int int_osr;
 
     TLKA_ASRC_FLAGS asrc_tag;
-    int last_sample;
-    unsigned int samp_frac_num;
+    int             last_sample;
+    unsigned int    samp_frac_num;
 
     int stereo;
 
-    int hp_coeff_num;
+    int    hp_coeff_num;
     short *hp_coeff;
 
     short hp_buf_l[HP_BUF_LEN];
@@ -184,14 +183,13 @@ typedef struct TLKA_ASRC_16_BIT_HP_PARAM
     short hp_filt_l_stat[HP_BUF_LEN];
     void *hp_filter_l;
 
-    short* hp_buf_r;
-    short* hp_filt_r;
-    short* hp_filt_r_stat;
-    void *hp_filter_r;
+    short *hp_buf_r;
+    short *hp_filt_r;
+    short *hp_filt_r_stat;
+    void  *hp_filter_r;
 
     int mode;
 } tlka_asrc_16_bit_hp_param;
-
 
 /* data struct */
 typedef struct TLKA_ASRC_24_BIT_HP_PARAM
@@ -206,22 +204,22 @@ typedef struct TLKA_ASRC_24_BIT_HP_PARAM
     int int_osr;
 
     TLKA_ASRC_FLAGS asrc_tag;
-    int last_sample;
-    unsigned int samp_frac_num;
+    int             last_sample;
+    unsigned int    samp_frac_num;
 
     int stereo;
 
-    int hp_coeff_num;
+    int  hp_coeff_num;
     int *hp_coeff;
 
-    int hp_buf_l[HP_BUF_LEN];
-    int hp_filt_l[HP_BUF_LEN];
-    int hp_filt_l_stat[HP_BUF_LEN];
+    int   hp_buf_l[HP_BUF_LEN];
+    int   hp_filt_l[HP_BUF_LEN];
+    int   hp_filt_l_stat[HP_BUF_LEN];
     void *hp_filter_l;
 
-    int* hp_buf_r;
-    int* hp_filt_r;
-    int* hp_filt_r_stat;
+    int  *hp_buf_r;
+    int  *hp_filt_r;
+    int  *hp_filt_r_stat;
     void *hp_filter_r;
 
     int mode;
@@ -230,11 +228,10 @@ typedef struct TLKA_ASRC_24_BIT_HP_PARAM
 /* hp mode  */
 typedef enum
 {
-	TLKA_ASRC_FASTMODE = 0,
+    TLKA_ASRC_FASTMODE = 0,
     TLKA_ASRC_HPMODE
 
 } TLKA_ASRC_MODE;
-
 
 int tlka_asrc_get_version(void);
 /*---------------------------------------------------------------*
@@ -242,13 +239,13 @@ int tlka_asrc_get_version(void);
  * channel : defined the input channel type                      *
  *---------------------------------------------------------------*/
 TLKA_ASRC_ERROR tlka_asrc_16_bit_get_size(TLKA_ASRC_FLAGS flag, TLKA_ASRC_CHANNEL channel);
-int tlka_asrc_16_bit_init(void *state, TLKA_ASRC_FLAGS flag, TLKA_ASRC_CHANNEL channel);
+int             tlka_asrc_16_bit_init(void *state, TLKA_ASRC_FLAGS flag, TLKA_ASRC_CHANNEL channel);
 
 TLKA_ASRC_ERROR tlka_asrc_16_bit_hp_get_size(TLKA_ASRC_CHANNEL channel);
-int tlka_asrc_16_bit_hp_init(void *state, TLKA_ASRC_FLAGS flag, TLKA_ASRC_CHANNEL channel, int ppm);
+int             tlka_asrc_16_bit_hp_init(void *state, TLKA_ASRC_FLAGS flag, TLKA_ASRC_CHANNEL channel, int ppm);
 
 TLKA_ASRC_ERROR tlka_asrc_24_bit_hp_get_size(TLKA_ASRC_CHANNEL channel);
-int tlka_asrc_24_bit_hp_init(void *state, TLKA_ASRC_FLAGS flag, TLKA_ASRC_CHANNEL channel, int ppm);
+int             tlka_asrc_24_bit_hp_init(void *state, TLKA_ASRC_FLAGS flag, TLKA_ASRC_CHANNEL channel, int ppm);
 
 /*---------------------------------------------------------------*
  * name : tlka_asrc_process_frame                                *

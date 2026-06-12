@@ -24,10 +24,10 @@
 #include "tl_common.h"
 #include "tlkapi/tlkapi.h"
 #if (TLK_CFG_UART_TOOL_ENABLE)
-    #include "tlkalg/digest/crc/tlkalg_crc.h"
-    #include "tlkspto.h"
-    #include "tlkspto_recv.h"
-    #include "tlkspto_send.h"
+#include "tlkalg/digest/crc/tlkalg_crc.h"
+#include "tlkspto.h"
+#include "tlkspto_recv.h"
+#include "tlkspto_send.h"
 
 /**
  * @brief       Reset the Serial Protocol module.
@@ -64,7 +64,7 @@ int tlkspto_sendProc(uint32_t param0, uint32_t param1, uint8_t *pData, uint16_t 
 
     ptype = param0 & 0xFF;
     if (ptype == TLKPRT_COMM_PTYPE_CMD || ptype == TLKPRT_COMM_PTYPE_EVT) {
-        uint8_t mtype;
+        uint8_t  mtype;
         uint16_t msgID;
         mtype = (param0 & 0xFF00) >> 8;
         msgID = (param0 & 0x0FFF0000) >> 16;
@@ -74,17 +74,17 @@ int tlkspto_sendProc(uint32_t param0, uint32_t param1, uint8_t *pData, uint16_t 
             return tlkspto_send_evt(mtype, msgID, pData, dataLen);
         }
     } else if (ptype == TLKPRT_COMM_PTYPE_RSP) {
-        uint8_t mtype;
+        uint8_t  mtype;
         uint16_t msgID;
-        uint8_t status;
-        uint8_t reason;
+        uint8_t  status;
+        uint8_t  reason;
         mtype  = (param0 & 0xFF00) >> 8;
         msgID  = (param0 & 0x0FFF0000) >> 16;
         status = param1 & 0xFF;
         reason = (param1 & 0xFF00) >> 8;
         return tlkspto_send_rsp(mtype, msgID, status, reason, pData, dataLen);
     } else if (ptype == TLKPRT_COMM_PTYPE_DAT) {
-        uint8_t datID;
+        uint8_t  datID;
         uint32_t number;
         datID  = (param0 & 0xFF00) >> 8;
         number = (param1 & 0x0FFFFF);

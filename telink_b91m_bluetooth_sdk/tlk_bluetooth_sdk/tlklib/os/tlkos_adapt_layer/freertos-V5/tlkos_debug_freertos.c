@@ -33,6 +33,9 @@
 #include "tlklib/os/3rd-party/freertos-V5/include/FreeRTOS.h"
 #include "tlklib/os/3rd-party/freertos-V5/include/task.h"
 
+/* Telink custom function to get system state for debug purposes */
+UBaseType_t uxTaskGetSystemState_tlk_debug(TaskStatus_t *const pxTaskStatusArray, const UBaseType_t uxArraySize, uint32_t *const pulTotalRunTime);
+
 #define TLKOS_DEBUG_TASK_MAX_NUM 10
 
 typedef enum
@@ -70,7 +73,7 @@ static const char *tlkos_debug_freeRTOSCoreInfo(void)
     } else if (tlkos_debug_info_sm == TLKOS_DEBUG_FREERTOS_INFO_SM_TITLE) {
         sprintf(tlkos_debug_info_logBuf, "TaskName\tWaterMark\tTask State\tStackBase\n");
         tlkos_debug_info_sm = TLKOS_DEBUG_FREERTOS_INFO_SM_TASK_INF0;
-        uxTaskGetSystemState(pxTaskStatusArray, TLKOS_DEBUG_TASK_MAX_NUM, NULL);
+        uxTaskGetSystemState_tlk_debug(pxTaskStatusArray, TLKOS_DEBUG_TASK_MAX_NUM, NULL);
 
     } else if (tlkos_debug_info_sm == TLKOS_DEBUG_FREERTOS_INFO_SM_TASK_INF0) {
         if (uxTaskGetNumberOfTasks() <= tlkos_debug_info_taskIndex) {

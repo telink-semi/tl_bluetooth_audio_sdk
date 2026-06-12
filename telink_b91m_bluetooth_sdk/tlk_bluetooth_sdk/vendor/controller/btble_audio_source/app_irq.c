@@ -98,7 +98,7 @@ _attribute_retention_code_ void stimer_irq_handler(void)
 {
     DBG_CHN15_HIGH;
 
-    tlksdk_irq_handler(IRQ_SYSTIMER);
+    tlk_sys_irq_handler(IRQ_SYSTIMER);
 
     DBG_CHN15_LOW;
 }
@@ -117,7 +117,7 @@ _attribute_retention_code_ void ble_rf_irq_handler(void)
 {
     DBG_CHN14_HIGH;
 
-    tlksdk_irq_handler(IRQ_ZB_RT);
+    tlk_sys_irq_handler(IRQ_ZB_RT);
 
     DBG_CHN14_LOW;
 }
@@ -135,7 +135,7 @@ PLIC_ISR_REGISTER(ble_rf_irq_handler, IRQ_ZB_RT)
  */
 _attribute_retention_code_ void bt_rf_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_ZB_BT);
+    tlk_sys_irq_handler(IRQ_ZB_BT);
 }
 #if MCU_CORE_N22
 CLIC_ISR_REGISTER(bt_rf_irq_handler, IRQ_ZB_BT)
@@ -153,7 +153,7 @@ PLIC_ISR_REGISTER(bt_rf_irq_handler, IRQ_ZB_BT)
  */
 _attribute_retention_code_ void bt_rf_dm_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_ZB_BT_DM);
+    tlk_sys_irq_handler(IRQ_ZB_BT_DM);
 }
 #if MCU_CORE_N22
 CLIC_ISR_REGISTER(bt_rf_dm_irq_handler, IRQ_ZB_BT_DM)

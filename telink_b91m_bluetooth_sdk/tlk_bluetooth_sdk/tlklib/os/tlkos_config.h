@@ -27,72 +27,78 @@
 #include "vendor/common/user_config.h"
 
 #if !TLK_CFG_RTOS_ENABLE
-#define TLKOS_CFG_BAREMETAL_ENABLE    1
-#define TLKOS_CFG_FREERTOS_ENABLE     0
+#define TLKOS_CFG_BAREMETAL_ENABLE 1
+#define TLKOS_CFG_FREERTOS_ENABLE  0
 #else
-#define TLKOS_CFG_BAREMETAL_ENABLE    0
-#define TLKOS_CFG_FREERTOS_ENABLE     1
-#endif 
+#define TLKOS_CFG_BAREMETAL_ENABLE 0
+#define TLKOS_CFG_FREERTOS_ENABLE  1
+#endif
 
 #ifndef TLKOS_CFG_USE_LOWER_RAM_SIZE
 #if MCU_CORE_TYPE == MCU_CORE_TL752X
-#define TLKOS_CFG_USE_LOWER_RAM_SIZE  1
+#define TLKOS_CFG_USE_LOWER_RAM_SIZE 1
 #else
-#define TLKOS_CFG_USE_LOWER_RAM_SIZE  0
+#define TLKOS_CFG_USE_LOWER_RAM_SIZE 0
 #endif
 #endif
 
 #ifndef TLKOS_CFG_BAREMETAL_HEAP_SIZE
-#define TLKOS_CFG_BAREMETAL_HEAP_SIZE (8 * 1024)
+#define TLKOS_CFG_BAREMETAL_HEAP_SIZE (14 * 1024)
 #endif
 
 #ifndef TLKOS_CFG_OS_HEAP_SIZE
-#define TLKOS_CFG_OS_HEAP_SIZE        (30 * 1024)
+#define TLKOS_CFG_OS_HEAP_SIZE (20 * 1024)
 #endif
+
+#define TLKOS_CFG_OS_HEAP_ALG_HEAP4       0 //FreeRTOS heap4
+#define TLKOS_CFG_OS_HEAP_ALG_HEAP5       1 //temp not ok
+#define TLKOS_CFG_OS_HEAP_ALG_HEAP4_SPLIT 2 //FreeRTOS heap4 + change by telink
+#define TLKOS_CFG_OS_HEAP_ALG_TLK         3 //just for internal debug
+#define TLKOS_CFG_OS_HEAP_ALG_TLSF        4 //temp not ok
+
+#define TLKOS_CFG_OS_HEAP_ALG_SELECT      TLKOS_CFG_OS_HEAP_ALG_HEAP4
 
 #ifndef TLKOS_CFG_HEART_TIMER_TICK_HZ
 #define TLKOS_CFG_HEART_TIMER_TICK_HZ (32000UL) //32768(ext_clock) 32000(internal_clock)
-#endif 
+#endif
 
 #ifndef TLKOS_CFG_OS_TICK_HZ
-#define TLKOS_CFG_OS_TICK_HZ          (1000)     //1ms
+#define TLKOS_CFG_OS_TICK_HZ (1000) //1ms
 #endif
 
 #ifndef TLKOS_CFG_PLIC_STACK_SIZE_WORD
-#define TLKOS_CFG_PLIC_STACK_SIZE_WORD    (1024 * 1)
+#define TLKOS_CFG_PLIC_STACK_SIZE_WORD (1024 * 1)
 #endif
 
 #ifndef TLKOS_CFG_DEBUG_ENABLE
-#define TLKOS_CFG_DEBUG_ENABLE             (1 && TLK_CFG_RTOS_ENABLE)
+#define TLKOS_CFG_DEBUG_ENABLE (1 && TLK_CFG_RTOS_ENABLE)
 #endif
 
 #ifndef TLKOS_CFG_DEBUG_INFO_OUT
-#define TLKOS_CFG_DEBUG_INFO_OUT           ((!TLKOS_CFG_USE_LOWER_RAM_SIZE) && TLKOS_CFG_DEBUG_ENABLE)
+#define TLKOS_CFG_DEBUG_INFO_OUT ((!TLKOS_CFG_USE_LOWER_RAM_SIZE) && TLKOS_CFG_DEBUG_ENABLE)
 #endif
-#define TLKOS_CFG_DEBUG_IO_ENABLE          (0 && TLKOS_CFG_DEBUG_ENABLE)
-#define TLKOS_CFG_DEBUG_STACK_OVERFLOW     (0 && TLKOS_CFG_DEBUG_ENABLE)
-#define TLKOS_CFG_DEBUG_MALLOC_FAIL        (1 && TLKOS_CFG_DEBUG_ENABLE)
-#define TLKOS_CFG_DEBUG_CPU_USAGE          (0 && TLKOS_CFG_DEBUG_ENABLE)
+#define TLKOS_CFG_DEBUG_IO_ENABLE      (0 && TLKOS_CFG_DEBUG_ENABLE)
+#define TLKOS_CFG_DEBUG_STACK_OVERFLOW (0 && TLKOS_CFG_DEBUG_ENABLE)
+#define TLKOS_CFG_DEBUG_MALLOC_FAIL    (1 && TLKOS_CFG_DEBUG_ENABLE)
+#define TLKOS_CFG_DEBUG_CPU_USAGE      (0 && TLKOS_CFG_DEBUG_ENABLE)
 
-#define TLKOS_CFG_TICKLESS_ENABLE     (TLK_CFG_SUSPEND_ENABLE)
-
-
+#define TLKOS_CFG_TICKLESS_ENABLE      (TLK_CFG_SUSPEND_ENABLE)
 
 
-#define TLKOS_CFG_CHECK_OS_ENABLE_NUM ((TLKOS_CFG_BAREMETAL_ENABLE) + (TLKOS_CFG_FREERTOS_ENABLE))
+#define TLKOS_CFG_CHECK_OS_ENABLE_NUM  ((TLKOS_CFG_BAREMETAL_ENABLE) + (TLKOS_CFG_FREERTOS_ENABLE))
 
 #if (TLKOS_CFG_CHECK_OS_ENABLE_NUM) != 1
-    #error "TLK_OS_CFG_CHECK_OS_ENABLE_NUM NOT EQUAL TO 1"
+#error "TLK_OS_CFG_CHECK_OS_ENABLE_NUM NOT EQUAL TO 1"
 #endif
 
 
-#define _attribute_os_core_code_ram_sec_ __attribute__((section(".ram_code"))) __attribute__((optimize("O2"))) 
-#define _attribute_os_core_code_flash_sec_ __attribute__((optimize("O2"))) 
+#define _attribute_os_core_code_ram_sec_   __attribute__((section(".ram_code"))) __attribute__((optimize("O2")))
+#define _attribute_os_core_code_flash_sec_ __attribute__((optimize("O2")))
 
 #if MCU_DUAL_CORE_ENABLE
-#define _attribute_os_heap_sec_ __attribute__((section(".iram_data"))) 
+#define _attribute_os_heap_sec_ __attribute__((section(".iram_data")))
 #else
-#define _attribute_os_heap_sec_ 
+#define _attribute_os_heap_sec_
 #endif
 
-#define TLKOS_ASSERT(x) 
+#define TLKOS_ASSERT(x)

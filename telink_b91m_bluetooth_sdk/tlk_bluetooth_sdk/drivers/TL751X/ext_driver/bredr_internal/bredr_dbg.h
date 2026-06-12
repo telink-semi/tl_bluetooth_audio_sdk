@@ -25,11 +25,11 @@
 #define BTC_DBG_H
 
 #ifndef BT_DIAG_DEBUG_VCD
-	#if TLK_LOW_POWER_ENABLE || SDK_RELEASE_CHECK_EN
-		#define BT_DIAG_DEBUG_VCD 0
-    #else
-		#define BT_DIAG_DEBUG_VCD 0
-	#endif
+#if TLK_LOW_POWER_ENABLE || SDK_RELEASE_CHECK_EN
+#define BT_DIAG_DEBUG_VCD 0
+#else
+#define BT_DIAG_DEBUG_VCD 0
+#endif
 #endif
 
 //LOOPBACK or not

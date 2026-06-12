@@ -34,19 +34,19 @@ static TlkAppHostModule_t *head = NULL;
  */
 void tlkapp_host_addModule(TlkAppHostModule_t *module)
 {
-    if(module == NULL || module->next != NULL){
+    if (module == NULL || module->next != NULL) {
         return;
     }
-    if(head == NULL){
+    if (head == NULL) {
         head = module;
-    }else{
+    } else {
         TlkAppHostModule_t *current = head;
-        while (current->next != NULL){
+        while (current->next != NULL) {
             current = current->next;
         }
         current->next = module;
     }
-    if(module->cfgs->init){
+    if (module->cfgs->init) {
         module->cfgs->init();
     }
 }
@@ -59,8 +59,8 @@ void tlkapp_host_addModule(TlkAppHostModule_t *module)
 void tlkapp_host_startAllModules(void)
 {
     TlkAppHostModule_t *current = head;
-    while (current != NULL){
-        if (current->cfgs->start != NULL){
+    while (current != NULL) {
+        if (current->cfgs->start != NULL) {
             current->cfgs->start();
         }
         current = current->next;
@@ -75,8 +75,8 @@ void tlkapp_host_startAllModules(void)
 void tlkapp_host_handleAllModules(void)
 {
     TlkAppHostModule_t *current = head;
-    while (current != NULL){
-        if (current->cfgs->handler != NULL){
+    while (current != NULL) {
+        if (current->cfgs->handler != NULL) {
             current->cfgs->handler();
         }
         current = current->next;
@@ -92,10 +92,10 @@ void tlkapp_host_handleAllModules(void)
  */
 int tlkapp_host_msgHandleAllModules(uint16_t msgID, uint8_t *pData, uint16_t dataLen)
 {
-    TlkAppHostModule_t *current = head;
-    uint8_t hostType = msgID >> 8;
-    while (current != NULL){
-        if (current->cfgs->input != NULL && hostType == current->cfgs->hostType){
+    TlkAppHostModule_t *current  = head;
+    uint8_t             hostType = msgID >> 8;
+    while (current != NULL) {
+        if (current->cfgs->input != NULL && hostType == current->cfgs->hostType) {
             return current->cfgs->input(msgID, pData, dataLen);
         }
         current = current->next;

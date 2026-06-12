@@ -43,12 +43,6 @@ extern "C"
 #define I2C_GPIO_SDA_PIN GPIO_FC_PB7
 #define I2C_GPIO_SCL_PIN GPIO_FC_PC0
 
-#define I2C_TX_DMA_CHN   DMA4
-#define I2C_RX_DMA_CHN   DMA5
-
-#define I2S_MIC_DMA      DMA6
-#define I2S_SPK_DMA      DMA7
-
     typedef struct
     {
         uint8_t vref_impedance;

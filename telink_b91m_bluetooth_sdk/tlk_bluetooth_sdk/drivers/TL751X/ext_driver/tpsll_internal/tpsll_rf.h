@@ -57,12 +57,12 @@
 #define TPSLL_RF_RSSI_OFFSET                 (3)
 
 #ifndef TPSLL_BASEBAND_DEBUG_PORT_EN
-#define TPSLL_BASEBAND_DEBUG_PORT_EN         (0)
+#define TPSLL_BASEBAND_DEBUG_PORT_EN (0)
 #endif
 
-extern u8  *rf_get_chn_num_from_selected_map(void);
-extern void rf_fastsettle_init(u8 tx_fastsettle_en, u8 rx_fastsettle_en);
-extern void rf_bb_dbg_setting(u8 en);
+extern u8         *rf_get_chn_num_from_selected_map(void);
+extern void        rf_fastsettle_init(u8 tx_fastsettle_en, u8 rx_fastsettle_en);
+extern void        rf_bb_dbg_setting(u8 en);
 extern signed char rf_tpsll_get_rssi(unsigned char raw_rssi);
 
 __INLINE void rf_tpsll_set_rx_wait(u8 rx_wait_us)

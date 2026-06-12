@@ -26,21 +26,21 @@
 #include "common/types.h"
 #include "lc3.h"
 #include "tlkalg_lc3_24bit_interface.h"
-#if (TLKALG_LC3_24BIT_ENC_ENABLE || TLKALG_LC3_24BIT_DEC_ENABLE ) && (!TLK_CFG_TEMP_DRAM_OPTM_TPSLL)
+#if (TLKALG_LC3_24BIT_ENC_ENABLE || TLKALG_LC3_24BIT_DEC_ENABLE) && (!TLK_CFG_TEMP_DRAM_OPTM_TPSLL)
 
 #if (MCU_CORE_TYPE == MCU_CORE_TL721X)
 parameters_t lc3_enc_para = {
-	.frame_us    = 10000,
-	.sample_rate = 48000,
-	.bitrate     = 72000,
-	.bitdepth    = 24,
+    .frame_us    = 10000,
+    .sample_rate = 48000,
+    .bitrate     = 72000,
+    .bitdepth    = 24,
 };
 
 parameters_t lc3_dec_para = {
-	.frame_us    = 10000,
-	.sample_rate = 16000,
-	.bitrate     = 24000,
-	.bitdepth    = 24,
+    .frame_us    = 10000,
+    .sample_rate = 16000,
+    .bitrate     = 24000,
+    .bitdepth    = 24,
 };
 #else
 parameters_t lc3_enc_para = {
@@ -58,7 +58,7 @@ parameters_t lc3_dec_para = {
 };
 #endif
 
-    #define LC3_MAX_FRAME_BYTES 400
+#define LC3_MAX_FRAME_BYTES 400
 uint8_t       lc3_24bit_enc_out[LC3_MAX_FRAME_BYTES];
 lc3_encoder_t lc3_enc_handle[2];
 lc3_decoder_t lc3_dec_handle[2];
@@ -221,12 +221,12 @@ int tlkalg_lc3_24bit_enc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t
     (void)width;
     (void)len;
 
-    int *psrc       = (int *)ps;
+    int *psrc = (int *)ps;
 #if (MCU_CORE_TYPE == MCU_CORE_TL721X)
     int enc_ret = lc3_encode(lc3_enc_handle[channel], LC3_PCM_FORMAT_S24, (const void *)(psrc), 1, enc_frame_size, pd);
     return enc_ret;
 #else
-    int  enc_ret[2] = {0};
+    int enc_ret[2] = {0};
 
     int8_t chnl = tlkalg_lc3_24bit_channel_change(channel);
     if (chnl == -1) {
@@ -274,7 +274,7 @@ int tlkalg_lc3_24bit_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t
 
     if (chnl == 1) {
         for (int k = 0; k < 480; k++) {
-            pdes_stereo_lr[k]       = pdes_stereo[k];
+            pdes_stereo_lr[k] = pdes_stereo[k];
         }
     } else {
         for (int k = 0; k < 480; k++) {
@@ -285,17 +285,17 @@ int tlkalg_lc3_24bit_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t
 
     uint8_t *pdes = (uint8_t *)pdes_stereo_lr;
     if (chnl == 1) {
-		for (int k = 0; k < 480 * 4; k++) {
-			pd[k] = pdes[k];
-		}
+        for (int k = 0; k < 480 * 4; k++) {
+            pd[k] = pdes[k];
+        }
     } else {
-		for (int k = 0; k < 480 * 4 * 2; k++) {
-			pd[k] = pdes[k];
-		}
+        for (int k = 0; k < 480 * 4 * 2; k++) {
+            pd[k] = pdes[k];
+        }
     }
 #endif
     if (dec_ret[0] != 0) {
-    	tlkapi_trace(0xFFFFFFFF, "[LC3 24BIT]", "lc3 24bit dec_ret:  %d", dec_ret[0]);
+        tlkapi_trace(0xFFFFFFFF, "[LC3 24BIT]", "lc3 24bit dec_ret:  %d", dec_ret[0]);
     }
 
     return dec_ret[0];

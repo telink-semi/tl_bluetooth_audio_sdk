@@ -125,3 +125,12 @@ int ble_host_hci_le_remove_adv_set(const struct ble_hci_le_remove_adv_set_cp *p_
  * @return int Returns 0 on success, or an error code on failure.
  */
 int ble_host_hci_le_clear_adv_sets(void);
+
+/**
+ * @brief Sets the random address for the advertising set.
+ *
+ * @param[in] p_set_adv_set_rnd_addr Pointer to the structure containing the random address.
+ *
+ * @return int Returns 0 on success, or an error code on failure.
+ */
+int ble_host_hci_le_set_adv_set_rand_addr(const struct ble_hci_le_set_adv_set_rnd_addr_cp *p_adv_enable);

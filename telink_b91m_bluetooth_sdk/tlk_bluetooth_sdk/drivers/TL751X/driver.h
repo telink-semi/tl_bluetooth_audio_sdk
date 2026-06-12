@@ -85,3 +85,4 @@
 #include "flash/flash_type.h"
 #include "sdio/mmc.h"
 #include "sdio/sdmmc.h"
+#include "sdio/sdcard.h"

@@ -51,7 +51,7 @@ static const btp_a2dp_codec_cap_t scBtpA2dpEndpointCaps[BTP_A2DP_ENDPOINT_TYPE_N
             .sbc.subbands          = A2DP_SUBBANDS_8 | A2DP_SUBBANDS_4,
             .sbc.allocation_method = A2DP_ALLOCATION_LOUDNESS | A2DP_ALLOCATION_SNR,
             .sbc.min_bitpool       = 2,
-            .sbc.max_bitpool       = BTP_A2DP_SBC_MAX_BITPOOL,
+            .sbc.max_bitpool       = BTP_A2DP_SBC_SNK_MAX_BITPOOL,
         },
 
     [BTP_A2DP_ENDPOINT_TYPE_SNK_AAC] =
@@ -98,13 +98,13 @@ static const btp_a2dp_codec_cap_t scBtpA2dpEndpointCaps[BTP_A2DP_ENDPOINT_TYPE_N
         {
             .sbc.media_type        = BTP_A2DP_MEDIA_TYPE_AUDIO,
             .sbc.codecType         = BTP_A2DP_CODEC_SBC,
-            .sbc.frequency         = BTP_A2DP_FREQUENCY_44100 | BTP_A2DP_FREQUENCY_48000,
+            .sbc.frequency         = BTP_A2DP_FREQUENCY_48000,
             .sbc.chnMode           = BTP_A2DP_CHN_MODE_JOINT_STEREO,
             .sbc.block_length      = A2DP_BLOCK_LENGTH_16,
             .sbc.subbands          = A2DP_SUBBANDS_8,
             .sbc.allocation_method = A2DP_ALLOCATION_LOUDNESS,
             .sbc.min_bitpool       = 2,
-            .sbc.max_bitpool       = BTP_A2DP_SBC_MAX_BITPOOL,
+            .sbc.max_bitpool       = BTP_A2DP_SBC_SRC_MAX_BITPOOL,
         },
 
     [BTP_A2DP_ENDPOINT_TYPE_SRC_AAC] =
@@ -122,7 +122,7 @@ static const btp_a2dp_codec_cap_t scBtpA2dpEndpointCaps[BTP_A2DP_ENDPOINT_TYPE_N
         },
 };
 
-const btp_a2dp_codec_cap_t *btp_a2dp_getCapInfoByType(uint8_t type)
+__attribute__((weak)) const btp_a2dp_codec_cap_t *btp_a2dp_getCapInfoByType(uint8_t type)
 {
     if (type >= BTP_A2DP_ENDPOINT_TYPE_NUMS) {
         return NULL;
@@ -130,7 +130,7 @@ const btp_a2dp_codec_cap_t *btp_a2dp_getCapInfoByType(uint8_t type)
     return &scBtpA2dpEndpointCaps[type];
 }
 
-uint16_t btp_a2dp_getCapInfoLenByType(uint8_t type)
+__attribute__((weak)) uint16_t btp_a2dp_getCapInfoLenByType(uint8_t type)
 {
     if (type >= BTP_A2DP_ENDPOINT_TYPE_NUMS) {
         return 0;

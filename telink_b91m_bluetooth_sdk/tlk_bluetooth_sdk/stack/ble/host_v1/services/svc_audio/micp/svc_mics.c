@@ -40,21 +40,20 @@
 #include "../../inc/svc_format.h"
 
 #include "../svc_audio.h"
+#include "../aics/svc_aics.h"
 
-#define APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM (0)
-
-#define MICS_START_HDL                         SERVICE_MICROPHONE_CONTROL_HDL
+#define MICS_START_HDL SERVICE_MICROPHONE_CONTROL_HDL
 
 _attribute_ble_data_retention_ static uint8_t micsMuteValue    = 0x00;
 static const uint16_t                         micsMuteValueLen = 1;
 
-extern const uint16_t aicsIncludeValue[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM][3];
+extern const uint16_t aicsIncludeValue[LEA_AICS_SERVICE_COUNT][3];
 
 /*
  * @brief the structure for default MICS service List.
  */
 static const struct atts_attribute micsList[] = {
-    ATTS_PRIMARY_SERVICE(serviceMicrophoneControlUuid),
+    ATTS_PRIMARY_SERVICE(serviceMicrophoneControlAttUuid),
 
 #if APP_AUDIO_MICS_INCLUDE_AICS_INSTANCE_NUM > 0
     ATTS_INCLUDE_DEFINE(&aicsIncludeValue[0][0]),
@@ -70,7 +69,7 @@ static const struct atts_attribute micsList[] = {
 #endif
 
     //Mute
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteNotify, characteristicMuteUuid, micsMuteValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteNotify, characteristicMuteAttUuid, micsMuteValue),
     ATTS_COMMON_CCC_DEFINE,
 };
 

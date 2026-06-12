@@ -199,7 +199,7 @@ static inline void tlkdrv_key_evtHappenNotify(tlkdrv_key_unit_t *pUnit, uint8_t 
 static inline void tlkdrv_key_state_machine_idle(tlkdrv_key_unit_t *pUnit, uint8_t isPress, uint16_t pastTimeMs)
 {
     (void)pastTimeMs;
-    pUnit->state  = isPress ? TLKDRV_KEY_STATE_PRESSED : TLKDRV_KEY_STATE_IDLE;
+    pUnit->state  = isPress ? TLKDRV_KEY_STATE_DEBOUNCING : TLKDRV_KEY_STATE_IDLE;
     pUnit->timeMs = 0;
 }
 
@@ -456,7 +456,7 @@ int tlkdrv_key_insert(uint8_t keyID, uint8_t evtMsk, uint16_t inPort, uint16_t o
     return TLK_ENONE;
 }
 
-static tlkdrv_vendor_config_cb_t s_venodr_config_cb[KEY_EVT_VENDOR_CONFIG_END - KEY_EVT_VENDOR_CONFIG + 1] = {NULL};
+static tlkdrv_vendor_config_cb_t s_tlkdrv_key_venodr_config_cb[KEY_EVT_VENDOR_CONFIG_END - KEY_EVT_VENDOR_CONFIG + 1] = {NULL};
 
 /**
  * @brief       Register a vendor configuration callback function.
@@ -468,7 +468,7 @@ static tlkdrv_vendor_config_cb_t s_venodr_config_cb[KEY_EVT_VENDOR_CONFIG_END - 
 void tlkdrv_key_registerVendorConfigCallback(uint8_t eventMode, tlkdrv_vendor_config_cb_t cb)
 {
     if (eventMode >= KEY_EVT_VENDOR_CONFIG && eventMode <= KEY_EVT_VENDOR_CONFIG_END) {
-        s_venodr_config_cb[eventMode - KEY_EVT_VENDOR_CONFIG] = cb;
+        s_tlkdrv_key_venodr_config_cb[eventMode - KEY_EVT_VENDOR_CONFIG] = cb;
     }
 }
 
@@ -568,9 +568,9 @@ void tlkdrv_key_registerVendorConfig8Callback(tlkdrv_vendor_config_cb_t cb)
  */
 void tlkdrv_key_vendorConfigCallback(uint8_t offsetId)
 {
-    if (offsetId <= ARRAY_SIZE(s_venodr_config_cb)) {
-        if (s_venodr_config_cb[offsetId] != NULL) {
-            s_venodr_config_cb[offsetId]();
+    if (offsetId <= ARRAY_SIZE(s_tlkdrv_key_venodr_config_cb)) {
+        if (s_tlkdrv_key_venodr_config_cb[offsetId] != NULL) {
+            s_tlkdrv_key_venodr_config_cb[offsetId]();
         }
     }
 }

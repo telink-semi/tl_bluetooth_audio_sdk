@@ -22,6 +22,7 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
+#include "drivers.h"
 #include "tlkapi/tlkapi.h"
 #include "tlkmw/tinysql/tlkmdi_tinySql.h"
 #include "tlkmw/tinysql/tlkmdi_tinySql_inner.h"
@@ -60,9 +61,9 @@ typedef struct
     uint8_t      btName[TINYSQL_BT_NAME_LENS];
 } userSettings_t;
 
-_attribute_extend_low_speed_bss_sec_ static userSettings_t sUserSettings = {0};
+_attribute_extend_low_speed_bss_sec_ static userSettings_t sTlkmdiSqlUserSettings = {0};
 
-_attribute_extend_low_speed_bss_sec_ static tlkapi_save_ctrl_t sUserSettingCtrl = {0};
+_attribute_extend_low_speed_bss_sec_ static tlkapi_save_ctrl_t sTlkmdiSqlUserSettingCtrl = {0};
 
 /**
  * @brief       Operate mutex for user setting disk.
@@ -81,12 +82,8 @@ static void tlkmdi_tinySql_userSettingDisk_mutexOperate(uint8_t isLock)
  */
 static inline void tlkmdi_tinySql_BTNameReset(uint8_t macAddress[6])
 {
-#if TLK_CFG_GAME_PAD_ENABLE
-    (void)macAddress;
-    tmemcpy(sUserSettings.btName, "gamepad_controller", sizeof("gamepad_controller") - 1);
-#else
     //default name Telink-BT-(MAC address)
-    tmemcpy(sUserSettings.btName, "Telink-BT-", sizeof("Telink-BT-") - 1);
+    tmemcpy(sTlkmdiSqlUserSettings.btName, "Telink-BT-", sizeof("Telink-BT-") - 1);
     int arrOffset = sizeof("Telink-BT-") - 1;
     for (int i = 0; i < 6; i++) {
         char highNum = (macAddress[i] >> 4);
@@ -101,15 +98,14 @@ static inline void tlkmdi_tinySql_BTNameReset(uint8_t macAddress[6])
         } else {
             lowNum += 'A' - 10;
         }
-        sUserSettings.btName[arrOffset++] = highNum;
-        sUserSettings.btName[arrOffset++] = lowNum;
+        sTlkmdiSqlUserSettings.btName[arrOffset++] = highNum;
+        sTlkmdiSqlUserSettings.btName[arrOffset++] = lowNum;
         if (i != 5) {
-            sUserSettings.btName[arrOffset++] = ':';
+            sTlkmdiSqlUserSettings.btName[arrOffset++] = ':';
         } else {
-            sUserSettings.btName[arrOffset++] = '\0';
+            sTlkmdiSqlUserSettings.btName[arrOffset++] = '\0';
         }
     }
-#endif
 }
 
 /**
@@ -118,16 +114,16 @@ static inline void tlkmdi_tinySql_BTNameReset(uint8_t macAddress[6])
  */
 static void tlkmdi_tinySql_UserSettingReset(void)
 {
-    sUserSettings.workMode = TLK_WORK_MODE_NORMAL;
-    sUserSettings.usbMode  = 0;
+    sTlkmdiSqlUserSettings.workMode = TLK_WORK_MODE_NORMAL;
+    sTlkmdiSqlUserSettings.usbMode  = 0;
 
     uint8_t btmac[6];
     tlkmdi_tinySql_getBtMacAddress(btmac);
     tlkmdi_tinySql_BTNameReset(btmac);
 
-    memset(&sUserSettings.addrs.macAddr[0], 0XFFFFFFFF, sizeof(sUserSettings.addrs));
+    memset(&sTlkmdiSqlUserSettings.addrs.macAddr[0], 0XFFFFFFFF, sizeof(sTlkmdiSqlUserSettings.addrs));
 
-    memset(&sUserSettings.keyConfigs, 0, sizeof(keyConfigs_t));
+    memset(&sTlkmdiSqlUserSettings.keyConfigs, 0, sizeof(keyConfigs_t));
 }
 
 /**
@@ -142,8 +138,8 @@ static void tlkmdi_tinySql_UserSettingSetAddr(uint8_t index, uint8_t *addr)
         return;
     }
     tlkmdi_tinySql_userSettingDisk_mutexOperate(true);
-    if (tmemcmp(addr, sUserSettings.addrs.macAddr[index], 6) != 0) {
-        tmemcpy(sUserSettings.addrs.macAddr[index], addr, 6);
+    if (tmemcmp(addr, sTlkmdiSqlUserSettings.addrs.macAddr[index], 6) != 0) {
+        tmemcpy(sTlkmdiSqlUserSettings.addrs.macAddr[index], addr, 6);
         tlkmdi_tinySql_requestSave(tinySql_userSettingsSaveIndex);
     }
     tlkmdi_tinySql_userSettingDisk_mutexOperate(false);
@@ -161,7 +157,7 @@ static int tlkmdi_tinySql_UserSettingGetAddr(uint8_t index, uint8_t *pBuffer)
         return -TLK_EPARAM;
     }
     tlkmdi_tinySql_userSettingDisk_mutexOperate(true);
-    tmemcpy(pBuffer, sUserSettings.addrs.macAddr[index], 6);
+    tmemcpy(pBuffer, sTlkmdiSqlUserSettings.addrs.macAddr[index], 6);
     tlkmdi_tinySql_userSettingDisk_mutexOperate(false);
     return TLK_ENONE;
 }
@@ -174,17 +170,14 @@ static void tlkmdi_tinySql_UserSettingDiskInit(void)
 {
     //get UserSetting data from flash,if nodata/not right version/crc fail -> reset data
     unsigned int saveAddress = tlkmdi_tinySql_getSaveAddr(TLKMDI_TINYSQL_DISK0_ADDR);
-    tlkapi_save3_init(&sUserSettingCtrl, TLKMDI_TINYSQL_SAVE_SIGN, TLKMDI_TINYSQL_VER, sizeof(userSettings_t), saveAddress + 4096 * 0,
-                      saveAddress + 4096 * 1); //2*4K
-    int ret = tlkapi_save3_load(&sUserSettingCtrl, (uint8_t *)&sUserSettings, sizeof(sUserSettings));
+    tlkapi_save3_init(&sTlkmdiSqlUserSettingCtrl, TLKMDI_TINYSQL_SAVE_SIGN, TLKMDI_TINYSQL_VER, sizeof(userSettings_t), saveAddress);
+    int ret = tlkapi_save3_load(&sTlkmdiSqlUserSettingCtrl, (uint8_t *)&sTlkmdiSqlUserSettings, sizeof(sTlkmdiSqlUserSettings));
     if (ret < (int)sizeof(userSettings_t)) {
         tlkmdi_tinySql_UserSettingReset();
-        // tlkmdi_tinySql_requestSave(tinySql_userSettingsSaveIndex);
     }
-    //note:temp code for qianghang
-    //erase flash when mcu boot
-    tlkapi_save3_migrate(&sUserSettingCtrl, (uint8_t *)&sUserSettings, sizeof(sUserSettings));
-    tlkapi_printf(TLKMDI_TINYSQL_LOG_ENABLE && TLK_STK_BT_ENABLE, "[SQL]<TRACE>Bt name:%s", (char *)sUserSettings.btName);
+    uint8_t usbFlag = 0;
+    flash_read_page((TLK_CFG_FLASH_USBID_ADDR + tlkhal_flash_get_size() - 0x100000), 1, (uint8_t *)&usbFlag);
+    sTlkmdiSqlUserSettings.usbID = ((0xff == usbFlag) ? 0x120 : (0x0100 + usbFlag));
 }
 
 /**
@@ -193,12 +186,7 @@ static void tlkmdi_tinySql_UserSettingDiskInit(void)
  */
 static void tlkmdi_tinySql_UserSettingDiskSave(void)
 {
-    //note:temp code for qianghang
-    //print log when erase/mirage
-    if (sUserSettingCtrl.offs + sUserSettingCtrl.lens > 4095) {
-        tlkapi_printf(TLKMDI_TINYSQL_LOG_ENABLE, "[SQL]<WARN>change sector begin(erase flash)");
-    }
-    tlkapi_save3_smartSave(&sUserSettingCtrl, (uint8_t *)&sUserSettings, sizeof(sUserSettings));
+    tlkapi_save3_smartSave(&sTlkmdiSqlUserSettingCtrl, (uint8_t *)&sTlkmdiSqlUserSettings, sizeof(sTlkmdiSqlUserSettings));
 }
 
 /**
@@ -207,7 +195,7 @@ static void tlkmdi_tinySql_UserSettingDiskSave(void)
  */
 static void tlkmdi_tinySql_UserSettingDiskRestore(void)
 {
-    tlkapi_save3_clean(&sUserSettingCtrl);
+    tlkapi_save3_clean(&sTlkmdiSqlUserSettingCtrl);
     tlkmdi_tinySql_UserSettingReset();
     tlkmdi_tinySql_requestSave(tinySql_userSettingsSaveIndex);
 }
@@ -229,7 +217,7 @@ const tinySqlDisk_t tinySql_userSetting_disk = {
  */
 _always_inline uint8_t tlkmdi_tinySql_getWorkMode(void)
 {
-    return sUserSettings.workMode;
+    return sTlkmdiSqlUserSettings.workMode;
 }
 
 /**
@@ -243,35 +231,8 @@ void tlkmdi_tinySql_setWorkMode(uint8_t mode)
         return;
     }
     tlkmdi_tinySql_userSettingDisk_mutexOperate(true);
-    if (mode != sUserSettings.workMode) {
-        sUserSettings.workMode = mode;
-        tlkmdi_tinySql_requestSave(tinySql_userSettingsSaveIndex);
-    }
-    tlkmdi_tinySql_userSettingDisk_mutexOperate(false);
-}
-
-/**
- * @brief       Get the current USB mode setting.
- * @return      Current USB mode.
- */
-uint8_t tlkmdi_tinySql_getUsbMode(void)
-{
-    return sUserSettings.usbMode;
-}
-
-/**
- * @brief       Set the USB mode with a given value.
- * @param[in]   mode - The new USB mode to be set. It must be within the range 0 to 5.
- * @return      none.
- */
-void tlkmdi_tinySql_setUsbMode(uint8_t mode)
-{
-    if (mode > 5) {
-        return;
-    }
-    tlkmdi_tinySql_userSettingDisk_mutexOperate(true);
-    if (mode != sUserSettings.usbMode) {
-        sUserSettings.usbMode = mode;
+    if (mode != sTlkmdiSqlUserSettings.workMode) {
+        sTlkmdiSqlUserSettings.workMode = mode;
         tlkmdi_tinySql_requestSave(tinySql_userSettingsSaveIndex);
     }
     tlkmdi_tinySql_userSettingDisk_mutexOperate(false);
@@ -283,22 +244,7 @@ void tlkmdi_tinySql_setUsbMode(uint8_t mode)
  */
 uint16_t tlkmdi_tinySql_getUsbID(void)
 {
-    return sUserSettings.usbID;
-}
-
-/**
- * @brief       Set the USB ID with a given value.
- * @param[in]   usbID - The new USB ID to be set.
- * @return      none.
- */
-void tlkmdi_tinySql_setUsbID(uint16_t usbID)
-{
-    tlkmdi_tinySql_userSettingDisk_mutexOperate(true);
-    if (sUserSettings.usbID != usbID) {
-        sUserSettings.usbID = usbID;
-        tlkmdi_tinySql_requestSave(tinySql_userSettingsSaveIndex);
-    }
-    tlkmdi_tinySql_userSettingDisk_mutexOperate(false);
+    return sTlkmdiSqlUserSettings.usbID;
 }
 
 /**
@@ -447,7 +393,7 @@ int tlkmdi_tinySql_getBtName(uint8_t *recBuffer)
         return -TLK_EPARAM;
     }
     tlkmdi_tinySql_userSettingDisk_mutexOperate(true);
-    tmemcpy(recBuffer, sUserSettings.btName, TINYSQL_BT_NAME_LENS);
+    tmemcpy(recBuffer, sTlkmdiSqlUserSettings.btName, TINYSQL_BT_NAME_LENS);
     tlkmdi_tinySql_userSettingDisk_mutexOperate(false);
     return TLK_ENONE;
 }
@@ -467,8 +413,8 @@ int tlkmdi_tinySql_setBtName(uint8_t *inBuffer, uint32_t datalen)
         datalen = TINYSQL_BT_NAME_LENS - 1;
     }
     tlkmdi_tinySql_userSettingDisk_mutexOperate(true);
-    tmemcpy(sUserSettings.btName, inBuffer, datalen);
-    sUserSettings.btName[datalen] = 0; //str end
+    tmemcpy(sTlkmdiSqlUserSettings.btName, inBuffer, datalen);
+    sTlkmdiSqlUserSettings.btName[datalen] = 0; //str end
     tlkmdi_tinySql_requestSave(tinySql_userSettingsSaveIndex);
     tlkmdi_tinySql_userSettingDisk_mutexOperate(false);
     return TLK_ENONE;
@@ -481,7 +427,7 @@ int tlkmdi_tinySql_setBtName(uint8_t *inBuffer, uint32_t datalen)
  */
 void tlkmdi_tinySql_getKeyCofnig(keyConfigs_t **key_config_info)
 {
-    *key_config_info = &sUserSettings.keyConfigs;
+    *key_config_info = &sTlkmdiSqlUserSettings.keyConfigs;
 }
 
 /**
@@ -491,11 +437,11 @@ void tlkmdi_tinySql_getKeyCofnig(keyConfigs_t **key_config_info)
  */
 void tlkmdi_tinySql_updateKeyCofnig(keyConfigs_t *key_config_info)
 {
-    if (key_config_info == NULL || key_config_info == &sUserSettings.keyConfigs) {
+    if (key_config_info == NULL || key_config_info == &sTlkmdiSqlUserSettings.keyConfigs) {
         return;
     }
     tlkmdi_tinySql_userSettingDisk_mutexOperate(true);
-    tmemcpy(&sUserSettings.keyConfigs, key_config_info, sizeof(keyConfigs_t));
+    tmemcpy(&sTlkmdiSqlUserSettings.keyConfigs, key_config_info, sizeof(keyConfigs_t));
     tlkmdi_tinySql_requestSave(tinySql_userSettingsSaveIndex);
     tlkmdi_tinySql_userSettingDisk_mutexOperate(false);
 }

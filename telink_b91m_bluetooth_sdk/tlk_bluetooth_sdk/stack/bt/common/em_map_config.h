@@ -32,35 +32,35 @@
 
 
 #ifndef MAX_NB_SYNC
-    #define MAX_NB_SYNC (2)
+#define MAX_NB_SYNC (2)
 #endif
 
 /// Number of RX descriptors
 #ifndef BT_RXDESC_NB
-    #define BT_RXDESC_NB (3)
+#define BT_RXDESC_NB (3)
 #endif
 
 /// Number of RX/TX ACL data buffers
 #ifndef ACL_DATA_BUF_NB_RX
-    #define ACL_DATA_BUF_NB_RX (BT_RXDESC_NB)
+#define ACL_DATA_BUF_NB_RX (BT_RXDESC_NB)
 #endif
 
 #ifndef ACL_DATA_BUF_NB_TX
-    #define ACL_DATA_BUF_NB_TX (MAX_NB_ACTIVE_ACL + 2)
+#define ACL_DATA_BUF_NB_TX (MAX_NB_ACTIVE_ACL + 2)
 #endif
 
 /// Number of TX LMP buffers
 #ifndef BT_LMP_BUF_NB_TX
-    #if (MAX_NB_ACTIVE_ACL > 3)
-        #define BT_LMP_BUF_NB_TX (2 * MAX_NB_ACTIVE_ACL)
-    #else  // (MAX_NB_ACTIVE_ACL > 3)
-        #define BT_LMP_BUF_NB_TX (10)
-    #endif // (MAX_NB_ACTIVE_ACL > 3)
+#if (MAX_NB_ACTIVE_ACL > 3)
+#define BT_LMP_BUF_NB_TX (2 * MAX_NB_ACTIVE_ACL)
+#else // (MAX_NB_ACTIVE_ACL > 3)
+#define BT_LMP_BUF_NB_TX (10)
+#endif // (MAX_NB_ACTIVE_ACL > 3)
 #endif
 
 /// Maximum ACL Data Packet Size
 #ifndef ACL_DATA_BUF_SIZE
-    #define ACL_DATA_BUF_SIZE ((DH5_3_PACKET_SIZE + 1) & (~0x01))
+#define ACL_DATA_BUF_SIZE ((DH5_3_PACKET_SIZE + 1) & (~0x01))
 #endif
 
 /******************************************************************************************/
@@ -69,15 +69,15 @@
 
 /// Support of Connectionless Slave Broadcast
 #ifndef CSB_SUPPORT
-    #define CSB_SUPPORT 0
+#define CSB_SUPPORT 0
 #endif
 
 #ifndef PCA_SUPPORT
-    #define PCA_SUPPORT 0
+#define PCA_SUPPORT 0
 #endif
 
 #ifndef RW_BT_MWS_COEX
-    #define RW_BT_MWS_COEX 0
+#define RW_BT_MWS_COEX 0
 #endif
 
 #endif

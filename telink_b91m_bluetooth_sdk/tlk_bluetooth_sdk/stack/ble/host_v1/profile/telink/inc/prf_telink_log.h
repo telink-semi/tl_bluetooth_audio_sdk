@@ -30,13 +30,13 @@ extern const uint8_t g_ble_telink_log_enable;
 extern const uint8_t g_ble_telink_spp_log_enable;
 
 #define BLE_TELINK_PRF_LOG(log, en, str, ...)  \
-    do {                                         \
-        if (en && g_ble_telink_log_enable) { \
-            log("[T-PRF]" str, ##__VA_ARGS__);   \
-        }                                        \
+    do {                                       \
+        if (en && g_ble_telink_log_enable) {   \
+            log("[T-PRF]" str, ##__VA_ARGS__); \
+        }                                      \
     } while (0)
 
-#define BLE_SPP_ERROR(str, ...)    BLE_TELINK_PRF_LOG(BLE_HOST_SAL_LOG_ERROR, g_ble_telink_spp_log_enable, "[SPP]"str, ##__VA_ARGS__)
-#define BLE_SPP_WARN(str, ...)     BLE_TELINK_PRF_LOG(BLE_HOST_SAL_LOG_WARN, g_ble_telink_spp_log_enable, "[SPP]"str, ##__VA_ARGS__)
-#define BLE_SPP_INFO(str, ...)     BLE_TELINK_PRF_LOG(BLE_HOST_SAL_LOG_INFO, g_ble_telink_spp_log_enable, "[SPP]"str, ##__VA_ARGS__)
-#define BLE_SPP_DEBUG(str, ...)    BLE_TELINK_PRF_LOG(BLE_HOST_SAL_LOG_DEBUG, g_ble_telink_spp_log_enable, "[SPP]"str, ##__VA_ARGS__)
+#define BLE_SPP_ERROR(str, ...) BLE_TELINK_PRF_LOG(BLE_HOST_SAL_LOG_ERROR, g_ble_telink_spp_log_enable, "[SPP]" str, ##__VA_ARGS__)
+#define BLE_SPP_WARN(str, ...)  BLE_TELINK_PRF_LOG(BLE_HOST_SAL_LOG_WARN, g_ble_telink_spp_log_enable, "[SPP]" str, ##__VA_ARGS__)
+#define BLE_SPP_INFO(str, ...)  BLE_TELINK_PRF_LOG(BLE_HOST_SAL_LOG_INFO, g_ble_telink_spp_log_enable, "[SPP]" str, ##__VA_ARGS__)
+#define BLE_SPP_DEBUG(str, ...) BLE_TELINK_PRF_LOG(BLE_HOST_SAL_LOG_DEBUG, g_ble_telink_spp_log_enable, "[SPP]" str, ##__VA_ARGS__)

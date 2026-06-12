@@ -35,7 +35,7 @@
 uint8_t g_codec_test_mode;
 uint8_t g_codec_test_started;
 
-extern int16_t  g_tone_buff[512];
+extern int16_t  g_tone_buff[300];
 extern int16_t *g_tone_buff_ptr;
 
 /**
@@ -58,18 +58,19 @@ signed short sin_48k_mono_d1_dbg[] __attribute__((aligned(4))) = {
  * @param[in] len - Length of data to convert.
  * @return Result of conversion.
  */
-_attribute_ram_code_ int pcm_s32_2_s16(int16_t *dst, const int32_t *src, uint16_t len)
-{
-    if (!len || dst == NULL || src == NULL) {
-        return -1;
-    }
+extern _attribute_ram_code_ int pcm_s32_2_s16(int16_t *dst, const int32_t *src, uint16_t len);
 
-    while (len--) {
-        *dst++ = *src++ >> 8;
-    };
+// {
+//     if (!len || dst == NULL || src == NULL) {
+//         return -1;
+//     }
 
-    return 0;
-}
+//     while (len--) {
+//         *dst++ = *src++ >> 8;
+//     };
+
+//     return 0;
+// }
 
 /**
  * @brief       Handle audio test timer interrupt
@@ -129,7 +130,12 @@ _attribute_retention_code_ void tlkmdi_audio_codec_test_player(uint8_t mode)
     int16_t pcm16_tone_left[240];
     int16_t pcm16_tone_right[240];
 
-    int16_t rptr            = (audio_get_tx_dma_rptr(TLKDRV_CODEC_SPK_DMA)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#if (MCU_CORE_TL752X_TEMP && AUDIO_DAC_DMA_LLP_EN)
+    int16_t rptr = (audio_get_tx_dma_rptr(&audio_dac_dmac_handle)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#else
+    int16_t rptr = (audio_get_tx_dma_rptr(gTlkdrvCodecSpkDmaChn)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+#endif
+
     codec_buffer_avail_size = tlkdrv_codec_get_spk_buf_idle_size();
 
     tlkapi_printf(0, "codec free_len: %d, rptr: %d", codec_buffer_avail_size, rptr);
@@ -300,10 +306,8 @@ uint8_t audio_alg_get_loopback_enable(void)
 }
 
 #if TLKALG_LC3_PLUS_ENC_ENABLE && TLKALG_LC3_PLUS_DEC_ENABLE
-static uint8_t *s_alg_lc3_plus_dec_buffer         = NULL;
-static uint8_t *s_alg_lc3_plus_enc_buffer         = NULL;
-static uint8_t *s_alg_lc3_plus_dec_scratch_buffer = NULL;
-static uint8_t *s_alg_lc3_plus_enc_scratch_buffer = NULL;
+static uint8_t *s_alg_lc3_plus_dec_buffer = NULL;
+static uint8_t *s_alg_lc3_plus_enc_buffer = NULL;
 #endif
 
 /**
@@ -317,54 +321,29 @@ void tlkmdi_audio_alg_init(void)
 #if TLKALG_LC3_PLUS_ENC_ENABLE && TLKALG_LC3_PLUS_DEC_ENABLE
     p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_DEC);
     if (s_alg_lc3_plus_dec_buffer == NULL) {
-        p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_NORMAL, NULL); //TODO:WQ
-                                                                             //        	p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_ULTRA_LOW_LATENCY, NULL);
-        //ENCORD BUFF
-        uint8_t  size_param            = (ALG_SIZE_TYPE_ENCODER << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        uint16_t lc3_plus_dec_mem_size = p_audio_alg_if->audio_alg_get_size(size_param);
+        p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_NORMAL, NULL);
+
+        uint16_t lc3_plus_dec_mem_size = p_audio_alg_if->audio_alg_get_size(ALG_CHANNEL_STEREO);
         s_alg_lc3_plus_dec_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_dec_mem_size);
         if (s_alg_lc3_plus_dec_buffer == NULL) {
             tlkapi_printf(APP_AUDIO_LOG_EN, "lc3 plus dec buffer alloc failed");
         }
-        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_dec_buffer, size_param);
+        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_dec_buffer, ALG_CHANNEL_STEREO);
 
-        tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_dec_mem_size: %d", lc3_plus_dec_mem_size);
-
-        //SCRATCH BUFF
-        size_param                        = (ALG_SIZE_TYPE_SCRATCH << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        lc3_plus_dec_mem_size             = p_audio_alg_if->audio_alg_get_size(size_param);
-        s_alg_lc3_plus_dec_scratch_buffer = (uint8_t *)tlkalg_malloc_func(lc3_plus_dec_mem_size);
-        if (s_alg_lc3_plus_dec_scratch_buffer == NULL) {
-            tlkapi_printf(APP_AUDIO_LOG_EN, "lc3 plus dec scratch buffer alloc failed");
-        }
-        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_dec_scratch_buffer, size_param);
         tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_dec_mem_size: %d", lc3_plus_dec_mem_size);
     }
 
     p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_ENC);
     if (s_alg_lc3_plus_enc_buffer == NULL) {
-        p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_ENC_NORMAL, NULL); //TODO:WQ
-                                                                             //        	p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_ENC_ULTRA_LOW_LATENCY, NULL);
-        //ENCORD BUFF
-        uint8_t  size_param            = (ALG_SIZE_TYPE_ENCODER << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        uint16_t lc3_plus_enc_mem_size = p_audio_alg_if->audio_alg_get_size(size_param);
+        p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_ENC_NORMAL, NULL);
+
+        uint16_t lc3_plus_enc_mem_size = p_audio_alg_if->audio_alg_get_size(ALG_CHANNEL_STEREO);
         s_alg_lc3_plus_enc_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_enc_mem_size);
 
         if (s_alg_lc3_plus_enc_buffer == NULL) {
             tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus enc buffer alloc failed");
         }
-        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_enc_buffer, size_param);
-        tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc_mem_size:: %d", lc3_plus_enc_mem_size);
-
-        //SCRATCH BUFF
-        size_param                        = (ALG_SIZE_TYPE_SCRATCH << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        lc3_plus_enc_mem_size             = p_audio_alg_if->audio_alg_get_size(size_param);
-        s_alg_lc3_plus_enc_scratch_buffer = (uint8_t *)tlkalg_malloc_func(lc3_plus_enc_mem_size);
-
-        if (s_alg_lc3_plus_enc_scratch_buffer == NULL) {
-            tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc scratch_buffer alloc failed");
-        }
-        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_enc_scratch_buffer, size_param);
+        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_enc_buffer, ALG_CHANNEL_STEREO);
         tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc_mem_size:: %d", lc3_plus_enc_mem_size);
     }
 

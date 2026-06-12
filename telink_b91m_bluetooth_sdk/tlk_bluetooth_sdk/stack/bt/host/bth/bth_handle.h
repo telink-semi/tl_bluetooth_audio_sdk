@@ -30,8 +30,8 @@
 
 typedef struct
 {
-    uint8_t state;
-    uint8_t attrs;
+    uint8_t  state;
+    uint8_t  attrs;
     uint16_t busys;
     uint16_t flags;
     uint16_t timeout;
@@ -43,32 +43,36 @@ typedef struct
     uint16_t exitTimer;     // Exit Sniffer wait timer in disconnect acl.
     uint16_t connTimer;
 
-    uint8_t sniffBusys;    // Refer BTH_ACL_SNIFF_BUSYS_ENUM.
-    uint8_t sniffReqCount;
+    uint8_t  sniffBusys; // Refer BTH_ACL_SNIFF_BUSYS_ENUM.
+    uint8_t  sniffReqCount;
     uint16_t sniffReqTimer;
     uint16_t unsniffReqTimer;
     uint16_t leaveSniffTimer;
 
     uint8_t reason;
-    uint8_t othBusys; // Other Busys
+    uint8_t othBusys; //Refer to BTH_ACL_OTH_BUSYS_ENUM.
     uint8_t btaddr[6];
 
     uint32_t devClass;
-    uint8_t curRole;
-    uint8_t airMode;
-    uint8_t aclPktNumb;
-    uint8_t positive;   // 1:positive connect to the remote or 0: negative be connected
-    uint8_t switchCnt;  // role_switch_req_cnt
-    uint8_t scanMode;   // page_scan_repetition_mode
+    uint8_t  curRole;
+    uint8_t  airMode;
+    uint8_t  aclPktNumb;
+    uint8_t  positive;  // 1:positive connect to the remote or 0: negative be connected
+    uint8_t  switchCnt; // role_switch_req_cnt
+    uint8_t  scanMode;  // page_scan_repetition_mode
     uint16_t clkOffs;
     uint32_t extFeature; // Peer
+
+    uint8_t peer_fix_channel; //Do not save RFU.
+    uint8_t pin_len;
+    uint8_t resv[2];
 
     uint8_t curMode;
     uint8_t initRole;
     uint8_t curPolicy;
     uint8_t setPolicy;
 
-    uint8_t pinCode[4];
+    uint8_t pinCode[16];
     uint8_t linkKey[16];
     uint8_t infoRsp[16];
     uint8_t devName[32];
@@ -78,17 +82,17 @@ typedef struct
 
 typedef struct
 {
-    uint8_t         state;
-    uint8_t         busys;
-    uint8_t         reason;
-    uint8_t         airMode;
-    uint8_t         timeout;
-    uint8_t         positive;
-    uint8_t         linkType; // BTH_LINK_TYPE_ESCO or BTH_LINK_TYPE_SCO
-    uint8_t         resv01;
-    uint16_t         aclHandle;
-    uint16_t         scoHandle;
-    TlkApiTimer_t  timer;
+    uint8_t       state;
+    uint8_t       busys;
+    uint8_t       reason;
+    uint8_t       airMode;
+    uint8_t       timeout;
+    uint8_t       positive;
+    uint8_t       linkType; // BTH_LINK_TYPE_ESCO or BTH_LINK_TYPE_SCO
+    uint8_t       resv01;
+    uint16_t      aclHandle;
+    uint16_t      scoHandle;
+    TlkApiTimer_t timer;
 } bth_sco_handle_t;
 
 typedef uint8_t (*bth_acl_get_tws_role_cb_t)(void);
@@ -243,9 +247,9 @@ bth_acl_handle_t *bth_device_getConnAclByType(uint8_t devType);
 bth_acl_handle_t *bth_handle_searchUsedAcl(uint8_t *pBtAddr);
 bth_acl_handle_t *bth_handle_searchConnAcl(uint8_t *pBtAddr);
 
-int    bth_handle_aclPktNumbUpdate(uint16_t aclHandle, bool isInc, uint8_t pktNumb);
+int     bth_handle_aclPktNumbUpdate(uint16_t aclHandle, bool isInc, uint8_t pktNumb);
 uint8_t bth_handle_aclGetTotalUsedPktNumb(void);
-void bth_handle_set_all_acl_max_slot(uint8_t slot);
+void    bth_handle_set_all_acl_max_slot(uint8_t slot);
 
 /******************************************************************************
  * Function: Get the idle sco handle item or get used or connected item
@@ -261,9 +265,6 @@ bth_sco_handle_t *bth_handle_getDiscSco(uint16_t scoHandle);
 bth_sco_handle_t *bth_handle_searchUsedSco(uint16_t aclHandle);
 bth_sco_handle_t *bth_handle_searchConnSco(uint16_t aclHandle);
 bth_sco_handle_t *bth_handle_searchBusySco(uint16_t aclHandle);
-bth_sco_handle_t *bth_handle_findUsedSco(uint16_t aclHandle, uint8_t offset);
-bth_sco_handle_t *bth_handle_findConnSco(uint16_t aclHandle, uint8_t offset);
-uint16_t            bth_handle_getConnScoHandle(uint16_t aclHandle);
-
-
+uint16_t          bth_handle_getConnScoHandle(uint16_t aclHandle);
+bth_sco_handle_t *bth_handle_searchUsedScoExt(void);
 #endif // BTH_HANDLE_H

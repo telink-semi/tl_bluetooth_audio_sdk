@@ -31,19 +31,14 @@
 #include "tlklib/mem/tlkmem1.h"
 
 _attribute_os_heap_sec_ __attribute__((aligned(4))) static uint8_t sTlkOsBareMetalMemBuffer[TLKOS_CFG_BAREMETAL_HEAP_SIZE] = {0};
-static uint8_t                                                     sTlkOsBareMetalMemIsInit                                = 0;
 
 /**
  * @brief     Allocates a block of memory.
  * @param[in] size Number of bytes to allocate.
  * @returns   Pointer to the allocated memory, or NULL if allocation fails.
  */
-void *tlkos_malloc(uint32_t size)
+_attribute_ram_code_sec_ void *tlkos_malloc(uint32_t size)
 {
-    if (sTlkOsBareMetalMemIsInit == 0) {
-        tlkmem1_init(sTlkOsBareMetalMemBuffer, TLKOS_CFG_BAREMETAL_HEAP_SIZE);
-        sTlkOsBareMetalMemIsInit = 1;
-    }
     void *ptr = tlkmem1_malloc(sTlkOsBareMetalMemBuffer, size);
     if (ptr != NULL) {
         return ptr;
@@ -75,10 +70,24 @@ void *tlkos_calloc(uint32_t size)
  * @param[in] ptr Pointer to the memory block to free.
  * @returns   None.
  */
-void tlkos_free(void *ptr)
+_attribute_ram_code_sec_ void tlkos_free(void *ptr)
 {
     tlkmem1_free(sTlkOsBareMetalMemBuffer, ptr);
 }
 
+/**
+ * @brief     Print previously allocated block of memory.
+ * @param[in] None
+ * @returns   None.
+ */
+void tlkos_mem_print(void)
+{
+    tlkmem1_print(sTlkOsBareMetalMemBuffer);
+}
+
+void tlkos_mem_init(void)
+{
+    tlkmem1_init(sTlkOsBareMetalMemBuffer, TLKOS_CFG_BAREMETAL_HEAP_SIZE);
+}
 
 #endif //TLKOS_CFG_BAREMETAL_ENABLE

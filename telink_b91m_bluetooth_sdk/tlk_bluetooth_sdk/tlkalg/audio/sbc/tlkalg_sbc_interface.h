@@ -31,6 +31,13 @@
 
 extern uint8_t msbc_silence_pkt[];
 
+/*
+ * @brief       This function updates the SBC encoder bitpool.
+ * @param[in]   bitpool - the new bitpool value.
+ * @return      None.
+ */
+void tlkalg_sbc_enc_update_bitpool(uint8_t bitpool);
+
 /**
  * @brief       This function retrieves the size required for the SBC decoder buffer.
  * @param[in]   channel - the audio channel configuration.
@@ -44,13 +51,13 @@ uint16_t tlkalg_sbc_dec_get_size(uint8_t channel);
  * @param[in]   channel - the audio channel configuration.
  * @return      The result of the initialization process.
  */
-int8_t   tlkalg_sbc_dec_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_sbc_dec_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function deinitializes the SBC decoder.
  * @return      The result of the deinitialization process.
  */
-int8_t   tlkalg_sbc_dec_deinit(void);
+int8_t tlkalg_sbc_dec_deinit(void);
 
 /**
  * @brief       This function processes an SBC encoded audio frame.
@@ -61,7 +68,7 @@ int8_t   tlkalg_sbc_dec_deinit(void);
  * @param[in]   channel - the audio channel configuration.
  * @return      The length of the decoded audio data.
  */
-int      tlkalg_sbc_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_sbc_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 /**
  * @brief       This function retrieves the size required for the SBC encoder buffer.
@@ -76,7 +83,7 @@ uint16_t tlkalg_sbc_enc_get_size(uint8_t channel);
  * @param[in]   channel - the audio channel configuration.
  * @return      The result of the initialization process.
  */
-int8_t   tlkalg_sbc_enc_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_sbc_enc_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function sets the encoder parameters for SBC.
@@ -84,13 +91,15 @@ int8_t   tlkalg_sbc_enc_init(uint8_t *p_buff, uint8_t channel);
  * @param[in]   param - the parameter value to set.
  * @return      The result of setting the parameter.
  */
-uint8_t  tlkalg_sbc_enc_param_set(uint8_t type, void *param);
+uint8_t tlkalg_sbc_enc_param_set(uint8_t type, void *param);
 
 /**
  * @brief       This function deinitializes the SBC encoder.
  * @return      The result of the deinitialization process.
  */
-int8_t   tlkalg_sbc_enc_deinit(void);
+int8_t tlkalg_sbc_enc_deinit(void);
+
+uint16_t tlkalg_sbc_enc_get_data_len(void);
 
 /**
  * @brief       This function processes an SBC encoded audio frame.
@@ -101,7 +110,7 @@ int8_t   tlkalg_sbc_enc_deinit(void);
  * @param[in]   channel - the audio channel configuration.
  * @return      The length of the encoded audio data.
  */
-int      tlkalg_sbc_enc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_sbc_enc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 /**
  * @brief       This function retrieves the size required for the mSBC decoder buffer.
@@ -116,13 +125,13 @@ uint16_t tlkalg_msbc_dec_get_size(uint8_t channel);
  * @param[in]   channel - the audio channel configuration.
  * @return      The result of the initialization process.
  */
-int8_t   tlkalg_msbc_dec_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_msbc_dec_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function deinitializes the mSBC decoder.
  * @return      The result of the deinitialization process.
  */
-int8_t   tlkalg_msbc_dec_deinit(void);
+int8_t tlkalg_msbc_dec_deinit(void);
 
 /**
  * @brief       This function processes an mSBC encoded audio frame.
@@ -133,7 +142,7 @@ int8_t   tlkalg_msbc_dec_deinit(void);
  * @param[in]   channel - the audio channel configuration.
  * @return      The length of the decoded audio data.
  */
-int      tlkalg_msbc_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_msbc_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 /**
  * @brief       This function retrieves the size required for the mSBC encoder buffer.
@@ -148,13 +157,13 @@ uint16_t tlkalg_msbc_enc_get_size(uint8_t channel);
  * @param[in]   channel - the audio channel configuration.
  * @return      The result of the initialization process.
  */
-int8_t   tlkalg_msbc_enc_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_msbc_enc_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       This function deinitializes the mSBC encoder.
  * @return      The result of the deinitialization process.
  */
-int8_t   tlkalg_msbc_enc_deinit(void);
+int8_t tlkalg_msbc_enc_deinit(void);
 
 /**
  * @brief       This function processes an mSBC encoded audio frame.
@@ -165,5 +174,32 @@ int8_t   tlkalg_msbc_enc_deinit(void);
  * @param[in]   channel - the audio channel configuration.
  * @return      The length of the encoded audio data.
  */
-int      tlkalg_msbc_enc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_msbc_enc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+
+#if TLKALG_MSBC_ENABLE_CH2
+int8_t tlkalg_msbc_dec_ch2_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_msbc_dec_ch2_deinit(void);
+int    tlkalg_msbc_dec_ch2_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+
+int8_t tlkalg_msbc_enc_ch2_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_msbc_enc_ch2_deinit(void);
+int    tlkalg_msbc_enc_ch2_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+#endif
+
+#if BT_VOICE_SPP_TEST
+int8_t tlkalg_msbc_dec_micbuf_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_msbc_dec_spkbuf_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_msbc_dec_micbuf_deinit(void);
+int8_t tlkalg_msbc_dec_spkbuf_deinit(void);
+int    tlkalg_msbc_dec_micbuf_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int    tlkalg_msbc_dec_spkbuf_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+
+int8_t tlkalg_msbc_enc_micbuf_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_msbc_enc_spkbuf_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_msbc_enc_micbuf_deinit(void);
+int8_t tlkalg_msbc_enc_spkbuf_deinit(void);
+int    tlkalg_msbc_enc_micbuf_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int    tlkalg_msbc_enc_spkbuf_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+#endif
+
 #endif

@@ -32,8 +32,8 @@
 #endif
 
 #if (TLK_MW_AUDIO_ENABLE)
-static uint8_t s_tone_mix_mode = 0;
-volatile uint32_t codec_flag = 0;
+static uint8_t    s_tone_mix_mode = 0;
+volatile uint32_t codec_flag      = 0;
 
 uint32_t g_alg_mic_rptr = 0;
 uint32_t g_alg_mic_wptr = 0;
@@ -47,7 +47,7 @@ uint32_t g_alg_spk_rptr = 0;
  */
 void tlkalg_sync_mic_spk_index(uint16_t sample)
 {
-    g_alg_mic_wptr = ((audio_get_rx_dma_wptr(TLKDRV_CODEC_MIC_DMA)) - ((uint32_t)g_codec_mic_buff)) / sizeof(adc_int);
+    g_alg_mic_wptr = ((audio_get_rx_dma_wptr(gTlkdrvCodecMicDmaChn)) - ((uint32_t)g_codec_mic_buff)) / sizeof(adc_int);
     g_alg_mic_rptr = (g_alg_mic_wptr - sample) & (CODEC_MIC_FIFO_SAMPLES - 1);
     g_alg_spk_rptr = (g_alg_mic_rptr - hybrid_delay) & (CODEC_SPK_FIFO_SAMPLES - 1);
 }
@@ -60,23 +60,26 @@ void tlkalg_sync_mic_spk_index(uint16_t sample)
  * @param[out]  pd - Destination buffer pointer
  * @return      None
  */
-void tlkalg_agc_proc_behind_nn(uint8_t *ps, uint8_t *pd)
+void tlkalg_agc_proc_behind_nn(uint8_t *ps, uint8_t *pd, uint8_t width)
 {
     //20ms frame length
-    adc_mono_int dsp_ret_buff[MIC_FRAME_SIZE], agc_out_buff[MIC_FRAME_SIZE];
-    adc_mono_int *psrc = (adc_mono_int*)ps;
-    adc_mono_int *pdes = (adc_mono_int*)pd;
-    for (int i = 0; i < MIC_FRAME_SIZE; i++) {
-        dsp_ret_buff[i] = *psrc++;
-    }
+    // adc_mono_int dsp_ret_buff[MIC_FRAME_SIZE], agc_out_buff[MIC_FRAME_SIZE];
+    // adc_mono_int *psrc = (adc_mono_int*)ps;
+    // adc_mono_int *pdes = (adc_mono_int*)pd;
+    // for (int i = 0; i < MIC_FRAME_SIZE; i++) {
+    //     dsp_ret_buff[i] = *psrc++;
+    // }
+
+    // audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_AGC);
+    // p_audio_alg_if->audio_alg_process((uint8_t *)dsp_ret_buff, (uint8_t *)agc_out_buff, 160, 0, 0);
+    // p_audio_alg_if->audio_alg_process((uint8_t *)(&dsp_ret_buff[160]), (uint8_t *)(&agc_out_buff[160]), 160, 0, 0);
+
+    // for(int j = 0; j < MIC_FRAME_SIZE; j++) {
+    //     *pdes++ = agc_out_buff[j];
+    // }
 
     audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_AGC);
-    p_audio_alg_if->audio_alg_process((uint8_t *)dsp_ret_buff, (uint8_t *)agc_out_buff, 160, 0, 0);
-    p_audio_alg_if->audio_alg_process((uint8_t *)(&dsp_ret_buff[160]), (uint8_t *)(&agc_out_buff[160]), 160, 0, 0);
-
-    for(int j = 0; j < MIC_FRAME_SIZE; j++) {
-        *pdes++ = agc_out_buff[j];
-    }
+    p_audio_alg_if->audio_alg_process((uint8_t *)ps, (uint8_t *)pd, MIC_FRAME_SIZE, width, 0);
 }
 #endif
 
@@ -90,9 +93,9 @@ void tlkalg_agc_proc_behind_nn(uint8_t *ps, uint8_t *pd)
 void tlkalg_ans_proc_behind_nn(uint8_t *ps, uint8_t *pd)
 {
     //20ms frame length
-    adc_mono_int dsp_ret_buff[MIC_FRAME_SIZE], agc_out_buff[MIC_FRAME_SIZE];
-    adc_mono_int *psrc = (adc_mono_int*)ps;
-    adc_mono_int *pdes = (adc_mono_int*)pd;
+    adc_mono_int  dsp_ret_buff[MIC_FRAME_SIZE], agc_out_buff[MIC_FRAME_SIZE];
+    adc_mono_int *psrc = (adc_mono_int *)ps;
+    adc_mono_int *pdes = (adc_mono_int *)pd;
     for (int i = 0; i < MIC_FRAME_SIZE; i++) {
         dsp_ret_buff[i] = *psrc++;
     }
@@ -103,7 +106,7 @@ void tlkalg_ans_proc_behind_nn(uint8_t *ps, uint8_t *pd)
     p_audio_alg_if->audio_alg_process((uint8_t *)(&dsp_ret_buff[160]), (uint8_t *)(&agc_out_buff[160]), 80, 0, 0);
     p_audio_alg_if->audio_alg_process((uint8_t *)(&dsp_ret_buff[240]), (uint8_t *)(&agc_out_buff[240]), 80, 0, 0);
 
-    for(int j = 0; j < MIC_FRAME_SIZE; j++) {
+    for (int j = 0; j < MIC_FRAME_SIZE; j++) {
         *pdes++ = agc_out_buff[j];
     }
 }
@@ -115,11 +118,11 @@ void tlkalg_ans_proc_behind_nn(uint8_t *ps, uint8_t *pd)
  */
 bool tlkmdi_anc_btmusic_is_busy_no_macro(void)
 {
-    #if TLKALG_ANC_ENABLE
+#if TLKALG_ANC_ENABLE
     return tlkmdi_anc_btmusic_is_busy();
-    #else
+#else
     return 0;
-    #endif
+#endif
 }
 
 /**
@@ -128,11 +131,11 @@ bool tlkmdi_anc_btmusic_is_busy_no_macro(void)
  */
 bool tlkmdi_anc_btvoice_is_busy_no_macro(void)
 {
-    #if TLKALG_ANC_ENABLE
+#if TLKALG_ANC_ENABLE
     return tlkmdi_anc_btvoice_is_busy();
-    #else
+#else
     return 0;
-    #endif
+#endif
 }
 
 /**
@@ -148,7 +151,7 @@ void tlkmdi_anc_inform_dsp_sync(void)
 #endif
 }
 
-#if(TLKALG_ANS_SPK_ENABLE)
+#if (TLKALG_ANS_SPK_ENABLE)
 /**
  * @brief       Process multi-frame ANS for speaker
  * @param[in]   ps - Source buffer pointer
@@ -157,22 +160,22 @@ void tlkmdi_anc_inform_dsp_sync(void)
  * @return      None
  * @note        Process 20ms frame length
  */
-void tlkalg_ans_multiframe(uint8_t *ps, uint8_t *pd ,uint8_t frame_num)
+void tlkalg_ans_multiframe(uint8_t *ps, uint8_t *pd, uint8_t frame_num)
 {
     //20ms frame length
-    adc_mono_int ans_in[MIC_FRAME_SIZE*2], ans_out[MIC_FRAME_SIZE*2];
-    adc_mono_int *psrc = (adc_mono_int*)ps;
-    adc_mono_int *pdes = (adc_mono_int*)pd;
+    adc_mono_int  ans_in[MIC_FRAME_SIZE * 2], ans_out[MIC_FRAME_SIZE * 2];
+    adc_mono_int *psrc = (adc_mono_int *)ps;
+    adc_mono_int *pdes = (adc_mono_int *)pd;
     for (int i = 0; i < MIC_FRAME_SIZE; i++) {
-    	ans_in[i] = *psrc++;
-    	ans_in[i] = *psrc++;
+        ans_in[i] = *psrc++;
+        ans_in[i] = *psrc++;
     }
 
 #if 1
     audio_alg_interface_t *p_audio_alg_if = audio_alg_get_interface_by_type(ALG_SPK_ANS);
-	for(int i=0;i<frame_num;i++) {
-		p_audio_alg_if->audio_alg_process((uint8_t *)(&ans_in[80*i]), (uint8_t *)(&ans_out[80*i]), 80, 0, 0);
-	}
+    for (int i = 0; i < frame_num; i++) {
+        p_audio_alg_if->audio_alg_process((uint8_t *)(&ans_in[80 * i]), (uint8_t *)(&ans_out[80 * i]), 80, 0, 0);
+    }
 //    (void)frame_num;
 //    p_audio_alg_if->audio_alg_process((uint8_t *)ans_in, (uint8_t *)ans_out, 80, 0, 0);
 //	p_audio_alg_if->audio_alg_process((uint8_t *)(&ans_in[80]), (uint8_t *)(&ans_out[80]), 80, 0, 0);
@@ -181,11 +184,11 @@ void tlkalg_ans_multiframe(uint8_t *ps, uint8_t *pd ,uint8_t frame_num)
 #else
     (void)frame_num;
     for (int k = 0; k < MIC_FRAME_SIZE; k++) {
-    	ans_out[k] = ans_in[k];
-        }
+        ans_out[k] = ans_in[k];
+    }
 #endif
 
-    for(int j = 0; j < MIC_FRAME_SIZE; j++) {
+    for (int j = 0; j < MIC_FRAME_SIZE; j++) {
         *pdes++ = ans_out[j];
         *pdes++ = ans_out[j];
     }
@@ -205,17 +208,17 @@ uint8_t tlkalg_get_mic_frame(int16_t *pdes, uint16_t len)
     short   buff_alg_in[360] = {0};
 
     // short pcm_stereo[240] = {0};
-    #if (TLKALG_AGC_ENABLE)
+#if (TLKALG_AGC_ENABLE)
     short buff_hybrid_out[120];
-    #endif
-    #if TLKALG_AGC_ENABLE
+#endif
+#if TLKALG_AGC_ENABLE
     short buff_agc_out[120];
-    #endif
+#endif
 
-    #if (TLKALG_AGC_ENABLE || TLKALG_AGC_ENABLE)
+#if (TLKALG_AGC_ENABLE || TLKALG_AGC_ENABLE)
     short                 *mic_ptr = buff_alg_in;
     audio_alg_interface_t *p_audio_alg_if;
-    #endif
+#endif
     short *pout = buff_alg_in;
 
 
@@ -229,7 +232,7 @@ uint8_t tlkalg_get_mic_frame(int16_t *pdes, uint16_t len)
     }
     g_alg_mic_rptr = (g_alg_mic_rptr + len) & (CODEC_MIC_FIFO_SAMPLES - 1);
 
-    #if TLK_ALG_HYBRID_ENABLE
+#if TLK_ALG_HYBRID_ENABLE
     //get spk data
     if (alg_ctrl & AEC_CTRL_MASK) {
         for (int j = 0; j < len; j++) {
@@ -240,13 +243,13 @@ uint8_t tlkalg_get_mic_frame(int16_t *pdes, uint16_t len)
     p_audio_alg_if = audio_alg_get_interface_by_type(ALG_HYBRID);
     p_audio_alg_if->audio_alg_process((uint8_t *)mic_ptr, (uint8_t *)buff_hybrid_out, len, 0, 0);
     mic_ptr = pout = buff_hybrid_out;
-    #endif
+#endif
 
-    #if TLKALG_AGC_ENABLE
+#if TLKALG_AGC_ENABLE
     p_audio_alg_if = audio_alg_get_interface_by_type(ALG_AGC);
     p_audio_alg_if->audio_alg_process((uint8_t *)mic_ptr, (uint8_t *)buff_agc_out, len, 0, 0);
     pout = buff_agc_out;
-    #endif
+#endif
 
     for (int k = 0; k < len; k++) {
         *pdes++ = *pout++;
@@ -297,22 +300,22 @@ AUDIO_CODEC_DAC_TYPE_ENUM tlkmdi_audio_get_codec_dac_type(void)
  */
 float tlkmdi_audio_dB_calc_16bit(short *data, uint16_t len)
 {
-    float temp = 0.0;
-    float rms_frame = 0.0;
+    float temp         = 0.0;
+    float rms_frame    = 0.0;
     float rms_frame_db = 0.0;
     for (int i = 0; i < len; i++) {
         temp = data[i];
-        temp /= (1 << 15);//16bit-15    24bit-23
+        temp /= (1 << 15); //16bit-15    24bit-23
         rms_frame += temp * temp;
     }
-    rms_frame = riscv_dsp_sqrt_f32(rms_frame / len);
-    rms_frame_db = 20.0 * (riscv_dsp_log_f32(rms_frame)/riscv_dsp_log_f32(10.0));
+    rms_frame    = riscv_dsp_sqrt_f32(rms_frame / len);
+    rms_frame_db = 20.0 * (riscv_dsp_log_f32(rms_frame) / riscv_dsp_log_f32(10.0));
 
     // if (rms_frame_db < mute_threshold) {
     //     for (int j = 0; j < len; j++) {
     //         data[j] = 0;
     //     }
-        // tlkapi_printf(APP_LOG_EN, "mute en %fdB", rms_frame_db);
+    // tlkapi_printf(APP_LOG_EN, "mute en %fdB", rms_frame_db);
     // }
 
     return rms_frame_db;

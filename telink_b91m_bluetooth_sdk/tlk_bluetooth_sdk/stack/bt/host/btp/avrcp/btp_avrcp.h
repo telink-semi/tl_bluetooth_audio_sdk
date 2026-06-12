@@ -761,5 +761,6 @@ int btp_avrcp_sendGetElementAttrCmd(uint16_t aclHandle, uint8_t identify[8], uin
  *******************************************************************************/
 void btp_avrcp_regInsCompleteCB(BtpAvrcpInsCompleteCB cb);
 
+uint8_t btp_avrcp_get_current_volume(uint16_t aclHandle);
 
 #endif /* BTP_AVRCP_H */

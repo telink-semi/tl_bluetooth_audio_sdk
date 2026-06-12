@@ -29,24 +29,24 @@
 
 const unsigned char tlk_hid_keyboard_report_map[] = {
     //keyboard report in
-    0x05, 0x01,                         // Usage Pg (Generic Desktop)
-    0x09, 0x06,                         // Usage (Keyboard)
-    0xA1, 0x01,                         // Collection: (Application)
+    0x05, 0x01, // Usage Pg (Generic Desktop)
+    0x09, 0x06, // Usage (Keyboard)
+    0xA1, 0x01, // Collection: (Application)
     0x85,
     BLE_HOST_HID_REPORT_ID_KEYBOARD_INPUT, // Report Id (keyboard)
-    0x05, 0x07,                         // Usage Pg (Key Codes)
-    0x19, 0xE0,                         // Usage Min (224)  VK_CTRL:0xe0
-    0x29, 0xE7,                         // Usage Max (231)  VK_RWIN:0xe7
-    0x15, 0x00,                         // Log Min (0)
-    0x25, 0x01,                         // Log Max (1)
+    0x05, 0x07,                            // Usage Pg (Key Codes)
+    0x19, 0xE0,                            // Usage Min (224)  VK_CTRL:0xe0
+    0x29, 0xE7,                            // Usage Max (231)  VK_RWIN:0xe7
+    0x15, 0x00,                            // Log Min (0)
+    0x25, 0x01,                            // Log Max (1)
     // Modifier byte
-    0x75, 0x01,                         // Report Size (1)   1 bit * 8
-    0x95, 0x08,                         // Report Count (8)
-    0x81, 0x02,                         // Input: (Data, Variable, Absolute)
+    0x75, 0x01, // Report Size (1)   1 bit * 8
+    0x95, 0x08, // Report Count (8)
+    0x81, 0x02, // Input: (Data, Variable, Absolute)
     // Reserved byte
-    0x95, 0x01,                         // Report Count (1)
-    0x75, 0x08,                         // Report Size (8)
-    0x81, 0x01,                         // Input: (static constant)
+    0x95, 0x01, // Report Count (1)
+    0x75, 0x08, // Report Size (8)
+    0x81, 0x01, // Input: (static constant)
 
     //keyboard output
     //5 bit led ctrl: NumLock CapsLock ScrollLock Compose kana
@@ -70,21 +70,21 @@ const unsigned char tlk_hid_keyboard_report_map[] = {
     0x19, 0x00, // Usage Min (0)
     0x29, 0xf1, // Usage Max (241)
     0x81, 0x00, // Input: (Data, Array)
-    0xC0, // End Collection
+    0xC0,       // End Collection
 
     //consumer report in
-    0x05, 0x0C,                                // Usage Page (Consumer)
-    0x09, 0x01,                                // Usage (Consumer Control)
-    0xA1, 0x01,                                // Collection (Application)
+    0x05, 0x0C,                                         // Usage Page (Consumer)
+    0x09, 0x01,                                         // Usage (Consumer Control)
+    0xA1, 0x01,                                         // Collection (Application)
     0x85, BLE_HOST_HID_REPORT_ID_CONSUME_CONTROL_INPUT, //     Report Id
-    0x75, 0x10,                                //global, report size 16 bits
-    0x95, 0x01,                                //global, report count 1
-    0x15, 0x01,                                //global, min  0x01
-    0x26, 0x8c, 0x02,                          //global, max  0x28c
-    0x19, 0x01,                                //local, min   0x01
-    0x2a, 0x8c, 0x02,                          //local, max    0x28c
-    0x81, 0x00,                                //main,  input data variable, absolute
-    0xc0,                                      //main, end collection
+    0x75, 0x10,                                         //global, report size 16 bits
+    0x95, 0x01,                                         //global, report count 1
+    0x15, 0x01,                                         //global, min  0x01
+    0x26, 0x8c, 0x02,                                   //global, max  0x28c
+    0x19, 0x01,                                         //local, min   0x01
+    0x2a, 0x8c, 0x02,                                   //local, max    0x28c
+    0x81, 0x00,                                         //main,  input data variable, absolute
+    0xc0,                                               //main, end collection
 };
 
 const unsigned short tlk_hid_keyboard_report_map_len = sizeof(tlk_hid_keyboard_report_map);

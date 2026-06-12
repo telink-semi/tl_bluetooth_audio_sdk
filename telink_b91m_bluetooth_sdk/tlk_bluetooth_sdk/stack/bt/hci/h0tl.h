@@ -32,10 +32,10 @@
 #include "stack/bt/common/rwip_config.h" // stack configuration
 
 #if (H0TL_SUPPORT)
-    #include "stack/bt/common/rwip.h"    // SW interface
-    #include "stack/bt/ke/ke_msg.h"      // kernel event
-    #include <stdint.h>                  // standard integer definition
-    #include <stdbool.h>                 // standard boolean definition
+#include "stack/bt/common/rwip.h" // SW interface
+#include "stack/bt/ke/ke_msg.h"   // kernel event
+#include <stdint.h>               // standard integer definition
+#include <stdbool.h>              // standard boolean definition
 
 /*
  * DEFINES
@@ -75,7 +75,7 @@ typedef int (*h0tl_c2h_rx_callback_t)(uint8_t type, uint8_t *hci_packet, uint16_
  * 
  *****************************************************************************************
  */
-void h0tl_init(uint8_t h2c_fifo_num, uint16_t h2c_fifo_size, uint8_t c2h_fifo_num, uint16_t c2h_fifo_size, h0tl_c2h_rx_callback_t cb);
+void tlk_bt_ctrl_h0tl_init(uint8_t h2c_fifo_num, uint16_t h2c_fifo_size, uint8_t c2h_fifo_num, uint16_t c2h_fifo_size, h0tl_c2h_rx_callback_t cb);
 
 /**
  ****************************************************************************************
@@ -90,7 +90,7 @@ void h0tl_init(uint8_t h2c_fifo_num, uint16_t h2c_fifo_size, uint8_t c2h_fifo_nu
  *
  *****************************************************************************************
  */
-void h0tl_reset(void);
+void tlk_bt_ctrl_h0tl_reset(void);
 
 /**
  ****************************************************************************************
@@ -104,7 +104,7 @@ void h0tl_reset(void);
  * 
  *****************************************************************************************
  */
-void h0tl_c2h_write(struct ke_msg *msg);
+void tlk_bt_ctrl_h0tl_c2h_write(struct ke_msg *msg);
 
 /**
  ****************************************************************************************
@@ -118,8 +118,8 @@ void h0tl_c2h_write(struct ke_msg *msg);
  * @param[in] param   pointer to the HCI command parameters
  *****************************************************************************************
  */
-// uint8_t h0tl_h2c_write_command(uint16_t opcode, uint8_t parlen, uint8_t *param);
-uint8_t h0tl_h2c_write_command(uint16_t opcode, volatile uint8_t *param, uint8_t parlen);
+// uint8_t tlk_bt_ctrl_h0tl_h2c_write_command(uint16_t opcode, uint8_t parlen, uint8_t *param);
+uint8_t tlk_bt_ctrl_h0tl_h2c_write_command(uint16_t opcode, volatile uint8_t *param, uint8_t parlen);
 
 /**
  ****************************************************************************************
@@ -134,9 +134,9 @@ uint8_t h0tl_h2c_write_command(uint16_t opcode, volatile uint8_t *param, uint8_t
  * @param[in] data   pointer to the payload of this HCI acl data packet
  *****************************************************************************************
  */
-uint8_t h0tl_h2c_write_acl_data(uint16_t hdl_flags, uint16_t data_len, uint8_t *data);
+uint8_t tlk_bt_ctrl_h0tl_h2c_write_acl_data(uint16_t hdl_flags, uint16_t data_len, uint8_t *data);
 
-    /**
+/**
  ****************************************************************************************
  * @brief H0TL write hci sync data API. This is called by host stack once it wants to send 
  *        an HCI sync data packet to controller in SoC mode.
@@ -149,19 +149,19 @@ uint8_t h0tl_h2c_write_acl_data(uint16_t hdl_flags, uint16_t data_len, uint8_t *
  * @param[in] data   pointer to the payload of this HCI sync data packet
  *****************************************************************************************
  */
-    #if (VOICE_OVER_HCI)
-uint8_t h0tl_h2c_write_sync_data(uint16_t conhdl_flags, uint8_t data_total_len, uint8_t *data);
-    #endif
+#if (1)
+uint8_t tlk_bt_ctrl_h0tl_h2c_write_sync_data(uint16_t conhdl_flags, uint8_t data_total_len, uint8_t *data);
+#endif
 
 typedef int (*TlkBtH4c2htxCallback)(void);
 
-void hci_regh4CB(TlkBtH4c2htxCallback cb);
+void tlk_bt_ctrl_hci_regh4CB(TlkBtH4c2htxCallback cb);
 
-uint8_t h0tl_h2c_fifo_unused(void);
+uint8_t tlk_bt_ctrl_h0tl_h2c_fifo_unused(void);
 
-uint8_t h0tl_h2c_acl_tx_queue_free_count(void);
+uint8_t tlk_bt_ctrl_h0tl_h2c_acl_tx_queue_free_count(void);
 
-uint8_t h0tl_h2c_fifo_used(void);
+uint8_t tlk_bt_ctrl_h0tl_h2c_fifo_used(void);
 
 #endif //H0TL_SUPPORT
 

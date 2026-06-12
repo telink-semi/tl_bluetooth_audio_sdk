@@ -47,7 +47,7 @@ void tlk_fifo_init(tlk_fifo_t *f, int s, u8 n, u8 *p)
  * @param[in]  f - pointer to the FIFO structure
  * @return     Pointer to the current write position, or NULL if FIFO is full
  */
-_attribute_retention_code_ u8 *tlk_fifo_wptr(tlk_fifo_t *f)
+u8 *tlk_fifo_wptr(tlk_fifo_t *f)
 {
     if (((f->wptr - f->rptr) & 255) < f->num) {
         return f->p + (f->wptr & (f->num - 1)) * f->size;
@@ -60,7 +60,7 @@ _attribute_retention_code_ u8 *tlk_fifo_wptr(tlk_fifo_t *f)
  * @param[in]  f - pointer to the FIFO structure
  * @return     none
  */
-_attribute_retention_code_ void tlk_fifo_next(tlk_fifo_t *f)
+_always_inline void tlk_fifo_next(tlk_fifo_t *f)
 {
     f->wptr++;
 }

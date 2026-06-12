@@ -33,29 +33,29 @@
 #define MINIMP3_ALLOW_MONO_STEREO_TRANSITION
 
 #ifdef _WIN32
-    #ifndef int16_t
+#ifndef int16_t
 typedef short int16_t;
-    #endif
+#endif
 
-    #ifndef uint16_t
+#ifndef uint16_t
 typedef unsigned short uint16_t;
-    #endif
+#endif
 
-    #ifndef int32_t
+#ifndef int32_t
 typedef int int32_t;
-    #endif
+#endif
 
-    #ifndef uint32_t
+#ifndef uint32_t
 typedef unsigned int uint32_t;
-    #endif
+#endif
 
-    #ifndef uint64_t
+#ifndef uint64_t
 typedef unsigned long long uint64_t;
-    #endif
+#endif
 
-    #ifndef uint8_t
+#ifndef uint8_t
 typedef unsigned char uint8_t;
-    #endif
+#endif
 
 #endif
 

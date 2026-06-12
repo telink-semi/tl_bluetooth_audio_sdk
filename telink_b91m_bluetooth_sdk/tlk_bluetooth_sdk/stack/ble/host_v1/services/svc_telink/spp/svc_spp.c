@@ -44,31 +44,18 @@
 
 #define TLK_SPP_START_HDL SERVICE_TLK_SPP_HDL
 
-static const uint8_t serviceTlkSppUuid[16] = {TELINK_SPP_UUID_SERVICE};
-
-static const uint8_t tlkSppServer2ClientUuid[16] = {TELINK_SPP_DATA_SERVER2CLIENT};
-static const uint8_t tlkSppClient2ServerUuid[16] = {TELINK_SPP_DATA_CLIENT2SERVER};
-
 /*
  * @brief the structure for Telink SPP service List.
  */
 static const struct atts_attribute tlkSppList[] = {
-    ATTS_PRIMARY_SERVICE_128(serviceTlkSppUuid),
+    ATTS_PRIMARY_SERVICE_128(tlk_spp_service_att_uuid),
 
     ATTS_CHARACTERISTIC_DECLARATIONS(charPropNotify),
-    {
-        ATT_PERMISSIONS_NONE,
-        ATT_128_UUID_LEN,
-        (uint8_t *)(size_t)&tlkSppServer2ClientUuid[0],
-        NULL,
-        0,
-        NULL,
-        0,
-    },
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_NONE, tlk_spp_server2client_char_att_uuid, ATTS_SET_NONE, 0, NULL, NULL),
     ATTS_COMMON_CCC_DEFINE,
 
     ATTS_CHARACTERISTIC_DECLARATIONS(charPropWriteWithout),
-    {ATT_PERMISSIONS_WRITE, ATT_128_UUID_LEN, (uint8_t *)(size_t)&tlkSppClient2ServerUuid[0], NULL, 0, NULL, ATTS_SET_WRITE_CALLBACK},
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_WRITE, tlk_spp_client2server_char_att_uuid, ATTS_SET_WRITE_CALLBACK, 0, NULL, NULL),
 };
 
 /*

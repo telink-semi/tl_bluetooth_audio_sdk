@@ -24,8 +24,6 @@
 #pragma once
 #include "core/mcu_type.h"
 
-#define TLK_CFG_FLASH_PROT_ENABLE		0
-
 // LE Audio Music.
 #define TLK_MW_LEA_UC_MUSIC_ENABLE (1)
 // MIC function.
@@ -70,39 +68,50 @@
 #define TLKBTP_CFG_HID_ENABLE (1 && TLK_STK_BT_ENABLE)
 #endif
 
+#define APP_USB_PPM_IN_BUFF_SIZE (1024 * 4)
 
 //BLE Stack Configuration//
-#define TLK_STK_BLE_ENABLE        1
+#define TLK_STK_BLE_ENABLE       1
 
-#define BLE_DONGLE_CONTROLLER_EN    1
+#define BLE_DONGLE_CONTROLLER_EN 1
 
 
 /*Panther's codec do not support 32k.TODO: Junyuan.*/
-#define BLE_AUDIO_ENABLE_32KHZ_VOICE_STREAM     1
+#define BLE_AUDIO_ENABLE_32KHZ_VOICE_STREAM 1
 
 /////////////////////// Algorithm Select Configuration //////////////////////////////
 //encode/decode algorithm
-#define TLKALG_SBC_DEC_ENABLE                   1
-#define TLKALG_SBC_ENC_ENABLE                   1
-#define TLKALG_MSBC_ENABLE                      1
+#define TLKALG_SBC_DEC_ENABLE 1
+#define TLKALG_SBC_ENC_ENABLE 1
+#define TLKALG_MSBC_ENABLE    1
 
 //asrc/ppm algorithm
 #if (MCU_CORE_TYPE != MCU_CORE_TL752X)
-#define TLKALG_CVSD_ENABLE                      1
-#define TLKALG_AAC_DEC_ENABLE                   1
+#define TLKALG_CVSD_ENABLE    1
+#define TLKALG_AAC_DEC_ENABLE 0
 
-#define TLKALG_PPM_SPK_ENABLE                   1
-#define TLKALG_PPM_MIC_ENABLE                   1
+#define TLKALG_PPM_SPK_ENABLE 1
+#define TLKALG_PPM_MIC_ENABLE 1
 #endif
 
-#define TLKALG_ASRC_16BIT_ENABLE                1
-#define TLKALG_ASRC_16TO48_16BIT_ENABLE         1
-#define TLKALG_ASRC_48TO16_16BIT_ENABLE         1
+#define TLKALG_ASRC_16BIT_ENABLE        1
+#define TLKALG_ASRC_16TO48_16BIT_ENABLE 1
+#define TLKALG_ASRC_48TO16_16BIT_ENABLE 1
 
 #if BLE_AUDIO_ENABLE_32KHZ_VOICE_STREAM
-#define TLKALG_ASRC_48TO32_16BIT_ENABLE         1
-#define TLKALG_ASRC_32TO48_16BIT_ENABLE         1
-#define TLKALG_ASRC_32TO16_16BIT_ENABLE         1
+#define TLKALG_ASRC_48TO32_16BIT_ENABLE 1
+#define TLKALG_ASRC_32TO48_16BIT_ENABLE 1
+#define TLKALG_ASRC_32TO16_16BIT_ENABLE 1
+#endif
+
+#ifndef TLKCFG_MULTI_MIC_EN
+#define TLKCFG_MULTI_MIC_EN 0
+#endif
+#if (TLKCFG_MULTI_MIC_EN)
+#define AUDIO_PATH_24BITS_EN 1
+/*  1. This macro is used to verify the MIC in(48k) SPK out of the EVB board.
+    2. If use IIS to send 5 Mic (2 codec_mic and 1 bmic and 2 sco_mic from wireless)data can close. */
+#define AUDIO_CODEC_LOOPBACK 1
 #endif
 
 /////////////////////// Board Select Configuration //////////////////////////////
@@ -138,7 +147,30 @@
 #include "app_src_uac.h"
 
 
-#define VCD_DEFINE_SELECT           VCD_DEFINE_BTTPSLL_TL751X
+#define VCD_DEFINE_SELECT VCD_DEFINE_BTTPSLL_TL751X
 
 #endif
 #include "vendor/common/default_config.h"
+
+#if (TLKCFG_MULTI_MIC_EN && MCU_CORE_TYPE == MCU_CORE_TL751X && TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A20_V1_0)
+#if (AUDIO_CODEC_LOOPBACK)
+#undef TLKDRV_CODEC_ICODEC_ENABLE
+#define TLKDRV_CODEC_ICODEC_ENABLE 1
+#endif
+#if (TLK_DEV_CODEC_ENABLE && TLKDRV_CODEC_ICODEC_ENABLE)
+#if (!TLKALG_BBF_ENABLE)
+#undef TLKDRV_ICODEC_DMIC_CLK0_PIN
+#define TLKDRV_ICODEC_DMIC_CLK0_PIN GPIO_PI5
+#undef TLKDRV_ICODEC_DMIC_CLK1_PIN
+#define TLKDRV_ICODEC_DMIC_CLK1_PIN GPIO_PI5
+#undef TLKDRV_ICODEC_DMIC_DATA_PIN
+#define TLKDRV_ICODEC_DMIC_DATA_PIN GPIO_PI2
+#undef TLKDRV_ICODEC_DMIC1_CLK0_PIN
+#define TLKDRV_ICODEC_DMIC1_CLK0_PIN GPIO_PI4
+#undef TLKDRV_ICODEC_DMIC1_CLK1_PIN
+#define TLKDRV_ICODEC_DMIC1_CLK1_PIN GPIO_NONE_PIN //GPIO_NONE_PIN
+#undef TLKDRV_ICODEC_DMIC1_DATA_PIN
+#define TLKDRV_ICODEC_DMIC1_DATA_PIN GPIO_PI3
+#endif // #if (!TLKALG_BBF_ENABLE)
+#endif // (TLK_DEV_CODEC_ENABLE && TLKDRV_CODEC_ICODEC_ENABLE)
+#endif

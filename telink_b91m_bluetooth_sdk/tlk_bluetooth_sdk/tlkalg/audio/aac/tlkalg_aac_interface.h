@@ -24,7 +24,7 @@
 #include "tlkalg/audio/aac/tlka_aac_dec_api.h"
 
 #ifndef CODEC_AAC_TLK_AAC_INTERFACE_API_H_
-    #define CODEC_AAC_TLK_AAC_INTERFACE_API_H_
+#define CODEC_AAC_TLK_AAC_INTERFACE_API_H_
 #if TLKALG_AAC_DEC_ENABLE
 extern void                  *g_aac_dec_env_buf_ptr;
 extern void                  *g_aac_scratch_buf_ptr;
@@ -44,13 +44,13 @@ uint16_t tlkalg_aac_dec_get_size(uint8_t channel);
  * @param[in]   channel - the number of channels
  * @return      0 on success, non-zero on failure
  */
-int8_t   tlkalg_aac_dec_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_aac_dec_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief       Deinitialize AAC decoder
  * @return      0 on success, non-zero on failure
  */
-int8_t   tlkalg_aac_dec_deinit(void);
+int8_t tlkalg_aac_dec_deinit(void);
 
 /**
  * @brief       Process an AAC frame and decode it
@@ -61,9 +61,9 @@ int8_t   tlkalg_aac_dec_deinit(void);
  * @param[in]   channel - the number of channels
  * @return      Decoding state
  */
-int      tlkalg_aac_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_aac_dec_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 #endif
-    #if 0
+#if 0
 /**
  * @brief       Set up the AAC required for the decoding and scratch buffer
  * @param[in]   p       - pointer to the system buffer for AAC decoding
@@ -98,5 +98,5 @@ extern int tlkalg_aac_dec_chn_right (const unsigned char *ps, int len, unsigned 
  * @return      decoding state
  */
 extern int tlkalg_aac_dec_stereo (const unsigned char *ps, int len, unsigned char *pd);
-    #endif
+#endif
 #endif /* CODEC_AAC_TLK_AAC_INTERFACE_API_H_ */

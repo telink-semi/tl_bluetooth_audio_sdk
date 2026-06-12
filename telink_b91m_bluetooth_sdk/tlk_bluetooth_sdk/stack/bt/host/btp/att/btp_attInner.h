@@ -31,37 +31,37 @@
 #if (TLKBTP_CFG_ATT_ENABLE)
 
 
-    #define BTP_ATT_DBG_FLAG ((TLK_MAJOR_DBGID_BTP << 24) | (TLK_MINOR_DBGID_BTP_ATT << 16) | TLK_DEBUG_DBG_FLAG_ALL)
-    #define BTP_ATT_DBG_SIGN NULL
+#define BTP_ATT_DBG_FLAG ((TLK_MAJOR_DBGID_BTP << 24) | (TLK_MINOR_DBGID_BTP_ATT << 16) | TLK_DEBUG_DBG_FLAG_ALL)
+#define BTP_ATT_DBG_SIGN NULL
 
 typedef struct
 {
-    uint8_t state;
-    uint8_t usrID;
+    uint8_t  state;
+    uint8_t  usrID;
     uint16_t chnID;
     uint16_t busys;
     uint16_t flags;
     uint16_t handle;
     uint16_t mtuSize;
-    uint8_t timeout;
-    uint8_t reserve0;
+    uint8_t  timeout;
+    uint8_t  reserve0;
     uint16_t reserve1;
 
     union
     {
         struct
         {
-            uint8_t opcode;
-            uint8_t reason;
-            uint8_t resv000;
-            uint8_t uuidLen;
+            uint8_t  opcode;
+            uint8_t  reason;
+            uint8_t  resv000;
+            uint8_t  uuidLen;
             uint16_t roffset;
             uint16_t resv001;
             uint16_t mtuSize;
             uint16_t ahandle;
             uint16_t shandle; // Att Handle
             uint16_t ehandle;
-            uint8_t attUUID[16];
+            uint8_t  attUUID[16];
         } server;
 
         struct

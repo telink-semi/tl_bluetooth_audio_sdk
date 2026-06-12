@@ -28,9 +28,6 @@
 #include "stack/stack.h"
 #include "drivers.h"
 
-extern uint32_t g_tick_bt_window_us;
-extern uint32_t g_tick_bt_window;
-
 /**
  * @brief       Set asynchronous TWS status flag
  * @param[in]   flag - Flag to set

@@ -61,7 +61,7 @@
 
 #define FOR_EBQ_SPECIAL_MODE   0 // no schedule
 
-#define EBQ_NO_SCH_ACCESS_MODE FOR_EBQ_SPECIAL_MODE &&EBQ_BT_CTRLER_ONLY_TEST_MODE
+#define EBQ_NO_SCH_ACCESS_MODE 0
 /// Check if compilation is performed for BLE HW 5.0 + ISO target
 #if (defined(CFG_HW_50_ISO))
 #define BLE_HW_50_ISO 1

@@ -30,11 +30,13 @@
 #ifndef BT_HCI_H_
 #define BT_HCI_H_
 
-#define TLKBT_HCI_H2C_ACL_SIZE H0TL_H2C_FIFO_SIZE - 13 //679 // Data(2-DH5)=679
+#define TLKBT_HCI_H2C_ACL_SIZE 692 - 13 //679 // Data(2-DH5)=679
 
 
 //If available buffer size is less than TLKBT_HCI_H2C_ACL_RESV_NUMB, it is not allowed to continue sending
 #define TLKBT_HCI_H2C_ACL_RESV_NUMB 3
+
+#define BT_HCI_EVT_HDR_LEN          2
 
 /**
  *  @brief  Definition for HCI packet type & HCI packet indicator
@@ -97,6 +99,14 @@ typedef struct
     uint16_t lmp_subver;
 } bt_local_version_t;
 
+typedef struct
+{
+    u32 tick; //tick of free running system timer
+
+    u32 clkn; //28-bit BT Clock, CLKN counter counts between 0 and 2^28-1 with a 312.5us precision
+    u32 fcnt; //Fine Counter counts between 624 and 0 and has a 0.5us precision, note that it counts DOWNWARD
+} bt_rd_tcf_info_t;
+
 void    tlkbt_hci_setAclBuffSize(uint16_t acl_pk_len, uint8_t sco_pk_len, uint16_t acl_num, uint16_t sco_num);
 uint8_t tlkbt_hci_aclGetAvalSize(void);
 
@@ -116,6 +126,9 @@ int tlkbt_hci_sendH2cCmd(uint16_t opcode, uint8_t *pData, uint8_t dataLen);
 int tlkbt_hci_sendH2cAclData(uint16_t aclHandle, uint8_t *pUsrExt, uint16_t extLen, uint8_t *pHead, uint16_t headLen, uint8_t *pData, uint16_t dataLen);
 
 void tlkbt_hci_getLovalVersion(uint8_t *pdata, uint8_t dataLen);
+
+void tlkbt_hci_getTcfInfo(uint8_t *pdata, uint8_t dataLen);
+void tlksdk_host_get_clkn_fcnt_from_tick(bt_rd_tcf_info_t *p, uint32_t t);
 
 typedef enum
 {

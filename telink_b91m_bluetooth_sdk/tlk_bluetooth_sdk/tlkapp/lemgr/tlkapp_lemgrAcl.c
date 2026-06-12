@@ -29,7 +29,7 @@
 #define MAX_ADV_PARAM_SAVE (32)
 
 
- unsigned char le_auto_connect_flag = 1;
+unsigned char le_auto_connect_flag = 1;
 
 /**
  * @brief   Send ACL connection event to application.
@@ -44,7 +44,7 @@ void tlkapp_lemgr_sendAclConnectEvt(uint16_t handle, uint8_t status, uint8_t pee
 {
     uint8_t buffLen;
     uint8_t buffer[32];
-    buffLen = 0;
+    buffLen           = 0;
     buffer[buffLen++] = status;            //Status
     buffer[buffLen++] = peerRole + 1;      //Role
     buffer[buffLen++] = (handle & 0x00FF); //Handle
@@ -64,14 +64,14 @@ void tlkapp_lemgr_sendAclConnectEvt(uint16_t handle, uint8_t status, uint8_t pee
  */
 void tlkapp_lemgr_sendAclDisconnEvt(uint16_t handle, uint8_t reason, uint8_t *pBtAddr)
 {
-    (void) pBtAddr;
+    (void)pBtAddr;
     uint8_t buffLen;
     uint8_t buffer[32];
     buffLen = 0;
 
     buffer[buffLen++] = (handle & 0x00FF); //Handle
     buffer[buffLen++] = (handle & 0xFF00) >> 8;
-    buffer[buffLen++] = reason;            //reason
+    buffer[buffLen++] = reason; //reason
     // tmemcpy(buffer+buffLen, pBtAddr, 6); //MAC
     // buffLen += 6;
     tlkapp_lemgr_sendCommEvt(TLKPRT_COMM_EVTID_LE_DISCONN, buffer, buffLen);
@@ -89,7 +89,7 @@ void tlkapp_lemgr_sendExtScanDataEvt(uint8_t address_type, const uint8_t *addres
 {
     uint8_t buffLen;
     uint8_t buffer[32];
-    buffLen = 0;
+    buffLen           = 0;
     buffer[buffLen++] = address_type;      //address_type
     tmemcpy(buffer + buffLen, address, 6); //MAC address
     buffLen += 6;
@@ -116,7 +116,7 @@ void tlkapp_lemgr_sendExtScanDataEvt(uint8_t address_type, const uint8_t *addres
  */
 int tlkapp_lemgr_SetAutoRec(uint8_t *pData, uint16_t dataLen)
 {
-    (void) dataLen;
+    (void)dataLen;
     le_auto_connect_flag = pData[0];
     return TLK_ENONE;
 }

@@ -54,21 +54,11 @@ static void tlkapp_system_init(void)
 #endif
 
     trng_init();
-    tlk_readFlashSize_autoConfigCustomFlashSector();
 
     tlkapp_sys_pm_init();
     tlksys_task_regEvtCB(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_PM, tlkapp_sys_pm_handler);
 
     tlkapp_sys_ctrlInit();
-    tlksys_task_regEvtCB(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_SQL_SAVE, tlkapp_sys_flashHandler);
-
-#if (TLK_DEV_KEY_ENABLE)
-    tlkapp_sysKey_init();
-#endif
-#if (TLK_DEV_LED_ENABLE)
-    tlkapp_sysLed_init();
-#endif
-    tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_SYS, 0, TLKAPP_UI_STATE_POWER_ON);
 
 #if (TLK_MW_USER_CTRL_ENABLE)
     tlkmw_user_ctrl_init();
@@ -77,17 +67,20 @@ static void tlkapp_system_init(void)
 
 #if (TLK_CFG_UART_TOOL_ENABLE)
     tlkmdi_comm_init();
-    tlksys_task_regEvtCB(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_SERIAL, tlkmdi_comm_handler);
 #endif
+#if (TLK_DEV_SERIAL_ENABLE)
+    tlksys_task_regEvtCB(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_SERIAL, tlkmdi_serials_handler);
+#endif
+
 
 #if (TLK_CFG_USB_ENABLE)
     tlksys_task_regEvtCB(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_USB, tlkusb_handler);
-
-#if PROJ_BTTPSLL_TWS || PROJ_BLETPSLL_TWS || PROJ_HEARING_AID || PROJ_INTERNAL_TEST
-    uint8_t usbFlag = 0;
-    flash_read_page((0xD6000 + flash_full_size - 0x100000), 1, (uint8_t *)&usbFlag);
-    uint16_t usbID = ((0xff == usbFlag) ? 0x120 : (0x0100 + usbFlag));
-    tlkmdi_tinySql_setUsbID(usbID);
+#if TLK_USB_REMOTEWAKEUP_EN
+    tlksys_task_regEvtCBEx(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_USB_SUSPEND, tlkapp_sys_usb_suspend_handler, 0);
+    tlksys_task_regEvtCBEx(TLKSYS_TASKID_SYSTEM, TLKSYS_TASK_EVT_SYS_USB_EXIT_SUSPEND, tlkapp_sys_usb_exit_suspend_handler, 0);
+#endif
+#if PROJ_BLE_AUDIO_LL || TLKSTK_BTTPSLL_TWS_ENABLE || PROJ_INTERNAL_TEST
+    uint16_t usbID = tlkmdi_tinySql_getUsbID();
 #elif PROJ_MESH_AUDIO_DONGLE || PROJ_TPSLL_AUDIO_DONGLE
     uint16_t usbID = 0x123;
 #else
@@ -125,7 +118,17 @@ static void tlkapp_system_init(void)
 #endif
 
     tlkapp_sys_taskInitCompletedHook();
+}
 
+static void tlkapp_system_start(void)
+{
+#if (TLK_DEV_KEY_ENABLE)
+    tlkapp_sysKey_init();
+#endif
+#if (TLK_DEV_LED_ENABLE)
+    tlkapp_sysLed_init();
+#endif
+    tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_SYS, 0, TLKAPP_UI_STATE_POWER_ON);
     tlkapp_sys_sendCommEvt(TLKPRT_COMM_EVTID_SYS_READY, NULL, 0);
     tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_SYS, 0, TLKAPP_UI_STATE_IDLE);
 }
@@ -162,13 +165,14 @@ static int tlkapp_system_input(uint16_t msgID, uint8_t *pData, uint16_t dataLen)
  */
 const tlksys_task_cfg_t *tlkapp_system_getTaskCfg(void)
 {
-    _attribute_os_heap_sec_ static uint8_t sTlkAppSystemTaskBuffer[TLKAPP_SYSTEM_TASK_STASK_SIZE];
+    _attribute_os_heap_sec_ __attribute__((aligned(4))) static uint8_t sTlkAppSystemTaskBuffer[TLKAPP_SYSTEM_TASK_STASK_SIZE + TLKSYS_TASK_EXTRA_STATIC_BUFFER_SIZE];
     (void)sTlkAppSystemTaskBuffer;
     static const tlksys_task_cfg_t sTlkAppSystemTask = {
         .Init      = tlkapp_system_init,
+        .Start     = tlkapp_system_start,
         .Input     = tlkapp_system_input,
         .priority  = TLKSYS_TASK_SYSTEM_PRIORITY,
-        .stackSize = TLKAPP_SYSTEM_TASK_STASK_SIZE,
+        .stackSize = TLKAPP_SYSTEM_TASK_STASK_SIZE + TLKSYS_TASK_EXTRA_STATIC_BUFFER_SIZE, //do not use sizeof(sTlkAppSystemTaskBuffer)
         .pTaskName = "SYSTEM",
 #if TLK_CFG_RTOS_ENABLE
         .pTaskStaticBuffer = &sTlkAppSystemTaskBuffer,

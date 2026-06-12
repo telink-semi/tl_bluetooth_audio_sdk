@@ -64,12 +64,12 @@ void user_init(void)
         core_interrupt_enable();
 
         /* 1. initialize some basic MCU hardware */
-        tlksdk_init_mcu_hardware();
+        tlk_sys_init_mcu_hardware();
 
         /* 4. initialize scheduler and tph controller. */
-        tlksdk_sch_init();
+        tlk_sch_init();
 
-        tlksdk_sch_set_base_interval(PLAN_INTERVAL_10MS);
+        tlk_sch_plan_set_base_interval(PLAN_INTERVAL_10MS);
 
         /* initialize mailbox irq */
         tlk_multi_core_communication_init();
@@ -96,7 +96,7 @@ void user_init(void)
 #ifdef SL16_n22_wakeup_tick_l
         u32 wakeup_tick = clock_time();
 #endif
-        tlksdk_restore_mcu_hardware();
+        tlk_sys_restore_mcu_hardware();
 #ifdef SL16_n22_wakeup_tick_l
         log_b16_general(DBG_VCD_PM_EN, SL16_n22_wakeup_tick_l, wakeup_tick);
 #endif
@@ -118,7 +118,7 @@ void user_init(void)
  */
 void main_loop(void)
 {
-    tlksdk_main_loop();
+    tlk_sys_main_loop();
 
     tlk_multi_core_communication_loop();
 

@@ -32,14 +32,13 @@
 
 int tlk_multi_core_communication_init(void)
 {
+    tlk_mailbox_service_init();
 
-	tlk_mailbox_service_init();
-
-	tlk_share_memory_service_init();
-	return tlkipc_service_coreInfo_sync();
+    tlk_share_memory_service_init();
+    return tlkipc_service_coreInfo_sync();
 }
 
 void tlk_multi_core_communication_loop(void)
 {
-	tlk_share_memory_service_loop();
+    tlk_share_memory_service_loop();
 }

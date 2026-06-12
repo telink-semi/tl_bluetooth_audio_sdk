@@ -40,6 +40,7 @@ enum
 {
     MAIN_CORE_HCI_TX = 0,
     MAIN_CORE_HCI_RX,
+    MAIN_CORE_SYNC_RX,
     MAIN_CORE_LOG_RX,
     MAIN_CORE_FIFO_NUM
 };
@@ -53,8 +54,11 @@ static uint8_t mainCoreHciTxBuffer[TLK_SM_HCI_TX_BUFFER_SIZE];
 TLKIPC_HAL_RAM_SECTION
 static uint8_t mainCoreHciRxBuffer[TLK_SM_HCI_RX_BUFFER_SIZE];
 
-static tlk_sm_rx_cb_f mainCoreHciRxCb[TLK_SHARE_MEMORY_MESSAGE_TYPE_NUM] = {0};
+TLKIPC_HAL_RAM_SECTION
+static uint8_t mainCoreSyncRxBuffer[TLK_SM_SYNC_BUFFER_SIZE];
 
+static tlk_sm_rx_cb_f mainCoreHciRxCb[TLK_SHARE_MEMORY_MESSAGE_TYPE_NUM]  = {0};
+static tlk_sm_rx_cb_f mainCoreSyncRxCb[TLK_SHARE_MEMORY_MESSAGE_TYPE_NUM] = {0};
 
 #if (TLK_SM_LOG_ENABLE)
 TLKIPC_HAL_RAM_SECTION
@@ -77,6 +81,12 @@ void tlk_d25f_register_log_receive_cb(tlk_sm_message_type_e type, tlk_sm_rx_cb_f
 }
 #endif
 
+_attribute_ram_code_ static void tlkipc_main_core_sync_data_process(uint8_t *data)
+{
+    (void)data;
+    share_memory_data_popAll(&sTlkSmFifo[MAIN_CORE_SYNC_RX]);
+}
+
 //sTlkSmFifo[MAIN_CORE_HCI_TX]
 tlk_sm_ret_e tlk_d25f_hci_send_message(tlk_sm_message_type_e type, uint8_t *data, uint32_t dataLen)
 {
@@ -88,6 +98,14 @@ tlk_sm_ret_e tlk_d25f_hci_send_message(tlk_sm_message_type_e type, uint8_t *data
         retSts = TLK_SHARE_MEMORY_SUCCESS;
     }
     return retSts;
+}
+
+//sTlkSmFifo[MAIN_CORE_SYNC_RX]
+void tlk_d25f_register_sync_receive_cb(tlk_sm_message_type_e type, tlk_sm_rx_cb_f cb)
+{
+    if (type < TLK_SHARE_MEMORY_MESSAGE_TYPE_NUM) {
+        mainCoreSyncRxCb[type] = cb;
+    }
 }
 
 //sTlkSmFifo[MAIN_CORE_HCI_RX]
@@ -105,6 +123,7 @@ enum
 {
     CONTROLLER_CORE_HCI_RX = 0,
     CONTROLLER_CORE_HCI_TX,
+    CONTROLLER_CORE_SYNC_TX,
     CONTROLLER_CORE_LOG_TX,
     CONTROLLER_CORE_FIFO_NUM
 };
@@ -135,6 +154,18 @@ _attribute_ram_code_ tlk_sm_ret_e tlk_n22_hci_send_message(tlk_sm_message_type_e
             [0] = TLK_SM_DATA_READY_TYPE_HCI,
         };
         tlk_mailbox_send_data(TLK_MESSAGE_FROM_N22_TO_D25F_SM_DATA_READY, cmd);
+        return TLK_SHARE_MEMORY_SUCCESS;
+    }
+    return retSts;
+}
+
+//spTlkSmFifo[CONTROLLER_CORE_SYNC_TX]
+_attribute_ram_code_ tlk_sm_ret_e tlk_n22_sync_send_message(tlk_sm_message_type_e type, uint8_t *data, uint32_t dataLen)
+{
+    tlk_sm_ret_e retSts = share_memory_data_push(spTlkSmFifo[CONTROLLER_CORE_SYNC_TX], type, data, dataLen);
+    if (retSts == TLK_SHARE_MEMORY_SUCCESS_NEED_NOTIFY || retSts == TLK_SHARE_MEMORY_SUCCESS_NONEED_NOTIFY) {
+        uint8_t cmd[8] = {0};
+        tlk_mailbox_send_data(TLK_MESSAGE_FROM_N22_TO_D25F_SYNC_DATA_READY, cmd);
         return TLK_SHARE_MEMORY_SUCCESS;
     }
     return retSts;
@@ -175,6 +206,9 @@ void tlk_share_memory_service_init(void)
     share_memory_fifo_init(&sTlkSmFifo[MAIN_CORE_LOG_RX], mainCoreLogRxBuffer, TLK_SM_LOG_BUFFER_SIZE);
     share_memory_register_fifo_receive_cb(&sTlkSmFifo[MAIN_CORE_LOG_RX], mainCoreLogRxCb);
 #endif
+    share_memory_fifo_init(&sTlkSmFifo[MAIN_CORE_SYNC_RX], mainCoreSyncRxBuffer, TLK_SM_SYNC_BUFFER_SIZE);
+    share_memory_register_fifo_receive_cb(&sTlkSmFifo[MAIN_CORE_SYNC_RX], mainCoreSyncRxCb);
+    tlk_mailbox_register_message_cb(TLK_MESSAGE_FROM_N22_TO_D25F_SYNC_DATA_READY, tlkipc_main_core_sync_data_process);
 #endif
 }
 

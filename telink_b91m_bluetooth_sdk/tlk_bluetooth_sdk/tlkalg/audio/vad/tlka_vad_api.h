@@ -29,10 +29,10 @@
 #endif
 
 #define VAD_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
-#define VAD_VERSION VAD_VERSION_INT(0, 1, 4)
+#define VAD_VERSION                          VAD_VERSION_INT(0, 1, 4)
 
-#define VAD_DEBUG 0  //only for debug
-#define VAD_MAXWINSIZE 240
+#define VAD_DEBUG                            0 //only for debug
+#define VAD_MAXWINSIZE                       240
 
 #if __riscv
 #define VAD_RAM_CODE __attribute__((section(".ram_code")))
@@ -44,15 +44,15 @@
 /* data struct */
 typedef struct TLKA_VAD_PARAM
 {
-	short vad_mod;
-	short frm_ms;
-    int frm_len;
-    int pwr_longterm;
-    int win_idx;
-    int smp_idx;
+    short vad_mod;
+    short frm_ms;
+    int   frm_len;
+    int   pwr_longterm;
+    int   win_idx;
+    int   smp_idx;
 
     short pwr_diffthd_linear;
-    int pwr_shortterm_thd;
+    int   pwr_shortterm_thd;
     short pwr_longterm_alpha;
     short pwr_winsize;
 

@@ -28,7 +28,7 @@
 #include "tlkmdi_a2dp_to_bis_bt_music.h"
 #if TLK_CFG_A2DP_TO_BIS_ENABLE
 static uint32_t a2dp_dec_tick = 0;
-uint32_t dec_intval_us = 0;
+uint32_t        dec_intval_us = 0;
 
 /**
  * @brief       Set decoder tick value for A2DP to BIS conversion
@@ -47,7 +47,7 @@ void a2dp_to_bis_set_dec_ticks(uint32_t ticks)
  */
 audio_ram_code void a2dp_to_bis_bt_main_loop(void)
 {
-    #if (TLKBTP_CFG_A2DPSNK_ENABLE)
+#if (TLKBTP_CFG_A2DPSNK_ENABLE)
     if (tlkmdi_a2dp_to_bis_is_busy()) {
 #if AUDIO_HD_HAC_EN
         uint32_t tdiff_tick = 0;
@@ -65,6 +65,6 @@ audio_ram_code void a2dp_to_bis_bt_main_loop(void)
         bt_audio_player_task();
 #endif
     }
-    #endif
+#endif
 }
 #endif

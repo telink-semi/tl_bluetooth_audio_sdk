@@ -23,27 +23,27 @@
  *******************************************************************************************************/
 #include "core/mcu_type.h"
 
-#define LEA_CODEC_MODE_LEFT_ONLY        0x00
-#define LEA_CODEC_MODE_RIGHT_ONLY       0x01
-#define LEA_CODEC_MODE_STEREO           0x02
+#define LEA_CODEC_MODE_LEFT_ONLY  0x00
+#define LEA_CODEC_MODE_RIGHT_ONLY 0x01
+#define LEA_CODEC_MODE_STEREO     0x02
 
 #if (CHIP_TYPE == CHIP_TYPE_TL721X)
 #if (TLKHW_TYPE == BOARD_721X_EVK_C1TXA104_V1_1)
-    #define LEA_CODEC_INPUT_MODE            LEA_CODEC_MODE_LEFT_ONLY
+#define LEA_CODEC_INPUT_MODE LEA_CODEC_MODE_LEFT_ONLY
 #else
-    #define LEA_CODEC_INPUT_MODE            LEA_CODEC_MODE_STEREO
+#define LEA_CODEC_INPUT_MODE LEA_CODEC_MODE_STEREO
 #endif
 #endif
 
 #ifndef LEA_CODEC_INPUT_MODE
-#define LEA_CODEC_INPUT_MODE            LEA_CODEC_MODE_STEREO
+#define LEA_CODEC_INPUT_MODE LEA_CODEC_MODE_STEREO
 #endif
 
 #ifndef LEA_CODEC_OUTPUT_MODE
-#define LEA_CODEC_OUTPUT_MODE           LEA_CODEC_MODE_STEREO
+#define LEA_CODEC_OUTPUT_MODE LEA_CODEC_MODE_STEREO
 #endif
 
-#define LEA_CODEC_OUTPUT_ALG_TIME_US     2000
+#define LEA_CODEC_OUTPUT_ALG_TIME_US 2000
 
 /**
  * @brief       Read input value from codec.

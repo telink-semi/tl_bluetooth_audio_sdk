@@ -42,7 +42,7 @@ void *memset(void *d, int c, unsigned int n);
  * @param[in]  len - number of bytes to compare
  * @return     0 if equal, otherwise the difference between the first differing bytes
  */
-int   tmemcmp(const void *m1, const void *m2, u32 len);
+int tmemcmp(const void *m1, const void *m2, u32 len);
 
 /**
  * @brief      Compare two memory areas with 4-byte alignment
@@ -51,7 +51,7 @@ int   tmemcmp(const void *m1, const void *m2, u32 len);
  * @param[in]  len - number of bytes to compare
  * @return     0 if equal, 1 if different
  */
-int   tmemcmp4(void *m1, void *m2, register unsigned int len);
+int tmemcmp4(void *m1, void *m2, register unsigned int len);
 
 /**
  * @brief      Fill memory with a constant byte value (alias for memset)
@@ -69,7 +69,7 @@ void *tmemset(void *dest, int val, unsigned int len);
  * @param[in]  length - number of bytes to copy
  * @return     none
  */
-void  tmemcpy(void *out, const void *in, unsigned int length);
+void tmemcpy(void *out, const void *in, unsigned int length);
 
 /**
  * @brief      Copy memory with 4-byte alignment assumption
@@ -83,12 +83,12 @@ void tmemcpy4(void *d, void *s, unsigned int length);
 /**
  * @brief      Alias for memset function
  */
-#define tmemset  memset
+#define tmemset memset
 
 /**
  * @brief      Alias for tmemcmp function
  */
-#define smemcmp  tmemcmp
+#define smemcmp tmemcmp
 
 /**
  * @brief      Alias for tmemcmp4 function
@@ -98,12 +98,12 @@ void tmemcpy4(void *d, void *s, unsigned int length);
 /**
  * @brief      Alias for memset function
  */
-#define smemset  memset
+#define smemset memset
 
 /**
  * @brief      Alias for tmemcpy function
  */
-#define smemcpy  tmemcpy
+#define smemcpy tmemcpy
 
 /**
  * @brief      Alias for tmemcpy4 function

@@ -43,6 +43,8 @@ struct ble_csisc_register_param
 {
 };
 
+#define BLE_CSISC_INITIAL_PARAMS NULL
+
 /**
  *   @brief Register the LE Audio Coordinated Set Identification Service client control.
  *
@@ -95,3 +97,25 @@ int ble_csisc_get_set_member_rank(uint16_t conn_handle, uint8_t *p_set_member_ra
  *          BLE_PRF_ERR(BLE_PRF_ERR_INVALID_CONN_HANDLE) - if the connection handle is invalid.
  */
 int ble_csisc_get_resolving_key_plain(uint16_t conn_handle, uint8_t p_resolving_key[16]);
+
+/**
+ *    @brief Write the LE Audio CSIS locked command to peer.
+ *
+ *    @param[in] conn_handle ACL Connection handle.
+ *    @param[in] callback Pointer to the callback function to be called when the write operation is complete.
+ *
+ *    @return BLE_HOST_ERR_SUCC if the operation is successful.
+ *            BLE_PRF_ERR(BLE_PRF_ERR_INVALID_CONN_HANDLE) - if the connection handle is invalid.
+ */
+int ble_csisc_write_locked(uint16_t conn_handle, prf_write_callback callback);
+
+/**
+ *    @brief Write the LE Audio CSIS unlocked command to peer.
+ *
+ *    @param[in] conn_handle ACL Connection handle.
+ *    @param[in] callback Pointer to the callback function to be called when the write operation is complete.
+ *
+ *    @return BLE_HOST_ERR_SUCC if the operation is successful.
+ *            BLE_PRF_ERR(BLE_PRF_ERR_INVALID_CONN_HANDLE) - if the connection handle is invalid.
+ */
+int ble_csisc_write_unlocked(uint16_t conn_handle, prf_write_callback callback);

@@ -46,7 +46,7 @@
 #include "stack/bt/host/bth/bth.h"
 
 typedef enum
-{                                  // Major Class
+{ // Major Class
     BTH_DEVICE_DTYPE_NONE     = 0,
     BTH_REMOTE_DTYPE_COMPUTER = 1, // desktop, notebook, PDA, organizer,
     BTH_REMOTE_DTYPE_PHONE    = 2, // cellular, cordless, pay phone, modem,

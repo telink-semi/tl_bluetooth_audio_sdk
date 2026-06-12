@@ -53,6 +53,7 @@ uint16_t tlkusb_getVendorLens(uint8_t mode);
  * @return      length of the serial descriptor.
  */
 uint16_t tlkusb_getSerialLens(uint8_t mode);
+uint16_t tlkusb_getSerial1Lens(uint8_t mode);
 
 /**
  * @brief       This function gets the device descriptor length based on the mode.
@@ -95,6 +96,7 @@ uint8_t *tlkusb_getProductDesc(uint8_t mode);
  * @return      pointer to the serial descriptor.
  */
 uint8_t *tlkusb_getSerialDesc(uint8_t mode);
+uint8_t *tlkusb_getSerial1Desc(uint8_t mode);
 
 /**
  * @brief       This function gets the device descriptor based on the mode.

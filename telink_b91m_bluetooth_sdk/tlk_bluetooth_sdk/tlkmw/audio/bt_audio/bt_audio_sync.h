@@ -34,10 +34,10 @@ enum
     TSYNC_FLAG_MUSIC = 0x02,
 };
 
-#define AUDIO_TYPE_MUSIC 0
-#define AUDIO_TYPE_VOICE 1
+#define AUDIO_TYPE_MUSIC  0
+#define AUDIO_TYPE_VOICE  1
 
-#define TWS_SYNC_INFO_LEN  16
+#define TWS_SYNC_INFO_LEN 16
 
 /**
  * @brief  update audio sync config

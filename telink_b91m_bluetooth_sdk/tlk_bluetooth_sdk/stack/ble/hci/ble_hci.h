@@ -83,6 +83,7 @@ typedef struct
     u8  wptr;
     u8  rptr;
     u8 *p;
+    u32 offset;
 } hci_fifo_t;
 
 /**

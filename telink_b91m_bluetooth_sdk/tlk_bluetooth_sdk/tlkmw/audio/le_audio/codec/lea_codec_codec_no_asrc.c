@@ -29,13 +29,13 @@
 #include "lea_codec.h"
 #include "lea_codec_hal.h"
 
-#if (LEA_CODEC_NO_ASRC&&TLK_MW_LE_AUDIO_ENABLE)
+#if (LEA_CODEC_NO_ASRC && TLK_MW_LE_AUDIO_ENABLE)
 
 #if (LE_AUDIO_CODEC_INPUT_TYPE == LE_AUDIO_CODEC_TYPE_CODEC)
-static uint8_t *s_codec_input_asrc_buffer = NULL;
-static uint8_t s_codec_input_asrc_type = TLKA_ASRC_FLAG_END;
+static uint8_t *s_codec_input_asrc_buffer   = NULL;
+static uint8_t  s_codec_input_asrc_type     = TLKA_ASRC_FLAG_END;
 static uint32_t s_codec_input_sampling_rate = 0;
-static uint8_t s_codec_input_count = 0;
+static uint8_t  s_codec_input_count         = 0;
 
 /**
  * @brief       Initialize ASRC module for input stream.
@@ -43,35 +43,35 @@ static uint8_t s_codec_input_count = 0;
  */
 static void lea_codec_input_init_asrc_module(void)
 {
-//    s_codec_input_sampling_rate = lea_codec_get_input_sampling_rate();
-//    s_codec_input_asrc_type = TLKA_ASRC_FLAG_END;
-//
-//    if (s_codec_input_sampling_rate == 8000) {
-//        // ASRC current not support.
-//        s_codec_input_count = 24;
-//    } else if (s_codec_input_sampling_rate == 16000) {
-//        s_codec_input_asrc_type = TLKA_ASRC_48_TO_16;
-//        s_codec_input_count = 12;
-//    } else if (s_codec_input_sampling_rate == 24000) {
-//        s_codec_input_asrc_type = TLKA_ASRC_48_TO_24;
-//        s_codec_input_count = 8;
-//    } else if (s_codec_input_sampling_rate == 32000) {
-//        s_codec_input_asrc_type = TLKA_ASRC_48_TO_32;
-//        s_codec_input_count = 6;
-//    } else if (s_codec_input_sampling_rate == 48000) {
-//        // not need ASRC.
-//        s_codec_input_count = 4;
-//    }
-//
-//    if (s_codec_input_asrc_type != TLKA_ASRC_FLAG_END) {
-//        uint16_t asrc_buffer_size = tlka_asrc_16_bit_get_size(s_codec_input_asrc_type, TLKA_ASRC_STEREO);
-//        s_codec_input_asrc_buffer = (uint8_t *) tlkalg_malloc_func(asrc_buffer_size);
-//        tlk_printf("codec input asrc buffer size:%d, ptr:%p", asrc_buffer_size, s_codec_input_asrc_buffer);
-//        if (s_codec_input_asrc_buffer != NULL) {
-//            int ret = tlka_asrc_16_bit_init(s_codec_input_asrc_buffer, s_codec_input_asrc_type, TLKA_ASRC_STEREO);
-//            tlk_printf("codec input asrc init ret:%d", ret);
-//        }
-//    }
+    //    s_codec_input_sampling_rate = lea_codec_get_input_sampling_rate();
+    //    s_codec_input_asrc_type = TLKA_ASRC_FLAG_END;
+    //
+    //    if (s_codec_input_sampling_rate == 8000) {
+    //        // ASRC current not support.
+    //        s_codec_input_count = 24;
+    //    } else if (s_codec_input_sampling_rate == 16000) {
+    //        s_codec_input_asrc_type = TLKA_ASRC_48_TO_16;
+    //        s_codec_input_count = 12;
+    //    } else if (s_codec_input_sampling_rate == 24000) {
+    //        s_codec_input_asrc_type = TLKA_ASRC_48_TO_24;
+    //        s_codec_input_count = 8;
+    //    } else if (s_codec_input_sampling_rate == 32000) {
+    //        s_codec_input_asrc_type = TLKA_ASRC_48_TO_32;
+    //        s_codec_input_count = 6;
+    //    } else if (s_codec_input_sampling_rate == 48000) {
+    //        // not need ASRC.
+    //        s_codec_input_count = 4;
+    //    }
+    //
+    //    if (s_codec_input_asrc_type != TLKA_ASRC_FLAG_END) {
+    //        uint16_t asrc_buffer_size = tlka_asrc_16_bit_get_size(s_codec_input_asrc_type, TLKA_ASRC_STEREO);
+    //        s_codec_input_asrc_buffer = (uint8_t *) tlkalg_malloc_func(asrc_buffer_size);
+    //        tlk_printf("codec input asrc buffer size:%d, ptr:%p", asrc_buffer_size, s_codec_input_asrc_buffer);
+    //        if (s_codec_input_asrc_buffer != NULL) {
+    //            int ret = tlka_asrc_16_bit_init(s_codec_input_asrc_buffer, s_codec_input_asrc_type, TLKA_ASRC_STEREO);
+    //            tlk_printf("codec input asrc init ret:%d", ret);
+    //        }
+    //    }
 }
 
 /**
@@ -80,12 +80,12 @@ static void lea_codec_input_init_asrc_module(void)
  */
 static void lea_codec_input_deinit_asrc_module(void)
 {
-//    s_codec_input_asrc_type = TLKA_ASRC_FLAG_END;
-//
-//    if (s_codec_input_asrc_buffer != NULL) {
-//        tlkalg_free_func(s_codec_input_asrc_buffer);
-//        s_codec_input_asrc_buffer = NULL;
-//    }
+    //    s_codec_input_asrc_type = TLKA_ASRC_FLAG_END;
+    //
+    //    if (s_codec_input_asrc_buffer != NULL) {
+    //        tlkalg_free_func(s_codec_input_asrc_buffer);
+    //        s_codec_input_asrc_buffer = NULL;
+    //    }
 }
 
 /**
@@ -126,22 +126,22 @@ void lea_codec_input_clean_buffer(void)
  */
 bool lea_codec_input_get_audio_data(int16_t *left_data, int16_t *right_data, uint16_t sample_num)
 {
-    int16_t codec_pcm_stereo[480 * 2];
+    int16_t  codec_pcm_stereo[480 * 2];
     uint16_t sample_num_48k = sample_num * s_codec_input_count;
 
-    if (tlk_lea_codec_read_input_value((uint8_t *) codec_pcm_stereo, sample_num_48k) == false) {
+    if (tlk_lea_codec_read_input_value((uint8_t *)codec_pcm_stereo, sample_num_48k) == false) {
         return false;
     }
 
-    int16_t pcm_stereo[sample_num * 2];
+    int16_t  pcm_stereo[sample_num * 2];
     int16_t *p_pcm_stereo = codec_pcm_stereo;
-//    if (s_codec_input_asrc_type != TLKA_ASRC_FLAG_END) {
-//        tlka_asrc_16_bit_process_frame(s_codec_input_asrc_buffer, codec_pcm_stereo, sample_num_48k / 4, pcm_stereo);
-//        p_pcm_stereo = pcm_stereo;
-//    }
+    //    if (s_codec_input_asrc_type != TLKA_ASRC_FLAG_END) {
+    //        tlka_asrc_16_bit_process_frame(s_codec_input_asrc_buffer, codec_pcm_stereo, sample_num_48k / 4, pcm_stereo);
+    //        p_pcm_stereo = pcm_stereo;
+    //    }
 
     for (int i = 0; i < sample_num; i++) {
-        left_data[i] = p_pcm_stereo[i * 2];
+        left_data[i]  = p_pcm_stereo[i * 2];
         right_data[i] = p_pcm_stereo[i * 2 + 1];
     }
 
@@ -152,7 +152,6 @@ bool lea_codec_input_get_audio_data(int16_t *left_data, int16_t *right_data, uin
 
 #if (LE_AUDIO_CODEC_OUTPUT_TYPE == LE_AUDIO_CODEC_TYPE_CODEC)
 static uint32_t s_codec_output_sampling_rate = 0;
-
 
 /**
  * @brief       Initialize output stream.
@@ -202,8 +201,8 @@ int16_t g_lea_music_vol = 328;
  */
 static void lea_codec_control_volume(int16_t *p, uint16_t sample)
 {
-    uint8_t vol = lea_codec_get_output_volume();
-    vol = vol >> 4; //vol = vol / 16;
+    uint8_t vol     = lea_codec_get_output_volume();
+    vol             = vol >> 4; //vol = vol / 16;
     g_lea_music_vol = lea_music_vol_table[vol];
 
     static int16_t s_lea_music_vol_inner = 0;
@@ -233,12 +232,12 @@ void lea_codec_output_set_audio_data(int16_t *left_data, int16_t *right_data, ui
 {
     int16_t pcm_stereo[sample_num * 2];
     for (size_t i = 0; i < sample_num; i++) {
-        pcm_stereo[2 * i] = left_data[i];
+        pcm_stereo[2 * i]     = left_data[i];
         pcm_stereo[2 * i + 1] = right_data[i];
     }
     lea_codec_control_volume(pcm_stereo, sample_num * 2);
 
-    tlk_lea_codec_write_output_value((uint8_t *) pcm_stereo, sample_num * 4);
+    tlk_lea_codec_write_output_value((uint8_t *)pcm_stereo, sample_num * 4);
 }
 
 #endif
@@ -250,13 +249,12 @@ void lea_codec_output_set_audio_data(int16_t *left_data, int16_t *right_data, ui
  */
 void lea_codec_in_output_stream_init(void)
 {
-    #if (!TLK_CFG_TEMP_DRAM_OPTM)
-   lea_codec_output_init_asrc_module();
-   lea_codec_input_init_asrc_module();
-   #endif
+#if (!TLK_CFG_TEMP_DRAM_OPTM)
+    lea_codec_output_init_asrc_module();
+    lea_codec_input_init_asrc_module();
+#endif
     // configure codec always using 48kHz sample rate.
     tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_BOTH, TLKDRV_CODEC_CHANNEL_STEREO, TLKDRV_CODEC_BITDEPTH_16, 48000, 0);
-
 }
 
 /**
@@ -265,10 +263,10 @@ void lea_codec_in_output_stream_init(void)
  */
 void lea_codec_in_output_stream_deinit(void)
 {
-    #if (!TLK_CFG_TEMP_DRAM_OPTM)
-   lea_codec_output_deinit_asrc_module();
-   lea_codec_input_deinit_asrc_module();
-   #endif
+#if (!TLK_CFG_TEMP_DRAM_OPTM)
+    lea_codec_output_deinit_asrc_module();
+    lea_codec_input_deinit_asrc_module();
+#endif
     tlkdrv_codec_close(TLKDRV_CODEC_SUBDEV_BOTH);
 }
 #endif
@@ -301,10 +299,10 @@ void lea_us_tone_continue(void)
     int16_t pData[sample_num * 2];
     memset(pData, 0, sample_num * 2 * sizeof(int16_t));
     if (tone_is_playing()) {
-        tone_get_sample((int16_t *) pData, sample_num * sizeof(tone_int), g_codec_rate);
+        tone_get_sample((int16_t *)pData, sample_num * sizeof(tone_int), g_codec_rate);
     }
 
-    tlkdrv_codec_fillSpkBuff((uint8_t *) pData, sample_num * sizeof(int16_t) * 2);
+    tlkdrv_codec_fillSpkBuff((uint8_t *)pData, sample_num * sizeof(int16_t) * 2);
 
     if (tone_is_playing()) {
         tlkmdi_audio_task_set_next_irq(10000);

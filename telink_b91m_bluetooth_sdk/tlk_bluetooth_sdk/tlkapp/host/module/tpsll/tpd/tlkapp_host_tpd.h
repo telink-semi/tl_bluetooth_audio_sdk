@@ -28,4 +28,4 @@
  * @param[in]   none.
  * @return      Returns a pointer to the TPD module.
  */
-TlkAppHostModule_t* tlkapp_host_tpd_getModule(void);
+TlkAppHostModule_t *tlkapp_host_tpd_getModule(void);

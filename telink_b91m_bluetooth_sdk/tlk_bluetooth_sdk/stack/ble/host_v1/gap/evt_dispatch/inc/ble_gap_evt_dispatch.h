@@ -32,6 +32,7 @@ enum ble_host_gap_evt_type
     BLE_HOST_GAP_EVT_ENCRYPT,
     BLE_HOST_GAP_EVT_LE_SCAN,
     BLE_HOST_GAP_EVT_VENDOR_EVENT,
+    BLE_HOST_GAP_EVT_EATT,
 };
 
 enum ble_host_gap_evt_id
@@ -50,6 +51,10 @@ enum ble_host_gap_evt_id
     BLE_HOST_GAP_EVT_LE_SCAN_REPORT_DIRECTED,   /** < event data refer to struct ble_host_gap_evt_scan_adv_report_directed */
     BLE_HOST_GAP_EVT_VENDOR_EVENT_START = 0x400,
     BLE_HOST_GAP_EVT_VENDOR_EVENT_REPORT,
+    BLE_HOST_GAP_EVT_EATT_EVENT_START = 0x500,
+    BLE_HOST_GAP_EVT_EATT_CONNECTED,    /** < event data refer to struct ble_host_gap_evt_eatt_parameter */
+    BLE_HOST_GAP_EVT_EATT_DISCONNECTED, /** < event data refer to struct ble_host_gap_evt_eatt_parameter */
+    BLE_HOST_GAP_EVT_EATT_MTU_CHANGED,  /** < event data refer to struct ble_host_gap_evt_eatt_parameter */
 };
 
 /** < data structure for BLE_HOST_GAP_EVT_LE_CONNECT */
@@ -147,6 +152,13 @@ struct ble_host_gap_evt_scan_adv_report_directed
     const uint8_t *data;
 };
 
+struct ble_host_gap_evt_eatt_parameter
+{
+    uint16_t conn_handle; /** < ACL connection handle, range 0x0000 to 0x0EFF */
+    uint16_t src_cid;     /** < Source CID */
+    uint16_t mtu;
+};
+
 /** < data structure for BLE_HOST_GAP_EVT_LE_ACL_DISCONNECT */
 typedef void (*ble_host_gap_evt_handler)(uint32_t event_id, const void *data, void *user_data);
 
@@ -160,6 +172,7 @@ struct ble_host_gap_evt_subscribe_param
             uint32_t gap_le_encrypt_mask : 1;
             uint32_t gap_le_scan_mask    : 1;
             uint32_t gap_vendor_mask     : 1;
+            uint32_t gap_eatt_mask       : 1;
         };
 
         uint32_t all_masks;

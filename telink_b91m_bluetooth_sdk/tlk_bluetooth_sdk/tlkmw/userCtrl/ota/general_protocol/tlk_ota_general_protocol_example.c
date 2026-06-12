@@ -45,7 +45,7 @@ void tlk_ota_general_protocol_detail_reset(void)
         sTlkMwOtaCtrl.p_cache_buffer = NULL;
     }
 
-    OTA_MEMSET(&sTlkMwOtaCtrl, 0, sizeof(sTlkMwOtaCtrl) - sizeof(nvds_ota_Interface_t *));
+    OTA_MEMSET(&sTlkMwOtaCtrl, 0, sizeof(sTlkMwOtaCtrl) - sizeof(nvds_ota_Interface_t));
     sTlkMwOtaCtrl.status = TLK_OTA_STATUS_IDLE;
 }
 
@@ -99,6 +99,11 @@ void tlkmw_ota_update_ota_status(uint8_t *pData, uint16_t dataLen, void *userArg
         .reason  = reason,
         .channel = sTlkMwOtaCtrl.channel,
     };
+    if (event.status == TLK_FIRMWARE_OTA_ING) {
+        tlksys_pm_setChn(TLKSYS_PM_CHN_OTA, 0, 1);
+    } else {
+        tlksys_pm_setChn(TLKSYS_PM_CHN_OTA, 0, 0);
+    }
     tlk_ota_notify_status((uint8_t *)&event, sizeof(sTlkMwNotifyEvent_t), NULL);
 }
 
@@ -243,6 +248,7 @@ static void tlk_ota_general_protocol_example_timer_callback(tlk_ota_timer_handle
         sTlkMwOtaCtrl.timeout--;
     } else {
         OTA_PRINTF("[OTA] OTA data timeout.");
+        tlk_ota_timer_porting_stop(&sTlkMwOtaCtrl.timer);
         tlk_ota_general_save_breakpoint();
         tlkmw_ota_send_trans_end(TLK_OTA_RESULT_TIMEOUT, NULL);
         tlk_ota_general_protocol_reset();
@@ -361,7 +367,7 @@ static bool tlkmw_ota_write_total_img_header()
  * @param   userArg - User argument (not used)
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlkmw_ota_version_check(uint8_t *pData, uint16_t dataLen, void *userArg)
+__attribute__((weak)) int tlkmw_ota_version_check(uint8_t *pData, uint16_t dataLen, void *userArg)
 {
     (void)pData;
     (void)dataLen;
@@ -377,6 +383,19 @@ int tlkmw_ota_version_check(uint8_t *pData, uint16_t dataLen, void *userArg)
     pBuffer[buffLen++] = (version >> 24) & 0xff;
     tlk_ota_general_protocol_send_data(TLK_OTA_OPC_VERSION_RSP, pBuffer, buffLen, NULL);
 
+    /*Load breadpoint info from NVDS*/
+    sTlk_boot_and_ota_cfg_t boot_ota_cfg;
+    if (sTlkMwOtaCtrl.ota_intf->nvds_ota_user_load != NULL &&
+        sTlkMwOtaCtrl.ota_intf->nvds_ota_user_load((uint8_t *)&boot_ota_cfg, sizeof(sTlk_boot_and_ota_cfg_t), NULL) == OTA_NONE) {
+        if (boot_ota_cfg.break_index != 0xFF && boot_ota_cfg.break_offset != 0xFFFFFFFF) {
+            sTlkMwOtaCtrl.curFwNum       = boot_ota_cfg.break_index;
+            sTlkMwOtaCtrl.fwDataRecvSize = boot_ota_cfg.break_offset; //last transfer already saved size.
+            sTlkMwOtaCtrl.backAddr       = boot_ota_cfg.backup_addr;
+        }
+    } else {
+        return -OTA_LOADERR;
+    }
+
     return OTA_NONE;
 }
 
@@ -387,7 +406,7 @@ int tlkmw_ota_version_check(uint8_t *pData, uint16_t dataLen, void *userArg)
  * @param   userArg - User argument (not used)
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlkmw_ota_param_negotiation(uint8_t *pData, uint16_t dataLen, void *userArg)
+__attribute__((weak)) int tlkmw_ota_param_negotiation(uint8_t *pData, uint16_t dataLen, void *userArg)
 {
     (void)dataLen;
     (void)userArg;
@@ -398,18 +417,20 @@ int tlkmw_ota_param_negotiation(uint8_t *pData, uint16_t dataLen, void *userArg)
     uint8_t  pBuffer[4];
     uint16_t buffLen = 0;
 
-    uint16_t value = TLKMW_OTA_TRANS_MTU_SIZE;
-    value          = (recvPktSize > value) ? value : recvPktSize;
+    uint16_t value = tlkmw_ota_common_get_param(TLKMW_OTA_PARAM_MTU_SIZE, NULL);
+    if (value == 0) {
+        value = TLKMW_OTA_TRANS_MTU_SIZE;
+    }
+
+    sTlkMwOtaCtrl.shakeIntv = tlkmw_ota_common_get_param(TLKMW_OTA_PARAM_SHAKE_INTV, NULL);
+    if (sTlkMwOtaCtrl.shakeIntv == 0) {
+        sTlkMwOtaCtrl.shakeIntv = TLKMW_OTA_SHAKE_INTV;
+    }
+
+    value = (recvPktSize > value) ? value : recvPktSize;
 
     pBuffer[buffLen++] = value & 0xff;
     pBuffer[buffLen++] = (value >> 8) & 0xff;
-
-    if (sTlkMwOtaCtrl.channel == TLKMW_OTA_TRANS_CHN_UART) {
-        sTlkMwOtaCtrl.shakeIntv = TLKMW_OTA_SHAKE_UART_INTV;
-    } else {
-        sTlkMwOtaCtrl.shakeIntv = TLKMW_OTA_SHAKE_WIRELESS_INTV;
-    }
-
     pBuffer[buffLen++] = sTlkMwOtaCtrl.shakeIntv & 0xff;
     pBuffer[buffLen++] = (sTlkMwOtaCtrl.shakeIntv >> 8) & 0xff;
 
@@ -425,7 +446,7 @@ int tlkmw_ota_param_negotiation(uint8_t *pData, uint16_t dataLen, void *userArg)
  * @param   userArg - User argument (not used)
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlkmw_ota_break_point_request(uint8_t *pData, uint16_t dataLen, void *userArg)
+__attribute__((weak)) int tlkmw_ota_break_point_request(uint8_t *pData, uint16_t dataLen, void *userArg)
 {
     (void)pData;
     (void)dataLen;
@@ -458,7 +479,7 @@ int tlkmw_ota_break_point_request(uint8_t *pData, uint16_t dataLen, void *userAr
  * @param   userArg - User argument (not used)
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlkmw_ota_total_fw_descriptors_check(uint8_t *pData, uint16_t dataLen, void *userArg)
+__attribute__((weak)) int tlkmw_ota_total_fw_descriptors_check(uint8_t *pData, uint16_t dataLen, void *userArg)
 {
     (void)userArg;
     if (tlk_ota_parse_total_fw_descriptors(pData, dataLen, &sTlkMwRecvImgHeader, sTlkMwOtaCtrl.ota_intf) != OTA_NONE) {
@@ -542,7 +563,7 @@ static void tlkmw_ota_send_fw_img_ind()
  * @param   userArg - User argument (not used)
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlkmw_ota_start_ota_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
+__attribute__((weak)) int tlkmw_ota_start_ota_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
 {
     (void)pData;
     (void)dataLen;
@@ -613,7 +634,7 @@ static uint8_t tlkmw_ota_cur_fw_descriptor_parse(uint8_t *pData, uint16_t dataLe
  * @param   userArg - User argument (not used)
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlkmw_ota_cur_fw_descriptor_check(uint8_t *pData, uint16_t dataLen, void *userArg)
+__attribute__((weak)) int tlkmw_ota_cur_fw_descriptor_check(uint8_t *pData, uint16_t dataLen, void *userArg)
 {
     (void)userArg;
     uint8_t  pBuffer[4];
@@ -715,12 +736,11 @@ static void tlkmw_ota_recv_trans_data(uint8_t *pData, uint16_t dataLen)
         return;
     }
 
-    bool isLast = false;
-
     sTlkMwOtaCtrl.fwDataStartOffset += dataLen;
     sTlkMwOtaCtrl.fwDataRecvSize += dataLen;
     sTlkMwOtaCtrl.fwDataRecvNumb += 1;
 
+    bool isLast = false;
     if (sTlkMwOtaCtrl.fwDataRecvSize >= sTlkMwOtaCtrl.fwDataTotalSize) {
         isLast = true;
     }
@@ -728,7 +748,7 @@ static void tlkmw_ota_recv_trans_data(uint8_t *pData, uint16_t dataLen)
     tlkmw_ota_common_data_cache_deal(pData, dataLen, isLast);
 
     if (isLast == true) {
-        OTA_PRINTF("OTA fw[%d] receive complete,recvLen[%d], totalLen[%d]", sTlkMwOtaCtrl.curFwNum, sTlkMwOtaCtrl.fwDataRecvSize, sTlkMwOtaCtrl.fwDataTotalSize);
+        OTA_PRINTF("OTA fw[%d] receive complete,recvLen[%x], totalLen[%x]", sTlkMwOtaCtrl.curFwNum, sTlkMwOtaCtrl.fwDataRecvSize, sTlkMwOtaCtrl.fwDataTotalSize);
 
         // check fw data crc
         bool                        crc_check = false;
@@ -770,7 +790,7 @@ static void tlkmw_ota_recv_trans_data(uint8_t *pData, uint16_t dataLen)
  * @param   userArg - User argument (not used)
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlkmw_ota_cur_data_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
+__attribute__((weak)) int tlkmw_ota_cur_data_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
 {
     (void)userArg;
     tlkmw_ota_recv_trans_data(pData, dataLen);
@@ -811,7 +831,7 @@ static bool tlkmw_ota_update_bootloader_deal(void)
 
     OTA_MEMCPY(&read_crc.crc32, (uint8_t *)crc_addr, sizeof(sTlk_cur_fw_entity_crc_t));
     if (cal_crc != read_crc.crc32) {
-        OTA_PRINTF("tlkmw_ota_update_bootloader_deal crc check error.");
+        // OTA_PRINTF("tlkmw_ota_update_bootloader_deal crc check error.");
         core_restore_interrupt(r);
         return true;
     }
@@ -863,7 +883,7 @@ static bool tlkmw_ota_update_bootloader_deal(void)
  * @param[out] none
  * @return     int - OTA_NONE if success
  */
-int tlkmw_ota_end_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
+__attribute__((weak)) int tlkmw_ota_end_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
 {
     (void)pData;
     (void)dataLen;
@@ -886,7 +906,7 @@ int tlkmw_ota_end_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
  * @param   userArg - User argument (not used)
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlkmw_ota_end_ack_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
+__attribute__((weak)) int tlkmw_ota_end_ack_deal(uint8_t *pData, uint16_t dataLen, void *userArg)
 {
     (void)pData;
     (void)dataLen;
@@ -986,9 +1006,19 @@ void tlk_ota_general_protocol_deal(uint8_t channel, uint8_t opcode, uint8_t *pDa
     sTlkMwOtaCtrl.channel = channel;
 
     uint8_t status = TLK_OTA_RESULT_SUCCESS;
+
+    if (opcode != TLK_OTA_OPC_VERSION_REQ && sTlkMwOtaCtrl.status != TLK_OTA_STATUS_BUSY) {
+        return;
+    }
+
     switch (opcode) {
     case TLK_OTA_OPC_VERSION_REQ:
     {
+        int customer_result = tlkmw_ota_start_customer_init();
+        if (customer_result != OTA_NONE) {
+            status = TLK_OTA_RESULT_OTA_INCOMPLETE;
+            break;
+        }
         if (sTlkMwOtaCtrl.status != TLK_OTA_STATUS_IDLE) {
             status = TLK_OTA_RESULT_OTA_INCOMPLETE;
             break;
@@ -1010,6 +1040,9 @@ void tlk_ota_general_protocol_deal(uint8_t channel, uint8_t opcode, uint8_t *pDa
                 status = TLK_OTA_RESULT_VERSION_COMPARE_ERR;
             }
 
+            sTlkMwOtaCtrl.curFwNum       = 0;
+            sTlkMwOtaCtrl.fwDataRecvSize = 0;
+
             /*Load breadpoint info from NVDS*/
             // sTlk_boot_and_ota_cfg_t boot_ota_cfg;
             // if (sTlkMwOtaCtrl.ota_intf->nvds_ota_user_load != NULL &&
@@ -1030,8 +1063,7 @@ void tlk_ota_general_protocol_deal(uint8_t channel, uint8_t opcode, uint8_t *pDa
             pBuffer[buffLen++] = TLK_FIRMWARE_OTA_ING;
             pBuffer[buffLen++] = 0;
             tlkmw_ota_update_ota_status(pBuffer, buffLen, NULL);
-            //TODO:special
-            tlkmw_ota_start_customer_init();
+
         } else {
             status = TLK_OTA_RESULT_VERSION_COMPARE_ERR;
         }
@@ -1040,7 +1072,10 @@ void tlk_ota_general_protocol_deal(uint8_t channel, uint8_t opcode, uint8_t *pDa
     {
         if (tlkmw_ota_param_negotiation(pData, dataLen, UserArg) != OTA_NONE) {
             status = TLK_OTA_RESULT_PARAM_NEGO_ERR;
+            break;
         }
+
+
     } break;
     case TLK_OTA_OPC_BREAK_INFO_REQ:
     {
@@ -1095,7 +1130,7 @@ void tlk_ota_general_protocol_deal(uint8_t channel, uint8_t opcode, uint8_t *pDa
  * @param   pInterface - Pointer to OTA interface structure
  * @return  OTA_NONE if successful, error code otherwise
  */
-int tlk_ota_general_protocol_detail_init(nvds_ota_Interface_t *pInterface)
+int tlk_ota_general_protocol_detail_init(nvds_ota_Interface_t pInterface)
 {
     if (pInterface == NULL || pInterface->nvds_ota_malloc == NULL) {
         return -OTA_INITERR;

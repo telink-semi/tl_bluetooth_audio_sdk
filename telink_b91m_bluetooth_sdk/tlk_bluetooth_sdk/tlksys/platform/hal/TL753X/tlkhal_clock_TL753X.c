@@ -30,11 +30,12 @@
  * @param[in] futureUse : Reserved for future use
  * @returns  None.
  */
-void tlkhal_clock_setLevel(uint8_t level,void *futureUse)
+void tlkhal_clock_setLevel(uint8_t level, void *futureUse)
 {
-    (void) futureUse;
-    (void) level;
+    (void)futureUse;
+    (void)level;
 }
+
 /**
  * @brief  Get the current system clock level
  * @param[in] futureUse : Reserved for future use
@@ -42,7 +43,7 @@ void tlkhal_clock_setLevel(uint8_t level,void *futureUse)
  */
 uint8_t tlkhal_clock_getCurrentLevel(void *futureUse)
 {
-    (void) futureUse;
+    (void)futureUse;
     return 0;
 }
 

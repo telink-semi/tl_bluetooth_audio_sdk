@@ -24,6 +24,7 @@
 #pragma once
 
 #define TLK_PT_CMD_MSG_MAX_LEN 32
+
 typedef enum
 {
     TLK_PT_CMD_ENTER_SIDETONE,
@@ -42,16 +43,16 @@ typedef enum
     TLK_PT_CMD_MAX,
 } TLK_PT_CMD_ENUM;
 
-typedef struct 
+typedef struct
 {
     uint16_t cmd;
     uint16_t msgLen;
     uint8_t  msg[TLK_PT_CMD_MSG_MAX_LEN];
-}tlk_pt_msg_t;
+} tlk_pt_msg_t;
 
-typedef void(*tlk_pt_ack_cb)(tlk_pt_msg_t *msg);
+typedef void (*tlk_pt_ack_cb)(tlk_pt_msg_t *msg);
 
-typedef void(*tlk_pt_cmdFunc_t)(tlk_pt_msg_t *msg);
+typedef void (*tlk_pt_cmdFunc_t)(tlk_pt_msg_t *msg);
 
 /**
  * @brief     Sets the callback function for Bluetooth product test protocol acknowledgment.

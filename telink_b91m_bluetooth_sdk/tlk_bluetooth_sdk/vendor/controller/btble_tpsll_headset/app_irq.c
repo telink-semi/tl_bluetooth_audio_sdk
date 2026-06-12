@@ -66,11 +66,11 @@ _attribute_ram_code_sec_ uint8_t app_trap_handler(uint32_t mtval, uint32_t mepc,
 
     core_interrupt_disable();
     while (1) {
-    #if (TLKDBG_CFG_UDB_LOG_ENABLE)
+#if (TLKDBG_CFG_UDB_LOG_ENABLE)
         tlk_udb_usb_handle_irq();
-    #elif(TLK_DEBUG_ENABLE)
+#elif (TLK_DEBUG_ENABLE)
         tlkdbg_handler();
-    #endif
+#endif
     }
 
     return 0;
@@ -90,7 +90,7 @@ _attribute_ram_code_sec_noinline_ void trap_entry(void) __attribute__((interrupt
  */
 _attribute_ram_code_sec_ void trap_entry(void)
 {
-    #if (TLK_DEBUG_ENABLE)
+#if (TLK_DEBUG_ENABLE)
     register uint32_t ra asm("x1");
 
     uint32_t mtval, mepc, mstatus, mcause, mdcause;
@@ -101,9 +101,9 @@ _attribute_ram_code_sec_ void trap_entry(void)
     mdcause = read_csr(NDS_MDCAUSE);
 
     app_trap_handler(mtval, mepc, mstatus, mcause, mdcause, ra);
-    #else
+#else
     mcu_reboot();
-    #endif
+#endif
 }
 
 /**
@@ -116,7 +116,7 @@ _attribute_retention_code_ void stimer_irq_handler(void)
     // DBG_CHN15_HIGH;
     // DBG_COMMON_CHN1_TOGGLE;
 
-    tlksdk_irq_handler(IRQ_SYSTIMER);
+    tlk_sys_irq_handler(IRQ_SYSTIMER);
     // DBG_CHN15_LOW;
     // DBG_COMMON_CHN1_TOGGLE;
 }
@@ -132,7 +132,7 @@ _attribute_retention_code_ void ble_rf_irq_handler(void)
     // DBG_CHN14_HIGH;
     // DBG_COMMON_CHN0_TOGGLE;
 
-    tlksdk_irq_handler(IRQ_ZB_RT);
+    tlk_sys_irq_handler(IRQ_ZB_RT);
 
     // DBG_CHN14_LOW;
     // DBG_COMMON_CHN0_TOGGLE;
@@ -148,16 +148,16 @@ _attribute_retention_code_ void bt_rf_irq_handler(void)
 {
     // DBG_COMMON_CHN2_TOGGLE;
 
-    tlksdk_irq_handler(IRQ_ZB_BT);
+    tlk_sys_irq_handler(IRQ_ZB_BT);
 
     // DBG_COMMON_CHN2_TOGGLE;
 }
 CLIC_ISR_REGISTER(bt_rf_irq_handler, IRQ_ZB_BT)
 
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
 
-extern void tph_subschdule_irq_handler(void);
-extern void tph_subsequence_irq_handler(void);
+extern void tlk_tpsll_tph_subschdule_irq_handler(void);
+extern void tlk_tpsll_tph_subsequence_irq_handler(void);
 
 /**
  * @brief       BT RF DM interrupt handler
@@ -166,7 +166,7 @@ extern void tph_subsequence_irq_handler(void);
  */
 _attribute_retention_code_ void bt_rf_dm_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_ZB_BT_DM);
+    tlk_sys_irq_handler(IRQ_ZB_BT_DM);
 }
 #if MCU_CORE_N22
 CLIC_ISR_REGISTER(bt_rf_dm_irq_handler, IRQ_ZB_BT_DM)
@@ -185,13 +185,13 @@ _attribute_retention_code_ void tpsll_timer6_irq_handler(void)
     // DBG_COMMON_CHN1_TOGGLE;
     // DBG_COMMON_CHN1_TOGGLE;
     // DBG_COMMON_CHN1_TOGGLE;
-//	timer_stop(TIMER6);
-//	timer_clr_irq_status(FLD_TMR6_MODE_IRQ);
-//
-//    timer_set_cap_tick(TIMER6,1000 * sys_clk.pclk);//If the system clock is 48 MHz RC, the actual frequency is only 32 MHz
-//    timer_start(TIMER6);
-	tph_subschdule_irq_handler();
-//    DBG_JUNWEI_CHN0_TOGGLE;
+    //	timer_stop(TIMER6);
+    //	timer_clr_irq_status(FLD_TMR6_MODE_IRQ);
+    //
+    //    timer_set_cap_tick(TIMER6,1000 * sys_clk.pclk);//If the system clock is 48 MHz RC, the actual frequency is only 32 MHz
+    //    timer_start(TIMER6);
+    tlk_tpsll_tph_subschdule_irq_handler();
+    //    DBG_JUNWEI_CHN0_TOGGLE;
     // DBG_COMMON_CHN1_TOGGLE;
 }
 CLIC_ISR_REGISTER(tpsll_timer6_irq_handler, IRQ_TIMER1_2)
@@ -207,7 +207,7 @@ _attribute_retention_code_ void tpsll_timer7_irq_handler(void)
     // DBG_COMMON_CHN1_TOGGLE;
     // DBG_COMMON_CHN1_TOGGLE;
 
-	tph_subsequence_irq_handler();
+    tlk_tpsll_tph_subsequence_irq_handler();
 
     // DBG_COMMON_CHN1_TOGGLE;
 }
@@ -219,17 +219,17 @@ CLIC_ISR_REGISTER(tpsll_timer7_irq_handler, IRQ_TIMER1_3)
  * @param[in]   none
  * @return      none
  */
-_attribute_retention_code_ void tpsll_bbtimer_irq_handler(void)
+_attribute_retention_code_ void tlk_tpsll_bbtimer_irq_handler(void)
 {
     // DBG_COMMON_CHN1_TOGGLE;
     // DBG_COMMON_CHN1_TOGGLE;
     // DBG_COMMON_CHN1_TOGGLE;
 
-    tph_bbtimer_irq_handler();
+    tlk_tpsll_tph_bbtimer_irq_handler();
 
     // DBG_COMMON_CHN1_TOGGLE;
 }
-CLIC_ISR_REGISTER(tpsll_bbtimer_irq_handler, IRQ_TIMER_BB)
+CLIC_ISR_REGISTER(tlk_tpsll_bbtimer_irq_handler, IRQ_TIMER_BB)
 
 #endif
 

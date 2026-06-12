@@ -76,6 +76,33 @@ bool efuse_get_mac_address(u8 *mac_read, int length);
 /******************************* gpio start ******************************************************************/
 #define reg_gpio_out reg_gpio_out_set_clear
 
+/******************************* mac start ************************************************************/
+/**
+ * @brief      This function serves to read IEEE address from OTP.
+ * @param[out] buf  - Pointer to IEEE address buffer(IEEE address is 8bytes)
+ * @return     none
+ */
+
+static inline bool get_device_mac_address(u8 *mac_read, int length)
+{
+    unsigned char mac[8];
+    extern void   otp_get_ieee_addr(unsigned char *buf);
+    otp_get_ieee_addr(mac);
+
+    u8 empty_8_byte_0[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    u8 empty_8_byte_F[8] = {0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF, 0XFF};
+    if (memcmp(mac, empty_8_byte_0, 8) && memcmp(mac, empty_8_byte_F, 8)) {
+        if (length > 8) {
+            length = 8;
+        }
+        memcpy(mac_read, (u8 *)mac, 6);
+
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}
+
 /**
  * @brief     This function read a pin's cache from the buffer.
  * @param[in] pin - the pin needs to read.

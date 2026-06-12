@@ -37,11 +37,11 @@ typedef void (*BtpIapRecvDataCB)(uint16_t aclHandle, uint8_t rfcHandle, uint8_t 
 
 typedef struct
 {
-    uint8_t state;
-    uint8_t rfcHandle;
+    uint8_t  state;
+    uint8_t  rfcHandle;
     uint16_t aclHandle;
-    uint8_t credit;
-    uint8_t resv001;
+    uint8_t  credit;
+    uint8_t  resv001;
     uint16_t mtuSize;
 } btp_iap_item_t;
 

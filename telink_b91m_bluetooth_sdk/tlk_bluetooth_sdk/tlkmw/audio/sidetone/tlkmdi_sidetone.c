@@ -26,7 +26,7 @@
 #include "tlkmw/tlkmw.h"
 #include "tlkmdi_sidetone.h"
 #if TLKMW_SIDETONE_EN
-#define SIDETONE_SAMPLERATE     16000
+#define SIDETONE_SAMPLERATE 16000
 bool sidetone_busy_flag = false;
 
 /**
@@ -41,7 +41,7 @@ void tlkmdi_sidetone_set_mic_chanl(uint8_t channel)
         audio_matrix_set_side_tone_route(SIDE_TONE_CHN7, SIDE_TONE_ROUTE_ADC0, SIDE_TONE_ADC_LEFT_32_BIT);
     } else if (channel == TLKDRV_CODEC_CHANNEL_RIGHT) {
         audio_matrix_set_side_tone_route(SIDE_TONE_CHN6, SIDE_TONE_ROUTE_ADC0, SIDE_TONE_ADC_RIGHT_32_BIT);
-        audio_matrix_set_side_tone_route(SIDE_TONE_CHN7, SIDE_TONE_ROUTE_ADC0, SIDE_TONE_ADC_RIGHT_32_BIT);        
+        audio_matrix_set_side_tone_route(SIDE_TONE_CHN7, SIDE_TONE_ROUTE_ADC0, SIDE_TONE_ADC_RIGHT_32_BIT);
     } else {
         tlkapi_trace(0xffffffff, "<test>", "error channel para");
     }
@@ -80,7 +80,7 @@ bool tlkmdi_sidetone_switch(uint16_t handle, uint8_t status)
     if (status == TLK_STATE_OPENED) {
         tlkapi_trace(0xffffffff, "<test>", "open sidetone internal");
         tlkdrv_codec_muteSpkBuff();
-        tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_BOTH, TLKDRV_CODEC_CHANNEL_STEREO, TLKDRV_CODEC_BITDEPTH_16, SIDETONE_SAMPLERATE,0);
+        tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_BOTH, TLKDRV_CODEC_CHANNEL_STEREO, TLKDRV_CODEC_BITDEPTH_16, SIDETONE_SAMPLERATE, 0);
 
         audio_side_tone_dma_en(SIDE_TONE_CHN67);
         audio_side_tone_ch_en(SIDE_TONE_CHN6);

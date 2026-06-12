@@ -63,7 +63,7 @@ struct mem_arena_header
  * @param[in] base  Retention memory base address.
  * @param[in] size  Retention memory size.
  */
-void  tlk_initialRetentionBuffer(void *base, size_t size);
+void tlk_initialRetentionBuffer(void *base, size_t size);
 
 /**
  * @brief Initialize non-retention memory arena.
@@ -71,7 +71,7 @@ void  tlk_initialRetentionBuffer(void *base, size_t size);
  * @param[in] base  Non-retention memory base address.
  * @param[in] size  Non-retention memory size.
  */
-void  tlk_initialNonRetentionBuffer(void *base, size_t size);
+void tlk_initialNonRetentionBuffer(void *base, size_t size);
 
 /**
  * @brief Allocate memory from retention arena.
@@ -88,7 +88,7 @@ void *malloc_reten(size_t size, unsigned short usedType);
  *
  * @param[in] ptr  Pointer previously returned by malloc_reten/realloc_reten.
  */
-void  free_reten(void *ptr);
+void free_reten(void *ptr);
 
 /**
  * @brief Reallocate memory in retention arena.
@@ -136,7 +136,7 @@ void *malloc_nonreten(size_t size);
  *
  * @param[in] ptr  Pointer previously returned by malloc_nonreten/realloc_nonreten.
  */
-void  free_nonreten(void *ptr);
+void free_nonreten(void *ptr);
 
 /**
  * @brief Reallocate memory in default non-retention arena.
@@ -154,14 +154,14 @@ void *realloc_nonreten(void *ptr, size_t size);
  * @param[in] base  Arena base address.
  * @param[in] size  Arena size.
  */
-void  tlk_malloc_init(void *base, size_t size);
+void tlk_malloc_init(void *base, size_t size);
 
 /**
  * @brief Deinitialize a custom memory arena.
  *
  * @param[in] base  Arena base address (reserved for future use).
  */
-void  tlk_malloc_deinit(void *base);
+void tlk_malloc_deinit(void *base);
 
 /**
  * @brief Allocate memory from a custom arena.
@@ -180,7 +180,7 @@ void *tlk_malloc_buffer(void *base, size_t size, unsigned short usedType);
  * @param[in] base  Arena base address (mem_arena_header).
  * @param[in] ptr   Pointer to block allocated by tlk_malloc_buffer.
  */
-void  tlk_free_buffer(void *base, void *ptr);
+void tlk_free_buffer(void *base, void *ptr);
 
 enum
 {

@@ -34,18 +34,14 @@
 #define TLKDEV_SERIAL1_PORT 1
 #endif
 
-#define TLKMDI_COMM_SERIAL_BAUDRATE   1500000 // 921600//115200
-#define TLKMDI_COMM_SERIAL_RBUFF_NUMB 2
-#define TLKMDI_COMM_SERIAL_RBUFF_SIZE 540 // 280 //The configuration should be larger than the maximum frame of data in the system
-#define TLKMDI_COMM_SERIAL_SBUFF_NUMB 4
-#define TLKMDI_COMM_SERIAL_SBUFF_SIZE 128
+#define TLKMDI_COMM_SERIAL_BAUDRATE       1500000 // 921600//115200
+#define TLKMDI_COMM_SERIAL_RBUFF_NUMB     2
+#define TLKMDI_COMM_SERIAL_RBUFF_SIZE     540 // 280 //The configuration should be larger than the maximum frame of data in the system
+#define TLKMDI_COMM_SERIAL_SBUFF_NUMB     4
+#define TLKMDI_COMM_SERIAL_SBUFF_SIZE     128
 
-
-/**
- * @brief       This file defines constants related to communication data handling.
- * @note        The configuration values should be adjusted based on the system's maximum frame length requirements.
- */
-#define TLKMDI_COMM_DATA_CHANNEL_MAX 4
+#define TLKMDI_COMM_SERIAL_OTA_MTU        256
+#define TLKMDI_COMM_SERIAL_OTA_SHAKE_INTV 1
 
 /**
  * @brief       This macro defines the maximum length of a receive frame in the communication system.
@@ -99,7 +95,8 @@ void tlkmdi_comm_reset(void);
  * @brief       This function handles communication by processing serial handlers if the serial device is enabled.
  * @return      none.
  */
-void tlkmdi_comm_handler(void);
+void tlkmdi_serials_handler(void);
+
 /**
  * @brief       This function returns the buffer size for communication.
  * @return      The buffer size.   
@@ -125,14 +122,6 @@ bool tlkmdi_comm_sfifoIsMore60(uint16_t dataLen);
  * @return      true if more than 80% bytes are available, false otherwise.  
  */
 bool tlkmdi_comm_sfifoIsMore80(uint16_t dataLen);
-
-
-/**
- * @brief       This function finds the next available data channel ID.
- * @param[out]  pDatID - the pointer to store the available data channel ID.
- * @return      TLK_ENONE if an available ID is found, -TLK_EQUOTA if no ID is available.   
- */
-int tlkmdi_comm_getValidDatID(uint8_t *pDatID);
 
 /**
  * @brief       This function registers a callback for a specific data channel.

@@ -258,7 +258,17 @@ void adc_power_on(void)
      * adc_set_scan_chn_dis() must be called to stop the state machine at the beginning of the M channel and not start sampling.
      */
     adc_set_scan_chn_dis();
+    /*
+     * To prevent aging, configure ANA0/1 as VREF output pins and pull up ANA0/1 pins with a 10k resistor.
+     * (updated by bolong.zhang, confirmed by haitao at 202501224 jira: PAN-78)
+     */
+    analog_write_reg8(0xaa, analog_read_reg8(0xaa) | 0xf0);
+    analog_write_reg8(areg_adc_sel_atb_o, analog_read_reg8(areg_adc_sel_atb_o) | FLD_ADC_VREF_ANA0 | FLD_ADC_VREF_ANA1);
+    delay_us(10);
     analog_write_reg8(areg_adc_pga_ctrl, (analog_read_reg8(areg_adc_pga_ctrl) & (~FLD_SAR_ADC_POWER_DOWN)));
+    delay_us(10);
+    analog_write_reg8(areg_adc_sel_atb_o, analog_read_reg8(areg_adc_sel_atb_o) &(~(FLD_ADC_VREF_ANA0 | FLD_ADC_VREF_ANA1)));
+    analog_write_reg8(0xaa, analog_read_reg8(0xaa) & 0x0f);
     adc_reset();                   //reset whole digital adc module
     adc_dig_clk_en();
 }
@@ -385,14 +395,8 @@ void adc_init(adc_chn_cnt_e channel_cnt)
     adc_clk_en();                  //enable signal of 48M clock to sar adc
     adc_set_clk();                 //set adc digital clk to 24MHz and adc analog clk to 4MHz
     adc_set_resolution(ADC_RES12); //default adc_resolution set as 12bit ,BIT(11) is sign bit
-
-    /*
-     * To prevent aging, configure ANA0/1 as VREF output pins and pull up ANA0/1 pins with a 10k resistor.
-     * (updated by bolong.zhang, confirmed by haitao at 20250718 jira: PAN-78)
-     */
-    analog_write_reg8(areg_adc_sel_atb_o, analog_read_reg8(areg_adc_sel_atb_o) | FLD_ADC_VREF_ANA0 | FLD_ADC_VREF_ANA1);
-    gpio_set_up_down_res(GPIO_ANA0,GPIO_PIN_PULLUP_10K);
-    gpio_set_up_down_res(GPIO_ANA1,GPIO_PIN_PULLUP_10K);
+   
+    analog_write_reg8(0x13d, analog_read_reg8(0x13d) | 0x0c); //Disable the output function of analog pin 0/1
 
     if (NDMA_M_CHN == channel_cnt) {
         adc_all_chn_data_to_fifo_dis();

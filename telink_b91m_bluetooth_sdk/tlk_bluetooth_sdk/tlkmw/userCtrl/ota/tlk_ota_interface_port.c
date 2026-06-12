@@ -59,7 +59,10 @@ __attribute__((weak)) void nvds_ota_free(void *pBuffer)
  */
 __attribute__((weak)) void tlk_nvds_ota_write(unsigned long addr, unsigned long len, unsigned char *buf)
 {
-    flash_page_program(addr, len, buf);
+    (void)addr;
+    (void)len;
+    (void)buf;
+    flash_write_page(addr, len, buf);
 }
 
 /**
@@ -72,11 +75,10 @@ __attribute__((weak)) void tlk_nvds_ota_write(unsigned long addr, unsigned long 
  */
 __attribute__((weak)) void tlk_nvds_ota_read(unsigned long addr, unsigned long len, unsigned char *buf)
 {
-#if (MCU_CORE_TL752X_TEMP)
-    flash_4read(addr, len, buf);
-#else
-    flash_dread(addr, len, buf);
-#endif
+    (void)addr;
+    (void)len;
+    (void)buf;
+    flash_read_page(addr, len, buf);
 }
 
 /**
@@ -87,6 +89,7 @@ __attribute__((weak)) void tlk_nvds_ota_read(unsigned long addr, unsigned long l
  */
 __attribute__((weak)) void tlk_nvds_ota_eraseSector(unsigned long addr)
 {
+    (void)addr;
     flash_erase_sector(addr);
 }
 
@@ -177,6 +180,19 @@ __attribute__((weak)) int tlk_nvds_ota_userarea_addr_save(uint8_t *pBuffer, uint
     return -OTA_DEFINEDERR;
 }
 
+static const nvds_ota_Interface_funcs_t sc_tlk_nvds_ota_interFace_funcs = {
+    .nvds_ota_malloc             = nvds_ota_malloc,
+    .nvds_ota_free               = nvds_ota_free,
+    .nvds_ota_read               = tlk_nvds_ota_read,
+    .nvds_ota_write              = tlk_nvds_ota_write,
+    .nvds_ota_eraseSector        = tlk_nvds_ota_eraseSector,
+    .nvds_ota_user_load          = tlk_nvds_ota_usercfg_load,
+    .nvds_ota_user_save          = tlk_nvds_ota_usercfg_save,
+    .nvds_ota_status_save        = tlk_nvds_ota_status_save,
+    .nvds_ota_backup_addr_save   = tlk_nvds_ota_backup_addr_save,
+    .nvds_ota_userarea_addr_save = tlk_nvds_ota_userarea_addr_save,
+};
+
 /**
  * @brief      Initialize NVDS OTA interface
  * @param[out] p_interface - Pointer to OTA interface structure to initialize
@@ -184,16 +200,8 @@ __attribute__((weak)) int tlk_nvds_ota_userarea_addr_save(uint8_t *pBuffer, uint
  */
 void tlk_nvds_ota_interface_init(nvds_ota_Interface_t *p_interface)
 {
-    if (p_interface != NULL) {
-        p_interface->nvds_ota_malloc             = nvds_ota_malloc;
-        p_interface->nvds_ota_free               = nvds_ota_free;
-        p_interface->nvds_ota_read               = tlk_nvds_ota_read;
-        p_interface->nvds_ota_write              = tlk_nvds_ota_write;
-        p_interface->nvds_ota_eraseSector        = tlk_nvds_ota_eraseSector;
-        p_interface->nvds_ota_user_load          = tlk_nvds_ota_usercfg_load;
-        p_interface->nvds_ota_user_save          = tlk_nvds_ota_usercfg_save;
-        p_interface->nvds_ota_status_save        = tlk_nvds_ota_status_save;
-        p_interface->nvds_ota_backup_addr_save   = tlk_nvds_ota_backup_addr_save;
-        p_interface->nvds_ota_userarea_addr_save = tlk_nvds_ota_userarea_addr_save;
+    if (p_interface == NULL) {
+        return;
     }
+    *p_interface = &sc_tlk_nvds_ota_interFace_funcs;
 }

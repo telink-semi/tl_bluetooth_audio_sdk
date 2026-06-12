@@ -53,7 +53,7 @@
 typedef int (*le_hci_cmd_callback_t)(u8 *cmdPara, uint16_t opcode);
 
 
-void btc_hci_regBleCmdCallback(le_hci_cmd_callback_t cb);
+void tlk_bt_ctrl_btc_hci_regBleCmdCallback(le_hci_cmd_callback_t cb);
 /*
  * DEFINES
  ****************************************************************************************
@@ -407,16 +407,16 @@ struct rwip_eif_api
  */
 
 /// API for RF driver
-extern struct rwip_rf_api rwip_rf;
+extern struct rwip_rf_api tlk_bt_ctrl_g_rwip_rf;
 /// API for Clock driver
-extern struct rwip_clock_api rwip_clock;
+extern struct rwip_clock_api tlk_bt_ctrl_g_rwip_clock;
 /// API for PKE driver
-extern struct rwip_pke_api rwip_pke;
+extern struct rwip_pke_api tlk_bt_ctrl_g_rwip_pke;
 /// API for parameters
-extern struct rwip_param_api rwip_param;
+extern struct rwip_param_api tlk_bt_ctrl_g_rwip_param;
 #if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
 /// API for dual mode priority
-extern const struct rwip_prio rwip_priority[RWIP_PRIO_IDX_MAX];
+extern const struct rwip_prio tlk_bt_ctrl_gc_rwip_priority[RWIP_PRIO_IDX_MAX];
 #endif //#if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
 
 #if (BT_EMB_PRESENT || BLE_EMB_PRESENT)
@@ -450,14 +450,14 @@ extern const uint8_t rwip_coex_cfg[RWIP_COEX_CFG_MAX];
  *
  ****************************************************************************************
  */
-void EM_init();
+void tlk_bt_ctrl_EM_init();
 /**
  ****************************************************************************************
  * @brief Initializes the RW BT SW.
  *
  ****************************************************************************************
  */
-void rwip_init(uint32_t error);
+void tlk_bt_ctrl_rwip_init(uint32_t error);
 
 /**
  ****************************************************************************************
@@ -465,16 +465,16 @@ void rwip_init(uint32_t error);
  *
  ****************************************************************************************
  */
-void rwip_reset(void);
+void tlk_bt_ctrl_rwip_reset(void);
 
 
 #if (BT_EMB_PRESENT)
 
 
-void rwbt_hci_regEventCB(TlkBtHciEventCallback cb);
-void rwbt_hci_regAclDataCB(TlkBtHciAclDataCallback cb);
-void rwbt_hci_regScoDataCB(TlkBtHciScoDataCallback cb);
-void rwbt_hci_c2hCB(TlkBtHciC2HCallback cb);
+void tlk_bt_ctrl_rwbt_hci_regEventCB(TlkBtHciEventCallback cb);
+void tlk_bt_ctrl_rwbt_hci_regAclDataCB(TlkBtHciAclDataCallback cb);
+void tlk_bt_ctrl_rwbt_hci_regScoDataCB(TlkBtHciScoDataCallback cb);
+void tlk_bt_ctrl_rwbt_hci_c2hCB(TlkBtHciC2HCallback cb);
 void rwbt_hci_regfifoCB(tlk_fifo_t *f);
 #if PCA_SUPPORT
 /**
@@ -484,7 +484,7 @@ void rwbt_hci_regfifoCB(tlk_fifo_t *f);
  * @return    true if clock dragging must be used
  ****************************************************************************************
  */
-bool rwip_pca_clock_dragging_only(void);
+bool tlk_bt_ctrl_rwip_pca_clock_dragging_only(void);
 #endif //PCA_SUPPORT
 #endif // (BT_EMB_PRESENT)
 
@@ -523,7 +523,7 @@ void rwip_wlcoex_set(bool state);
  * @return External interface api structure
  ****************************************************************************************
  */
-extern const struct rwip_eif_api *rwip_eif_get(uint8_t idx);
+extern const struct rwip_eif_api *tlk_bt_ctrl_rwip_eif_get(uint8_t idx);
 
 #if RW_DEBUG
 /**
@@ -556,7 +556,7 @@ void rwip_assert(const char *file, int line, int param0, int param1, uint8_t typ
  ****************************************************************************************
  */
 
-rwip_time_t rwip_time_get(void); //TODO BY ZHAOWEI
+rwip_time_t tlk_bt_ctrl_rwip_time_get(void); //TODO BY ZHAOWEI
 
 
 #if (BT_EMB_PRESENT)
@@ -567,7 +567,7 @@ rwip_time_t rwip_time_get(void); //TODO BY ZHAOWEI
  * @param clock value in half-slots
  ****************************************************************************************
  */
-void rwip_time_set(uint32_t clock);
+void tlk_bt_ctrl_rwip_time_set(uint32_t clock);
 #endif // (BT_EMB_PRESENT)
 
 /**
@@ -579,7 +579,7 @@ void rwip_time_set(uint32_t clock);
  * @param[in] target       10ms Timer target value
  ****************************************************************************************
  */
-void rwip_timer_10ms_set(uint32_t target);
+void tlk_bt_ctrl_rwip_timer_10ms_set(uint32_t target);
 
 #if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
 /**
@@ -591,7 +591,7 @@ void rwip_timer_10ms_set(uint32_t target);
  * @param[in] target      Half Slot Timer target value
  ****************************************************************************************
  */
-void rwip_timer_hs_set(uint32_t target);
+void tlk_bt_ctrl_rwip_timer_hs_set(uint32_t target);
 
 /**
  ****************************************************************************************
@@ -603,7 +603,8 @@ void rwip_timer_hs_set(uint32_t target);
  * @param[in] half_us_delay  Half us timer delay in corresponding half slot (range [0:624])
  ****************************************************************************************
  */
-void rwip_timer_hus_set(uint32_t target, uint32_t half_us_delay);
+void tlk_bt_ctrl_rwip_timer_hus_set(uint32_t target, uint32_t half_us_delay);
+void tlk_bt_ctrl_rwip_timer_tgt3irq_close(void);
 #endif // (BLE_EMB_PRESENT || BT_EMB_PRESENT)
 
 /**
@@ -655,7 +656,7 @@ void rwip_isr(void);
  * @param[in] prv_slp_bit   Bit to be set in the prevent sleep bit field
  ****************************************************************************************
  */
-void rwip_prevent_sleep_set(uint16_t prv_slp_bit);
+void tlk_bt_ctrl_rwip_prevent_sleep_set(uint16_t prv_slp_bit);
 
 /**
  ****************************************************************************************
@@ -665,7 +666,7 @@ void rwip_prevent_sleep_set(uint16_t prv_slp_bit);
  * @param[in] prv_slp_bit   Bit to be cleared in the prevent sleep bit field
  ****************************************************************************************
  */
-void rwip_prevent_sleep_clear(uint16_t prv_slp_bit);
+void tlk_bt_ctrl_rwip_prevent_sleep_clear(uint16_t prv_slp_bit);
 
 #if (BLE_EMB_PRESENT || BT_EMB_PRESENT)
 /**
@@ -684,13 +685,13 @@ bool rwip_active_check(void);
  *
  ****************************************************************************************
  */
-void rwip_schedule(void);
+void tlk_bt_ctrl_rwip_schedule(void);
 
-void bredr_mainloop(void);
+void tlk_bt_ctrl_bredr_mainloop(void);
 
-void rwip_timer_hs_handler(void);
+void tlk_bt_ctrl_rwip_timer_hs_handler(void);
 
-void rwip_timer_10ms_handler(void);
+void tlk_bt_ctrl_rwip_timer_10ms_handler(void);
 ///@} ROOT
 
 #endif // _RWIP_H_

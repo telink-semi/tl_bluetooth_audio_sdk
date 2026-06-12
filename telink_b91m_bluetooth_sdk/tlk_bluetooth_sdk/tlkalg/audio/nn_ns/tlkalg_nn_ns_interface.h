@@ -24,10 +24,21 @@
 #ifndef TLKALG_NN_NS_INTERFACE_H_
 #define TLKALG_NN_NS_INTERFACE_H_
 
-#include "tl_common.h"
-#include "tlka_nn_ns_api.h"
+#define TLKALG_NN_NS_16K_20MS 1
+#define TLKALG_NN_NS_48K_10MS 2
 
-extern uint8_t *g_nn_ns_buf_ptr;
+#ifndef TLKALG_NN_NS_TYPE
+#define TLKALG_NN_NS_TYPE TLKALG_NN_NS_16K_20MS
+#endif
+
+#include "tl_common.h"
+#if (TLKALG_NN_NS_TYPE == TLKALG_NN_NS_16K_20MS)
+#include "tlka_nn_ns_api_16k_20ms.h"
+#elif (TLKALG_NN_NS_TYPE == TLKALG_NN_NS_48K_10MS)
+#include "tlka_nn_ns_api_48k_10ms.h"
+#endif
+
+extern uint8_t        *g_nn_ns_buf_ptr;
 extern NN_NS_PARA_STRU g_nn_ns_para;
 
 /**
@@ -43,13 +54,13 @@ uint16_t tlkalg_nn_ns_get_size(uint8_t channel);
  * @param[in]   channel - The channel to initialize.
  * @return      The result of the initialization (0 for error, non-zero for success).
  */
-int8_t   tlkalg_nn_ns_init(uint8_t *p_buff, uint8_t channel);
+int8_t tlkalg_nn_ns_init(uint8_t *p_buff, uint8_t channel);
 
 /**
  * @brief   This function deinitializes the noise suppression algorithm and frees the associated buffer.
  * @return      The result of the deinitialization (always 0 in this implementation).
  */
-int8_t   tlkalg_nn_ns_deinit(void);
+int8_t tlkalg_nn_ns_deinit(void);
 
 /**
  * @brief   This function sets the parameters for the noise suppression algorithm.
@@ -57,7 +68,7 @@ int8_t   tlkalg_nn_ns_deinit(void);
  * @param[in]   param   - Pointer to the parameter value to set.
  * @return      The result of the parameter setting (0 for error, non-zero for success).
  */
-uint8_t  tlkalg_nn_ns_set_param(uint8_t type, void *param);
+uint8_t tlkalg_nn_ns_set_param(uint8_t type, void *param);
 
 /**
  * @brief   This function processes a frame of audio data for noise suppression.
@@ -68,7 +79,7 @@ uint8_t  tlkalg_nn_ns_set_param(uint8_t type, void *param);
  * @param[in]   channel - Channel number of the audio data.
  * @return      The result of the audio processing (0 for error, non-zero for success).
  */
-int      tlkalg_nn_ns_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
+int tlkalg_nn_ns_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
 
 //int tlka_nn_ns_get_version(void);
 //int tlka_nn_ns_get_size();

@@ -35,6 +35,7 @@
 
 #include "drivers.h"
 #include "stack/stack.h"
+#include "tlkalg/audio/asrc_24bit/tlkalg_ppm_calc.h"
 extern uint8_t gLeaPpmStatus;
 // #if TLK_SIMPLE_PPM_EN
 uint32_t mic_ppm_tick_last      = 0;
@@ -91,14 +92,16 @@ void tlkusb_uacmic_setEnable(bool enable)
 {
     sTlkUsbUacMicEnable = enable;
     if (enable) {
+        reg_usb_ep_ctrl(TLKUSB_UAC_EDP_MIC) = 0;
         reg_usb_ep_ptr(TLKUSB_UAC_EDP_MIC)  = 0;
         reg_usb_ep_ctrl(TLKUSB_UAC_EDP_MIC) = 0x01; // ACK first packet
+        reg_usb_ep_ctrl(TLKUSB_UAC_EDP_MIC) = BIT(0);
     } else {
         g_tlk_usb_cfg.tick_in   = 0;
         g_tlk_usb_cfg.iso_in_en = false;
         tlkusb_uac_reset_in_config();
         if (sTlkUsbReportUacStatusCB != NULL) {
-            sTlkUsbReportUacStatusCB(g_tlk_usb_cfg.iso_in_en, g_tlk_usb_cfg.iso_out_en);
+            sTlkUsbReportUacStatusCB(g_tlk_usb_cfg.iso_in_en, g_tlk_usb_cfg.iso_out_en || g_tlk_usb_cfg.iso_out1_en);
         }
     }
 }
@@ -414,7 +417,14 @@ _attribute_ram_code_sec_noinline_ void tlkusb_uacmic_fillData(uint32_t tick)
     uint32_t intvTick     = tick - g_tlk_usb_cfg.tick_in;
     g_tlk_usb_cfg.tick_in = tick;
 
-    if (intvTick > (SYSTEM_TIMER_TICK_1US * 1100) && (intvTick / SYSTEM_TIMER_TICK_1US < 10000)) {
+#ifndef _B91_
+    usbhw_reset_ep_ptr(TLKUSB_UAC_EDP_MIC);
+#else
+    reg_usb_ep_ptr(TLKUSB_UAC_EDP_MIC) = 0;
+#endif
+
+    if (intvTick > (SYSTEM_TIMER_TICK_1US * 1500) && (intvTick / SYSTEM_TIMER_TICK_1US < 10000)) {
+        reg_usb_ep_ctrl(TLKUSB_UAC_EDP_MIC) = BIT(0);
         return;
     }
 #if !TLKLIB_UAC_PPM_MIC_ENABLE
@@ -425,8 +435,6 @@ _attribute_ram_code_sec_noinline_ void tlkusb_uacmic_fillData(uint32_t tick)
         is_fill_mute = true;
     } else {
     }
-
-    usbhw_reset_ep_ptr(TLKUSB_UAC_EDP_MIC);
 
     if (!sTlkUsbUacMicEnable || is_fill_mute) {
         for (uint16_t index = 0; index < need_samples; index++) {
@@ -528,6 +536,14 @@ _attribute_ram_code_sec_noinline_ void tlkusb_uacmic_fillData(uint32_t tick)
         tlkalg_u2s_ppm_calculation(tick);
     }
 
+#endif
+#if TLKALG_PPM_CALC_BY_SAMPLE
+    if (tlkalg_sample_ppm_mode_idle(&g_uac_ppm_ctrl)) {
+        tlkalg_set_sample_ppm_mode(&g_uac_ppm_ctrl, ASRC_VOICE_MODE);
+        tlkalg_reset_sample_ppm_calc(&g_uac_ppm_ctrl);
+        tlkalg_set_sample_ppm_mask(&g_uac_ppm_ctrl, APP_USB_ISO_IN_BUFF_IDX_MASK);
+        tlkalg_set_sample_ppm_channel(&g_uac_ppm_ctrl, tlkusb_uac_get_iso_in_Channels());
+    }
 #endif
 }
 

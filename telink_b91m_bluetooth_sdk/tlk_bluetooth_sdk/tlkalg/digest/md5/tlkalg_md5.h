@@ -35,7 +35,7 @@ typedef struct
     uint32_t b;
     uint32_t c;
     uint32_t d;
-    uint8_t buff[64];
+    uint8_t  buff[64];
     uint32_t block[16];
 } tlkalg_md5_context_t;
 

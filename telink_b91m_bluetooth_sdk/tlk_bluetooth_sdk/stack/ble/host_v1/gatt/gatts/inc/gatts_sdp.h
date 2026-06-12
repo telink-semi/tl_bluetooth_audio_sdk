@@ -80,6 +80,18 @@ struct gatts_discover_included_uuid
 int ble_gatts_discover_by_service_uuid(const struct att_uuid *service_uuid, const struct gatts_discover_char_info *char_list, void *user_data);
 
 /**
+ *   @brief Discover all characteristics information by service start handle on local device.
+ *
+ *   @param[in] start_handle The service start handle.
+ *   @param[in] char_list The list of characteristic uuids to be discovered.
+ *   @param[in] user_data The user data to be passed to the callback function.
+ *
+ *   @return  BLE_HOST_ERR_SUCC if the operation is successful.
+ *              --- BLE_GATT_ERR_NOT_FOUND_SERVICE if the service uuid is not found.
+ */
+int ble_gatts_discover_by_service_start_handle(uint16_t start_handle, const struct gatts_discover_char_info *char_list, void *user_data);
+
+/**
  *   @brief Discover included service uuid count.
  *
  *   @param[in] service_uuid The service uuid to be discovered.

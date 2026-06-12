@@ -21,13 +21,18 @@
  *          limitations under the License.
  *
  ********************************************************************************************************/
+#include "tl_common.h"
 #include "common/types.h"
-
 #include "tlka_lc3_api.h"
 #include "tlkalg_lc3_interface.h"
 #include "tlklib/dbg/tlkdbg.h"
 
-#if (!TLK_CFG_TEMP_DRAM_OPTM_TPSLL)
+#ifndef LE_AUDIO_NEW_LC3_ENABLE
+#define LE_AUDIO_NEW_LC3_ENABLE (0)
+#endif
+
+#if (!LE_AUDIO_NEW_LC3_ENABLE)
+
 #define LC3_ENC_SIZE         tlka_lc3enc_get_size()
 #define LC3_ENC_SCRATCH_SIZE tlka_lc3enc_get_scratch_size()
 #define LC3_DEC_SIZE         tlka_lc3dec_get_size()

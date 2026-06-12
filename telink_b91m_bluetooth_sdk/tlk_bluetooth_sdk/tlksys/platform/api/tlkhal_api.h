@@ -23,7 +23,7 @@
  *******************************************************************************************************/
 #pragma once
 
-#define TLKHAL_ASSERT(x) 
+#define TLKHAL_ASSERT(x)
 
 #define TLKHAL_DEFAULT (0)
 
@@ -33,10 +33,10 @@
 #include "tlksys/platform/api/tlkhal_clock.h"
 #include "tlksys/platform/api/tlkhal_dma.h"
 #include "tlksys/platform/api/tlkhal_gpio.h"
-#if (MCU_CORE_TL752X_TEMP)     // refer to include_path_lynx
-#include "drv_uart.h"
-#include "drv_dmac.h"
-#include "drv_gpio.h"
+#if (MCU_CORE_TL752X_TEMP) // refer to include_path_lynx
+#include "drivers/TL752X/driver/inc/drv_uart.h"
+#include "drivers/TL752X/driver/inc/drv_dmac.h"
+#include "drivers/TL752X/driver/modules/drv_gpio.h"
 #include "tlksys/platform/hal/TL752X/tlkhal_uart_TL752X.h"
 #endif
 #include "tlksys/platform/api/tlkhal_uart.h"
@@ -45,4 +45,5 @@
 #include "tlksys/platform/api/tlksys_hal_platform.h"
 #include "tlksys/platform/api/tlkhal_usb.h"
 #include "tlksys/platform/api/tlkhal_i2c.h"
-
+#include "tlksys/platform/api/tlkhal_flash.h"
+#include "tlksys/platform/api/tlkhal_misc.h"

@@ -83,12 +83,3 @@ uint8_t audio_ctl_get_tone_mix_mode(void)
 {
     return g_tone_mix_enable;
 }
-
-#if (TLKBTP_CFG_HFP_ENABLE && TLKBTP_CFG_A2DPSNK_ENABLE)
-uint32_t g_tick_bt_window_us = 0;
-uint32_t g_tick_bt_window    = 0;
-
-uint32_t g_delay_sw_le_tick = 0;
-uint32_t g_delay_sw_bt_tick = 0;
-
-#endif

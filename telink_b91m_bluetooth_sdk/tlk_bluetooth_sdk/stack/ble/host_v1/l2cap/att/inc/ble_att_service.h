@@ -104,7 +104,7 @@
         only attribute properties must need.
  *  - RFU(BIT5-7): Reserved for future use.
  */
-
+#define ATTS_SET_NONE                  0x00
 #define ATTS_SET_WRITE_CALLBACK        0x01
 #define ATTS_SET_READ_CALLBACK         0x02
 #define ATTS_SET_VARIABLE_LEN          0x04 /** < allow write value length is variable and can change length. */
@@ -128,13 +128,12 @@
 */
 struct atts_attribute
 {
-    uint8_t        perm;         // refer to ATT_PERMISSIONS_BITMAPS.
-    uint8_t        uuidLen;      // UUID length, usually 2 or 16, 4 maybe used.
-    const uint8_t *uuid;         // UUID value, 16 or 128 bits.
-    uint16_t      *attrValueLen; // attribute value length, point to the actual length of attribute value.
-    uint16_t       maxAttrLen;   // maximum attribute value length, only used for attribute value.
-    uint8_t       *attrValue;    // attribute value, point to the actual attribute value.
-    uint8_t        settings;     // refer to ATT_SETTINGS_BITMAPS.
+    uint8_t                perm;         // refer to ATT_PERMISSIONS_BITMAPS.
+    uint8_t                settings;     // refer to ATT_SETTINGS_BITMAPS.
+    uint16_t               maxAttrLen;   // maximum attribute value length, only used for attribute value.
+    const struct att_uuid *uuid;         // pointer to the uuid structure.
+    uint16_t              *attrValueLen; // attribute value length, point to the actual length of attribute value.
+    uint8_t               *attrValue;    // attribute value, point to the actual attribute value.
 };
 
 /**
@@ -258,6 +257,14 @@ struct atts_group *ble_host_get_attribute_service_group(void);
 void ble_host_add_attribute_service_group(struct atts_group *pGroup);
 
 /**
+ * @brief       Add an attribute service group in dynamic attributes handle range.
+ *              This function assigns new start and end handles for group.
+ * @param[in]   pGroup      - pointer to the attribute service group to add.
+ * @return      none.
+ */
+void ble_host_add_attribute_service_group_dynamic(struct atts_group *pGroup, uint16_t num_handles);
+
+/**
  * @brief       Remove an attribute service group by start handle.
  * @param[in]   startHandle - the start handle of the service group to remove.
  * @return      none.
@@ -270,3 +277,11 @@ void ble_host_remove_attribute_service_group(uint16_t startHandle);
  * @return      pointer to the attribute, or NULL if not found.
  */
 const struct atts_attribute *ble_host_get_attribute_info(uint16_t attr_handle);
+
+/**
+ * @brief       Set dynamic handles range
+ * @param[in]   start_handle - the dynamic range start handle.
+ * @param[in]   end_handle - the dynamic range end handle.
+ * @return      true if dynamic handle range has been set, false otherwise
+ */
+bool ble_host_set_dynamic_handle_range(uint16_t start_handle, uint16_t end_handle);

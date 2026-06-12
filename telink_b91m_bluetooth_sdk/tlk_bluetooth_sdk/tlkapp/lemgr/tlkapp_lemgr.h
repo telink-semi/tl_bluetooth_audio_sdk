@@ -23,11 +23,10 @@
  *******************************************************************************************************/
 #pragma once
 
-#define TLKAPP_LEMGR_LOG_ENABLE 1   
+#define TLKAPP_LEMGR_LOG_ENABLE 1
 
 /**
  * @brief   Get the task configuration for LE manager.
  * @return  Pointer to the task configuration structure.
  */
-const tlksys_task_cfg_t * tlkapp_lemgr_getTaskCfg(void);
-
+const tlksys_task_cfg_t *tlkapp_lemgr_getTaskCfg(void);

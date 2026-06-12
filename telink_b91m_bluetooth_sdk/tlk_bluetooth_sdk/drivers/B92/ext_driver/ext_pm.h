@@ -51,14 +51,6 @@ typedef struct
 extern _attribute_aligned_(4) misc_para_t blt_miscParam;
 
 /**
- * @brief      This function registers a callback function to be executed before suspend.
- * @param[in]  suspend_handler_t func.
- * @return     none.
- */
-typedef int (*suspend_handler_t)(void);
-void bls_pm_registerFuncBeforeSuspend(suspend_handler_t func);
-
-/**
  * @brief      This function serves to set the working mode of MCU based on 32k crystal,e.g. suspend mode, deepsleep mode, deepsleep with SRAM retention mode and shutdown mode.
  * @param[in]  sleep_mode - sleep mode type select.
  * @param[in]  wakeup_src - wake up source select.

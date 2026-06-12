@@ -51,6 +51,7 @@
 #include "hid/btp_hid.h"
 #include "iap/btp_iap.h"
 #include "browsing/btp_browsing.h"
+#include "avrcp/cover_art/btp_coverArt.h"
 
 int btp_init(void)
 {
@@ -63,7 +64,7 @@ int btp_init(void)
        a peer-to-peer connectivity scenario; set to 0 HFP and HID can be connected
        successfully, but will increase memory consumption.*/
     if (ret == TLK_ENONE) {
-        ret = btp_sdp_init(TLK_BT_SDP_MAX_NUMB, BTP_SDPSRV_RSP_ATT_LEN, BTP_SDP_BUFFER_SIZE, BTP_SDP_SHARE_BUFFER_ENABLE);
+        ret = btp_sdp_init(TLK_BT_SDP_MAX_NUMB, BTP_SDP_BUFFER_SIZE, BTP_SDP_SHARE_BUFFER_ENABLE);
     }
 #endif
 #if (TLKBTP_CFG_AVRCP_ENABLE)
@@ -225,6 +226,9 @@ void btp_destroy(uint16_t aclHandle)
 #endif
 }
 
+uint16_t debug_length[11]   = {0};
+uint16_t debug_length_L2[5] = {0};
+
 int btp_needMemLen(void)
 {
     int needLen = 0;
@@ -233,34 +237,39 @@ int btp_needMemLen(void)
     /* When 'BTP_SDP_SHARE_BUFFER_ENABLE' set to 1, HFP and HID fail to connect in
        a peer-to-peer connectivity scenario; set to 0 HFP and HID can be connected
        successfully, but will increase memory consumption.*/
-    needLen += btp_sdp_getMemLen(TLK_BT_SDP_MAX_NUMB, BTP_SDPSRV_RSP_ATT_LEN, BTP_SDP_BUFFER_SIZE, BTP_SDP_SHARE_BUFFER_ENABLE);
+    needLen += btp_sdp_getMemLen(TLK_BT_SDP_MAX_NUMB, 0, BTP_SDP_SHARE_BUFFER_ENABLE);
+    debug_length[0] = needLen;
 #endif
 #if (TLKBTP_CFG_AVRCP_ENABLE)
-    needLen += btp_avrcp_getMemLen(TLK_BT_AVRCP_MAX_NUMB);
+    // needLen += btp_avrcp_getMemLen(TLK_BT_AVRCP_MAX_NUMB);
+    debug_length[1] = btp_avrcp_getMemLen(TLK_BT_AVRCP_MAX_NUMB);
 #endif
 #if (TLKBTP_CFG_A2DP_ENABLE)
     needLen += btp_a2dp_getMemLen(TLK_BT_A2DP_MAX_NUMB);
+    debug_length[2] = btp_a2dp_getMemLen(TLK_BT_A2DP_MAX_NUMB);
 #endif
 #if (TLKBTP_CFG_RFC_ENABLE)
-    needLen += btp_rfcomm_getMemLen(TLK_BT_RFCOMM_SERVICE_MAX_NUMB, TLK_BT_RFCOMM_SESSION_MAX_NUMB, TLK_BT_RFCOMM_CHANNEL_MAX_NUMB, TLK_BT_RFCOMM_CHNDICT_MAX_NUMB);
+    debug_length[3] = btp_rfcomm_getMemLen(TLK_BT_RFCOMM_SERVICE_MAX_NUMB, TLK_BT_RFCOMM_SESSION_MAX_NUMB, TLK_BT_RFCOMM_CHANNEL_MAX_NUMB, TLK_BT_RFCOMM_CHNDICT_MAX_NUMB);
 #endif
+
 #if (TLKBTP_CFG_HFP_ENABLE)
-    needLen += btp_hfp_getMemLen(TLK_BT_HFP_MAX_NUMB);
+    debug_length[4] = btp_hfp_getMemLen(TLK_BT_HFP_MAX_NUMB);
 #endif
+
 #if (TLKBTP_CFG_PBAP_ENABLE)
-    needLen += btp_pbap_getMemLen(TLK_BT_PBAP_MAX_NUMB);
+    debug_length[5] = btp_pbap_getMemLen(TLK_BT_PBAP_MAX_NUMB);
 #endif
 #if (TLKBTP_CFG_SPP_ENABLE)
-    needLen += btp_spp_getMemLen(TLK_BT_SPP_MAX_NUMB);
+    debug_length[6] = btp_spp_getMemLen(TLK_BT_SPP_MAX_NUMB);
 #endif
 #if (TLKBTP_CFG_IAP_ENABLE)
-    needLen += btp_iap_getMemLen(TLK_BT_IAP_MAX_NUMB);
+    debug_length[7] = btp_iap_getMemLen(TLK_BT_IAP_MAX_NUMB);
 #endif
 #if (TLKBTP_CFG_ATT_ENABLE)
-    needLen += btp_att_getMemLen(TLK_BT_ATT_MAX_NUMB);
+    debug_length[8] = btp_att_getMemLen(TLK_BT_ATT_MAX_NUMB);
 #endif
 #if (TLKBTP_CFG_HID_ENABLE)
-    needLen += btp_hid_getMemLen(TLK_BT_HID_MAX_NUMB);
+    debug_length[9] = btp_hid_getMemLen(TLK_BT_HID_MAX_NUMB);
 #endif
 #if (TLKBTP_CFG_AVRCP_BROWSING_ENABLE)
     needLen += btp_browsing_getMemLen(TLK_BT_BROWSING_MAX_NUMB);
@@ -268,7 +277,13 @@ int btp_needMemLen(void)
 #if (TLKBTP_CFG_CUSTP_ENABLE)
     needLen += btp_custp_getMemLen(TLK_BT_CUSTP_MAX_NUMB);
 #endif
+    debug_length[10] = bth_l2cap_getMemLen(TLK_STK_BTPSM_NUMB, TLK_STK_BTCHN_NUMB, TLK_STK_BTACL_NUMB);
 
+    debug_length_L2[0] = TLKSTK_BT_STRUCT_ALIGN_4(bth_l2cap_service_t);
+
+    debug_length_L2[1] = TLKSTK_BT_STRUCT_ALIGN_4(bth_l2cap_channel_t);
+    debug_length_L2[2] = TLKSTK_BT_STRUCT_ALIGN_4(bth_l2cap_acldata_t);
+    debug_length_L2[3] = TLKSTK_BT_STRUCT_ALIGN_4(bth_l2cap_ctrl_t);
     return needLen;
 }
 

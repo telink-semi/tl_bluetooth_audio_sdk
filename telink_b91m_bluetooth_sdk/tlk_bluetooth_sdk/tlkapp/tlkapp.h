@@ -68,4 +68,3 @@ void tlkapp_create_allTasks(void);
  * @return      Returns a pointer to the user task configuration, or NULL if not implemented.
  */
 const tlksys_task_cfg_t *tlkapp_user_getTaskCfg(void);
-

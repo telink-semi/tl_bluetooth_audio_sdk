@@ -2207,6 +2207,19 @@ static inline void audio_codec0_set_dmic_b_clk(audio_codec_dmic_clk_sel_e clk_se
 }
 
 /**
+ * @brief      This function serves to set codec1 dmic0 clock frequency.
+ * @param[in]  clk_sel - dmic0 clock frequency.
+ * @note
+ *             - keep to AUDIO_CODEC1_DMIC_CLK_3072KHZ when FLD_CODEC1_ADCB_POWER_MODE = 00(Normal mode) and to AUDIO_CODEC0_DMIC_CLK_1024KHZ else(Low power mode or Ultra low power mode).
+ *             - dmic0_clk1 and dmic0_clk1 set in pairs.
+ */
+static inline void audio_codec1_set_dmic_a_clk(audio_codec_dmic_clk_sel_e clk_sel)
+{
+	reg_audio_codec1_cr_dmic_adca_12_rate = (reg_audio_codec1_cr_dmic_adca_12_rate & (~FLD_CODEC0_ADCA12_DMIC_RATE)) |
+                                            MASK_VAL(FLD_CODEC0_ADCA12_DMIC_RATE, clk_sel);
+}
+
+/**
  * @brief      This function serves to enable/disable codec0 dmic clock.
  * @param[in]  input  - input channel.
  * @param[in]  enable - 1: active dmic clock, 0: power-down dmic clock.
@@ -3300,6 +3313,15 @@ static inline void audio_i2s_align_config(i2s_align_config_t *align_config)
  */
 void audio_i2s_config_init(audio_i2s_config_t *i2s_config);
 
+/**
+ * @brief     This function configures i2s clk pin for extern codec clk,mclk=PLL1(36.864M)*(div_numerator/div_denominator)
+ * @param[in] i2s_select i2s channel.
+ * @param[in] mclk_pin -mclk output pin.
+ * @param[in] div_numerator   - the dividing factor of div_numerator (15bits valid).
+ * @param[in] div_denominator - the dividing factor of div_denominator(16bits valid).
+ * @return    none.
+ */
+void audio_set_i2s_clk_as_mclk(i2s_select_e i2s_select, gpio_func_pin_e mclk_pin, unsigned short div_numerator, unsigned short div_denominator);
 /**
  * @}
  */

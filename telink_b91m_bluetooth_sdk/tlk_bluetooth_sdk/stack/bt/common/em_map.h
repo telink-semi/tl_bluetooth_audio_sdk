@@ -49,7 +49,7 @@
 #include <stddef.h>
 #include "rwip_config.h"
 #include "rwbt_config.h"
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
 
 #include "../../common/co_math.h"
 
@@ -57,13 +57,13 @@
 /// Retrieve Exchange memory address to set into HW interface
 #define REG_EM_ADDR_GET(elem, idx) (REG_EM_##elem##_ADDR_GET(idx) >> 2)
 /// Retrieve Exchange index from address load from  HW interface
-#define REG_EM_IDX_GET(elem, addr) ((((addr)<<2) - (EM_##elem##_OFFSET))/(REG_EM_##elem##_SIZE))
+#define REG_EM_IDX_GET(elem, addr) ((((addr) << 2) - (EM_##elem##_OFFSET)) / (REG_EM_##elem##_SIZE))
 
 /// Exchange memory base address
-#define EM_BASE_ADDR         REG_EM_ET_BASE_ADDR
+#define EM_BASE_ADDR REG_EM_ET_BASE_ADDR
 
 /// Null pointer in EM offset space
-#define EM_PTR_NULL              (0x0000)
+#define EM_PTR_NULL (0x0000)
 #endif
 
 /*
@@ -127,20 +127,20 @@ enum em_et_status
 
 /// number of frequencies / Depends on RF target
 #if defined(CFG_RF_ATLAS)
-    /// IcyTRx requires 40 x 32-bit words for Frequency table + 40 byte for VCO sub-band table
-    #define EM_RF_FREQ_TABLE_LEN 160
-    #define EM_RF_VCO_TABLE_LEN  40
+/// IcyTRx requires 40 x 32-bit words for Frequency table + 40 byte for VCO sub-band table
+#define EM_RF_FREQ_TABLE_LEN 160
+#define EM_RF_VCO_TABLE_LEN  40
 #else
-    #if BT_EMB_PRESENT
-        /// Ripple/ExtRC requires 80 x 8-bit words for Frequency table / No VCO sub-band table
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
-	#define EM_RF_FREQ_TABLE_LEN  80
-	#define EM_RF_VCO_TABLE_LEN 0
+#if BT_EMB_PRESENT
+/// Ripple/ExtRC requires 80 x 8-bit words for Frequency table / No VCO sub-band table
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
+#define EM_RF_FREQ_TABLE_LEN 80
+#define EM_RF_VCO_TABLE_LEN  0
 #else
-	#define EM_RF_FREQ_TABLE_LEN 160
-	#define EM_RF_VCO_TABLE_LEN  40
+#define EM_RF_FREQ_TABLE_LEN 160
+#define EM_RF_VCO_TABLE_LEN  40
 #endif
-    #endif // BT_EMB_PRESENT
+#endif // BT_EMB_PRESENT
 #endif
 
 #define EM_FT_END (EM_FT_OFFSET + (EM_RF_VCO_TABLE_LEN + EM_RF_FREQ_TABLE_LEN) * sizeof(uint8_t))
@@ -151,27 +151,27 @@ enum em_et_status
  */
 /// RF SW-Driven SPI transfers area definition
 #if defined(CFG_RF_ATLAS)
-    /// IcyTYRx (Former Atlas) SW Driven SPI space
-    #define EM_RF_SW_SPI_OFFSET   (EM_FT_END)
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
+/// IcyTYRx (Former Atlas) SW Driven SPI space
+#define EM_RF_SW_SPI_OFFSET (EM_FT_END)
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
 
-	#define EM_RF_SW_SPI_SIZE_MAX   136
+#define EM_RF_SW_SPI_SIZE_MAX 136
 #else
-    #define EM_RF_SW_SPI_SIZE_MAX 120 // max reg_burst_wr 0x70+5
+#define EM_RF_SW_SPI_SIZE_MAX 120 // max reg_burst_wr 0x70+5
 #endif
-    #define EM_RF_SW_SPI_END      (EM_RF_SW_SPI_OFFSET + EM_RF_SW_SPI_SIZE_MAX)
+#define EM_RF_SW_SPI_END (EM_RF_SW_SPI_OFFSET + EM_RF_SW_SPI_SIZE_MAX)
 
 #elif defined(CFG_RF_BTIPT)
-    /// BTIPT (Former Atlas) SW Driven SPI space
-    #define EM_RF_SW_SPI_OFFSET   (EM_FT_END)
-    #define EM_RF_SW_SPI_SIZE_MAX 100
-    #define EM_RF_SW_SPI_END      (EM_RF_SW_SPI_OFFSET + EM_RF_SW_SPI_SIZE_MAX)
+/// BTIPT (Former Atlas) SW Driven SPI space
+#define EM_RF_SW_SPI_OFFSET   (EM_FT_END)
+#define EM_RF_SW_SPI_SIZE_MAX 100
+#define EM_RF_SW_SPI_END      (EM_RF_SW_SPI_OFFSET + EM_RF_SW_SPI_SIZE_MAX)
 #else
-    /// Ripple SW Driven SPI space
-    /// RF-SW-SPI transfers area definition
-    #define EM_RF_SW_SPI_OFFSET   (EM_FT_END)
-    #define EM_RF_SW_SPI_SIZE_MAX 8 //6
-    #define EM_RF_SW_SPI_END      (EM_RF_SW_SPI_OFFSET + EM_RF_SW_SPI_SIZE_MAX)
+/// Ripple SW Driven SPI space
+/// RF-SW-SPI transfers area definition
+#define EM_RF_SW_SPI_OFFSET   (EM_FT_END)
+#define EM_RF_SW_SPI_SIZE_MAX 8 //6
+#define EM_RF_SW_SPI_END      (EM_RF_SW_SPI_OFFSET + EM_RF_SW_SPI_SIZE_MAX)
 #endif
 
 
@@ -181,31 +181,31 @@ enum em_et_status
  */
 /// RF HW-Driven SPI transfers area definition
 #if defined(CFG_RF_ATLAS)
-    /// IcyTYRx (Former Atlas) SW Driven SPI space
-    #define EM_RF_HW_SPI_OFFSET   (EM_RF_SW_SPI_END)
-    #define EM_RF_HW_SPI_SIZE_MAX 100
-    #define EM_RF_HW_SPI_END      (EM_RF_HW_SPI_OFFSET + EM_RF_HW_SPI_SIZE_MAX)
+/// IcyTYRx (Former Atlas) SW Driven SPI space
+#define EM_RF_HW_SPI_OFFSET   (EM_RF_SW_SPI_END)
+#define EM_RF_HW_SPI_SIZE_MAX 100
+#define EM_RF_HW_SPI_END      (EM_RF_HW_SPI_OFFSET + EM_RF_HW_SPI_SIZE_MAX)
 
 #elif defined(CFG_RF_BTIPT)
-    /// BTIPT SW Driven SPI space
-    #define EM_RF_HW_SPI_OFFSET   (EM_RF_SW_SPI_END)
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
-	#define EM_RF_HW_SPI_SIZE_MAX 100
+/// BTIPT SW Driven SPI space
+#define EM_RF_HW_SPI_OFFSET (EM_RF_SW_SPI_END)
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
+#define EM_RF_HW_SPI_SIZE_MAX 100
 #else
-    #define EM_RF_HW_SPI_SIZE_MAX 256
+#define EM_RF_HW_SPI_SIZE_MAX 256
 #endif
-    #define EM_RF_HW_SPI_END      (EM_RF_HW_SPI_OFFSET + EM_RF_HW_SPI_SIZE_MAX)
+#define EM_RF_HW_SPI_END (EM_RF_HW_SPI_OFFSET + EM_RF_HW_SPI_SIZE_MAX)
 #elif defined(CFG_RF_CALYPSO)
-  /// CALYPSO RF SW Driven SPI space
-  #define EM_RF_HW_SPI_OFFSET     (EM_RF_SW_SPI_END)
-  #define EM_RF_HW_SPI_SIZE_MAX   0x100
-  #define EM_RF_HW_SPI_END        (EM_RF_HW_SPI_OFFSET + EM_RF_HW_SPI_SIZE_MAX)
+/// CALYPSO RF SW Driven SPI space
+#define EM_RF_HW_SPI_OFFSET   (EM_RF_SW_SPI_END)
+#define EM_RF_HW_SPI_SIZE_MAX 0x100
+#define EM_RF_HW_SPI_END      (EM_RF_HW_SPI_OFFSET + EM_RF_HW_SPI_SIZE_MAX)
 #else
-    /// Ripple SW Driven SPI space
-    /// RF-SW-SPI transfers area definition
-    #define EM_RF_HW_SPI_OFFSET   (EM_RF_SW_SPI_END)
-    #define EM_RF_HW_SPI_SIZE_MAX 0
-    #define EM_RF_HW_SPI_END      (EM_RF_HW_SPI_OFFSET + EM_RF_HW_SPI_SIZE_MAX)
+/// Ripple SW Driven SPI space
+/// RF-SW-SPI transfers area definition
+#define EM_RF_HW_SPI_OFFSET   (EM_RF_SW_SPI_END)
+#define EM_RF_HW_SPI_SIZE_MAX 0
+#define EM_RF_HW_SPI_END      (EM_RF_HW_SPI_OFFSET + EM_RF_HW_SPI_SIZE_MAX)
 #endif
 
 
@@ -213,23 +213,23 @@ enum em_et_status
 #define EM_COMMON_END (EM_RF_HW_SPI_END)
 
 #if (BT_EMB_PRESENT)
-    /*
+/*
  * ENCRYPTION
  ****************************************************************************************
  */
 
-    /// Encryption area definition
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
+/// Encryption area definition
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
 
-	#define EM_ENC_OFFSET     CO_ALIGN4_HI(EM_COMMON_END)
+#define EM_ENC_OFFSET CO_ALIGN4_HI(EM_COMMON_END)
 #else
-	#define EM_ENC_OFFSET     ((EM_COMMON_END + 1) & (~0x01))
+#define EM_ENC_OFFSET ((EM_COMMON_END + 1) & (~0x01))
 #endif
-    #define EM_ENC_IN_OFFSET  (EM_ENC_OFFSET)
-    #define EM_ENC_IN_SIZE    (16)
-    #define EM_ENC_OUT_OFFSET (EM_ENC_IN_OFFSET + EM_ENC_IN_SIZE)
-    #define EM_ENC_OUT_SIZE   (16)
-    #define EM_ENC_END        (EM_ENC_OFFSET + EM_ENC_IN_SIZE + EM_ENC_OUT_SIZE)
+#define EM_ENC_IN_OFFSET  (EM_ENC_OFFSET)
+#define EM_ENC_IN_SIZE    (16)
+#define EM_ENC_OUT_OFFSET (EM_ENC_IN_OFFSET + EM_ENC_IN_SIZE)
+#define EM_ENC_OUT_SIZE   (16)
+#define EM_ENC_END        (EM_ENC_OFFSET + EM_ENC_IN_SIZE + EM_ENC_OUT_SIZE)
 
 #endif // (BT_EMB_PRESENT)
 
@@ -239,8 +239,8 @@ enum em_et_status
  **********************                BT EM part                  **********************
  ****************************************************************************************
  */
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
-#define EM_BT_OFFSET           CO_ALIGN4_HI(EM_ENC_END)
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
+#define EM_BT_OFFSET CO_ALIGN4_HI(EM_ENC_END)
 #else
 #define EM_BT_OFFSET (EM_ENC_END)
 #endif

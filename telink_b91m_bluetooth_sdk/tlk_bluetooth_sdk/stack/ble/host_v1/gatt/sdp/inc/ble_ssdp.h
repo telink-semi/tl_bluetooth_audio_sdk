@@ -94,6 +94,17 @@ typedef void (*gatt_ssdp_start_read_value_callback)(uint16_t conn_handle, uint16
 
 /*
  * @param conn_handle --- acl connection handle.
+ * @param value_handle --- read characteristic value attribute handle.
+ * @param[in] read --- read characteristic value.
+ * @param[in] read_len --- read characteristic value length.
+ * if read is not NULL, must set read_max_size. read_len Not necessary.
+ * use read/read_len/read_max_size, gap layer will write characteristic value to read.
+ * use rdCbFunc:GAP layer will GATT layer callback pass to higher level.
+ */
+typedef void (*gatt_ssdp_read_value_done_callback)(uint16_t conn_handle, uint16_t value_handle, const uint8_t *read, uint16_t read_len);
+
+/*
+ * @param conn_handle --- acl connection handle.
  * @param uuid --- unknown characteristic uuid.
  * @param properties --- characteristic properties. reference ATT_READ_BY_TYPE_RSP.
  * @param value_handle --- characteristic value handle.
@@ -122,6 +133,9 @@ struct gatt_ssdp_characteristic
         bool found_descriptor : 1;
         //Automatically read characteristic value, if had read property.
         bool read_value : 1;
+        //Automatically read characteristic value done, if had read property.
+        // read_value or read_value_done only one is true, if read_value is true, ignore read_value_done.
+        bool read_value_done : 1;
     };
 
     //characteristic uuid.
@@ -132,8 +146,14 @@ struct gatt_ssdp_characteristic
     gatt_ssdp_found_desc_callback desc_callback;
     //subscribe client characteristic configuration callback function.
     gatt_ssdp_subscribe_ccc_callback subscribe_ccc_callback;
-    //want read characteristic value callback function.
-    gatt_ssdp_start_read_value_callback read_value_callback;
+
+    union
+    {
+        //want read characteristic value callback function.
+        gatt_ssdp_start_read_value_callback read_value_callback;
+        //read characteristic value done.
+        gatt_ssdp_read_value_done_callback read_value_done_callback;
+    };
 };
 
 /** @brief  GATT Single service discovery characteristic information. */

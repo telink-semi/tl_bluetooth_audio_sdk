@@ -25,6 +25,8 @@
 #include "drivers.h"
 #if TLKMW_INTERPHONE_EN
 #include "tlkmw/tlkmw.h"
+#include "stack/bt/host/btp/btp_stdio.h"
+#include "stack/bt/host/bth/bth_stdio.h"
 
 typedef struct
 {
@@ -35,7 +37,10 @@ typedef struct
 } Hfmgr_t;
 
 static Hfmgr_t sTlkmdiInterPhoneHfmgr = {0};
-
+#if (TLK_CHECK_REMOTE_DEV)
+extern void    tlkmdi_linkmgr_callback(uint16_t handle, bool isTrue);
+extern uint8_t tlkapp_get_remote_dev_istrue(void);
+#endif
 /**
  * @brief       Default callback function for interphone HF manager
  * @param[in]   handle - Connection handle
@@ -62,9 +67,16 @@ static void tlkmdi_interphone_voice_state_change_cb(uint16_t acl_handle, uint16_
 {
     (void)sco_handle;
     if (is_start) {
+#if (TLK_CHECK_REMOTE_DEV)
+        bth_aclGetNameReportEvt_t *info = (bth_aclGetNameReportEvt_t *)tlkmdi_btacl_get_remote_dev();
+        if ((!tlkmw_audio_btif_handle_is_ag(acl_handle) && info->handle != acl_handle) || sTlkmdiInterPhoneHfmgr.handle != 0) {
+            return; //if we are not ag(peer device earphone) or have connect sco or remote_dev,reject
+        }
+#else
         if (!tlkmw_audio_btif_handle_is_ag(acl_handle) || sTlkmdiInterPhoneHfmgr.handle != 0) {
             return; //if we are not ag(peer device earphone) or have connect sco ,reject
         }
+#endif
         sTlkmdiInterPhoneHfmgr.handle = acl_handle;
         sTlkmdiInterPhoneHfmgr.codec  = codec;
         uint8_t isRunning             = sTlkmdiInterPhoneHfmgr.isRunning;
@@ -72,6 +84,7 @@ static void tlkmdi_interphone_voice_state_change_cb(uint16_t acl_handle, uint16_
         if (isRunning) {
             sTlkmdiInterPhoneHfmgr.cb(acl_handle, true, codec);
         }
+        bt_voice_set_mode(BT_VOICE_PLAYBACK_MODE);
     } else {
         if (sTlkmdiInterPhoneHfmgr.handle != acl_handle) {
             return;
@@ -81,6 +94,16 @@ static void tlkmdi_interphone_voice_state_change_cb(uint16_t acl_handle, uint16_
             sTlkmdiInterPhoneHfmgr.cb(acl_handle, false, codec);
         }
         sTlkmdiInterPhoneHfmgr.handle = 0;
+#if (TLK_CHECK_REMOTE_DEV)
+        bth_aclGetNameReportEvt_t *info_t = (bth_aclGetNameReportEvt_t *)tlkmdi_btacl_get_remote_dev();
+        tlk_printf("tlkmdi_interphone_voice_state_change_cb1--[info_t->resume_music:%x] [info_t->music_handle:%x]---\n", info_t->resume_music, info_t->music_handle);
+        if (info_t->resume_music && info_t->music_handle) {
+            tlkmdi_interphone_set_mode(INTERPHONE_MODE_MUSIC);
+            tlkmdi_linkmgr_callback(info_t->music_handle, true);
+            info_t->resume_music = 0;
+            info_t->music_handle = 0;
+        }
+#endif
     }
 }
 

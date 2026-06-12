@@ -61,7 +61,7 @@ uint8_t tlkalg_ppm_spk_param_set(uint8_t type, void *param)
     if (g_tlkalg_ppm_spk_buff != NULL) {
         tlka_ppm_asrc_16_bit_init((void *)g_tlkalg_ppm_spk_buff, g_tlkalg_ppm_spk_chn, tlkalg_ppm_spk_value);
     }
-    
+
     //    tlkapi_trace(0xFFFFFFFF, "[TEST]", "ppm spk val %d", tlkalg_ppm_spk_value);
     return 0;
 }
@@ -127,7 +127,7 @@ int tlkalg_ppm_spk_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width
         tlkapi_trace(0xFFFFFFFF, "[TEST]", "g_tlkalg_ppm_spk_buff error");
         return 0;
     }
-    #if 1
+#if 1
     short *psrc    = (short *)ps;
     short *pdes    = (short *)pd;
     int    out_num = 0;
@@ -136,16 +136,16 @@ int tlkalg_ppm_spk_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width
 
         len -= ni;
         int out_len = tlka_ppm_asrc_16_bit_frame_process((void *)g_tlkalg_ppm_spk_buff, psrc, ni, pdes);
-        psrc += ni * 2;      //stereo
-        pdes += out_len * 2; //stereo
+        psrc += ni * (g_tlkalg_ppm_spk_chn + 1);      //mono or stereo
+        pdes += out_len * (g_tlkalg_ppm_spk_chn + 1); //mono or stereo
         out_num += out_len;
     }
 
     return out_num;
-    #else
+#else
     int out_num = tlka_ppm_asrc_16_bit_frame_process((void *)g_tlkalg_ppm_spk_buff, (short *)ps, len, (short *)pd);
     return out_num;
-    #endif
+#endif
 }
 
 /**

@@ -440,11 +440,7 @@ int tlkapi_strToArray(char *str, int strLen, uint8_t *pHex, int hexLen)
  * @param[in]   split - Character to use as a separator between bytes
  * @returns     Length of the converted string
 */
-#if (TLK_USB_UDB_ENABLE)
-_attribute_retention_code_
-#endif
-    int
-    tlkapi_arrayToStr(uint8_t *pHex, int hexLen, char *str, int strLen, char split)
+int tlkapi_arrayToStr(uint8_t *pHex, int hexLen, char *str, int strLen, char split)
 {
     char   *pStr;
     uint8_t temp;

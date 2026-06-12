@@ -27,10 +27,10 @@
 #include "bluetooth_controller.h"
 
 ///////////////////////// System -app Configuration start/////////////////////////////////////////////////
-#define DEBUG_COMMON_GPIO_ENABLE	1
+#define DEBUG_COMMON_GPIO_ENABLE 1
 
 #if (MCU_DUAL_CORE_ENABLE)
-#define TLK_CFG_RTOS_ENABLE           1
+#define TLK_CFG_RTOS_ENABLE 1
 #endif
 /********************  lynx adapt start *********************/
 // 1. Lynx haven't LDO power mode.
@@ -38,22 +38,25 @@
 // 3. "include_path_lynx" delete.
 // ALL macro will delete when drv is ready.
 #if (MCU_CORE_TYPE == MCU_CORE_TL752X)
-#define TLK_CFG_TEMP_DRAM_OPTM			1
+#define TLK_CFG_TEMP_DRAM_OPTM          1
 #define TLK_CFG_TEMP_OLD_N22_BOOT_READY 0
-#define BT_MODE							1
-#define BLE_MODE						0
-#define TLK_STK_MODE					BLE_MODE
+#define BT_MODE                         1
+#define BLE_MODE                        0
+#define TLK_STK_MODE                    BLE_MODE
 #define BT_BQB_D25F_TEST                1
 #define BT_EMI_D25F_TEST                0
-#else
-#define TLK_CFG_TEMP_DRAM_OPTM			0
-#define TLK_CFG_TEMP_OLD_N22_BOOT_READY 1    //wait drv code ok(use boot way same as tl751x)
+#if BT_BQB_D25F_TEST
+#define N22_SAVE_ADDR_OFFSET 0x20000
 #endif
-#define TLK_CFG_TEMP_PM_DRV_READY		0
-#define TLK_CFG_TEMP_WD_DRV_READY		0
-#define TLK_CFG_TEMP_RAND_DRV_READY		0
-#define TLK_CFG_TEMP_DRV_PWM_READY		0
-#define TLK_CFG_TEMP_UART_DRV_READY		0
+#else
+#define TLK_CFG_TEMP_DRAM_OPTM          0
+#define TLK_CFG_TEMP_OLD_N22_BOOT_READY 1 //wait drv code ok(use boot way same as tl751x)
+#endif
+#define TLK_CFG_TEMP_PM_DRV_READY   0
+#define TLK_CFG_TEMP_WD_DRV_READY   0
+#define TLK_CFG_TEMP_RAND_DRV_READY 0
+#define TLK_CFG_TEMP_DRV_PWM_READY  0
+#define TLK_CFG_TEMP_UART_DRV_READY 0
 /********************  lynx adapt end  **********************/
 
 #define TLK_CFG_SUSPEND_ENABLE   0 //1: enable suspend
@@ -65,12 +68,12 @@
 #define TLK_CFG_UART_TOOL_ENABLE 0
 #define TLK_DEBUG_ENABLE         1
 
-#define TLKSTK_HOST_ENABLE  1
+#define TLKSTK_HOST_ENABLE       1
 //#define TLK_STK_BLE_ENABLE  1
 
-#define TLK_MW_TINYSQL_ENABLE    1
+#define TLK_MW_TINYSQL_ENABLE   1
 
-#define TLK_MW_USER_CTRL_ENABLE       0
+#define TLK_MW_USER_CTRL_ENABLE 0
 
 ///////////////////////// System -app Configuration end/////////////////////////////////////////////////
 
@@ -78,7 +81,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 ////                          			BLE
 ////////////////////////////////////////////////////////////////////////////////////////
-#define BLE_FEATURE_ALL_EN 1
+#define BLE_FEATURE_ALL_EN                                  1
 
 #define ACL_CENTRAL_MAX_NUM                                 2 // ACL central maximum number
 #define ACL_PERIPHR_MAX_NUM                                 2 // ACL peripheral maximum number
@@ -100,20 +103,18 @@
 #define LL_FEATURE_SUPPORT_SLEEP_CLK_ACCURACY_UPDATE        1
 #define LL_FEATURE_SUPPORT_REMOTE_PUBLIC_KEY_VALIDATION     1
 #define HCI_CONTROLLER_TO_HOST_FLOW_CTRL_EN                 1
-#define HCI_SEND_NUM_OF_CMP_AFT_ACK                         1
-
 
 
 ///
 /////////////////////// Board Select Configuration //////////////////////////////
 #if (MCU_CORE_TYPE == MCU_CORE_B92)
-	#define TLKHW_TYPE      TLKHW_TLSR9528A_EVK_C1T266A20
-	#define HCI_TR_RX_PIN   GPIO_FC_PC7
-	#define HCI_TR_TX_PIN   GPIO_FC_PC6
-	#define HCI_TR_BAUDRATE (1000000)
-	#define LE_HOST_SEND_HCI_MODE LE_HOST_SEND_HCI_MODE_NONE
+#define TLKHW_TYPE            TLKHW_TLSR9528A_EVK_C1T266A20
+#define HCI_TR_RX_PIN         GPIO_FC_PC7
+#define HCI_TR_TX_PIN         GPIO_FC_PC6
+#define HCI_TR_BAUDRATE       (1000000)
+#define LE_HOST_SEND_HCI_MODE LE_HOST_SEND_HCI_MODE_NONE
 #else
-    #error "need config uart pin !!!"
+#error "need config uart pin !!!"
 #endif
 
 #define HCI_TR_RX_BUF_SIZE (760)

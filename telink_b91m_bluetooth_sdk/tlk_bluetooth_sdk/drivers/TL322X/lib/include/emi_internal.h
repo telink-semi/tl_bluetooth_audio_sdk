@@ -1,7 +1,7 @@
 /********************************************************************************************************
  * @file    emi_internal.h
  *
- * @brief   This is the header file for TL321X
+ * @brief   This is the header file for tl322x
  *
  * @author  Driver Group
  * @date    2024

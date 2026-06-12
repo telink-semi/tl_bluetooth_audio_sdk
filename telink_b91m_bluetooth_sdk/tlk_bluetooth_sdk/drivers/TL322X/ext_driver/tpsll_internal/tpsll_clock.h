@@ -26,10 +26,10 @@
 #include "drivers.h"
 
 #ifndef TICK_PER_US
-    #define TICK_PER_US 24
+#define TICK_PER_US 24
 #endif
 #ifndef TICK_PER_HALF_US
-    #define TICK_PER_HALF_US (TICK_PER_US / 2)
+#define TICK_PER_HALF_US (TICK_PER_US / 2)
 #endif
 
 #define N22_CLK_MHZ         (48)

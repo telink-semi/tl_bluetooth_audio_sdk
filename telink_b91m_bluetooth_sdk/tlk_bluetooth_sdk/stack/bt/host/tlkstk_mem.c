@@ -29,11 +29,11 @@
 #include "tlklib/mem/tlkmem1.h"
 
 #ifndef TLKSTK_BT_HOST_MEM_POOL_SIZE
-#define TLKSTK_BT_HOST_MEM_POOL_SIZE             (13 * 1024)
+#define TLKSTK_BT_HOST_MEM_POOL_SIZE (10 * 1024)
 #endif
 
 #if (!MCU_CORE_TL752X_TEMP)
-__attribute__((aligned(4))) static  uint8_t sTlkBtMemBuffer[TLKSTK_BT_HOST_MEM_POOL_SIZE] = {0};
+__attribute__((aligned(4))) static uint8_t sTlkBtMemBuffer[TLKSTK_BT_HOST_MEM_POOL_SIZE] = {0};
 #else
 __attribute__((aligned(4))) static _attribute_iram_data_ uint8_t sTlkBtMemBuffer[TLKSTK_BT_HOST_MEM_POOL_SIZE] = {0};
 #endif
@@ -50,11 +50,6 @@ void *tlkstk_malloc(uint32_t size)
 void *tlkstk_calloc(uint32_t size)
 {
     return tlkmem1_calloc(sTlkBtMemBuffer, size);
-}
-
-void *tlkstk_realloc(void *ptr, uint32_t size)
-{
-    return tlkmem1_realloc(sTlkBtMemBuffer, ptr, size);
 }
 
 void tlkstk_free(void *ptr)

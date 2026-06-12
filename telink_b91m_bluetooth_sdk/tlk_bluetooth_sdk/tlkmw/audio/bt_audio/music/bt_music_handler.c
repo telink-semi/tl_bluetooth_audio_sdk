@@ -39,9 +39,8 @@
 #include "tlkmw/aud/cc_tws/bt_audio/bt_music_lhdc.h"
 #endif
 
-#ifndef BT_BLE_CALL_MUSIC_MIX_VOL
-/** bt_music_vol_table_android, 6 level */
-#define BT_BLE_CALL_MUSIC_MIX_VOL 150
+#if TLKADU_MIDBUF_ENABLE
+#include "vendor/GameSir_Xiaoji/audio_mw/tlkaud_audio_mw.h"
 #endif
 
 #if AUDIO_TWS_MODE
@@ -50,22 +49,10 @@
 #define IN_MUSIC_MODE audio_codec_flag_get(CODEC_FLAG_MUSIC)
 #endif
 
-#ifndef BT_MUSIC_ENC_BUFF_LOCAL
-#define BT_MUSIC_ENC_BUFF_LOCAL 1
-#endif
-
-#ifndef AUDIO_LOW_LATENCY_PLC
-#define AUDIO_LOW_LATENCY_PLC 0
-#else
-
-#define AUDIO_LOW_LATENCY_PLC BIT(15)
-#define AUDIO_LOW_LATENCY_PLC (BIT(AUDIO_LOW_LATENCY_PLC) | 13)
-
-#endif /* AUDIO_LOW_LATENCY_PLC */
-
 #if (TLKBTP_CFG_A2DPSNK_ENABLE)
-uint16_t g_bt_music_buffer_size = BT_MUSIC_ENC_FIFO_SIZE;
-uint8_t  g_low_latency_enable   = 0;
+uint16_t    g_bt_music_buffer_size = BT_MUSIC_ENC_FIFO_SIZE;
+uint8_t     g_low_latency_enable   = 0;
+extern uint btp_a2dpsnk_getSampleRate(uint16_t aclHandle);
 
 /** BT MUSIC LowLatency buffer size */
 uint16_t          g_bt_music_ll_enc_buff_size          = 0;
@@ -287,14 +274,19 @@ uint8_t bt_music_check_status(void)
         // gpio_set_high_level(GPIO_CHN2);
         bt_music_play_init();
 
-        tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "state latency_mode %d", bt_music_cfg.latency_mode);
+        //tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "state latency_mode %d", bt_music_cfg.latency_mode);
 
 #if TLKMW_INTERPHONE_EN
         if (!tlkmdi_interphone_is_busy())
 #endif
         {
-            /* initialize tcodec.play_rptr and tcodec.play_wptr, tcodec.samples_played */
+/* initialize tcodec.play_rptr and tcodec.play_wptr, tcodec.samples_played */
+#if TLKADU_MIDBUF_ENABLE
+            extern void tlkmdi_midbuf_sync_spk(uint16_t sample);
+            tlkmdi_midbuf_sync_spk(bt_music_cfg.sync_samples);
+#else
             tlkdrv_codec_sync_play_samples(bt_music_cfg.sync_samples);
+#endif
         }
         // gpio_set_low_level(GPIO_CHN2);
 
@@ -475,15 +467,20 @@ audio_ram_code uint8_t bt_music_get_encoded_frame(uint8_t num, uint16_t samples)
 #endif
         }
     } else {
-        if (avail_buf < 10) {
-            tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "underflow, sbc avail_buf: %d, buf_num: %d", avail_buf, bt_music_cfg.enc_buf_num);
+        uint8_t avail_buf_threshold = 10;
+        if (bt_music_is_low_latency_mode()) {
+            avail_buf_threshold = 3;
+        }
+
+        if (avail_buf < avail_buf_threshold) {
+            tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "sbc avail_buf: %d, buf_num: %d", avail_buf, bt_music_cfg.enc_buf_num);
 #ifdef SLET_ld_avail_none
             log_tick_irq(1, SLET_ld_avail_none);
 #endif
         }
 
         if (avail_buf > bt_music_cfg.enc_buf_num - 10 && bt_music_cfg.sync_enc_buf_num < bt_music_cfg.enc_buf_num + 200) {
-            tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "overflow, sbc avail_buf: %d, buf_num: %d", avail_buf, bt_music_cfg.enc_buf_num);
+            tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "sbc avail_buf: %d, buf_num: %d", avail_buf, bt_music_cfg.enc_buf_num);
         }
     }
     /*
@@ -513,7 +510,7 @@ audio_ram_code uint8_t bt_music_get_encoded_frame(uint8_t num, uint16_t samples)
         bt_music_cfg.sync_ppm_cur = bt_music_cfg.sync_ppm;
 
 #if AUDIO_TWS_MODE
-        //        if (tph_headset_is_slave()) {
+        //        if (tlk_tpsll_tph_headset_is_slave()) {
         //            bt_music_cfg.sync_frac = bt_music_cfg.sync_frac_peer;
         //        }
         //        tlk_ppm_set_frac(bt_music_cfg.sync_frac);
@@ -673,7 +670,7 @@ _attribute_no_inline_ int bt_music_init_aac_decoder_params(uint32_t param, uint8
     if (audio_flag_get(FLG_BTC_TWS_EN)) {
 #if AUDIO_TWS_MODE
         /*
-        if (tph_headset_is_left()) {
+        if (tlk_tpsll_tph_headset_is_left()) {
             channel = ALG_CHANNEL_LEFT;
         } else {
             channel = ALG_CHANNEL_RIGHT;
@@ -732,7 +729,7 @@ void bt_music_choice_channel(void)
     }
 
     if (audio_flag_get(FLG_BTC_TWS_EN)) {
-        if (tph_headset_is_left()) {
+        if (tlk_tpsll_tph_headset_is_left()) {
             tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "<TSYNC_FLAG_LEFT:1>");
             if (SEPID_SBC == tlkmw_audio_btif_music_get_avdtp_seid_type()) {
                 bt_music_register_dec_callback(music_sbc_dec_left);
@@ -802,13 +799,12 @@ uint8_t bt_music_enc_crc_frames(uint16_t aclHandle, uint8_t *p, uint16_t len)
     uint16_t crc_len;
     uint32_t crc;
 
-    if (btif_get_bt_music_silent_flag() && len > 50) {
+    if (len > 50) {
         uint8_t a[10] = {0}, b[10] = {0};
         tmemset(a, 0x00, 10);
         tmemset(b, 0x5a, 10);
         if (!(tmemcmp(a, p + 40, 10) == 0 || tmemcmp(b, p + 40, 10) == 0)) {
             tlkapi_sendData(BT_AUDIO_DBG_FLAG, "bt_music_silent_3s set as 0 change to bt mode ", 0, 0);
-            btif_set_bt_music_silent_flag(0);
         }
     }
 
@@ -847,7 +843,7 @@ audio_ram_code uint8_t *bt_music_enc_get_frame(void)
  * @param[in]   None
  * @return      None
  */
-void bt_music_audio_path_init(void)
+void bt_music_audio_path_init(uint16_t handle)
 {
 #if AUDIO_TWS_MODE
 #ifdef BT_MUSIC_SUPPORT_DYNAMIC_LATENCY
@@ -865,6 +861,9 @@ void bt_music_audio_path_init(void)
 #endif
 
     bt_music_set_play_status(BT_MUSIC_SYNC_PLAY_IDLE);
+
+    bt_music_cfg.sample_rate = btp_a2dpsnk_getSampleRate(handle);
+    bt_music_open_codec(bt_music_cfg.sample_rate);
 
 #if TLKMW_INTERPHONE_EN
     if (!tlkmdi_interphone_is_busy())
@@ -897,6 +896,10 @@ void bt_music_open_codec(uint16_t sample_rate)
 {
     g_codec_cfg.sample_rate = sample_rate;
 
+#if TLKADU_MIDBUF_ENABLE
+    g_codec_cfg.codec_sample_rate = 48000;
+    tlkaud_set_audio_mode(AUDIO_BT_MUSIC);
+#else
 #if TLKMW_INTERPHONE_EN
     if (tlkmdi_interphone_is_busy()) {
         tlkmdi_interphone_spk_enable(INTERPHONE_MODE_MUSIC);
@@ -1000,7 +1003,7 @@ void bt_music_open_codec(uint16_t sample_rate)
     }
 #endif
 #endif
-
+#endif
 #if LE_AUDIO_BT_MUSIC_MIX_ENABLE
 #if (RESAMPLE_16_TO_48_EN == 2 || RESAMPLE_16_TO_441_EN == 2)
     if (g_codec_cfg.sample_rate == 48000) {
@@ -1019,7 +1022,11 @@ void bt_music_open_codec(uint16_t sample_rate)
  */
 void bt_music_close_codec(void)
 {
+#if TLKADU_MIDBUF_ENABLE
+    tlkaud_clear_audio_mode(AUDIO_BT_MUSIC);
+#else
     tlkdrv_codec_close(TLKDRV_CODEC_SUBDEV_SPK);
+#endif
 }
 
 /**
@@ -1072,7 +1079,7 @@ audio_ram_code void bt_music_play_init(void)
 
     if (bt_music_is_low_latency_mode()) {
         if (SEPID_SBC == tlkmw_audio_btif_music_get_avdtp_seid_type()) {
-            buff_num = 20;
+            buff_num = 15; //20;
         } else if (SEPID_AAC == tlkmw_audio_btif_music_get_avdtp_seid_type()) {
             buff_num = 3;
         }
@@ -1086,13 +1093,9 @@ audio_ram_code void bt_music_play_init(void)
 
     AUDIO_GLOBAL_INT_RESTORE();
 
-    tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "<bt_music_play_init> sync_enc:%d %d %d %d, buff_num:%d r:%d w:%d enc_buf_num:%d", bt_music_cfg.sync_enc_buf_num,
-                 bt_music_cfg.enc_buf_mute_num, bt_music_cfg.sample_avg_ref, bt_music_cfg.enc_buf_id, buff_num, bt_music_cfg.enc_buf_rptr, bt_music_cfg.enc_buf_wptr,
-                 bt_music_cfg.enc_buf_num);
-
-    if (btif_get_bt_music_silent_flag()) {
-        btif_set_bt_music_silent_flag(FALSE);
-    }
+    tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "PLAY INIT, mode:%d, enc_num:%d mute:%d s_avg_ref:%d, id:%d, buff_num:%d r:%d w:%d enc_buf_num:%d",
+                 bt_music_is_low_latency_mode(), bt_music_cfg.sync_enc_buf_num, bt_music_cfg.enc_buf_mute_num, bt_music_cfg.sample_avg_ref, bt_music_cfg.enc_buf_id, buff_num,
+                 bt_music_cfg.enc_buf_rptr, bt_music_cfg.enc_buf_wptr, bt_music_cfg.enc_buf_num);
 }
 
 /**
@@ -1283,15 +1286,13 @@ uint8_t bt_music_underflow_flag = 0;
  */
 audio_ram_code uint16_t bt_music_get_playback_data(int16_t *p_des0, int16_t *p_des1)
 {
-    // uint16_t pcm_sin[256];
-    // int16_t buf_num, rptr;
     uint16_t ret = 0, i;
     uint16_t samples_in_fifo;
     uint8_t *buf_ptr       = NULL;
     uint16_t frame_samples = 0;
 
-#if 1
-    int32_t pcm32[1024];
+#if AAC_CODEC_ENABLE
+    int32_t pcm32[1024 + 10];
 #elif LHDC_CODEC_ENABLE
     int32_t pcm32[LHDC_MAX_SAMPLE + 64];
 #else
@@ -1349,85 +1350,82 @@ audio_ram_code uint16_t bt_music_get_playback_data(int16_t *p_des0, int16_t *p_d
                 //               log_tick_general(SL_AUDIO_PATH_LOG_EN, SLEV_aud_get_mute_data);
                 //#endif
             } else {
-                if (1) { //bt_music_cfg.dec_func
-                    if (bt_music_cfg.dump_mask & FLG_DUMP_PLAYBACK_STATUS) {
-                        samples_in_fifo = tlkdrv_codec_get_spk_avail_samples();
+                if (bt_music_cfg.dump_mask & FLG_DUMP_PLAYBACK_STATUS) {
+                    samples_in_fifo = tlkdrv_codec_get_spk_avail_samples();
+                    tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "samples in playback buffer %d %d %d", samples_in_fifo, bt_music_cfg.enc_buf_rptr,
+                                 bt_music_cfg.enc_buf_wptr);
+                }
 
-                        tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "samples in playback buffer %d %d %d", samples_in_fifo, bt_music_cfg.enc_buf_rptr,
-                                     bt_music_cfg.enc_buf_wptr);
+                if (SEPID_AAC == tlkmw_audio_btif_music_get_avdtp_seid_type()) {
+#if AAC_CODEC_ENABLE
+                    uint16_t aac_enc_len;
+                    if (buf_ptr) {
+                        buf_ptr = g_bt_music_enc_buf_ptr + bt_music_cfg.aac_offset[bt_music_cfg.enc_buf_rptr];
                     }
 
-                    if (SEPID_AAC == tlkmw_audio_btif_music_get_avdtp_seid_type()) {
-#if AAC_CODEC_ENABLE
-                        uint16_t aac_enc_len;
-                        if (buf_ptr) {
-                            buf_ptr = g_bt_music_enc_buf_ptr + bt_music_cfg.aac_offset[bt_music_cfg.enc_buf_rptr];
-                        }
-
-                        if (NULL == buf_ptr || AAC_PACKET_FLAG != buf_ptr[0]) {
-                            tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "# AAC enc pkt out err");
-                            ret = 0xfe;
-                        } else {
-                            aac_enc_len = bt_music_cfg.aac_len[bt_music_cfg.enc_buf_rptr];
-
-#ifdef SL01_bt_audio_dec
-                            log_task_begin_irq(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec);
-#endif
-                            audio_alg_interface_t *audio_alg_if_handle = audio_alg_get_interface_by_type(ALG_AAC_DEC);
-                            ret = audio_alg_if_handle->audio_alg_process(buf_ptr, (uint8_t *)p_des, aac_enc_len, ALG_WIDTH_16, ALG_CHANNEL_STEREO);
-#ifdef SL01_bt_audio_dec
-                            log_task_end_irq(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec);
-#endif
-
-                            if (ret != 0) { // TLKA_AAC_DEC_OK
-                                tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "# AAC dec err, ret:%d len:%d offset:%d", ret, aac_enc_len,
-                                             bt_music_cfg.aac_offset[bt_music_cfg.enc_buf_rptr]);
-                            }
-
-                            bt_music_decoder_mute_detection((int16_t *)p_des, bt_music_cfg.samples_per_frame * (audio_flag_get(FLG_BTC_TWS_EN) ? 1 : 2));
-                        }
-#endif
-                    } else if (SEPID_LHDC == tlkmw_audio_btif_music_get_avdtp_seid_type()) {
-#if LHDC_CODEC_ENABLE
-                        if (tone_is_playing() && g_codec_cfg.sample_rate == 96000) {
-                            ret = 0;
-                            tmemset(pcm32, 0, sizeof(pcm32));
-                        } else {
-                            //log_task(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec, 1);
-                            //ret = bt_music_cfg.dec_func(buf_ptr, lhdc_config.frame_info.frame_len, p_des);
-                            //log_task(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec, 0);
-
-                            bt_music_decoder_mute_detection(p_des, bt_music_cfg.samples_per_frame * (audio_flag_get(FLG_BTC_TWS_EN) ? 1 : 2));
-                        }
-                        if (ret) {
-                            tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "# lhdc dec err");
-                        }
-#endif // LHDC_CODEC_ENABLE
-                    } else if (SEPID_SBC == tlkmw_audio_btif_music_get_avdtp_seid_type()) {
-                        audio_alg_interface_t *audio_alg_if_handle = audio_alg_get_interface_by_type(ALG_SBC_DEC);
+                    if (NULL == buf_ptr || AAC_PACKET_FLAG != buf_ptr[0]) {
+                        tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "# AAC enc pkt out err");
+                        ret = 0xfe;
+                    } else {
+                        aac_enc_len = bt_music_cfg.aac_len[bt_music_cfg.enc_buf_rptr];
 
 #ifdef SL01_bt_audio_dec
                         log_task_begin_irq(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec);
 #endif
-                        if (bt_music_cfg.sbc_channel_mode == 0) {
-                            int16_t pcm16_mono[128 + 32];
-                            ret = audio_alg_if_handle->audio_alg_process(buf_ptr, (uint8_t *)pcm16_mono, bt_music_cfg.sbc_framesize, ALG_WIDTH_16, ALG_CHANNEL_LEFT);
-
-                            for (i = 0; i < ret; i++) {
-                                p_des[i] = (uint16_t)pcm16_mono[i] | (pcm16_mono[i] << 16);
-                            }
-                        } else {
-                            ret = audio_alg_if_handle->audio_alg_process(buf_ptr, (uint8_t *)p_des, bt_music_cfg.sbc_framesize, ALG_WIDTH_16, ALG_CHANNEL_STEREO);
-                        }
+                        audio_alg_interface_t *audio_alg_if_handle = audio_alg_get_interface_by_type(ALG_AAC_DEC);
+                        ret = audio_alg_if_handle->audio_alg_process(buf_ptr, (uint8_t *)p_des, aac_enc_len, ALG_WIDTH_16, ALG_CHANNEL_STEREO);
 #ifdef SL01_bt_audio_dec
                         log_task_end_irq(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec);
 #endif
 
-                        /* AAC ret TLKA_AAC_DEC_OK = 0, TLKA_AAC_DEC_FILL_ERR = 1, SBC 1 is OK */
-                        //ret = (1 == ret) ? 0 : 1;
+                        if (ret != 0) { // TLKA_AAC_DEC_OK
+                            tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "# AAC dec err, ret:%d len:%d offset:%d", ret, aac_enc_len,
+                                         bt_music_cfg.aac_offset[bt_music_cfg.enc_buf_rptr]);
+                        }
 
-                        //bt_music_decoder_mute_detection(p_des, bt_music_cfg.samples_per_frame * 2);
+                        bt_music_decoder_mute_detection((int16_t *)p_des, bt_music_cfg.samples_per_frame * (audio_flag_get(FLG_BTC_TWS_EN) ? 1 : 2));
                     }
+#endif
+                } else if (SEPID_LHDC == tlkmw_audio_btif_music_get_avdtp_seid_type()) {
+#if LHDC_CODEC_ENABLE
+                    if (tone_is_playing() && g_codec_cfg.sample_rate == 96000) {
+                        ret = 0;
+                        tmemset(pcm32, 0, sizeof(pcm32));
+                    } else {
+                        //log_task(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec, 1);
+                        //ret = bt_music_cfg.dec_func(buf_ptr, lhdc_config.frame_info.frame_len, p_des);
+                        //log_task(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec, 0);
+
+                        bt_music_decoder_mute_detection(p_des, bt_music_cfg.samples_per_frame * (audio_flag_get(FLG_BTC_TWS_EN) ? 1 : 2));
+                    }
+                    if (ret) {
+                        tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "# lhdc dec err");
+                    }
+#endif // LHDC_CODEC_ENABLE
+                } else if (SEPID_SBC == tlkmw_audio_btif_music_get_avdtp_seid_type()) {
+                    audio_alg_interface_t *audio_alg_if_handle = audio_alg_get_interface_by_type(ALG_SBC_DEC);
+
+#ifdef SL01_bt_audio_dec
+                    log_task_begin_irq(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec);
+#endif
+                    if (bt_music_cfg.sbc_channel_mode == 0) {
+                        int16_t pcm16_mono[128 + 8];
+                        ret = audio_alg_if_handle->audio_alg_process(buf_ptr, (uint8_t *)pcm16_mono, bt_music_cfg.sbc_framesize, ALG_WIDTH_16, ALG_CHANNEL_LEFT);
+
+                        for (i = 0; i < ret; i++) {
+                            p_des[i] = (uint16_t)pcm16_mono[i] | (pcm16_mono[i] << 16);
+                        }
+                    } else {
+                        ret = audio_alg_if_handle->audio_alg_process(buf_ptr, (uint8_t *)p_des, bt_music_cfg.sbc_framesize, ALG_WIDTH_16, ALG_CHANNEL_STEREO);
+                    }
+#ifdef SL01_bt_audio_dec
+                    log_task_end_irq(SL_BT_MUSIC_LOG_EN, SL01_bt_audio_dec);
+#endif
+
+                    /* AAC ret TLKA_AAC_DEC_OK = 0, TLKA_AAC_DEC_FILL_ERR = 1, SBC 1 is OK */
+                    //ret = (1 == ret) ? 0 : 1;
+
+                    //bt_music_decoder_mute_detection(p_des, bt_music_cfg.samples_per_frame * 2);
                 }
 
                 frame_samples = bt_music_cfg.samples_per_frame;
@@ -1436,7 +1434,7 @@ audio_ram_code uint16_t bt_music_get_playback_data(int16_t *p_des0, int16_t *p_d
 
         if (ret == 0) {
             /* bt music frame decode fail process. */
-            if (0) { //!btif_power_off_is_ongoing()
+            if (0) {
                 tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "#BT_M dec error ret:%d frame_samples:%d buf_num:%d\n", ret, frame_samples, bt_music_cfg.sync_enc_buf_num);
             }
 
@@ -1485,16 +1483,14 @@ audio_ram_code uint16_t bt_music_get_playback_data(int16_t *p_des0, int16_t *p_d
         if (bt_music_cfg.sync_ppm_cur) {
 #if TLKALG_PPM_SPK_ENABLE
             audio_alg_interface_t *p_audio_alg_if;
-            int32_t                pcm_ppm_buff[1024 + 64];
+            // int32_t                pcm_ppm_buff[1024 + 64];
             p_audio_alg_if = audio_alg_get_interface_by_type(ALG_PPM_SPK);
-            //gpio_set_high_level(GPIO_PB10);
-            num_out = p_audio_alg_if->audio_alg_process((uint8_t *)p_des, (uint8_t *)pcm_ppm_buff, bt_music_cfg.samples_per_frame, ALG_WIDTH_16, ALG_CHANNEL_STEREO);
-            //gpio_set_low_level(GPIO_PB10);
+            num_out        = p_audio_alg_if->audio_alg_process((uint8_t *)p_des, (uint8_t *)p_des, bt_music_cfg.samples_per_frame, ALG_WIDTH_16, ALG_CHANNEL_STEREO);
             if (num_out != bt_music_cfg.samples_per_frame) {
                 //tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "PPM num_out %d", num_out);
             }
 
-            int32_t *pcm_ppm = pcm_ppm_buff;
+            int32_t *pcm_ppm = p_des;
 #else
             int32_t *pcm_ppm = p_des;
             num_out          = bt_music_cfg.samples_per_frame;
@@ -1651,27 +1647,12 @@ audio_ram_code uint16_t bt_music_get_playback_data(int16_t *p_des0, int16_t *p_d
         }
 #endif
 
-        /*
-        #if (MCU_CORE_TYPE == MCU_CORE_TL751X && (TLK_STK_BT_TPSLL_ENABLE || TLKSTK_BTTPSLL_TWS_ENABLE) && LE_AUDIO_BT_MUSIC_MIX_ENABLE)
-        if (!tlkmdi_tpsll_audio_is_busy()) {
-            mix_ll_audio_stereo(p_des0, p_des1, frame_samples);
-        }
-        #endif
-        */
-
-        //        dsp_codec_get_sin_data(pcm_sin, 256);
-        //        pcm_data = pcm_sin;
-
-        //        tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "===> pcm_data_len: %d, type: %d, sam: %d",
-        //                     pcm_data_len, tlkmw_audio_btif_music_get_avdtp_seid_type(), bt_music_cfg.enc_buf_samples);
-
         /* frame_samples, A2DP: sbc->128, aac->1024 */
         bt_music_get_encoded_frame(1, frame_samples);
 
         if (bt_music_cfg.sync_enc_buf_num > BT_MUSIC_SBC_BUFF_NUM_MAX || (bt_music_cfg.tick_skip && clock_time_exceed(bt_music_cfg.tick_skip, 1000000)) ||
             bt_music_underflow_flag) {
             //bt_audio_gpio_toggle_audio_tx();
-
             tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "Encoded buffer empty, reset, id: %d, mute num:%d, play:%d ppm:%d, buf_num: %d", bt_music_cfg.enc_buf_id,
                          bt_music_cfg.enc_buf_mute_num, bt_music_cfg.sync_play, bt_music_cfg.sync_ppm, bt_music_cfg.sync_enc_buf_num);
 
@@ -1718,11 +1699,11 @@ audio_ram_code uint16_t bt_music_get_playback_data(int16_t *p_des0, int16_t *p_d
  */
 void bt_music_dump(void)
 {
-    int16_t num             = bt_music_get_num_of_enc_buff_avail();
+    int16_t enc_avail       = bt_music_get_num_of_enc_buff_avail();
     int     samples_in_fifo = tlkdrv_codec_get_spk_avail_samples();
 
-    tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "enc_buf_num:%d, enc_buf_size:%d, sync_enc_buf_num:%d, num:%d, samples_in_fifo:%d", bt_music_cfg.enc_buf_num,
-                 bt_music_cfg.enc_buf_size, bt_music_cfg.enc_buf_num, num, samples_in_fifo);
+    tlkapi_trace(BT_AUDIO_DBG_FLAG, BT_AUDIO_DBG_SIGN, "enc_avail:%d, s_in_fifo:%d, enc_buf_num:%d, enc_buf_size:%d", enc_avail, samples_in_fifo, bt_music_cfg.enc_buf_num,
+                 bt_music_cfg.enc_buf_size);
 }
 
 /**

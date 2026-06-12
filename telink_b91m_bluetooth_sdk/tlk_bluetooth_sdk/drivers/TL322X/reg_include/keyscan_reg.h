@@ -193,11 +193,11 @@ enum
 
 enum
 {
-    FLD_KS_FRM_END_STA   = BIT(0),
-    FLD_KS_FRM_END1_STA  = BIT(1),
+    FLD_KS_FRM_END_STA   = BIT(0),//ks_ana ADC0 interrupt, write 1 to clear
+    FLD_KS_FRM_END1_STA  = BIT(1),//ks_ana ADC1 interrupt, write 1 to clear
     FLD_KS_WAKEA_UP_STA  = BIT(2),
     FLD_KS_WAKEA1_UP_STA = BIT(3),
-    FLD_KS_SCAN_EN       = BIT(4),
+    FLD_KS_SCAN_EN       = BIT(4),//ks_ana enable
     FLD_KS_CNT_CAPTURE1  = BIT_RNG(5, 7),
 };
 

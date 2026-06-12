@@ -26,11 +26,11 @@
  *
  *******************************************************************************************************/
 #pragma once
- 
+
 /* Media types definitions */
-#define BTP_A2DP_MEDIA_TYPE_AUDIO          0x00
-#define BTP_A2DP_MEDIA_TYPE_VIDEO          0x01
-#define BTP_A2DP_MEDIA_TYPE_MULTIMEDIA     0x02
+#define BTP_A2DP_MEDIA_TYPE_AUDIO      0x00
+#define BTP_A2DP_MEDIA_TYPE_VIDEO      0x01
+#define BTP_A2DP_MEDIA_TYPE_MULTIMEDIA 0x02
 
 typedef enum
 {
@@ -40,7 +40,13 @@ typedef enum
     BTP_A2DP_FREQUENCY_48000 = 0x01,
 } BTP_A2DP_FREQUENCY_ENUM;
 
-#define BTP_A2DP_SBC_MAX_BITPOOL 53 // 35 // 53
+#ifndef BTP_A2DP_SBC_SNK_MAX_BITPOOL
+#define BTP_A2DP_SBC_SNK_MAX_BITPOOL 53
+#endif
+
+#ifndef BTP_A2DP_SBC_SRC_MAX_BITPOOL
+#define BTP_A2DP_SBC_SRC_MAX_BITPOOL 36
+#endif
 
 // [Octet 0] Object Type
 #define A2DP_AAC_OBJECT_TYPE_MPEG2_LC       0x80 /* MPEG-2 Low Complexity */
@@ -79,12 +85,12 @@ typedef enum
 #define A2DP_AAC_VARIABLE_BIT_RATE_ENABLED  0x80
 #define A2DP_AAC_VARIABLE_BIT_RATE_DISABLED 0x00
 // [Octet 3], [Bits 0-6] Bit Rate - Bits 16-22 in the 23-bit UiMsbf
-#define A2DP_AAC_BIT_RATE_MASK0 (0x7F << 16)
-#define A2DP_AAC_BIT_RATE_MASK1 (0xFF << 8)
-#define A2DP_AAC_BIT_RATE_MASK2 0xFF
+#define A2DP_AAC_BIT_RATE_MASK0  (0x7F << 16)
+#define A2DP_AAC_BIT_RATE_MASK1  (0xFF << 8)
+#define A2DP_AAC_BIT_RATE_MASK2  0xFF
 
 #define A2DP_AAC_DEFAULT_BITRATE 264630 // 265 kbps
-#define A2DP_AAC_MIN_BITRATE 64000 // 64 kbps
+#define A2DP_AAC_MIN_BITRATE     64000  // 64 kbps
 
 typedef enum
 {
@@ -95,19 +101,19 @@ typedef enum
 
     BTP_A2DP_LHDC_VENDRO_CODECID = 0x4c35,
 
-  	BTP_A2DP_LHDC_VER_50 = BIT(0),
-	BTP_A2DP_LHDC_VER_51 = BIT(1),
-	BTP_A2DP_LHDC_VER_52 = BIT(2),
-	BTP_A2DP_LHDC_VER_53 = BIT(3),
+    BTP_A2DP_LHDC_VER_50 = BIT(0),
+    BTP_A2DP_LHDC_VER_51 = BIT(1),
+    BTP_A2DP_LHDC_VER_52 = BIT(2),
+    BTP_A2DP_LHDC_VER_53 = BIT(3),
 
     BTP_A2DP_LHDC_SRATE_441K = 44100,
-	BTP_A2DP_LHDC_SRATE_48K  = 48000,
-	BTP_A2DP_LHDC_SRATE_96K  = 96000,
-	BTP_A2DP_LHDC_SRATE_192K = 192000,
+    BTP_A2DP_LHDC_SRATE_48K  = 48000,
+    BTP_A2DP_LHDC_SRATE_96K  = 96000,
+    BTP_A2DP_LHDC_SRATE_192K = 192000,
 
     BTP_A2DP_LHDC_BITS_16 = 16,
-	BTP_A2DP_LHDC_BITS_24 = 24,
-	BTP_A2DP_LHDC_BITS_32 = 32,
+    BTP_A2DP_LHDC_BITS_24 = 24,
+    BTP_A2DP_LHDC_BITS_32 = 32,
 } BTP_A2DP_LHDC_NUM;
 
 typedef enum
@@ -122,7 +128,7 @@ typedef enum
     BTP_A2DP_ENDPOINT_TYPE_SRC_NUMS = BTP_A2DP_ENDPOINT_TYPE_NUMS - BTP_A2DP_ENDPOINT_TYPE_SNK_NUMS,
 } BTP_A2DP_ENDPOINT_TYPE_ENUM;
 
-//note:this structure can't be changed by user 
+//note:this structure can't be changed by user
 typedef struct
 {
     uint32_t rfa0              : 4;
@@ -133,8 +139,8 @@ typedef struct
     uint32_t allocation_method : 2; // Allocation Method - bit[1~0]
     uint32_t subbands          : 2; // Subbands - bit[3~2]
     uint32_t block_length      : 4; // Block Length - bit[7~4]
-    uint8_t min_bitpool;           // Minimum Bitpool Value
-    uint8_t max_bitpool;           // Maximum Bitpool Value
+    uint8_t  min_bitpool;           // Minimum Bitpool Value
+    uint8_t  max_bitpool;           // Maximum Bitpool Value
 } __attribute__((__packed__)) btp_a2dp_sbc_cap_t;
 
 typedef struct
@@ -154,49 +160,49 @@ typedef struct
     uint8_t bit_rate_l;
 } __attribute__((__packed__)) btp_a2dp_aac_cap_t;
 
-//note:this structure can't be changed by user 
-typedef struct 
+//note:this structure can't be changed by user
+typedef struct
 {
-	uint8_t rfa0:4;          
-	uint8_t media_type:4;    
-    uint8_t codecType;// 0xff
-    uint8_t vendor_id1;     //0x3a 
-    uint8_t vendor_id2;     // 0x05
+    uint8_t rfa0       : 4;
+    uint8_t media_type : 4;
+    uint8_t codecType;  // 0xff
+    uint8_t vendor_id1; //0x3a
+    uint8_t vendor_id2; // 0x05
 
-    uint8_t vendor_id3;     // 0x0000
-    uint8_t vendor_id4;     // 0x0000
-    uint16_t vendor_codec_id;//ID: 0x4c35
-    
-	uint8_t srate192000_en:1;  
-	uint8_t reserve3:1;   		   
-	uint8_t srate96000_en:1;   
-	uint8_t reserve2:1;  
-	uint8_t srate48000_en:1;   	
-	uint8_t srate44100_en:1;    
-	uint8_t reserve1:2;          
-       
-	uint8_t bits32_en:1;
-	uint8_t bits24_en:1;
-	uint8_t bits16_en:1;
-	uint8_t reserve4:1;   	
-	uint8_t max_bitrate:2;
-	uint8_t min_bitrate:2;
-	
-	uint8_t version_num:4;
-	uint8_t ms5:1;
-	uint8_t reserve5:3; 
-	
-	uint8_t ar:1;
-	uint8_t jas:1;
-	uint8_t meta:1;
-	uint8_t reserve6:3;
-	uint8_t ll:1;
-	uint8_t lossless:1;
-	
-	uint8_t reserve7;
-} __attribute__ ((__packed__)) btp_a2dp_lhdc_cap_t;
+    uint8_t  vendor_id3;      // 0x0000
+    uint8_t  vendor_id4;      // 0x0000
+    uint16_t vendor_codec_id; //ID: 0x4c35
 
-//note:this structure can't be changed by user 
+    uint8_t srate192000_en : 1;
+    uint8_t reserve3       : 1;
+    uint8_t srate96000_en  : 1;
+    uint8_t reserve2       : 1;
+    uint8_t srate48000_en  : 1;
+    uint8_t srate44100_en  : 1;
+    uint8_t reserve1       : 2;
+
+    uint8_t bits32_en   : 1;
+    uint8_t bits24_en   : 1;
+    uint8_t bits16_en   : 1;
+    uint8_t reserve4    : 1;
+    uint8_t max_bitrate : 2;
+    uint8_t min_bitrate : 2;
+
+    uint8_t version_num : 4;
+    uint8_t ms5         : 1;
+    uint8_t reserve5    : 3;
+
+    uint8_t ar       : 1;
+    uint8_t jas      : 1;
+    uint8_t meta     : 1;
+    uint8_t reserve6 : 3;
+    uint8_t ll       : 1;
+    uint8_t lossless : 1;
+
+    uint8_t reserve7;
+} __attribute__((__packed__)) btp_a2dp_lhdc_cap_t;
+
+//note:this structure can't be changed by user
 typedef union
 {
     btp_a2dp_sbc_cap_t  sbc;
@@ -204,6 +210,6 @@ typedef union
     btp_a2dp_lhdc_cap_t lhdc;
 } btp_a2dp_codec_cap_t;
 
-const btp_a2dp_codec_cap_t * btp_a2dp_getCapInfoByType(uint8_t type);
+const btp_a2dp_codec_cap_t *btp_a2dp_getCapInfoByType(uint8_t type);
 
 uint16_t btp_a2dp_getCapInfoLenByType(uint8_t type);

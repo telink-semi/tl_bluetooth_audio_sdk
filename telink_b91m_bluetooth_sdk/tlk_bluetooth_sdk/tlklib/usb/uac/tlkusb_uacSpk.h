@@ -25,11 +25,11 @@
 #define TLKUSB_AUDIO_SPK_H
 
 #if (TLKUSB_AUD_SPK_RESOLUTION_BIT == 24)
-#define TLKUSB_AUDSPK_VOL_MIN  ((int16_t)0xc180) /* Volume Minimum Value -62db  	SPEAKER_VOL_MIN == SPEAKER_VOL_MAX - SPEAKER_VOL_RES * 100 */
-#define TLKUSB_AUDSPK_VOL_MAX  ((int16_t)0x0000) /* Volume Maximum Value 0db */
-#define TLKUSB_AUDSPK_VOL_RES  0x00a0            /* Volume Resolution  100 steps, each step is 0x80*/
-#define TLKUSB_AUDSPK_VOL_DEF  TLKUSB_AUDSPK_VOL_MAX   /* Volume default */
-#define TLKUSB_AUDSPK_VOL_STEP 400
+#define TLKUSB_AUDSPK_VOL_MIN              ((int16_t)0xc180)     /* Volume Minimum Value -62db  	SPEAKER_VOL_MIN == SPEAKER_VOL_MAX - SPEAKER_VOL_RES * 100 */
+#define TLKUSB_AUDSPK_VOL_MAX              ((int16_t)0x0000)     /* Volume Maximum Value 0db */
+#define TLKUSB_AUDSPK_VOL_RES              0x00a0                /* Volume Resolution  100 steps, each step is 0x80*/
+#define TLKUSB_AUDSPK_VOL_DEF              TLKUSB_AUDSPK_VOL_MAX /* Volume default */
+#define TLKUSB_AUDSPK_VOL_STEP             400
 
 #define APP_AUDIO_ADJUST_VOLUME_SHIFT_BITS 14
 #define APP_AUDIO_DEFAULT_VOL_DB           0x7fff
@@ -46,9 +46,10 @@
 
 #define APP_HALF(n)                        ((n) >> 1)
 #else
-#define TLKUSB_AUDSPK_VOL_MIN  ((int16_t)0xa000) /* Volume Minimum Value */
-#define TLKUSB_AUDSPK_VOL_MAX  ((int16_t)0x0300) /* Volume Maximum Value */
-#define TLKUSB_AUDSPK_VOL_RES  0x0100           /* Volume Resolution */
+#define TLKUSB_AUDSPK_VOL_MIN       ((int16_t)0xa000) /* Volume Minimum Value */
+#define TLKUSB_AUDSPK_VOL_MAX       ((int16_t)0x0300) /* Volume Maximum Value */
+#define TLKUSB_AUDSPK_VOL_RES       0x0100            /* Volume Resolution */
+#define APP_AUDIO_SPK_VOL_GRDL_STEP 2
 #endif
 
 /**
@@ -64,6 +65,7 @@ int tlkusb_uacspk_init(void);
  * @return    true if enabled, false otherwise
  */
 bool tlkusb_uacspk_getEnable(void);
+bool tlkusb_uacspk1_getEnable(void);
 
 /**
  * @brief     Enable or disable the USB audio speaker
@@ -71,6 +73,7 @@ bool tlkusb_uacspk_getEnable(void);
  * @return    none
  */
 void tlkusb_uacspk_setEnable(bool enable);
+void tlkusb_uacspk1_setEnable(bool enable);
 
 /**
  * @brief     Get the volume of USB audio speaker
@@ -79,8 +82,10 @@ void tlkusb_uacspk_setEnable(bool enable);
  */
 #if (TLKUSB_AUD_SPK_RESOLUTION_BIT == 24)
 int16_t tlkusb_uacspk_getVolume(void);
+int16_t tlkusb_uacspk1_getVolume(void);
 #else
 uint tlkusb_uacspk_getVolume(void);
+uint tlkusb_uacspk1_getVolume(void);
 #endif
 
 /**
@@ -89,6 +94,7 @@ uint tlkusb_uacspk_getVolume(void);
  * @return    none
  */
 void tlkusb_uacspk_setVolume(int16_t volume);
+void tlkusb_uacspk1_setVolume(int16_t volume);
 
 /**
  * @brief     Mute or unmute the USB audio speaker
@@ -96,6 +102,7 @@ void tlkusb_uacspk_setVolume(int16_t volume);
  * @return    none
  */
 void tlkusb_uacspk_enterMute(bool enable);
+void tlkusb_uacspk1_enterMute(bool enable);
 
 /**
  * @brief     Handle set interface command for USB audio speaker
@@ -103,6 +110,7 @@ void tlkusb_uacspk_enterMute(bool enable);
  * @return    TLK_ENONE if successful, -TLK_ENOSUPPORT for unsupported requests
  */
 int tlkusb_uacspk_setInfCmdDeal(int type);
+int tlkusb_uacspk1_setInfCmdDeal(int type);
 
 /**
  * @brief     Handle get interface command for USB audio speaker
@@ -111,6 +119,7 @@ int tlkusb_uacspk_setInfCmdDeal(int type);
  * @return    TLK_ENONE if successful, -TLK_ENOSUPPORT for unsupported requests
  */
 int tlkusb_uacspk_getInfCmdDeal(int req, int type);
+int tlkusb_uacspk1_getInfCmdDeal(int req, int type);
 
 /**
  * @brief     Handle set endpoint command for USB audio speaker
@@ -118,13 +127,14 @@ int tlkusb_uacspk_getInfCmdDeal(int req, int type);
  * @return    TLK_ENONE
  */
 int tlkusb_uacspk_setEdpCmdDeal(int type);
-
+int tlkusb_uacspk1_setEdpCmdDeal(int type);
 /**
  * @brief     Receive data for USB audio speaker
  * @param[in] tick Current system tick
  * @return    none
  */
 void tlkusb_uacspk_recvData(uint32_t tick);
+void tlkusb_uacspk1_recvData(uint32_t tick);
 
 /**
  * @brief     Close the USB audio speaker

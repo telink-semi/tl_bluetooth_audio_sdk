@@ -37,7 +37,7 @@
 #include "tlklib/usb/uac/tlkusb_uac.h"
 #include "codec/lea_codec.h"
 #include "stack/ble/host_v1/profile/le_audio/trans_coord/cap/inc/cap_sm.h"
-#if (TLK_MW_LEA_UC_ENABLE)
+#if (TLK_MW_LE_AUDIO_ENABLE && TLK_MW_LEA_UC_ENABLE)
 #if (TLK_USB_UAC_ENABLE)
 extern uint8_t gLeaPpmStatus;
 #endif
@@ -214,7 +214,10 @@ int tlkmdi_lea_uc_init(void)
     lea_input_config_initial();
     lea_output_config_initial();
 
+    (void)tlkmdi_le_cig_start_time;
+#if !MCU_DUAL_CORE_ENABLE
     blt_ll_cis_central_event_start_cb(tlkmdi_le_cig_start_time);
+#endif
     cap_uc_register_state_change_callback(tlkmdi_le_audio_unicast_client_state_callback);
 
     return TLK_ENONE;

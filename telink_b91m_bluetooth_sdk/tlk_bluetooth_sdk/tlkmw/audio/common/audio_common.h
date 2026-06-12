@@ -55,8 +55,8 @@ enum
 typedef enum
 {
     AUDIO_CODEC_DAC_MONO,
-	AUDIO_CODEC_DAC_STEREO,
-	AUDIO_CODEC_DAC_TYPE_NUM,
+    AUDIO_CODEC_DAC_STEREO,
+    AUDIO_CODEC_DAC_TYPE_NUM,
 } AUDIO_CODEC_DAC_TYPE_ENUM;
 
 /**
@@ -130,7 +130,7 @@ void tlkalg_sync_mic_spk_index(uint16_t sample);
  * @param[out]  pd - Destination buffer pointer
  * @return      None
  */
-void tlkalg_agc_proc_behind_nn(uint8_t *ps, uint8_t *pd);
+void tlkalg_agc_proc_behind_nn(uint8_t *ps, uint8_t *pd, uint8_t width);
 
 /**
  * @brief       Process ANS after neural network processing
@@ -168,8 +168,8 @@ uint8_t tlkmdi_audio_get_tone_mix_mode(void);
  * @param[in]   frame_num - Number of frames to process
  * @return      None
  */
-#if(TLKALG_ANS_SPK_ENABLE)
-void tlkalg_ans_multiframe(uint8_t *ps, uint8_t *pd ,uint8_t frame_num);
+#if (TLKALG_ANS_SPK_ENABLE)
+void tlkalg_ans_multiframe(uint8_t *ps, uint8_t *pd, uint8_t frame_num);
 #endif
 
 /**

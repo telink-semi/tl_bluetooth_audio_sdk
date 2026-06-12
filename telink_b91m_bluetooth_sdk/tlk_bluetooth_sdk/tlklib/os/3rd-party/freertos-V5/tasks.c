@@ -2521,7 +2521,6 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery ) /*lint !e971 Unqualified char 
 /*-----------------------------------------------------------*/
 
 #if ( configUSE_TRACE_FACILITY == 1 )
-    _attribute_os_core_code_ram_sec_
     UBaseType_t uxTaskGetSystemState( TaskStatus_t * const pxTaskStatusArray,
                                       const UBaseType_t uxArraySize,
                                       uint32_t * const pulTotalRunTime )
@@ -2592,6 +2591,123 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery ) /*lint !e971 Unqualified char 
         return uxTask;
     }
 
+    //add by telink - rewritten to be trap-safe (no API calls)
+    static configSTACK_DEPTH_TYPE prvTaskCheckFreeStackSpace_tlk_debug( const uint8_t * pucStackByte )
+    {
+        uint32_t ulCount = 0U;
+
+        while( *pucStackByte == ( uint8_t ) tskSTACK_FILL_BYTE )
+        {
+            pucStackByte -= portSTACK_GROWTH;
+            ulCount++;
+        }
+
+        ulCount /= ( uint32_t ) sizeof( StackType_t );
+        return ( configSTACK_DEPTH_TYPE ) ulCount;
+    }
+
+    static void prvGetTaskInfo_tlk_debug( TCB_t * pxTCB, TaskStatus_t * pxTaskStatus, eTaskState eState )
+    {
+        uint8_t * pucEndOfStack;
+
+        pxTaskStatus->xHandle = ( TaskHandle_t ) pxTCB;
+        pxTaskStatus->pcTaskName = ( const char * ) &( pxTCB->pcTaskName[ 0 ] );
+        pxTaskStatus->uxCurrentPriority = pxTCB->uxPriority;
+        pxTaskStatus->pxStackBase = pxTCB->pxStack;
+        pxTaskStatus->xTaskNumber = pxTCB->uxTCBNumber;
+        pxTaskStatus->eCurrentState = ( pxTCB == pxCurrentTCB ) ? eRunning : eState;
+
+        #if portSTACK_GROWTH < 0
+            pucEndOfStack = ( uint8_t * ) pxTCB->pxStack;
+        #else
+            pucEndOfStack = ( uint8_t * ) pxTCB->pxEndOfStack;
+        #endif
+        pxTaskStatus->usStackHighWaterMark = prvTaskCheckFreeStackSpace_tlk_debug( pucEndOfStack );
+
+        #if ( configUSE_MUTEXES == 1 )
+            pxTaskStatus->uxBasePriority = pxTCB->uxBasePriority;
+        #else
+            pxTaskStatus->uxBasePriority = 0;
+        #endif
+        #if ( configGENERATE_RUN_TIME_STATS == 1 )
+            pxTaskStatus->ulRunTimeCounter = pxTCB->ulRunTimeCounter;
+        #else
+            pxTaskStatus->ulRunTimeCounter = 0;
+        #endif
+    }
+
+    static UBaseType_t prvListTasksWithinSingleList_tlk_debug( TaskStatus_t * pxTaskStatusArray,
+                                                                List_t * pxList,
+                                                                eTaskState eState )
+    {
+        UBaseType_t uxTask = 0;
+
+        if( listCURRENT_LIST_LENGTH( pxList ) > ( UBaseType_t ) 0 )
+        {
+            ListItem_t * pxItem = listGET_HEAD_ENTRY( pxList );
+            ListItem_t const * pxEnd = listGET_END_MARKER( pxList );
+
+            while( pxItem != pxEnd )
+            {
+                TCB_t * pxTCB = ( TCB_t * ) listGET_LIST_ITEM_OWNER( pxItem );
+                if( pxTCB != NULL )
+                {
+                    prvGetTaskInfo_tlk_debug( pxTCB, &( pxTaskStatusArray[ uxTask ] ), eState );
+                    uxTask++;
+                }
+                pxItem = listGET_NEXT( pxItem );
+            }
+        }
+
+        return uxTask;
+    }
+
+    UBaseType_t uxTaskGetSystemState_tlk_debug( TaskStatus_t * const pxTaskStatusArray,
+                                      const UBaseType_t uxArraySize,
+                                      uint32_t * const pulTotalRunTime )
+    {
+        UBaseType_t uxTask = 0, uxQueue = configMAX_PRIORITIES;
+
+        if( uxArraySize >= uxCurrentNumberOfTasks )
+        {
+            /* Ready tasks */
+            do
+            {
+                uxQueue--;
+                uxTask += prvListTasksWithinSingleList_tlk_debug( &( pxTaskStatusArray[ uxTask ] ), &( pxReadyTasksLists[ uxQueue ] ), eReady );
+            } while( uxQueue > ( UBaseType_t ) tskIDLE_PRIORITY );
+
+            /* Blocked tasks */
+            uxTask += prvListTasksWithinSingleList_tlk_debug( &( pxTaskStatusArray[ uxTask ] ), ( List_t * ) pxDelayedTaskList, eBlocked );
+            uxTask += prvListTasksWithinSingleList_tlk_debug( &( pxTaskStatusArray[ uxTask ] ), ( List_t * ) pxOverflowDelayedTaskList, eBlocked );
+
+            #if ( INCLUDE_vTaskDelete == 1 )
+                uxTask += prvListTasksWithinSingleList_tlk_debug( &( pxTaskStatusArray[ uxTask ] ), &xTasksWaitingTermination, eDeleted );
+            #endif
+
+            #if ( INCLUDE_vTaskSuspend == 1 )
+                uxTask += prvListTasksWithinSingleList_tlk_debug( &( pxTaskStatusArray[ uxTask ] ), &xSuspendedTaskList, eSuspended );
+            #endif
+
+            #if ( configGENERATE_RUN_TIME_STATS == 1 )
+                if( pulTotalRunTime != NULL )
+                {
+                    #ifdef portALT_GET_RUN_TIME_COUNTER_VALUE
+                        portALT_GET_RUN_TIME_COUNTER_VALUE( ( *pulTotalRunTime ) );
+                    #else
+                        *pulTotalRunTime = portGET_RUN_TIME_COUNTER_VALUE();
+                    #endif
+                }
+            #else
+                if( pulTotalRunTime != NULL )
+                {
+                    *pulTotalRunTime = 0;
+                }
+            #endif
+        }
+
+        return uxTask;
+    }
 #endif /* configUSE_TRACE_FACILITY */
 /*----------------------------------------------------------*/
 

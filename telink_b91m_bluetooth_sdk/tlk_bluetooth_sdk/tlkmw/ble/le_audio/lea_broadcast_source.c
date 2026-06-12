@@ -31,7 +31,7 @@
 
 #include "tlkmw/audio/a2dp_to_bis/tlkmdi_a2dp_to_bis.h"
 #include "tlkmw/audio/a2dp_to_bis/tlkmdi_a2dp_to_bis_le_music.h"
-
+#include "inc/lea_cfg.h"
 #include "inc/lea_broadcast_source.h"
 #include "tlkmw/audio/le_audio/tlkmdi_lea_bms.h"
 
@@ -42,9 +42,9 @@
 #define BIS_SOURCE_COMPLETE_NAME  "A2DP to BIS Demo"
 
 #define SOURCE_PRESENTATION_DELAY 40000 //20ms    presentation delay, unit is 1us.
-#define SOURCE_TRANSMIT_LATENCY   2     // bis transmit delay, unit is sdu interval(7.5ms or 10ms).
+#define SOURCE_TRANSMIT_LATENCY   3     // bis transmit delay, unit is sdu interval(7.5ms or 10ms).
 #define SOURCE_ISO_INTERVAL       2     // bis iso interval, unit is sdu interval(7.5ms or 10ms).
-#define SOURCE_RETRANSMIT_NUMBER  3     // streaming packet retry count, usually 3 or 4, current use 3.
+#define SOURCE_RETRANSMIT_NUMBER  4     // streaming packet retry count, usually 3 or 4, current use 3.
 
 // BASE control
 #if (BIS_STREAM_CONFIG == BIS_STREAM_48kHz_96kbps)
@@ -256,7 +256,10 @@ static void app_ble_bis_big_start(void)
         .retry_count       = SOURCE_RETRANSMIT_NUMBER,
         .enc               = 0,
     };
-
+#ifdef BROADCAST_CODE
+    s_big_broadcast_param.enc = 1;
+    memcpy(s_big_broadcast_param.broadcast_code, BROADCAST_CODE, sizeof(BROADCAST_CODE) - 1);
+#endif
     ble_sts_t status = ble_host_gap_big_create_param(&s_big_broadcast_param, app_ble_big_create_callback);
     tlkapi_printf(APP_LOG_EN, "[APP][INI] create big broadcast, status=%d", status);
 }

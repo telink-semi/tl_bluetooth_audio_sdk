@@ -24,12 +24,30 @@
 #pragma once
 
 /**
+ * @brief     Gets the required static buffer length for creating an event tab.
+ * @param[in] evtTabLen Length of the event tab.
+ * @returns   Required buffer size in bytes.
+ */
+uint32_t tlkos_event_getStaticBufferLen(uint32_t evtTabLen);
+
+/**
  * @brief     Creates an event tab.
  * @param[in] evtTabLen Length of the event tab.
  * @param[out] evtTabHandle Pointer to store the created event tab handle.
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
-int tlkos_event_createTab(uint32_t evtTabLen,TlkOsEventTabHandle_t *evtTabHandle);
+int tlkos_event_createTab(uint32_t evtTabLen, TlkOsEventTabHandle_t *evtTabHandle);
+
+
+/**
+ * @brief     Creates an event tab with a static buffer.
+ * @param[in] evtTabLen Length of the event tab.
+ * @param[in] pStaticBuffer Pointer to the static buffer provided by the user.
+ * @param[in] staticBufferSize Size of the static buffer in bytes.
+ * @param[out] evtTabHandle Pointer to store the created event tab handle.
+ * @returns   0 indicates success, other values indicate corresponding error codes.
+ */
+int tlkos_event_createTabStatic(uint32_t evtTabLen, uint8_t *pStaticBuffer, uint32_t staticBufferSize, TlkOsEventTabHandle_t *evtTabHandle);
 
 /**
  * @brief     Destroys an event tab.
@@ -45,7 +63,7 @@ int tlkos_event_destroyTab(TlkOsEventTabHandle_t evtTabHandle);
  * @param[in] cb Callback function to register.
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
-int tlkos_event_regDealCB(TlkOsEventTabHandle_t evtTabHandle,uint32_t index,TlkOsEventDealCB cb);
+int tlkos_event_regDealCB(TlkOsEventTabHandle_t evtTabHandle, uint32_t index, TlkOsEventDealCB cb);
 
 
 /**
@@ -54,7 +72,7 @@ int tlkos_event_regDealCB(TlkOsEventTabHandle_t evtTabHandle,uint32_t index,TlkO
  * @param[in] index Index of the event.
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
-int tlkos_event_set(TlkOsEventTabHandle_t evtTabHandle,uint32_t index);
+int tlkos_event_set(TlkOsEventTabHandle_t evtTabHandle, uint32_t index);
 
 
 /**
@@ -63,7 +81,7 @@ int tlkos_event_set(TlkOsEventTabHandle_t evtTabHandle,uint32_t index);
  * @param[in] index Index of the event.
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
-int tlkos_event_setFromIsr(TlkOsEventTabHandle_t evtTabHandle,uint32_t index);
+int tlkos_event_setFromIsr(TlkOsEventTabHandle_t evtTabHandle, uint32_t index);
 
 /**
  * @brief     Waits for events.
@@ -71,7 +89,7 @@ int tlkos_event_setFromIsr(TlkOsEventTabHandle_t evtTabHandle,uint32_t index);
  * @param[in] blockTimeMs Blocking time in milliseconds.
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
-int tlkos_event_wait(TlkOsEventTabHandle_t evtTabHandle,uint32_t blockTimeMs);
+int tlkos_event_wait(TlkOsEventTabHandle_t evtTabHandle, uint32_t blockTimeMs);
 
 /**
  * @brief     Gets event bits.
@@ -79,4 +97,4 @@ int tlkos_event_wait(TlkOsEventTabHandle_t evtTabHandle,uint32_t blockTimeMs);
  * @param[out] evt Pointer to store the event bits.
  * @returns   0 indicates success, other values indicate corresponding error codes.
  */
-int tlkos_event_get(TlkOsEventTabHandle_t evtTabHandle,uint32_t *evt);
+int tlkos_event_get(TlkOsEventTabHandle_t evtTabHandle, uint32_t *evt);

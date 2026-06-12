@@ -141,37 +141,17 @@
 
 typedef struct
 {
-    uint8_t  tone_st;
-    uint16_t vol;
     uint32_t pkt_audio;
-    uint8_t  audio_mute;
     uint8_t  plc_num;
 
-    uint8_t audio_per;
-    uint8_t sync;
-    uint8_t dev_mode_peer;
-    uint8_t peer_bt_mode;
-    uint8_t dev_bt_mode_last;
-
-    uint8_t pkt_wptr;
-    uint8_t pkt_rptr;
-    uint8_t pkt_len;
-
-    uint8_t  wptr;
-    uint8_t  format;
-    uint16_t ll_rcvd;
 
     uint32_t tick0;
     uint32_t tus_mic;
     uint32_t tus_single_tpsll_enc_offset;
     uint32_t tick_timer;
-    uint16_t dump_mask;
 
-    /* mix mode */
-    uint8_t  rx_pkt;
-    uint32_t mix_tick;
-    uint8_t  mix_wptr;
-    uint16_t bt_mix_reset;
+    uint8_t state;
+
 } __attribute__((aligned(4))) ll_dongle_audio_context_t;
 
 extern ll_dongle_audio_context_t ll_dongle_audio_ctx;
@@ -194,6 +174,9 @@ typedef enum
     TLKMDI_LL_DONGLE_ENC,
     TLKMDI_LL_DONGLE_DEC,
     TLKMDI_LL_DONGLE_BT_VOICE_MIX_ENC,
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+    TLKMDI_LL_DONGLE_ENC_SECOND,
+#endif
     TLKMDI_LL_DONGLE_STATE_MAX
 } tlkmdi_ll_dongle_state_e;
 
@@ -207,7 +190,7 @@ extern uint8_t g_max_vol;  /*async.max_vol*/
 
 
 #define APP_AUDIO_LC3A_FRMAE_LEN          90
-#define APP_AUDIO_ULTRA_LL_LC3A_FRMAE_LEN 50
+#define APP_AUDIO_ULTRA_LL_LC3A_FRMAE_LEN 45
 
 #ifndef APP_AUDIO_LC3A_FRMAE_LEN
 #define APP_AUDIO_LC3A_FRMAE_LEN 90
@@ -237,6 +220,15 @@ void ll_dongle_audio_enter_audio_mode(void);
  * @return  None
  */
 void ll_dongle_clear_status(void);
+
+/**
+ * @brief   Callback function for traffic notify.
+ * @param[in] cmd The command to process.
+ *                TPD_SET_AUDIO_PATH_IDLE = 0x00
+ *                TPD_STIMER_START_EVENT  = 0x01
+ * @return  void
+ */
+void ll_dongle_audio_path_traffic_notify(uint8_t controller_traffic_state);
 
 /**
  * @brief   Callback function for handling audio path commands.

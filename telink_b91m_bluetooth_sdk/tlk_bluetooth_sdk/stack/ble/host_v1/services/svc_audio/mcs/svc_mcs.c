@@ -108,8 +108,6 @@ _attribute_ble_data_retention_ static uint8_t  mcsMediaPlayerIconURLValue[LE_AUD
 _attribute_ble_data_retention_ static uint16_t mcsMediaPlayerIconURLValueLen;
 #endif
 
-static const uint16_t gMcsTrackChangedLen = 0;
-
 _attribute_ble_data_retention_ static uint8_t  mcsTrackTitleValue[LE_AUDIO_MCS_TRACK_TITLE_MAX_SIZE];
 _attribute_ble_data_retention_ static uint16_t mcsTrackTitleValueLen;
 const uint16_t                                 mcsTrackTitleMaxSize = sizeof(mcsTrackTitleValue);
@@ -185,111 +183,111 @@ extern const uint16_t otsIncludeValue[3];
  * @brief the structure for default MCS service List.
  */
 static const struct atts_attribute mcsList[] = {
-    ATTS_PRIMARY_SERVICE(serviceGenericMediaControlUuid),
+    ATTS_PRIMARY_SERVICE(serviceGenericMediaControlAttUuid),
 
     ATTS_INCLUDE_DEFINE(&otsIncludeValue),
 
     //Media Player Name
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicMediaPlayerNameUuid, mcsMediaPlayerNameValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicMediaPlayerNameAttUuid, mcsMediaPlayerNameValue),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_MCS_MEDIA_PLAYER_ICON_OBJECT_ID
     //Media Player Icon Object ID
-    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicMediaPlayerIconObjectIdUuid, mcsMediaPlayerIconObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicMediaPlayerIconObjectIdAttUuid, mcsMediaPlayerIconObjectIDValue),
 #endif
 
 #if LE_AUDIO_MCS_MEDIA_PLAYER_ICON_URL
     //Media Player Icon URL
-    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicMediaPlayerIconUrlUuid, mcsMediaPlayerIconURLValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicMediaPlayerIconUrlAttUuid, mcsMediaPlayerIconURLValue),
 #endif
 
     //Track Changed
     ATTS_CHARACTERISTIC_DECLARATIONS(charPropNotify),
-    {0, ATT_16_UUID_LEN, (uint8_t *)(size_t)characteristicTrackChangedUuid, (uint16_t *)(size_t)&gMcsTrackChangedLen, 0, NULL, 0},
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_NONE, characteristicTrackChangedAttUuid, ATTS_SET_NONE, 0, NULL, NULL),
     ATTS_COMMON_CCC_DEFINE,
 
     //Track Title
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicTrackTitleUuid, mcsTrackTitleValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicTrackTitleAttUuid, mcsTrackTitleValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Track Duration
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicTrackDurationUuid, mcsTrackDurationValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicTrackDurationAttUuid, mcsTrackDurationValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Track Position
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteWriteWithout, characteristicTrackPositionUuid, mcsTrackPositionValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteWriteWithout, characteristicTrackPositionAttUuid, mcsTrackPositionValue),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_MCS_PLAYBACK_SPEED
     //Playback Speed
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteWriteWithoutNotify, characteristicPlaybackSpeedUuid, mcsPlaybackSpeedValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteWriteWithoutNotify, characteristicPlaybackSpeedAttUuid, mcsPlaybackSpeedValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_MCS_SEEKING_SPEED
     //Seeking Speed
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicSeekingSpeedUuid, mcsSeekingSpeedValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicSeekingSpeedAttUuid, mcsSeekingSpeedValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_MCS_CURRENT_TRACK_OBJECT_ID
     //Current Track Segments Object ID
-    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicCurrentTrackSegmentsObjectIdUuid, mcsCurrentTrackSegmentsObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropRead, characteristicCurrentTrackSegmentsObjectIdAttUuid, mcsCurrentTrackSegmentsObjectIDValue),
 
     //Current Track Object ID
-    ATTS_CHAR_UUID_ENCR_RDWR_POINT_WCB(charPropReadWriteWriteWithoutNotify, characteristicCurrentTrackObjectIdUuid, mcsCurrentTrackObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_POINT_WCB(charPropReadWriteWriteWithoutNotify, characteristicCurrentTrackObjectIdAttUuid, mcsCurrentTrackObjectIDValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Next Track Object ID
-    ATTS_CHAR_UUID_ENCR_RDWR_POINT_WCB(charPropReadWriteWriteWithoutNotify, characteristicNextTrackObjectIdUuid, mcsNextTrackObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_POINT_WCB(charPropReadWriteWriteWithoutNotify, characteristicNextTrackObjectIdAttUuid, mcsNextTrackObjectIDValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Parent Group Object ID
-    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropReadNotify, characteristicParentGroupObjectIdUuid, mcsParentGroupTrackObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_NOCB(charPropReadNotify, characteristicParentGroupObjectIdAttUuid, mcsParentGroupTrackObjectIDValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Current Group Object ID
-    ATTS_CHAR_UUID_ENCR_RDWR_POINT_WCB(charPropReadWriteWriteWithoutNotify, characteristicCurrentGroupObjectIdUuid, mcsCurrentGroupTrackObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_POINT_WCB(charPropReadWriteWriteWithoutNotify, characteristicCurrentGroupObjectIdAttUuid, mcsCurrentGroupTrackObjectIDValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_MCS_PLAYING_ORDER
     //Playing Order
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteWriteWithoutNotify, characteristicPlayingOrderUuid, mcsPlayingOrderValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_WCB(charPropReadWriteWriteWithoutNotify, characteristicPlayingOrderAttUuid, mcsPlayingOrderValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_MCS_PLAYING_ORDERS_SUPPORTED
     //Playing Order Supported
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicPlayingOrdersSupportedUuid, mcsPlayingOrderSupportedValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicPlayingOrdersSupportedAttUuid, mcsPlayingOrderSupportedValue),
 #endif
 
     //Media State
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadNotify, characteristicMediaStateUuid, mcsMediaStateValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_NOCB(charPropReadNotify, characteristicMediaStateAttUuid, mcsMediaStateValue),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_MCS_MEDIA_CONTROL_POINT
     //Media Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_POINT_CB(charPropWriteWriteWithoutNotify, characteristicMediaControlPointUuid, mcsMediaControlPointValue),
+    ATTS_CHAR_UUID_ENCR_WRITE_POINT_CB(charPropWriteWriteWithoutNotify, characteristicMediaControlPointAttUuid, mcsMediaControlPointValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Media Control Point Supported
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicMediaCtrlPointOpSupportedUuid, mcsMediaControlPointSupportedValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropReadNotify, characteristicMediaCtrlPointOpSupportedAttUuid, mcsMediaControlPointSupportedValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_MCS_SEARCH_RESULTS_OBJECT_ID
     //Search Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_ENTITY_CB(charPropWriteWriteWithoutNotify, characteristicSearchControlPointUuid, mcsSearchControlPointValue),
+    ATTS_CHAR_UUID_ENCR_WRITE_ENTITY_CB(charPropWriteWriteWithoutNotify, characteristicSearchControlPointAttUuid, mcsSearchControlPointValue),
     ATTS_COMMON_CCC_DEFINE,
 
     //Search Results Object ID
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicSearchResultsObjectIdUuid, mcsSearchResultsObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicSearchResultsObjectIdAttUuid, mcsSearchResultsObjectIDValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
     //Content Control ID(CCID)
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicContentControlIdUuid, mcsCCIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_ENTITY_NOCB(charPropRead, characteristicContentControlIdAttUuid, mcsCCIDValue),
 };
 
 /*

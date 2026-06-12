@@ -28,8 +28,8 @@
 
 typedef struct
 {
-    uint8_t enable;
-    uint8_t waitFlag;
+    uint8_t  enable;
+    uint8_t  waitFlag;
     uint16_t handle;
     uint32_t waitTimer; //wait sco timer
 } tlkmdi_audu2h_voice_ctrl_t;

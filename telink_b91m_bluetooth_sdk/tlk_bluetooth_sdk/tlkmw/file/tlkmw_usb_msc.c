@@ -37,7 +37,7 @@
  */
 static int tlkmw_msc_diskRead(uint8_t *pBuff, uint32_t blkOffs, uint32_t blkNumb)
 {
-    int ret = tlkmw_fs_diskio_read(pBuff,blkOffs,blkNumb);
+    int ret = tlkmw_fs_diskio_read(pBuff, blkOffs, blkNumb);
     return ret == 0 ? TLK_ENONE : -TLK_EFAIL;
 }
 
@@ -50,7 +50,7 @@ static int tlkmw_msc_diskRead(uint8_t *pBuff, uint32_t blkOffs, uint32_t blkNumb
  */
 static int tlkmw_msc_diskWrite(uint8_t *pData, uint32_t blkOffs, uint32_t blkNumb)
 {
-    int ret = tlkmw_fs_diskio_write(pData,blkOffs,blkNumb);
+    int ret = tlkmw_fs_diskio_write(pData, blkOffs, blkNumb);
     return ret == 0 ? TLK_ENONE : -TLK_EFAIL;
 }
 
@@ -64,16 +64,16 @@ static uint32_t tlkmw_msc_diskGetBlkCount(void)
     return tlkmw_fs_diskio_getBlkCount();
 }
 
-static const tlkusb_msc_disk_t sTlkMwMscDisk = {
-	.isReady     = true, 
-	.hotPlug     = true, 
-    .blkSize     = 512,
-    .getBlkCount = tlkmw_msc_diskGetBlkCount,
-    .pVendorStr  = "TLK-DISK", //<=8
-	.pProductStr = "Telink Disk Demo", //<=16
-    .pVersionStr = "1.02", //<=4
-    .Read        = tlkmw_msc_diskRead,
-    .Write       = tlkmw_msc_diskWrite,
+static tlkusb_msc_disk_var_t   sTlkMwMscDiskVar = {0};
+static const tlkusb_msc_disk_t sTlkMwMscDisk    = {
+       .blkSize     = TLK_CFG_FS_SECTOR_SIZE,
+       .getBlkCount = tlkmw_msc_diskGetBlkCount,
+       .pVendorStr  = "TLK-DISK",         //<=8
+       .pProductStr = "Telink Disk Demo", //<=16
+       .pVersionStr = "1.02",             //<=4
+       .Read        = tlkmw_msc_diskRead,
+       .Write       = tlkmw_msc_diskWrite,
+       .pVar        = &sTlkMwMscDiskVar,
 };
 
 /**
@@ -83,9 +83,9 @@ static const tlkusb_msc_disk_t sTlkMwMscDisk = {
  */
 void tlkmw_msc_init(void)
 {
-	tlkusb_msc_appendDisk((tlkusb_msc_disk_t*)&sTlkMwMscDisk);
+    tlkusb_msc_appendDisk((tlkusb_msc_disk_t *)&sTlkMwMscDisk);
     tlksys_pm_regChn(TLKSYS_PM_CHN_MSC);
-    tlksys_pm_setChn(TLKSYS_PM_CHN_MSC,0,0);
+    tlksys_pm_setChn(TLKSYS_PM_CHN_MSC, 0, 0);
 }
 
 /**
@@ -95,11 +95,14 @@ void tlkmw_msc_init(void)
  */
 void tlkmw_msc_open(void)
 {
+#if TLK_CFG_USB_ENABLE
+    sTlkMwMscDiskVar.isReady = 1;
     tlkusb_hal_disable_eventMode();
-    tlksys_pm_setChn(TLKSYS_PM_CHN_MSC,0,1);
+    tlksys_pm_setChn(TLKSYS_PM_CHN_MSC, 0, 1);
     tlkusb_init(TLK_CFG_USB_MSC_INDEX, 0x124);
     tlkusb_open(TLK_CFG_USB_MSC_INDEX, TLKUSB_MODTYPE_MSC);
     tlkusb_hal_enable_eventMode();
+#endif
 }
 
 /**
@@ -109,9 +112,11 @@ void tlkmw_msc_open(void)
  */
 void tlkmw_msc_close(void)
 {
+#if TLK_CFG_USB_ENABLE
+    memset(&sTlkMwMscDiskVar, 0, sizeof(sTlkMwMscDiskVar));
     tlkusb_close(TLK_CFG_USB_MSC_INDEX);
-    tlkusb_hal_disable_eventMode();
-    tlksys_pm_setChn(TLKSYS_PM_CHN_MSC,0,0);
+    tlksys_pm_setChn(TLKSYS_PM_CHN_MSC, 0, 0);
+#endif
 }
 
 #endif

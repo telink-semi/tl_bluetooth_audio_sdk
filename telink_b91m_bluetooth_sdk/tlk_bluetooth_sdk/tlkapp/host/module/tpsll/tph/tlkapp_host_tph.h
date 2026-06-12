@@ -28,4 +28,4 @@
  * @param[in]   none.
  * @return      Returns a pointer to the TPH module.
  */
-TlkAppHostModule_t* tlkapp_host_tph_getModule(void);
+TlkAppHostModule_t *tlkapp_host_tph_getModule(void);

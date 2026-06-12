@@ -34,24 +34,24 @@
 #include "common/fifo.h"
 #if (HCI_TR_MODE == HCI_TR_H5)
 
-    /*!  H5 transport buffer config macro. */
-    #define HCI_H5_TX_BUF_SIZE MEM_SIZE_ALIGN4(HCI_H5_HEAD_LEN + HCI_TR_TX_BUF_SIZE + HCI_H5_CRC_LEN)
+/*!  H5 transport buffer config macro. */
+#define HCI_H5_TX_BUF_SIZE MEM_SIZE_ALIGN4(HCI_H5_HEAD_LEN + HCI_TR_TX_BUF_SIZE + HCI_H5_CRC_LEN)
 
 
-    /*! HCI H5 Packet Type. */
-    #define HCI_H5_PKT_TYPE_ACK       0
-    #define HCI_H5_PKT_TYPE_CMD       1
-    #define HCI_H5_PKT_TYPE_ACL       2
-    #define HCI_H5_PKT_TYPE_SCO       3
-    #define HCI_H5_PKT_TYPE_EVT       4
-    #define HCI_H5_PKT_TYPE_VENDOR    14
-    #define HCI_H5_PKT_TYPE_LINK_CTRL 15
+/*! HCI H5 Packet Type. */
+#define HCI_H5_PKT_TYPE_ACK       0
+#define HCI_H5_PKT_TYPE_CMD       1
+#define HCI_H5_PKT_TYPE_ACL       2
+#define HCI_H5_PKT_TYPE_SCO       3
+#define HCI_H5_PKT_TYPE_EVT       4
+#define HCI_H5_PKT_TYPE_VENDOR    14
+#define HCI_H5_PKT_TYPE_LINK_CTRL 15
 
-    /*! HCI H5 Link Control message. */
-    #define HCI_H5_MSG_SYNC       0x7E01
-    #define HCI_H5_MSG_SYNC_RSP   0x7D02
-    #define HCI_H5_MSG_CONFIG     0xFC03
-    #define HCI_H5_MSG_CONFIG_RSP 0x7B04
+/*! HCI H5 Link Control message. */
+#define HCI_H5_MSG_SYNC       0x7E01
+#define HCI_H5_MSG_SYNC_RSP   0x7D02
+#define HCI_H5_MSG_CONFIG     0xFC03
+#define HCI_H5_MSG_CONFIG_RSP 0x7B04
 
 /*! HCI H5 Transport Link State. */
 enum
@@ -82,39 +82,39 @@ typedef struct
     u16 payloadLen;   /*!< Payload length.               */
 } HciH5Head_t;
 
-    /*! H5 head handle macro. */
-    #define H5_HDR_SEQ(head)       ((u32)(head) & 0x07)
-    #define H5_HDR_ACK(head)       (((u32)(head) >> 3) & 0x07)
-    #define H5_HDR_CRC(head)       (((u32)(head) >> 6) & 0x01)
-    #define H5_HDR_RELIABLE(head)  (((u32)(head) >> 7) & 0x01)
-    #define H5_HDR_PKT_TYPE(head)  (((u32)(head) >> 8) & 0x0F)
-    #define H5_HDR_LEN(head)       (((u32)(head) >> 12) & 0x0FFF)
-    #define H5_HDR_CHECKSUM(head)  (((u32)(head) >> 24) & 0xFF)
+/*! H5 head handle macro. */
+#define H5_HDR_SEQ(head)       ((u32)(head) & 0x07)
+#define H5_HDR_ACK(head)       (((u32)(head) >> 3) & 0x07)
+#define H5_HDR_CRC(head)       (((u32)(head) >> 6) & 0x01)
+#define H5_HDR_RELIABLE(head)  (((u32)(head) >> 7) & 0x01)
+#define H5_HDR_PKT_TYPE(head)  (((u32)(head) >> 8) & 0x0F)
+#define H5_HDR_LEN(head)       (((u32)(head) >> 12) & 0x0FFF)
+#define H5_HDR_CHECKSUM(head)  (((u32)(head) >> 24) & 0xFF)
 
-    #define H5_SET_SEQ(hdr, seq)   ((hdr)[0] |= (seq))
-    #define H5_SET_ACK(hdr, ack)   ((hdr)[0] |= (ack) << 3)
-    #define H5_SET_RELIABLE(hdr)   ((hdr)[0] |= 1 << 7)
-    #define H5_SET_TYPE(hdr, type) ((hdr)[1] |= type)
-    #define H5_SET_LEN(hdr, len)   (((hdr)[1] |= ((len) & 0x0f) << 4), ((hdr)[2] |= (len) >> 4))
-
-
-    /*! OOF Flow Control. */
-    #define HCI_H5_OOF_FLW_CTRL_NONE 0
-    #define HCI_H5_OOF_FLW_CTRL_EN   1
-
-    /*! Level of Data Integrity Check. */
-    #define HCI_H5_DATA_INTEGRITY_LEVEL_NONE  0
-    #define HCI_H5_DATA_INTEGRITY_LEVEL_CRC16 1
-
-    /*! Level of Data Integrity Check. */
-    #define HCI_H5_VERSION_V1_0 0 /*!< HCI H5 version v1.0. */
+#define H5_SET_SEQ(hdr, seq)   ((hdr)[0] |= (seq))
+#define H5_SET_ACK(hdr, ack)   ((hdr)[0] |= (ack) << 3)
+#define H5_SET_RELIABLE(hdr)   ((hdr)[0] |= 1 << 7)
+#define H5_SET_TYPE(hdr, type) ((hdr)[1] |= type)
+#define H5_SET_LEN(hdr, len)   (((hdr)[1] |= ((len) & 0x0f) << 4), ((hdr)[2] |= (len) >> 4))
 
 
-    /*! HCI H5 Link Config selection. */
-    #define HCI_H5_SLIDING_WIN_SIZE     1 /*!< Sliding Window Size. */
-    #define HCI_H5_OOF_FLW_CTRL         HCI_H5_OOF_FLW_CTRL_NONE
-    #define HCI_H5_DATA_INTEGRITY_LEVEL HCI_H5_DATA_INTEGRITY_LEVEL_NONE
-    #define HCI_H5_VERSION              HCI_H5_VERSION_V1_0
+/*! OOF Flow Control. */
+#define HCI_H5_OOF_FLW_CTRL_NONE 0
+#define HCI_H5_OOF_FLW_CTRL_EN   1
+
+/*! Level of Data Integrity Check. */
+#define HCI_H5_DATA_INTEGRITY_LEVEL_NONE  0
+#define HCI_H5_DATA_INTEGRITY_LEVEL_CRC16 1
+
+/*! Level of Data Integrity Check. */
+#define HCI_H5_VERSION_V1_0 0 /*!< HCI H5 version v1.0. */
+
+
+/*! HCI H5 Link Config selection. */
+#define HCI_H5_SLIDING_WIN_SIZE     1 /*!< Sliding Window Size. */
+#define HCI_H5_OOF_FLW_CTRL         HCI_H5_OOF_FLW_CTRL_NONE
+#define HCI_H5_DATA_INTEGRITY_LEVEL HCI_H5_DATA_INTEGRITY_LEVEL_NONE
+#define HCI_H5_VERSION              HCI_H5_VERSION_V1_0
 
 /**
  * @brief : H5 protocol initialization.

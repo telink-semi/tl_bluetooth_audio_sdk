@@ -24,6 +24,7 @@
 #include "tl_common.h"
 #include "tlkapi/tlkapi.h"
 #include "stack/bt/host/btp/btp_stdio.h"
+#include "stack/bt/host/bth/bth_stdio.h"
 #include "tlkmw/tlkmw.h"
 #if (TLKBTP_CFG_HFPHF_ENABLE)
 
@@ -32,12 +33,6 @@
 
 static tlkmdi_hfphf_ctrl_t sTlkMdiBtHfpCtrl[TLKMDI_HFPHF_MAX_NUMBER];
 
-static int tlkmdi_hfphf_codecChangedEvt(uint8_t *pData, uint16_t dataLen);
-static int tlkmdi_hfphf_volumeChangedEvt(uint8_t *pData, uint16_t dataLen);
-static int tlkmdi_hfphf_statusChangedEvt(uint8_t *pData, uint16_t dataLen);
-static int tlkmdi_hfphf_callStatusChangedEvt(uint8_t *pData, uint16_t dataLen);
-static int tlkmdi_hfphf_numberInquiryEvt(uint8_t *pData, uint16_t dataLen);
-static int tlkmdi_hfphf_recvCmdCB(uint16_t aclHandle, uint8_t *pCmd, uint8_t cmdLen);
 static int tlkmdi_hfphf_unknownCmdCB(uint16_t aclHandle, uint8_t *pCmd, uint8_t cmdLen);
 
 BTP_EVT_REGISTER(BTP_EVTID_HFPHF_CODEC_CHANGED, tlkmdi_hfphf_codecChangedEvt);
@@ -65,7 +60,7 @@ int tlkmdi_bthfphf_init(void)
  * @param[in]   dataLen   - length of event data
  * @return      TLK_ENONE if success, otherwise error code
  */
-static int tlkmdi_hfphf_codecChangedEvt(uint8_t *pData, uint16_t dataLen)
+__attribute__((weak)) int tlkmdi_hfphf_codecChangedEvt(uint8_t *pData, uint16_t dataLen)
 {
     (void)dataLen;
     tlkmdi_hfphf_ctrl_t      *pItem = NULL;
@@ -88,7 +83,7 @@ static int tlkmdi_hfphf_codecChangedEvt(uint8_t *pData, uint16_t dataLen)
  * @param[in]   dataLen   - length of event data
  * @return      TLK_ENONE if success, otherwise error code
  */
-static int tlkmdi_hfphf_volumeChangedEvt(uint8_t *pData, uint16_t dataLen)
+__attribute__((weak)) int tlkmdi_hfphf_volumeChangedEvt(uint8_t *pData, uint16_t dataLen)
 {
     (void)dataLen;
     btp_hfpVolumeChangedEvt_t *pEvt = (btp_hfpVolumeChangedEvt_t *)pData;
@@ -120,19 +115,43 @@ static int tlkmdi_hfphf_volumeChangedEvt(uint8_t *pData, uint16_t dataLen)
     return TLK_ENONE;
 }
 
+static void tlkmdi_hfphf_timer(TlkApiTimerHandle_t timer, void *arg)
+{
+    (void)timer;
+    uint16_t             handle = (uint32_t)arg;
+    tlkmdi_hfphf_ctrl_t *pItem  = tlkmdi_hfphf_getItem(handle);
+    if (pItem == NULL) {
+        return;
+    }
+    if (pItem->ring_timer_cnt != 0) {
+        pItem->ring_timer_cnt--;
+        tlksys_timer_reStart(TLKSYS_TASKID_HOST, &pItem->timer);
+        return;
+    }
+    tlkmdi_btacl_item_t *pItem_t;
+    pItem_t = tlkmdi_btacl_getConnItem(handle);
+    if (pItem_t->state == TLK_STATE_CONNECT) {
+        tlksys_sendMsg(TLKSYS_TASKID_AUDIO, TLKSYS_AUD_MSGID_RING_PLAY, (uint8_t *)&handle, sizeof(handle));
+        pItem->ring_timer_cnt = 30;
+        tlksys_timer_reStart(TLKSYS_TASKID_HOST, &pItem->timer);
+    } else {
+        tlksys_timer_stop(TLKSYS_TASKID_HOST, &pItem->timer);
+    }
+}
+
 /**
  * @brief       This function handles HFP status changed event
  * @param[in]   pData     - pointer to event data
  * @param[in]   dataLen   - length of event data
  * @return      TLK_ENONE if success, otherwise error code
  */
-static int tlkmdi_hfphf_statusChangedEvt(uint8_t *pData, uint16_t dataLen)
+__attribute__((weak)) int tlkmdi_hfphf_statusChangedEvt(uint8_t *pData, uint16_t dataLen)
 {
     tlkmdi_hfphf_ctrl_t       *pItem;
     btp_hfpStatusChangedEvt_t *pEvt;
 
     pEvt = (btp_hfpStatusChangedEvt_t *)pData;
-    tlkapi_array(0xFFFFFFFF, "[TEST]", "statusChangedEvt:", pData, dataLen);
+    tlkapi_array(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "statusChangedEvt:", pData, dataLen);
     pItem = tlkmdi_hfphf_getItem(pEvt->handle);
     if (pItem == NULL) {
         pItem = tlkmdi_hfphf_getIdleItem();
@@ -147,10 +166,13 @@ static int tlkmdi_hfphf_statusChangedEvt(uint8_t *pData, uint16_t dataLen)
 
     if (pEvt->status == BTP_HFP_CALL_STATUS_ALART && pEvt->callDir == BTP_HFP_CALL_DIR_INCOMING) {
         tlkapi_trace(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "tlkmdi_hfphf_statusChangedEvt: ring coming");
-        uint8_t buffer[2];
-        buffer[0] = pItem->handle;
-        buffer[1] = pItem->handle >> 8;
-        tlksys_sendMsg(TLKSYS_TASKID_AUDIO, TLKSYS_AUD_MSGID_RING_PLAY, buffer, 2);
+    } else if (pEvt->status == BTP_HFP_CALL_STATUS_START && pEvt->callDir == BTP_HFP_CALL_DIR_INCOMING) {
+        tlkapi_trace(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "tlkmdi_hfphf_statusChangedEvt: incoming call");
+        tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &pItem->timer, 100 * 1000, 0, tlkmdi_hfphf_timer, (void *)(uint32_t)pEvt->handle);
+        tlksys_timer_start(TLKSYS_TASKID_HOST, &pItem->timer);
+        pItem->ring_timer_cnt = 10;
+    } else {
+        tlksys_timer_stop(TLKSYS_TASKID_HOST, &pItem->timer);
     }
 
 
@@ -163,16 +185,17 @@ static int tlkmdi_hfphf_statusChangedEvt(uint8_t *pData, uint16_t dataLen)
  * @param[in]   dataLen   - length of event data
  * @return      TLK_ENONE if success, otherwise error code
  */
-static int tlkmdi_hfphf_callStatusChangedEvt(uint8_t *pData, uint16_t dataLen)
+__attribute__((weak)) int tlkmdi_hfphf_callStatusChangedEvt(uint8_t *pData, uint16_t dataLen)
 {
     tlkmdi_hfphf_ctrl_t           *pItem;
     btp_hfpCallStatusChangedEvt_t *pEvt;
-    tlkapi_array(0xFFFFFFFF, "[TEST]", "callStatusChangedEvt:", pData, dataLen);
+    tlkapi_array(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "callStatusChangedEvt:", pData, dataLen);
     pEvt = (btp_hfpCallStatusChangedEvt_t *)pData;
     if (pEvt == NULL) {
         tlkapi_error(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "tlkmdi_hfphf_callStatusChangedEvt error param");
         return -TLK_EPARAM;
     }
+
 
     pItem = tlkmdi_hfphf_getItem(pEvt->handle);
     if (pItem == NULL) {
@@ -202,9 +225,10 @@ static int tlkmdi_hfphf_callStatusChangedEvt(uint8_t *pData, uint16_t dataLen)
  * @param[in]   dataLen   - length of event data
  * @return      TLK_ENONE if success, otherwise error code
  */
-static int tlkmdi_hfphf_numberInquiryEvt(uint8_t *pData, uint16_t dataLen)
+__attribute__((weak)) int tlkmdi_hfphf_numberInquiryEvt(uint8_t *pData, uint16_t dataLen)
 {
     (void)dataLen;
+    uint8_t                    status = 0;
     tlkmdi_hfphf_ctrl_t       *pItem;
     btp_hfpNumberInquiryEvt_t *pEvt;
     pEvt = (btp_hfpNumberInquiryEvt_t *)pData;
@@ -219,19 +243,42 @@ static int tlkmdi_hfphf_numberInquiryEvt(uint8_t *pData, uint16_t dataLen)
         return -TLK_ENOITEM;
     }
 
-    if (pEvt->numbLen == 0) {
+    if (pEvt->clcc_info == NULL || pEvt->clcc_info->numbLen == 0) {
         return -TLK_EPARAM;
     }
-    if (pEvt->numbLen > TLKMDI_HFPHF_NUMBER_MAX_LEN) {
-        pEvt->numbLen = TLKMDI_HFPHF_NUMBER_MAX_LEN;
+
+    if (pEvt->clcc_info->numbLen > TLKMDI_HFPHF_NUMBER_MAX_LEN) {
+        pEvt->clcc_info->numbLen = TLKMDI_HFPHF_NUMBER_MAX_LEN;
     }
 
-    tlkapi_trace(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "tlkmdi_hfphf_numberInquiryEvt: handle-%d,status-%d,callDir-%d,numbLen-%d, number-%s", pEvt->handle,
-                 pEvt->status, pEvt->callDir, pEvt->numbLen, pEvt->pNumber);
-    pItem->status  = pEvt->status;
-    pItem->handle  = pEvt->handle;
-    pItem->numbLen = pEvt->numbLen;
-    tmemcpy(pItem->number, pEvt->pNumber, pEvt->numbLen);
+    pItem->numbLen = pEvt->clcc_info->numbLen;
+    tmemcpy(pItem->number, pEvt->clcc_info->pNumber, pEvt->clcc_info->numbLen);
+
+    // if (pEvt->clcc_info->dir == 0x30) {
+    //     callDir = BTP_HFP_CALL_DIR_OUTGOING;
+    // } else if (pEvt->clcc_info->dir == 0x31) {
+    //     callDir = BTP_HFP_CALL_DIR_INCOMING;
+    // } else {
+    //     callDir = BTP_HFP_CALL_DIR_NONE;
+    // }
+
+    if (pEvt->clcc_info->status == BTP_HFP_CLCC_STATUS_DIALING || pEvt->clcc_info->status == BTP_HFP_CLCC_STATUS_INCOMING) {
+        status = BTP_HFP_CALL_STATUS_START;
+    } else if (pEvt->clcc_info->status == BTP_HFP_CLCC_STATUS_ALERTING) {
+        status = BTP_HFP_CALL_STATUS_ALART;
+    } else if (pEvt->clcc_info->status == BTP_HFP_CLCC_STATUS_ACTIVE) {
+        status = BTP_HFP_CALL_STATUS_ACTIVE;
+    } else if (pEvt->clcc_info->status == BTP_HFP_CLCC_STATUS_WAITING) {
+        status = BTP_HFP_CALL_STATUS_WAITING;
+    } else if (pEvt->clcc_info->status == BTP_HFP_CLCC_STATUS_HELD || pEvt->clcc_info->status == BTP_HFP_CLCC_STATUS_CALLHELD) {
+        status = BTP_HFP_CALL_STATUS_PAUSED;
+    }
+
+    pItem->status = status;
+    pItem->handle = pEvt->handle;
+
+    tlkapi_trace(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "tlkmdi_hfphf_numberInquiryEvt: handle-%d,status-%d,numbLen-%d, number-%s", pItem->handle, pItem->status,
+                 pItem->numbLen, pItem->number);
 
     return TLK_ENONE;
 }
@@ -243,11 +290,11 @@ static int tlkmdi_hfphf_numberInquiryEvt(uint8_t *pData, uint16_t dataLen)
  * @param[in]   cmdLen      - length of command data
  * @return      TLK_EFAIL
  */
-static int tlkmdi_hfphf_recvCmdCB(uint16_t aclHandle, uint8_t *pCmd, uint8_t cmdLen)
+__attribute__((weak)) int tlkmdi_hfphf_recvCmdCB(uint16_t aclHandle, uint8_t *pCmd, uint8_t cmdLen)
 {
     (void)aclHandle;
     // When the HFP connection is complete the user do something.
-    tlkapi_array(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "tlkmdi_bthfphf_recvCmdCB: ", pCmd, cmdLen);
+    tlkapi_array(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "tlkmdi_hfphf_recvCmdCB: ", pCmd, cmdLen);
 
     return TLK_EFAIL;
 }
@@ -278,6 +325,22 @@ tlkmdi_hfphf_ctrl_t *tlkmdi_hfphf_getItem(uint16_t handle)
     uint8_t index;
     for (index = 0; index < TLKMDI_HFPHF_MAX_NUMBER; index++) {
         if (sTlkMdiBtHfpCtrl[index].handle != 0 && sTlkMdiBtHfpCtrl[index].handle == handle) {
+            break;
+        }
+    }
+
+    if (index == TLKMDI_HFPHF_MAX_NUMBER) {
+        return NULL;
+    } else {
+        return &sTlkMdiBtHfpCtrl[index];
+    }
+}
+
+tlkmdi_hfphf_ctrl_t *tlkmdi_hfphf_getItemExt(uint16_t handle)
+{
+    uint8_t index;
+    for (index = 0; index < TLKMDI_HFPHF_MAX_NUMBER; index++) {
+        if (sTlkMdiBtHfpCtrl[index].handle != 0 && sTlkMdiBtHfpCtrl[index].handle != handle) {
             break;
         }
     }
@@ -408,6 +471,7 @@ void tlkmdi_bthfphf_reset(uint16_t aclHandle)
         tlkapi_error(TLKMDI_BTHFPHF_DBG_FLAG, TLKMDI_BTHFPHF_DBG_SIGN, "tlkmdi_bthfphf_reset - failure: not exit handle: 0x%x", aclHandle);
         return;
     }
+    tlksys_timer_destroy(TLKSYS_TASKID_HOST, &pItem->timer);
     STATIC_ASSERT_THIS_FILE(IS_4BYTE_ALIGN(sizeof(tlkmdi_hfphf_ctrl_t)));
     memset(&sTlkMdiBtHfpCtrl, 0, sizeof(tlkmdi_hfphf_ctrl_t));
 }

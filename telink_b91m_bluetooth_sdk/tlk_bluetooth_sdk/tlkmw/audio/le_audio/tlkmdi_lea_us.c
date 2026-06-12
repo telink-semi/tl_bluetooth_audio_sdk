@@ -37,14 +37,24 @@
 #include "stack/ble/ble.h"
 #if (TLK_CFG_TPSLL_HCI_ENABLE)
 #include "stack/tpsll/host/tpsll_hcicmd.h"
-#include "stack/tpsll/tpdt/tpdt_host_interface.h"
+#include "stack/tpsll/controller/tpdt/tpdt_host_interface.h"
 #endif
+
+#if TLKADU_MIDBUF_ENABLE
+#include "vendor/GameSir_Xiaoji/audio_mw/tlkaud_audio_mw.h"
+#endif
+
 // tlkdrv_codec_get_sin_data(pcm, samples); test sin data.
-#if (TLK_MW_LEA_US_ENABLE)
+#if (TLK_MW_LE_AUDIO_ENABLE && TLK_MW_LEA_US_ENABLE)
 #define TLKMDI_LEA_US_DBG_FLAG     ((TLK_MAJOR_DBGID_MDI_AUDIO << 24) | (TLK_MINOR_DBGID_MDI_AUD_LEA_US << 16) | TLK_DEBUG_DBG_FLAG_ALL)
 #define TLKMDI_LEA_US_DBG_SIGN     "[US]"
 
 #define LEA_US_INVALID_CONN_HANDLE 0xFFFF
+
+#if TLKAUD_LEA_PLAY_FLOW_CTRL_EN
+extern uint32_t lea_tmr_ideal_tick;
+extern bool     render_sync_flag;
+#endif
 
 enum
 {
@@ -82,6 +92,16 @@ static struct lea_us_audio_state
 } s_lea_us_audio_state;
 
 static struct lea_us_audio_common_parameter s_lea_us_audio_param;
+
+#if TLKADU_MIDBUF_ENABLE
+extern void tlkaud_mainloop_thread(void);
+extern void tlkaud_timer_thread(void);
+extern void tlkaud_high_priority_thread(void);
+extern void tlkaud_fifo_irq_handler(void);
+extern void tlkaud_fifo_config(uint16_t byte_num);
+extern void tlkaud_fifo_irq_disable(void);
+extern void tlkaud_codec_task_init(void);
+#endif
 
 static void tlkmdi_lea_us_init_audio_state(void)
 {
@@ -318,6 +338,7 @@ static void tlkmdi_bap_uc_event_callback(uint16_t conn_handle, enum ble_bap_us_e
         uint16_t                                   iso_handle = p_event->cis_handle;
         tlkmdi_lea_us_release_input_codec_config(conn_handle, iso_handle);
         if (tlkmdi_lea_us_check_active_conn_handle(conn_handle)) {
+            lea_close_input();
             lea_release_input_config(iso_handle);
         }
     } break;
@@ -497,7 +518,12 @@ static bool tlkmdi_lea_us_switch(uint16_t handle, uint8_t status)
 #endif
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, le_audio_timer_irq);
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, le_audio_main_loop);
-
+#if TLKAUD_LEA_PLAY_FLOW_CTRL_EN
+        lea_tmr_ideal_tick += clock_time() + LEA_TRANS_PLAY_DATA_INTVAL * SYSTEM_TIMER_TICK_1US;
+        tlkmdi_audio_task_set_next_irq(LEA_TRANS_PLAY_DATA_INTVAL);
+        tlkmdi_midbuf_sync_spk(TLKADU_MIDBUF_SPK_LEN / 2);
+        tlkaud_midbuf_mute_spk();
+#endif
     } else {
         struct lea_us_audio_state *p_lea_us_audio_state = tlkmdi_lea_us_get_audio_state(handle);
 
@@ -514,6 +540,7 @@ static bool tlkmdi_lea_us_switch(uint16_t handle, uint8_t status)
 #if (TLK_MW_LEA_US_VOICE_ENABLE)
         if (p_lea_us_audio_state->input_audio_index > 0) {
             const struct lea_config *input_audio_init = &p_lea_us_audio_state->input_audio_init[0];
+            lea_close_input();
             lea_release_input_config(input_audio_init->iso_handle);
             if (p_lea_us_audio_state->input_audio_index > 1) {
                 lea_release_input_config(p_lea_us_audio_state->input_audio_init[1].iso_handle);
@@ -528,6 +555,14 @@ static bool tlkmdi_lea_us_switch(uint16_t handle, uint8_t status)
             }
         }
 
+#if TLKADU_MIDBUF_ENABLE
+        tlkaud_codec_task_deinit();
+        tlkaud_codec_task_clear_mode(PLAYER_MODE_LEA);
+#endif
+#if TLKAUD_LEA_PLAY_FLOW_CTRL_EN
+        render_sync_flag = false;
+        tlkmdi_audio_stop_timer();
+#endif
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_TIMER, NULL);
         tlkmdi_audio_register_cb(TLKMDI_AUDIO_CB_MAIN, NULL);
         if (status == TLK_STATE_CLOSED) {

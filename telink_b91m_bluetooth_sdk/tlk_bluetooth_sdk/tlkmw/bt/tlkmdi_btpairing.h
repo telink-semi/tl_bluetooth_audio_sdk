@@ -30,7 +30,15 @@ typedef enum
     TLKMDI_BTPAIRING_CB_STATE_CANCEL,
 } TLKMDI_BTPAIRING_CB_STATE_ENUM;
 
-typedef void (*TlkMdiBtPairingCB)(uint8_t state);//state refer to TLKMDI_BTPAIRING_CB_STATE_ENUM
+typedef enum
+{
+    TLKMDI_BTPAIRING_MODE_CLEAN_LINK = 0, //disconnect all bt links
+    TLKMDI_BTPAIRING_MODE_RETAIN_LINK,    //retain connected bt links
+    TLKMDI_BTPAIRING_MODE_NUM,            //just number,can't use this
+    TLKMDI_BTPAIRING_MODE_DEFAULT = TLKMDI_BTPAIRING_MODE_CLEAN_LINK,
+} TLKMDI_BTPAIRING_MODE_ENUM;
+
+typedef void (*TlkMdiBtPairingCB)(uint8_t state); //state refer to TLKMDI_BTPAIRING_CB_STATE_ENUM
 
 /**
  * @brief  Register callback function for bt pairing.
@@ -73,3 +81,19 @@ int tlkmdi_btParing_start(void);
  * @note Not thread safe,must call in bt host's thread.
  */
 int tlkmdi_btParing_stop(void);
+
+/**
+ * @brief  Set bt pairing mode.
+ *
+ * @param[in] mode:refer to TLKMDI_BTPAIRING_MODE_ENUM
+ *
+ * @return none.
+ */
+void tlkmdi_btPairing_setMode(uint8_t mode);
+
+/**
+ * @brief     Provides a hook function to operate connected handles when pairing mode is retain.
+ * @param[in] handle: acl handle
+ * @returns   none.
+ */
+uint8_t tlkmdi_btPairing_retainLinkHook(uint16_t handle);

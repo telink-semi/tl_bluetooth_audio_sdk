@@ -36,7 +36,7 @@ uint16_t tlkmdi_bt_music_is_enabled(void);
  * @param[in]  none
  * @returns TLK_ENONE is success,other value is false
  */
-int     tlkmdi_bt_music_init(void);
+int tlkmdi_bt_music_init(void);
 
 /**
  * @brief  start bt music
@@ -44,28 +44,28 @@ int     tlkmdi_bt_music_init(void);
  * @param[in]  param  - start parameter
  * @returns TLK_ENONE is success,other value is false
  */
-int     tlkmdi_bt_music_start(uint16_t handle, uint32_t param);
+int tlkmdi_bt_music_start(uint16_t handle, uint32_t param);
 
 /**
  * @brief  close bt music
  * @param[in]  handle - connection handle
  * @returns TLK_ENONE is success,other value is false
  */
-int     tlkmdi_bt_music_close(uint16_t handle);
+int tlkmdi_bt_music_close(uint16_t handle);
 
 /**
  * @brief  play next song
  * @param[in]  none
  * @returns TLK_ENONE is success,other value is false
  */
-bool    tlkmdi_bt_music_next(void);
+bool tlkmdi_bt_music_next(void);
 
 /**
  * @brief  play previous song
  * @param[in]  none
  * @returns TLK_ENONE is success,other value is false
  */
-bool    tlkmdi_bt_music_previous(void);
+bool tlkmdi_bt_music_previous(void);
 
 /**
  * @brief  switch bt music state
@@ -73,14 +73,14 @@ bool    tlkmdi_bt_music_previous(void);
  * @param[in]  status - switch status
  * @returns operation result
  */
-bool    tlkmdi_bt_music_switch(uint16_t handle, uint8_t status);
+bool tlkmdi_bt_music_switch(uint16_t handle, uint8_t status);
 
 /**
  * @brief  check if bt music is busy
  * @param[in]  none
  * @returns busy status
  */
-bool    tlkmdi_bt_music_is_busy(void);
+bool tlkmdi_bt_music_is_busy(void);
 
 /**
  * @brief  operate bt music
@@ -90,7 +90,7 @@ bool    tlkmdi_bt_music_is_busy(void);
  * @param[in]  dataLen - data length
  * @returns operation result
  */
-bool    tlkmdi_bt_music_operate(uint16_t handle, uint8_t opcode, uint8_t *pdata, uint16_t dataLen);
+bool tlkmdi_bt_music_operate(uint16_t handle, uint8_t opcode, uint8_t *pdata, uint16_t dataLen);
 
 /**
  * @brief  get avrcp volume function
@@ -98,21 +98,5 @@ bool    tlkmdi_bt_music_operate(uint16_t handle, uint8_t opcode, uint8_t *pdata,
  * @returns volume value
  */
 uint8_t bt_audio_get_avrcp_vol_func(uint8_t step);
-
-#if TLKALG_ASRC_441TO48_16BIT_TEMP_ENABLE
-/**
- * @brief  initialize 441 to 48 conversion
- * @param[in]  none
- * @returns none
- */
-void bt_music_441to48_init(void);
-
-/**
- * @brief  deinitialize 441 to 48 conversion
- * @param[in]  none
- * @returns none
- */
-void bt_music_441to48_deinit(void);
-#endif
 
 #endif // TLKMDI_BT_MUSIC_H

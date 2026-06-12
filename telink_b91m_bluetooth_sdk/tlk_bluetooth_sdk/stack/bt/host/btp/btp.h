@@ -32,7 +32,7 @@
 int  btp_init(void);
 void btp_deinit(void);
 
-void   btp_destroy(uint16_t aclHandle);
+void btp_destroy(uint16_t aclHandle);
 
 int btp_needMemLen(void);
 

@@ -276,4 +276,13 @@ ble_sts_t blc_hci_readSuggestedDefaultTxDataLength(u8 *tx, u8 *txtime);
 ble_sts_t blc_hci_writeSuggestedDefaultTxDataLength(u16 tx, u16 txtime);
 ble_sts_t blc_hci_readMaximumDataLength(hci_le_readMaxDataLengthCmd_retParam_t *para);
 
+/**
+ * @brief      get current connection channel map
+ * @param[in]  connHandle - connect handle
+ * @param[in]  returnChannelMap - current channel map
+ * @return     status, 0x00:  succeed
+ * 			           other: failed
+ */
+ble_sts_t blc_hci_le_readChannelMap(u16 connHandle, u8 *returnChannelMap);
+
 #endif /* ACL_CONN_H_ */

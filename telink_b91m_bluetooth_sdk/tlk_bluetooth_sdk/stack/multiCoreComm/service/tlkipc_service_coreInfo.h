@@ -28,4 +28,3 @@
 #pragma once
 
 int tlkipc_service_coreInfo_sync(void);
-

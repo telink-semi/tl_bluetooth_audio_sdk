@@ -40,6 +40,7 @@ struct ble_host_gap_big_sync_create_param
 /** < Structure for BLE GAP Layer report BIG Info */
 struct ble_host_gap_big_info
 {
+    uint16_t pa_sync_handle;
     uint8_t  bis_num;
     uint8_t  nse;
     uint16_t iso_interval; /** < unit: 1.25ms */

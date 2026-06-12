@@ -51,12 +51,12 @@ static const tlk_debug_list_t scTlkDebugBthInfo = {true,                    //  
                                                    "BT-Host",               //  pListName
                                                    {
                                                        {TLK_MINOR_DBGID_BTH, true, false, TLK_DEBUG_DBG_FLAG_ALL, "[BTH]"},
-                                                       {TLK_MINOR_DBGID_BTH_ACL, true, false, TLK_DEBUG_DBG_FLAG_ALL, "[ACL]"},
+                                                       {TLK_MINOR_DBGID_BTH_ACL, false, false, TLK_DEBUG_DBG_FLAG_ALL, "[ACL]"},
                                                        {TLK_MINOR_DBGID_BTH_SCO, true, false, TLK_DEBUG_DBG_FLAG_ALL, "[SCO]"},
-                                                       {TLK_MINOR_DBGID_BTH_CMD, true, false, TLK_DEBUG_DBG_FLAG_ALL, "[CMD]"},
-                                                       {TLK_MINOR_DBGID_BTH_EVT, true, false, TLK_DEBUG_DBG_FLAG_ALL, "[EVT]"},
-                                                       {TLK_MINOR_DBGID_BTH_L2C, true, false, TLK_DEBUG_DBG_FLAG_ALL, "[L2C]"},
-                                                       {TLK_MINOR_DBGID_BTH_SIG, true, false, TLK_DEBUG_DBG_FLAG_ALL, "[SIG]"},
+                                                       {TLK_MINOR_DBGID_BTH_CMD, false, false, TLK_DEBUG_DBG_FLAG_ALL, "[CMD]"},
+                                                       {TLK_MINOR_DBGID_BTH_EVT, false, false, TLK_DEBUG_DBG_FLAG_ALL, "[EVT]"},
+                                                       {TLK_MINOR_DBGID_BTH_L2C, false, false, TLK_DEBUG_DBG_FLAG_ALL, "[L2C]"},
+                                                       {TLK_MINOR_DBGID_BTH_SIG, false, false, TLK_DEBUG_DBG_FLAG_ALL, "[SIG]"},
                                                    }};
 static const tlk_debug_list_t scTlkDebugBtpInfo = {
     true,                    //  logIsEn
@@ -145,7 +145,7 @@ static const tlk_debug_list_t *scTlkDebugInfo[TLK_MAJOR_DBGID_MAX] = {
     &scTlkDebugMdiBtInfo,  // TLK_MAJOR_DBGID_MDI_BT
 };
 
-static unsigned long sTlkDebugLogMask[TLK_MAJOR_DBGID_MAX];
+static unsigned long sTlkDbgLogMask[TLK_MAJOR_DBGID_MAX];
 
 void tlk_debug_init(void)
 {
@@ -157,10 +157,10 @@ void tlk_debug_logLoad(void)
     unsigned int idxI;
     unsigned int idxJ;
     for (idxI = 0; idxI < TLK_MAJOR_DBGID_MAX; idxI++) {
-        sTlkDebugLogMask[idxI] = 0;
+        sTlkDbgLogMask[idxI] = 0;
         for (idxJ = 0; idxJ < 24; idxJ++) {
             if (scTlkDebugInfo[idxI] != NULL && idxJ < scTlkDebugInfo[idxI]->unitCnt && scTlkDebugInfo[idxI]->logIsEn && scTlkDebugInfo[idxI]->unit[idxJ].logIsEn) {
-                sTlkDebugLogMask[idxI] |= (1 << idxJ);
+                sTlkDbgLogMask[idxI] |= (1 << idxJ);
             }
         }
     }
@@ -173,18 +173,18 @@ _attribute_noinline_ bool tlk_debug_logIsEnable(unsigned int flags, unsigned int
     if (flags == 0xFFFFFFFF) {
         return true;
     }
-    if ((flags & logFlag) == 0 || majorID >= TLK_MAJOR_DBGID_MAX || minorID >= 32 || (sTlkDebugLogMask[majorID] & (1 << minorID)) == 0 || scTlkDebugInfo[majorID] == NULL ||
+    if ((flags & logFlag) == 0 || majorID >= TLK_MAJOR_DBGID_MAX || minorID >= 32 || (sTlkDbgLogMask[majorID] & (1 << minorID)) == 0 || scTlkDebugInfo[majorID] == NULL ||
         (scTlkDebugInfo[majorID]->logFlag & logFlag) == 0 || (scTlkDebugInfo[majorID]->unit[minorID].logFlag & logFlag) == 0) {
         return false;
     }
     return true;
 }
 
-_attribute_ram_code_sec_noinline_ char *tlk_debug_getDbgSign(unsigned int flags)
+_attribute_noinline_ char *tlk_debug_getDbgSign(unsigned int flags)
 {
     unsigned char majorID = (flags >> 24);
     unsigned char minorID = (flags >> 16) & 0xFF;
-    if (majorID >= TLK_MAJOR_DBGID_MAX || scTlkDebugInfo[majorID] == NULL || minorID >= 24 || (sTlkDebugLogMask[majorID] & (1 << minorID)) == 0) {
+    if (majorID >= TLK_MAJOR_DBGID_MAX || scTlkDebugInfo[majorID] == NULL || minorID >= 32 || (sTlkDbgLogMask[majorID] & (1 << minorID)) == 0) {
         return NULL;
     }
     return (char *)scTlkDebugInfo[majorID]->unit[minorID].pItemName;

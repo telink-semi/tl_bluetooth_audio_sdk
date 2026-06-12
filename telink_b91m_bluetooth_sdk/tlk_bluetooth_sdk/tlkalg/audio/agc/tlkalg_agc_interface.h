@@ -26,6 +26,13 @@
 
 #include "tlka_agc_api.h"
 
+#define TLKALG_AGC_16K_10MS 1
+#define TLKALG_AGC_48K_5MS  2
+
+#ifndef TLKALG_AGC_TYPE
+#define TLKALG_AGC_TYPE TLKALG_AGC_16K_10MS
+#endif
+
 extern AGC_Param agc_para;
 
 /**

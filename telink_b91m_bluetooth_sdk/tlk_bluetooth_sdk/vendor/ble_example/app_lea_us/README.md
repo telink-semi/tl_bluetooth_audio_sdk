@@ -27,7 +27,7 @@
 - **设备参数配置**
    - Headset模式参数配置：
      ```c
-     static struct lea_us_headset_param s_le_headset_param = {
+     static struct tlk_mw_lea_cap_headset_param s_le_headset_param = {
          .device_name = "app_lea_us_headset",  // 设备广播名称
          .interval = 50,  // 扩展广播间隔（毫秒）
          .volume = 150,  // 初始音量（0~255）
@@ -51,13 +51,13 @@
       - 耳机通过flash中的特定值来确定自身是左耳机还是右耳机
       - 需要在flash中添加相应的标记
       - 左耳标识：0x20，右耳标识：0x21
-      - Flash地址：2M Flash - 0x1D6000，8M Flash - 0x7D6000
+      - Flash地址：最后1M的F8000位置，如2M flash则在0x1F8000，8M flash在0x7F8000
 
    - **SIRK密钥配对**：
       - 一对耳机需要共用一个16字节的 SIRK（Set Identity Resolving Key）
       - 相同的 SIRK 标识一对耳机
       - 手机只需与其中一个耳机配对，就能自动连接到另一个耳机
-      - Flash地址：2M Flash - 0x1D6010，8M Flash - 0x7D6010
+      - Flash地址：Flash地址：最后1M的F8010位置，如2M flash则在0x1F8010，8M flash在0x7F8010
 
    - **注意**: SDK目前默认配置，左耳是主耳，右耳是副耳，主耳能被手机扫描连接，主耳被手机配对连接后，手机会自动连接副耳。第一次配对时，必须要同时完成左耳和右耳的配对，才能保证TWS模式正常工作。如果用户只配对了左耳并开始音乐播放，手机不能连接副耳并播放音乐。
 

@@ -163,3 +163,5 @@ int ble_host_gap_pa_sync_cancel_past(uint16_t acl_conn_handle);
  *   @return true if the handle is valid, otherwise false.
  */
 bool ble_host_gap_pa_sync_is_valid_handle(uint16_t sync_handle);
+
+int ble_host_gap_pa_sync_past(uint16_t acl_conn_handle, uint16_t service_data, uint16_t sync_handle);

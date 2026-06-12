@@ -26,6 +26,7 @@
 #include "tlkmw/tlkmw.h"
 #include "tlkmw_test_mode.h"
 #include "tlkmw/btble/tlkmdi_btble_btsnoop.h"
+#include "tlkmw/btble/tlkmw_btble_key_derivation.h"
 #include "tlkmw/dualcore/tlkmw_dualcore_boot.h"
 
 #if (MCU_CORE_TYPE == CHIP_TYPE_TL751X)
@@ -37,9 +38,9 @@
 #elif (MCU_CORE_TYPE == CHIP_TYPE_TL322X)
 #define N22_IRAM_ADDR 0x50000000
 #define N22_DRAM_ADDR 0x50080000
-#elif (MCU_CORE_TYPE == CHIP_TYPE_TL752X)//TODO
-#define N22_IRAM_ADDR 0x50000000
-#define N22_DRAM_ADDR 0x50080000
+#elif (MCU_CORE_TYPE == CHIP_TYPE_TL752X) //TODO
+#define N22_IRAM_ADDR         0x50000000
+#define N22_DRAM_ADDR         0x50080000
 #define D25F_NO_CACHE_RAM_BIT 0x00000000
 #define MCU_FLASH_ADDR_OFFSET 0x10000000
 #endif
@@ -50,6 +51,9 @@
 #define MCU_FLASH_ADDR_OFFSET 0x20000000
 #endif
 
+#ifndef N22_SAVE_ADDR_OFFSET
+#define N22_SAVE_ADDR_OFFSET 0x100000
+#endif
 
 /**
  * @brief       This function gets the N22 flash address.
@@ -59,13 +63,12 @@
 static uint32_t tlkmw_host_getN22FlashAddr(void)
 {
     uint32_t N22_Addr_from_flash = 0x00;
-    N22_Addr_from_flash = tlkmw_getN22StartUpAddrFromFlash();
-    if(N22_Addr_from_flash){
+    N22_Addr_from_flash          = tlkmw_getN22StartUpAddrFromFlash();
+    if (N22_Addr_from_flash) {
         return N22_Addr_from_flash;
-    }else{
-        return MCU_FLASH_ADDR_OFFSET + 0x100000;
+    } else {
+        return MCU_FLASH_ADDR_OFFSET + N22_SAVE_ADDR_OFFSET;
     }
-   
 }
 
 /**
@@ -75,11 +78,11 @@ static uint32_t tlkmw_host_getN22FlashAddr(void)
  */
 static void tlkmw_host_startN22(void)
 {
-    (void) tlkmw_host_getN22FlashAddr;
+    (void)tlkmw_host_getN22FlashAddr;
 #if (MCU_DUAL_CORE_ENABLE)
     sys_n22_init(N22_IRAM_ADDR);
 
-    uint32_t addr = tlkmw_host_getN22FlashAddr();
+    uint32_t addr              = tlkmw_host_getN22FlashAddr();
     uint32_t n22_ilm_bin_size  = REG_ADDR32(addr + 0x08);
     uint32_t n22_dlm_bin_size  = REG_ADDR32(addr + 0x0c);
     uint32_t n22_dlm_lma_start = REG_ADDR32(addr + 0x10) + addr;
@@ -88,11 +91,11 @@ static void tlkmw_host_startN22(void)
     tlkmw_dualcore_boot_cfg_t cfg = {
         .iram_dst_addr = N22_IRAM_ADDR,
         .iram_src_addr = addr,
-        .iram_size = n22_ilm_bin_size,
+        .iram_size     = n22_ilm_bin_size,
 
         .dram_dst_addr = N22_DRAM_ADDR | n22_dlm_vma_start,
         .dram_src_addr = n22_dlm_lma_start,
-        .dram_size = n22_dlm_bin_size,
+        .dram_size     = n22_dlm_bin_size,
 
         .no_cache_bit = D25F_NO_CACHE_RAM_BIT,
     };
@@ -100,11 +103,11 @@ static void tlkmw_host_startN22(void)
 
     sys_n22_start();
     int ret = tlk_multi_core_communication_init();
-    if(ret != TLK_ENONE){
+    if (ret != TLK_ENONE) {
+        while (1);
         tlk_printf("[ERROR]boot controller core fail,need check");
         return;
     }
-    tlkmw_pm_enableControllerCoreSleepCheck(1);
 #endif
 }
 
@@ -116,10 +119,9 @@ static void tlkmw_host_startN22(void)
 static void tlkmw_host_closeN22(void)
 {
 #if (MCU_DUAL_CORE_ENABLE)
-#if (!MCU_CORE_TL752X_TEMP)//TODO
+#if (!MCU_CORE_TL752X_TEMP) //TODO
     pm_set_dig_module_power_switch(FLD_PD_ZB_EN, PM_POWER_DOWN);
 #endif
-    tlkmw_pm_enableControllerCoreSleepCheck(0);
 #endif
 }
 
@@ -133,7 +135,6 @@ void tlkmw_host_resetController(void)
     tlkmw_host_startN22();
 }
 
-
 /**
  * @brief       This function initializes the host module.
  * @param[in]   none.
@@ -141,11 +142,13 @@ void tlkmw_host_resetController(void)
  */
 void tlkmw_host_init(void)
 {
+    tlkmw_host_antennaInitHook();
     tlkmw_test_mode_emi_check();
     tlkmw_host_resetController();
     tlkmw_test_mode_bqb_check();
-    
+
     bluetooth_host_snoop_initial();
+    tlkmw_btble_key_derivation_init(TLK_STK_BTBLE_CTKD);
 }
 
 /**
@@ -158,6 +161,17 @@ void tlkmw_host_closeController(void)
     tlkmw_host_closeN22();
 }
 
+/**
+ * @brief  Antenna initialization weak hook.
+ * This function is a weak symbol that can be overridden by the application.
+ * By default no antenna-specific setup is required; override it when your
+ * board needs special antenna configuration (e.g. RF switch, external PA/LNA,
+ * antenna diversity, matching network tuning).
+ * 
+ * @param[in]   none.
+ * @return      none.
+ */
+__attribute__((weak)) void tlkmw_host_antennaInitHook(void) {}
 
 /**
  * @brief       This function checks if C2H is pending.
@@ -168,6 +182,3 @@ __attribute__((weak)) bool tlkmw_host_isC2hPending(void)
 {
     return false;
 }
-
-
-

@@ -162,6 +162,8 @@ DRESULT disk_ioctl (
         
         case GET_SECTOR_SIZE:
             //  This command is required only if FF_MAX_SS > FF_MIN_SS.
+            *((DWORD*)(buff)) = tlkfs_diskio_getDiskInfo().sector_size;
+            r = RES_OK;
             break;
             
         case GET_BLOCK_SIZE:

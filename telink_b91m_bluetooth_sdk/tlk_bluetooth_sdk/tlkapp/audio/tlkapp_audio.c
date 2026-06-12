@@ -133,13 +133,13 @@ static int tlkapp_audio_input(uint16_t msgID, uint8_t *pData, uint16_t dataLen)
  */
 const tlksys_task_cfg_t *tlkapp_audio_getTaskCfg(void)
 {
-    _attribute_os_heap_sec_ static uint8_t sTlkAppAudioTaskBuffer[TLKAPP_AUDIO_TASK_STASK_SIZE];
+    _attribute_os_heap_sec_ __attribute__((aligned(4))) static uint8_t sTlkAppAudioTaskBuffer[TLKAPP_AUDIO_TASK_STASK_SIZE + TLKSYS_TASK_EXTRA_STATIC_BUFFER_SIZE];
     (void)sTlkAppAudioTaskBuffer;
     static const tlksys_task_cfg_t sTlkAppAudioTask = {
         .Init      = tlkapp_audio_init,
         .Input     = tlkapp_audio_input,
         .priority  = TLKSYS_TASK_AUDIO_PRIORITY,
-        .stackSize = TLKAPP_AUDIO_TASK_STASK_SIZE,
+        .stackSize = TLKAPP_AUDIO_TASK_STASK_SIZE + TLKSYS_TASK_EXTRA_STATIC_BUFFER_SIZE, //do not use sizeof(sTlkAppSystemTaskBuffer)
         .pTaskName = "AUDIO",
 #if TLK_CFG_RTOS_ENABLE
         .pTaskStaticBuffer = &sTlkAppAudioTaskBuffer,

@@ -23,35 +23,35 @@
  *******************************************************************************************************/
 #pragma once
 
-typedef struct 
+typedef struct
 {
     uint8_t  port;
-    uint8_t  txDma;  //0 means no use
-    uint8_t  rxDma;  //0 means no use
+    uint8_t  txDma; //0 means no use
+    uint8_t  rxDma; //0 means no use
     uint8_t  futureUse;
     uint16_t txPin; //0 means no use
     uint16_t rxPin; //0 means no use
     uint32_t baudRate;
-	#if (MCU_CORE_TL752X_TEMP)
+#if (MCU_CORE_TL752X_TEMP)
     uart_handle_t *pUartHandle;
     dmac_handle_t *pRxDmaHandle;
     dmac_handle_t *pTxDmaHandle;
-	#endif
-}tlkhal_uart_cfg_t;
+#endif
+} tlkhal_uart_cfg_t;
 
 /**
  * @brief  Open and configure UART
  * @param[in] pCfg : Pointer to UART configuration structure
  * @returns  None.
  */
-void tlkhal_uart_open(const tlkhal_uart_cfg_t * const pCfg);
+void tlkhal_uart_open(const tlkhal_uart_cfg_t *const pCfg);
 
 /**
  * @brief  Close UART
  * @param[in] pCfg : Pointer to UART configuration structure
  * @returns  None.
  */
-void tlkhal_uart_close(const tlkhal_uart_cfg_t * const pCfg);
+void tlkhal_uart_close(const tlkhal_uart_cfg_t *const pCfg);
 
 /**
  * @brief  Clear UART TX done status
@@ -59,7 +59,7 @@ void tlkhal_uart_close(const tlkhal_uart_cfg_t * const pCfg);
  * @param[in] futureUse : Reserved for future use
  * @returns  None.
  */
-void tlkhal_uart_clrTxDoneStatus(uint8_t port,void *futureUse);
+void tlkhal_uart_clrTxDoneStatus(uint8_t port, void *futureUse);
 
 /**
  * @brief  Get UART TX done status
@@ -67,7 +67,7 @@ void tlkhal_uart_clrTxDoneStatus(uint8_t port,void *futureUse);
  * @param[in] futureUse : Reserved for future use
  * @returns  TX done status.
  */
-uint32_t tlkhal_uart_getTxDoneStatus(uint8_t port,void *futureUse);
+uint32_t tlkhal_uart_getTxDoneStatus(uint8_t port, void *futureUse);
 
 /**
  * @brief  Clear UART RX done status
@@ -75,7 +75,7 @@ uint32_t tlkhal_uart_getTxDoneStatus(uint8_t port,void *futureUse);
  * @param[in] futureUse : Reserved for future use
  * @returns  None.
  */
-void tlkhal_uart_clrRxDoneStatus(uint8_t port,void *futureUse);
+void tlkhal_uart_clrRxDoneStatus(uint8_t port, void *futureUse);
 
 /**
  * @brief  Get UART RX done status
@@ -83,5 +83,4 @@ void tlkhal_uart_clrRxDoneStatus(uint8_t port,void *futureUse);
  * @param[in] futureUse : Reserved for future use
  * @returns  RX done status.
  */
-uint32_t tlkhal_uart_getRxDoneStatus(uint8_t port,void *futureUse);
-
+uint32_t tlkhal_uart_getRxDoneStatus(uint8_t port, void *futureUse);

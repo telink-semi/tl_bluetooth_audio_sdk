@@ -103,21 +103,24 @@
 #define BTP_SDP_SRVCLASS_ID_GEN_MCS_SERVICE 0x1849 // Generic Media Control Service
 #define BTP_SDP_SRVCLASS_ID_MICS_SERVICE    0x184D // Microphone Control Service
 /* 0x184E ... 0x1859 */
-#define BTP_SDP_SRVCLASS_ID_IMDS_SERVICE  0x185A // Industrial Measurement Device Service
-#define BTP_SDP_SRVCLASS_ID_RANGS_SERVICE 0x185B // Ranging Service
+#define BTP_SDP_SRVCLASS_ID_IMDS_SERVICE    0x185A // Industrial Measurement Device Service
+#define BTP_SDP_SRVCLASS_ID_RANGS_SERVICE   0x185B // Ranging Service
 
 
-#define BTP_SDP_SRVCLASS_ID_IAP2_TEMP     0xFFAC //{0x00, 0x00, 0x00, 0x00, 0xde,  0xCA, 0xFA, 0xDE, 0xDE, 0xCA, 0xDE, 0xAF, 0xDE, 0xCA, 0xCA, 0xFF}
+#define BTP_SDP_SRVCLASS_ID_IAP2_TEMP       0xFFAC //{0x00, 0x00, 0x00, 0x00, 0xde,  0xCA, 0xFA, 0xDE, 0xDE, 0xCA, 0xDE, 0xAF, 0xDE, 0xCA, 0xCA, 0xFF}
 
-#define BTP_SDP_SRVCLASS_ID_CUSTP         0xF0F0
-
-
-#define BTP_SVC_USER_ID0                  0xff00
-#define BTP_SVC_USER_ID1                  0xff01
+#define BTP_SDP_SRVCLASS_ID_CUSTP           0xF0F0
 
 
-#define BTP_SDPSRV_RSP_ATT_LEN            700
-#define BTP_SDP_BUFFER_SIZE               1500
+#define BTP_SVC_USER_ID0                    0xff00
+#define BTP_SVC_USER_ID1                    0xff01
+
+
+#define BTP_SDPSRV_RSP_ATT_LEN              700
+#define BTP_SDP_BUFFER_SIZE                 720
+#define BTP_SDP_SEARCH_RSP_HEADSET_LEN      9
+#define BTP_SDP_ATTR_RSP_HEADSET_LEN        7
+#define BTP_SDP_SEARCH_ATTR_RSP_HEADSET_LEN 7
 
 typedef enum
 {
@@ -172,7 +175,7 @@ typedef enum
  *       and HID, you need to disable the shared buffer function. The value of
  *       this parameter must be synchronized with the BTP_SDP_SHARE_BUFFER_ENABLE.
  *******************************************************************************/
-int btp_sdp_init(uint8_t count, uint16_t srvRspAttLen, uint16_t cacheBufferSize, bool isShareCache);
+int btp_sdp_init(uint8_t count, uint16_t cacheBufferSize, bool isShareCache);
 
 /******************************************************************************
  * Function: SDP Deinit interface
@@ -188,7 +191,7 @@ int btp_sdp_deinit(void);
  * Params: count: refer to TLK_BT_SDP_MAX_NUMB
  * Return: Actual node memory size required(unit: byte).
  *******************************************************************************/
-int btp_sdp_getMemLen(uint8_t count, uint16_t srvRspAttLen, uint16_t shareBufferSize, bool isShareCache);
+int btp_sdp_getMemLen(uint8_t count, uint16_t shareBufferSize, bool isShareCache);
 
 /******************************************************************************
  * Function: SDP Connect interface

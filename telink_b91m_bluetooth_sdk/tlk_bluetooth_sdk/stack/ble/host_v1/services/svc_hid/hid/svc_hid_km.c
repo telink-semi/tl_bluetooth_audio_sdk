@@ -73,8 +73,8 @@ static const uint16_t hidBootMouseInReportValueLen = sizeof(hidBootMouseInReport
 
 static const uint8_t  hidReportMap[] = {0x00};
 static const uint16_t hidReportMapLen;
-static const uint8_t  hidReportMapExtServiceUuidVale[]  = {0x00, 0x00};
-static const uint16_t hidReportMapExtServiceUuidValeLen = sizeof(hidReportMapExtServiceUuidVale);
+static const uint8_t  hidReportMapVale[]  = {0x00, 0x00};
+static const uint16_t hidReportMapValeLen = sizeof(hidReportMapVale);
 
 // default HID information, bcd:0x0111, country code:0x00, flags: remote wake(true), normally connectable(false)
 static const uint8_t  hidInformationValue[]  = {0x11, 0x01, 0x00, 0x01};
@@ -123,10 +123,9 @@ static const uint16_t hidReportFeatureRefValueLen = sizeof(hidReportFeatureRefVa
 #endif
 
 #define HID_MAP_DESCRIPTOR_REFERENCE(value) \
-    {ATT_PERMISSIONS_READ, ATT_16_UUID_LEN, (uint8_t *)(size_t)descriptorExternalReportReferenceUuid, (uint16_t *)(size_t) & value##Len, sizeof(value), (uint8_t *)(size_t)value, 0}
+    ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_READ, descriptorExternalReportReferenceAttUuid, ATTS_SET_NONE, sizeof(value), &value##Len, value)
 
-#define HID_DESCRIPTOR_REFERENCE(value) \
-    {ATT_PERMISSIONS_READ, ATT_16_UUID_LEN, (uint8_t *)(size_t)descriptorReportReferenceUuid, (uint16_t *)(size_t) & value##Len, sizeof(value), (uint8_t *)(size_t)value, 0}
+#define HID_DESCRIPTOR_REFERENCE(value) ATTS_ATTRIBUTE_INIT_PARAM(ATT_PERMISSIONS_READ, descriptorReportReferenceAttUuid, ATTS_SET_NONE, sizeof(value), &value##Len, value)
 
 extern const uint16_t basIncludeVal[3];
 
@@ -134,79 +133,79 @@ extern const uint16_t basIncludeVal[3];
  * @brief the structure for default HID service List.
  */
 static const struct atts_attribute hidList[] = {
-    ATTS_PRIMARY_SERVICE(serviceHumanInterfaceDeviceUuid),
+    ATTS_PRIMARY_SERVICE(serviceHumanInterfaceDeviceAttUuid),
 
     //include BAS
     ATTS_INCLUDE_DEFINE(&basIncludeVal[0]),
 
 #ifdef HID_KM_SUPP_BOOT_PROTOCOL_MODE
     //protocol mode
-    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteWithout, characteristicProtocolModeUuid, hidProtocolModeValue),
+    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteWithout, characteristicProtocolModeAttUuid, hidProtocolModeValue),
 #endif
 
 #ifdef HID_KM_SUPP_BOOT_KEYBOARD_INPUT
     //boot keyboard input report
-    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicBootKeyboardInputReportUuid, hidBootKeyInReportValue),
+    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicBootKeyboardInputReportAttUuid, hidBootKeyInReportValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #ifdef HID_KM_SUPP_BOOT_KEYBOARD_OUTPUT
     //boot keyboard output report
-    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteWriteWithout, characteristicBootKeyboardOutputReportUuid, hidBootKeyOutReportValue),
+    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteWriteWithout, characteristicBootKeyboardOutputReportAttUuid, hidBootKeyOutReportValue),
 #endif
 
 #ifdef HID_KM_SUPP_BOOT_MOUSE_INPUT
     //boot mouse input report
-    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicBootMouseInputReportUuid, hidBootMouseInReportValue),
+    ATTS_CHAR_UUID_RDWR_ENTITY_RWCB(charPropReadWriteNotify, characteristicBootMouseInputReportAttUuid, hidBootMouseInReportValue),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
     //hid map
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropRead, characteristicReportMapUuid, hidReportMap),
-    HID_MAP_DESCRIPTOR_REFERENCE(hidReportMapExtServiceUuidVale),
+    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropRead, characteristicReportMapAttUuid, hidReportMap),
+    HID_MAP_DESCRIPTOR_REFERENCE(hidReportMapVale),
 
     //hid information
-    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicHidInformationUuid, hidInformationValue),
+    ATTS_CHAR_UUID_READ_ENTITY_NOCB(charPropRead, characteristicHidInformationAttUuid, hidInformationValue),
 
     //hid control point
-    ATTS_CHAR_UUID_WRITE_NULL(charPropWriteWithout, characteristicHidControlPointUuid),
+    ATTS_CHAR_UUID_WRITE_NULL(charPropWriteWithout, characteristicHidControlPointAttUuid),
 
 #if HID_KM_INPUT_REPORT_NUM > 0
     //report(input)
-    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteNotify, characteristicReportUuid, hidReportInput1Value),
+    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteNotify, characteristicReportAttUuid, hidReportInput1Value),
     ATTS_COMMON_CCC_DEFINE,
     HID_DESCRIPTOR_REFERENCE(hidReportInput1RefValue),
 #endif
 
 #if HID_KM_INPUT_REPORT_NUM > 1
     //report(input)
-    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteNotify, characteristicReportUuid, hidReportInput2Value),
+    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteNotify, characteristicReportAttUuid, hidReportInput2Value),
     ATTS_COMMON_CCC_DEFINE,
     HID_DESCRIPTOR_REFERENCE(hidReportInput2RefValue),
 #endif
 
 #if HID_KM_INPUT_REPORT_NUM > 2
     //report(input)
-    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteNotify, characteristicReportUuid, hidReportInput3Value),
+    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteNotify, characteristicReportAttUuid, hidReportInput3Value),
     ATTS_COMMON_CCC_DEFINE,
     HID_DESCRIPTOR_REFERENCE(hidReportInput3RefValue),
 #endif
 
 #if HID_KM_OUTPUT_REPORT_NUM > 0
     //report(output)
-    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteWriteWithout, characteristicReportUuid, hidReportOutput1Value),
+    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteWriteWithout, characteristicReportAttUuid, hidReportOutput1Value),
     HID_DESCRIPTOR_REFERENCE(hidReportOutput1RefValue),
 #endif
 
 #if HID_KM_OUTPUT_REPORT_NUM > 1
     //report(output)
-    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteWriteWithout, characteristicReportUuid, hidReportOutput2Value),
+    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWriteWriteWithout, characteristicReportAttUuid, hidReportOutput2Value),
     HID_DESCRIPTOR_REFERENCE(hidReportOutput2RefValue),
 #endif
 
 #if HID_KM_FEATURE_REPORT_NUM
     //report(feature)
-    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWrite, characteristicReportUuid, hidReportFeatureValue),
+    ATTS_CHAR_UUID_RDWR_ENTITY_WCB(charPropReadWrite, characteristicReportAttUuid, hidReportFeatureValue),
     HID_DESCRIPTOR_REFERENCE(hidReportFeatureRefValue),
 #endif
 

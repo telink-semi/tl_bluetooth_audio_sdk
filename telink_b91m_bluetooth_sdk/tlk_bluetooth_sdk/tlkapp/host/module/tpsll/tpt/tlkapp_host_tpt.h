@@ -28,4 +28,4 @@
  * @param[in]   none.
  * @return      Returns a pointer to the Tpsll TWS module.
  */
-TlkAppHostModule_t* tlkapp_host_tpt_getModule(void);
+TlkAppHostModule_t *tlkapp_host_tpt_getModule(void);

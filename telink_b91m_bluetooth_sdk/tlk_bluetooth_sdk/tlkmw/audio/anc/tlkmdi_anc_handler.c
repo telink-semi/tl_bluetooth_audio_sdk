@@ -27,8 +27,8 @@
 #include "tlkmdi_anc_handler.h"
 
 #if TLKALG_ANC_ENABLE
-uint8_t anc_tool_cmd_flag = 0;
-tlkmdi_anc_ctl g_anc_ctr = {0};
+uint8_t        anc_tool_cmd_flag = 0;
+tlkmdi_anc_ctl g_anc_ctr         = {0};
 
 /**
  * @brief       Initialize ANC IRQ
@@ -42,7 +42,7 @@ void tlkmdi_anc_irq_init(uint16_t byte_num)
     audio_fifo_ptr_en(AUDIO_TX_FIFO0 + TLKDRV_ANC0_SPK_FIFO);
     audio_set_tx_rptr(TLKDRV_ANC0_SPK_FIFO, 0);
     audio_set_tx_buff_thres(TLKDRV_ANC0_SPK_FIFO, byte_num);
-    audio_fifo_irq_en(AUDIO_TX_FIFO0 + TLKDRV_ANC0_SPK_FIFO);//enable TX_FIFO0
+    audio_fifo_irq_en(AUDIO_TX_FIFO0 + TLKDRV_ANC0_SPK_FIFO); //enable TX_FIFO0
 
     // audio_fifo_ptr_en(AUDIO_RX_FIFO0 + TLKDRV_ANC0_MIC_FIFO);
     // audio_set_rx_wptr(TLKDRV_ANC0_MIC_FIFO, 0);
@@ -93,19 +93,19 @@ void tlkmdi_anc_irq_deinit(void)
 void tlkmdi_anc_set_para_to_dsp(uint8_t type, uint8_t *data, uint16_t len)
 {
     tlkapi_printf(APP_LOG_EN, "tlkmdi_anc_set_para_to_dsp type %d, data %d", type, *data);
-    set_param_t set_param;
-    uint8_t *p_mcu_2_dsp_buff = d25f_get_enc_buff_ptr(IPC_SET_PARAM_PATH_2);
-    audio_buffer_context_t *p_audio_buf_ctx = get_audio_buff_context_ptr(IPC_SET_PARAM_PATH_2);
+    set_param_t             set_param;
+    uint8_t                *p_mcu_2_dsp_buff = d25f_get_enc_buff_ptr(IPC_SET_PARAM_PATH_2);
+    audio_buffer_context_t *p_audio_buf_ctx  = get_audio_buff_context_ptr(IPC_SET_PARAM_PATH_2);
 
     p_audio_buf_ctx->enc_audio_data_len = len;
 
     p_mcu_2_dsp_buff[0] = type;
     for (int i = 0; i < len; i++) {
-        p_mcu_2_dsp_buff[i+1] = *data++;
+        p_mcu_2_dsp_buff[i + 1] = *data++;
     }
-    
+
     set_param.buff_wptr = p_audio_buf_ctx->enc_audio_buff_wptr;
-    set_param.data_len = p_audio_buf_ctx->enc_audio_data_len;
+    set_param.data_len  = p_audio_buf_ctx->enc_audio_data_len;
     set_param.para_type = ANC_PARA;
 
     d25f_update_enc_buff_wptr(IPC_SET_PARAM_PATH_2);
@@ -134,7 +134,7 @@ void d25f_set_dsp_anc_downlink_enable(uint8_t enable)
     // } else {
     //     g_anc_ctr.dsp_sync_flag = false;
     // }
-    
+
     tlkmdi_anc_set_para_to_dsp(ANC_MUSIC_EN, &enable, 1);
 }
 
@@ -219,21 +219,21 @@ void tlkalg_anc_proc_mode_para(int *data)
     }
 
     switch (data[0]) {
-        case(ADAPTIVE_EN):
+    case (ADAPTIVE_EN):
 
         break;
-        case(ANC_EN):
-            
+    case (ANC_EN):
+
         break;
-        case(ANC_MUSIC_EN):
-            
+    case (ANC_MUSIC_EN):
+
         break;
-        case(ANC_SYNC):
-            g_anc_ctr.dsp_sync_flag = true;
-            tlkmdi_anc_enable_dma();
+    case (ANC_SYNC):
+        g_anc_ctr.dsp_sync_flag = true;
+        tlkmdi_anc_enable_dma();
         break;
-        default:
-        break;       
+    default:
+        break;
     }
 }
 
@@ -242,91 +242,90 @@ void tlkalg_anc_proc_mode_para(int *data)
  * @param[in]   data - Pointer to parameter data
  * @return      None
  */
-void tlkalg_anc_load_para(uint8_t* data)
+void tlkalg_anc_load_para(uint8_t *data)
 {
 #if TLK_MW_DSP_COMM_ENABLE
-	anc_reg_para_t *pdata = (anc_reg_para_t*)data;
-    
-//	audio_anc_mode_sel(AUDIO_ANC_CHANNEL, pdata->alg_mode);//0-FF	1-FB	2-HB	0x801428e2
+    anc_reg_para_t *pdata = (anc_reg_para_t *)data;
+
+    //	audio_anc_mode_sel(AUDIO_ANC_CHANNEL, pdata->alg_mode);//0-FF	1-FB	2-HB	0x801428e2
     // tlkapi_printf(APP_LOG_EN, "alg mode %d, cmd_type %d", pdata->alg_mode, pdata->cmd_type);
-    
-	switch (pdata->alg_mode) {
-        case ANC_MODE_FF:
-        {
-            audio_anc_latch_wz_fir_gain(AUDIO_ANC_CHANNEL);
-            audio_anc_latch_ref_mic_gain(AUDIO_ANC_CHANNEL);
-        
-            break;
-        }
-        case ANC_MODE_FB:
-        {
-            audio_anc_latch_wz_fir_gain(AUDIO_ANC_CHANNEL);
-            break;
-        }
-        case ANC_MODE_HB:
-        {
-            audio_anc_latch_wz_fir_gain(AUDIO_ANC_CHANNEL);
-            audio_anc_latch_ref_mic_gain(AUDIO_ANC_CHANNEL);
-            break;
-        }
-        default:
+
+    switch (pdata->alg_mode) {
+    case ANC_MODE_FF:
+    {
+        audio_anc_latch_wz_fir_gain(AUDIO_ANC_CHANNEL);
+        audio_anc_latch_ref_mic_gain(AUDIO_ANC_CHANNEL);
+
         break;
-	}
-    
+    }
+    case ANC_MODE_FB:
+    {
+        audio_anc_latch_wz_fir_gain(AUDIO_ANC_CHANNEL);
+        break;
+    }
+    case ANC_MODE_HB:
+    {
+        audio_anc_latch_wz_fir_gain(AUDIO_ANC_CHANNEL);
+        audio_anc_latch_ref_mic_gain(AUDIO_ANC_CHANNEL);
+        break;
+    }
+    default:
+        break;
+    }
 
-	uint8_t p_cz_num = (pdata->filter_mode == FILTER_CZ0) ? 0 : (pdata->filter_mode == FILTER_CZ1 ? 1 : 2);
 
-	if (anc_tool_cmd_flag == 1) {//single param by anc tool
-		if (pdata->cmd_type == CMD_DOWNLOAD_IIR) {
-			if (pdata->filter_mode == FILTER_WZ) {
-				audio_anc_set_wz_iir_taps(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_stages);
-				audio_anc_update_wz_iir_coef(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_iir_para, pdata->filter_para.wz_stages);
-			} else {
-			    audio_anc_set_cz_iir_taps(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_stages[p_cz_num]);
-			    audio_anc_update_cz_iir_coef(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_iir_para, pdata->filter_para.cz_stages[p_cz_num]);
-			}
-		} else if (pdata->cmd_type == CMD_DOWNLOAD_FIR) {
-			if (pdata->filter_mode == FILTER_WZ) {
-				audio_anc_set_wz_fir_taps(AUDIO_ANC_CHANNEL, 390);
-				audio_anc_update_wz_fir_coef(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_fir_para, 390);
-			} else {
-				audio_anc_set_cz_fir_taps(AUDIO_ANC_CHANNEL, p_cz_num, 150);
-			    audio_anc_update_cz_fir_coef(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_fir_para, 150);
-			}
-		} else if (pdata->cmd_type == CMD_DOWNLOAD_GAIN) {
-			audio_anc_set_ref_mic_gain(AUDIO_ANC_CHANNEL, pdata->gain_para.ref_gain, pdata->gain_para.ref_shift);
-			audio_anc_set_wz_fir_gain(AUDIO_ANC_CHANNEL, pdata->gain_para.wz_gain, pdata->gain_para.wz_shift);
-		}
-	} else {//dsp param total
-		if (pdata->filter_mode & FILTER_WZ) {
-			if (pdata->cmd_type & CMD_DOWNLOAD_IIR) {
-				audio_anc_set_wz_iir_taps(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_stages);
-				audio_anc_update_wz_iir_coef(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_iir_para, pdata->filter_para.wz_stages);
-			}
-			if (pdata->cmd_type & CMD_DOWNLOAD_FIR) {
-				audio_anc_set_wz_fir_taps(AUDIO_ANC_CHANNEL, 390);
-				audio_anc_update_wz_fir_coef(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_fir_para, 390);
-			}
-		}
+    uint8_t p_cz_num = (pdata->filter_mode == FILTER_CZ0) ? 0 : (pdata->filter_mode == FILTER_CZ1 ? 1 : 2);
 
-		if (pdata->filter_mode & FILTER_CZ0) {
-			if (pdata->cmd_type & CMD_DOWNLOAD_IIR) {
-			    audio_anc_set_cz_iir_taps(AUDIO_ANC_CHANNEL, p_cz_num,  pdata->filter_para.cz_stages[p_cz_num]);
-			    audio_anc_update_cz_iir_coef(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_iir_para, pdata->filter_para.cz_stages[p_cz_num]);
-			}
-			if (pdata->cmd_type & CMD_DOWNLOAD_FIR) {
-			    audio_anc_set_cz_fir_taps(AUDIO_ANC_CHANNEL, p_cz_num, 150);
-			    audio_anc_update_cz_fir_coef(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_fir_para, 150);//wz_fir390_bypass
-			}
-		}
+    if (anc_tool_cmd_flag == 1) { //single param by anc tool
+        if (pdata->cmd_type == CMD_DOWNLOAD_IIR) {
+            if (pdata->filter_mode == FILTER_WZ) {
+                audio_anc_set_wz_iir_taps(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_stages);
+                audio_anc_update_wz_iir_coef(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_iir_para, pdata->filter_para.wz_stages);
+            } else {
+                audio_anc_set_cz_iir_taps(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_stages[p_cz_num]);
+                audio_anc_update_cz_iir_coef(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_iir_para, pdata->filter_para.cz_stages[p_cz_num]);
+            }
+        } else if (pdata->cmd_type == CMD_DOWNLOAD_FIR) {
+            if (pdata->filter_mode == FILTER_WZ) {
+                audio_anc_set_wz_fir_taps(AUDIO_ANC_CHANNEL, 390);
+                audio_anc_update_wz_fir_coef(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_fir_para, 390);
+            } else {
+                audio_anc_set_cz_fir_taps(AUDIO_ANC_CHANNEL, p_cz_num, 150);
+                audio_anc_update_cz_fir_coef(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_fir_para, 150);
+            }
+        } else if (pdata->cmd_type == CMD_DOWNLOAD_GAIN) {
+            audio_anc_set_ref_mic_gain(AUDIO_ANC_CHANNEL, pdata->gain_para.ref_gain, pdata->gain_para.ref_shift);
+            audio_anc_set_wz_fir_gain(AUDIO_ANC_CHANNEL, pdata->gain_para.wz_gain, pdata->gain_para.wz_shift);
+        }
+    } else { //dsp param total
+        if (pdata->filter_mode & FILTER_WZ) {
+            if (pdata->cmd_type & CMD_DOWNLOAD_IIR) {
+                audio_anc_set_wz_iir_taps(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_stages);
+                audio_anc_update_wz_iir_coef(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_iir_para, pdata->filter_para.wz_stages);
+            }
+            if (pdata->cmd_type & CMD_DOWNLOAD_FIR) {
+                audio_anc_set_wz_fir_taps(AUDIO_ANC_CHANNEL, 390);
+                audio_anc_update_wz_fir_coef(AUDIO_ANC_CHANNEL, pdata->filter_para.wz_fir_para, 390);
+            }
+        }
 
-		if (pdata->cmd_type & CMD_DOWNLOAD_GAIN) {
+        if (pdata->filter_mode & FILTER_CZ0) {
+            if (pdata->cmd_type & CMD_DOWNLOAD_IIR) {
+                audio_anc_set_cz_iir_taps(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_stages[p_cz_num]);
+                audio_anc_update_cz_iir_coef(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_iir_para, pdata->filter_para.cz_stages[p_cz_num]);
+            }
+            if (pdata->cmd_type & CMD_DOWNLOAD_FIR) {
+                audio_anc_set_cz_fir_taps(AUDIO_ANC_CHANNEL, p_cz_num, 150);
+                audio_anc_update_cz_fir_coef(AUDIO_ANC_CHANNEL, p_cz_num, pdata->filter_para.cz_fir_para, 150); //wz_fir390_bypass
+            }
+        }
+
+        if (pdata->cmd_type & CMD_DOWNLOAD_GAIN) {
             // tlkapi_printf(APP_LOG_EN, "anc set para gain ref_gain %d, wz_gain %d", pdata->gain_para.ref_gain, pdata->gain_para.wz_gain);
             audio_anc_set_ref_mic_gain(AUDIO_ANC_CHANNEL, pdata->gain_para.ref_gain, pdata->gain_para.ref_shift);
             audio_anc_set_wz_fir_gain(AUDIO_ANC_CHANNEL, pdata->gain_para.wz_gain, pdata->gain_para.wz_shift);
-		}
-        
-	}
+        }
+    }
 #else
     (void)data;
 #endif

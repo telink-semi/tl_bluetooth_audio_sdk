@@ -49,14 +49,15 @@ static TlkApiTimer_t sTlkdrvDspTmr   = {0};
  */
 static inline void tlkdrv_dsp_core_boot(void)
 {
-#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
-    boot_cpu2(0x180000, 0x200000);
-    tlkapi_printf(1, "*******boot_cpu2(0x180000, 0x200000)");
-#else
     sys_dsp_init(DSP_FW_DOWNLOAD_FLASH_ADDR);
+
     uint32_t addr = tlkmw_getDSPStartUpAddrFromFlash();
     if (addr == 0) {
+#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
+        addr = 0x10200000;
+#else
         addr = 0x20200000;
+#endif
     }
 
     // uint32_t dram_bin_begin = REG_ADDR32(addr + 0);
@@ -75,11 +76,13 @@ static inline void tlkdrv_dsp_core_boot(void)
         .dram_dst_addr = 0x2000000,
         .dram_src_addr = addr + dram_bin_begin,
         .dram_size     = dram_bin_size,
-
+#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
+        .no_cache_bit = 0xb0000000,
+#else
         .no_cache_bit = 0x80000000,
+#endif
     };
     tlkmw_dualcore_boot(&cfg);
-#endif
 
     sys_dsp_start();
     sTlkdrvDspState = TLKDRV_DSP_STATE_BOOTING;
@@ -113,11 +116,7 @@ static void tlkdrv_dsp_timer(TlkApiTimerHandle_t handle, void *userArg)
     if (sTlkdrvDspState != TLKDRV_DSP_STATE_PAUSING) {
         return;
     }
-#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
-//    sys_dsp_clk_dis();
-#else
     sys_dsp_clk_dis();
-#endif
     sTlkdrvDspState = TLKDRV_DSP_STATE_PAUSED;
 }
 
@@ -155,12 +154,7 @@ void tlkdrv_dsp_pause(void)
 void tlkdrv_dsp_resume(void)
 {
     if (sTlkdrvDspState == TLKDRV_DSP_STATE_PAUSED) {
-#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
-        // sys_dsp_clk_en();
-        // __DRV_CPR_CPU2_CLK_ENABLE();
-#else
         sys_dsp_clk_en();
-#endif
         sTlkdrvDspState = TLKDRV_DSP_STATE_RUNNING;
     } else if (sTlkdrvDspState == TLKDRV_DSP_STATE_PAUSING) {
         tlksys_timer_stop(TLKSYS_TASKID_AUDIO, &sTlkdrvDspTmr);
@@ -176,11 +170,7 @@ void tlkdrv_dsp_resume(void)
 void tlkdrv_dsp_bootOkCB(void)
 {
     sTlkdrvDspState = TLKDRV_DSP_STATE_RUNNING;
-#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
-    // sys_dsp_clk_dis();
-#else
     sys_dsp_clk_dis();
-#endif
     sTlkdrvDspState = TLKDRV_DSP_STATE_PAUSED;
 }
 

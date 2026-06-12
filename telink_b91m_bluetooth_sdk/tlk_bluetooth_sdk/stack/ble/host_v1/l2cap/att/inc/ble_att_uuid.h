@@ -83,10 +83,10 @@ bool ble_uuid_cmp_uuid16_uuid128(const uint8_t *pUuid16, const uint8_t *pUuid128
 /**
  *  @brief Compare a 16-bit UUID with a UUID of any length.
  *
- *  @param[in] pUuid16 Pointer to a 16-bit UUID.
+ *  @param[in] uuid16 a 16-bit UUID.
  *  @param[in] uuidLen Length of the UUID to compare.
  *  @param[in] pUuid Pointer to the UUID to compare.
  *
  *  @return true if the 16-bit UUID matches the UUID of any length, false otherwise.
 */
-bool ble_uuid_cmp_uuid16_uuid(const uint8_t *pUuid16, uint8_t uuidLen, const uint8_t *pUuid);
+bool ble_uuid_cmp_uuid16_uuid(uint16_t uuid16, uint8_t uuidLen, const uint8_t *pUuid);

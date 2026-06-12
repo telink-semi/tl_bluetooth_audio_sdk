@@ -59,17 +59,16 @@ typedef struct
     uint16_t codec_sample_rate;
     uint16_t samples_played;
     uint16_t mute_samples;
+
     uint16_t latency;
+    int16_t  mic_rptr;
+    int16_t  mic_wptr;
+    int16_t  play_wptr;
 
-    int16_t mic_rptr;
-    int16_t mic_wptr;
-    int16_t play_wptr;
-    int16_t play_rptr;
-
+    int16_t  play_rptr;
     uint16_t play_dec_samples;
     int16_t  music_vol_percent;
     int16_t  voice_vol_percent;
-    uint16_t resv;
 
 } codec_cfg_t;
 
@@ -77,12 +76,12 @@ extern codec_cfg_t g_codec_cfg;
 
 typedef struct
 {
-    bool     irq_en;
-    uint8_t  resv3byte[3];
-    uint32_t tick_irq;
-
+    uint8_t irq_en;
     uint8_t sco_packet_is_processing;
+    uint8_t sco_queue_id;
+    uint8_t sco_id;
 
+    uint32_t tick_irq;
     // audio sync
     uint32_t stimer_irq_tick;
 
@@ -90,7 +89,7 @@ typedef struct
     uint32_t m_schedule_tick;
     uint32_t s_capture_tick;
     uint32_t bt_audio_sync_tick;
-    uint8_t  sco_id;
+
 } bt_audio_task_env_t;
 
 extern bt_audio_task_env_t g_bt_audio_task_env;
@@ -101,7 +100,6 @@ typedef uint32_t (*bt_audio_lowpower_callback_t)(void);
 
 extern bt_audio_get_pcm_data_callback_t  bt_audio_get_pcm_data_cb;
 extern bt_audio_post_pcm_data_callback_t bt_audio_post_pcm_data_cb;
-extern bt_audio_lowpower_callback_t      bt_codec_lowpower_cb;
 
 #if TLK_PCM_DATA_WR_EN
 typedef uint16_t (*bt_audio_trans_pcm_data_callback_t)(int16_t *p_des, uint16_t dataLen);
@@ -282,6 +280,8 @@ bool tlkmdi_audio_get_threshold_flag(void);
  * @returns none
  */
 void tlkmdi_audio_set_check_threshold_flag(bool flag);
+
+uint8_t bt_audio_irq_task_is_running(void);
 
 #if AUDIO_TWS_MODE
 /**

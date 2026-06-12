@@ -24,12 +24,14 @@
 #ifndef TLKMW_USER_CTRL_H
 #define TLKMW_USER_CTRL_H
 
+#define TLKMW_USER_CTRL_HEADER      5 //type(1Octet) + channel(1Octet) + dataLen(2Octets) + opcode(1Octet)
 #define TLKMW_USER_CTRL_CHN_MAX_NUM 4
 
 enum
 {
     TLKMW_USER_CTRL_MODE_NONE = 0,
     TLKMW_USER_CTRL_MODE_OTA,
+    TLKMW_USER_CTRL_MODE_AUDIO,
     TLKMW_USER_CTRL_MODE_KEY,
     TLKMW_USER_CTRL_MODE_MAX,
 };
@@ -39,8 +41,11 @@ typedef struct sTlkMwUsrCtrlBufferNode
     uint8_t                         type;
     uint8_t                         channel;
     uint16_t                        buffer_size;
+    uint16_t                        remain_size;
+    uint16_t                        resv;
     uint8_t                        *pBuffer;
     struct sTlkMwUsrCtrlBufferNode *pNext;
+    struct sTlkMwUsrCtrlBufferNode *pPrev;
 } sTlkMwUsrCtrlBufferNode_t;
 
 typedef struct
@@ -73,11 +78,14 @@ void tlkmw_userctrl_mutex_unlock(void);
 /**
  * @brief      Push data to a task
  * @param[in]  taskID  - task identifier
+ * @param[in]  designate_chn -  designated channel
  * @param[in]  pData   - pointer to data buffer
  * @param[in]  dataLen - length of data
  * @return     int - TLK_ENONE if success, error code otherwise
+ * @note       This function is used to push ota data to ota module.
+ * 			   If designate_chn is 0, means use the channel parsed from data,otherwise, use the designated channel.
  */
-int tlkmw_userctrl_pushDataToTask(uint32_t taskID, uint8_t *pData, uint16_t dataLen);
+int tlkmw_userctrl_pushDataToTask(uint32_t taskID, uint8_t designate_chn, uint8_t *pData, uint16_t dataLen);
 
 /**
  * @brief      Push OTA data to a task

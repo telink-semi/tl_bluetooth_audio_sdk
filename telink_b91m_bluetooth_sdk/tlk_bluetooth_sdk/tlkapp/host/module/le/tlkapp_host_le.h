@@ -28,7 +28,7 @@
  * @param[in]   none.
  * @return      Returns a pointer to the LE module.
  */
-TlkAppHostModule_t* tlkapp_host_le_getModule(void);
+TlkAppHostModule_t *tlkapp_host_le_getModule(void);
 
 
 /**

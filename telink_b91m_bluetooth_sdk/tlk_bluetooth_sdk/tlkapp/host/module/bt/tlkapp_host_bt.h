@@ -28,4 +28,4 @@
  * @param[in]   none    - none.
  * @return      pointer to the Bluetooth host module.
  */
-TlkAppHostModule_t* tlkapp_host_bt_getModule(void);
+TlkAppHostModule_t *tlkapp_host_bt_getModule(void);

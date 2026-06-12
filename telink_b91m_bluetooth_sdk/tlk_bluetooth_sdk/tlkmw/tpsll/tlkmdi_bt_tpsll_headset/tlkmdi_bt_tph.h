@@ -26,17 +26,20 @@
 
 typedef void (*tlkmdi_tph_state_change_cb)(uint8_t state);
 typedef void (*tlkmdi_tph_force_idle_finished_cb)(void);
-typedef enum 
-{    
+typedef void (*tlkmdi_bt_tph_appUsbSuspendCallback)(uint8_t *pData, uint16_t dataLen);
+
+typedef enum
+{
     TLKMDI_TPSLL_STATE_CHANGE_CB_PAIR,
     TLKMDI_TPSLL_STATE_CHANGE_CB_CONNECT,
     TLKMDI_TPSLL_STATE_CHANGE_CB_DISCONNECT,
 } tlkmdi_tph_state_change_cb_e;
 
-enum  
-{    
+enum
+{
     TLKMDI_TPSLL_NO_INIT,
     TLKMDI_TPSLL_IDLE,
+    TLKMDI_TPSLL_RECONNECTING,
     TLKMDI_TPSLL_PAIRING_ASYNC_DISCON_WAITING,
     TLKMDI_TPSLL_PAIRING_ASYNC_DISCONNECTED,
     TLKMDI_TPSLL_PAIRING_BT_DSICON_WAITING,
@@ -45,9 +48,11 @@ enum
     TLKMDI_TPSLL_CONNECTED,
     TLKMDI_TPSLL_CRASH,
     TLKMDI_TPSLL_BT_CONN_ASYNC_DISCON,
+    TLKMDI_TPSLL_BT_STATUS_MSW_WAITING, /* Only low latency mode to normal mode. MSW - mode switch */
+    TLKMDI_TPSLL_WAIT_VERSION_SYNC,
 };
 
-enum 
+enum
 {
     TLK_MDI_DONGLE_ACL_CMD_MEDIA_KEY  = 0x40,
     TLK_MDI_DONGLE_ACL_CMD_DONGLE_LED = 0x41,
@@ -68,6 +73,15 @@ enum
     TLK_MDI_HID_AUDIO_MAX,
 };
 
+enum
+{
+    TLK_MDI_APP_NONE = 0,
+    TLK_MDI_APP_VERSION_SYNC,
+    TLK_MDI_APP_DFU_STATUS_NOTIFY,
+
+    TLK_MDI_APP_MAX,
+};
+
 /**
  * @brief       Initializes the Bluetooth TPH module.
  * @return      none.
@@ -83,7 +97,7 @@ void tlkmdi_bt_tph_init(void);
  * @note        This function sets up the pairing process, cleans previous pairing data if refactory,
  *              and initiates a disconnection before starting the pairing timer.
  */
-void tlkmdi_bt_tph_pair_start(bool isRefactory);
+void tlkmdi_bt_tph_pair_start(uint8_t isRefactory);
 
 /**
  * @brief       This function handles BT TPH related tasks.
@@ -131,4 +145,35 @@ void tlkmdi_bt_tph_forceToIdle(tlkmdi_tph_force_idle_finished_cb cb);
  *              setting up necessary parameters and starting reconnection.
  */
 void tlkmdi_bt_tph_restart(void);
+
+/**
+ * @brief       This function handles the event when peer device exits low latency mode.
+ *              It updates the connection status and triggers reconnection if needed.
+ * @param[in]   data    - pointer to received data
+ * @param[in]   dataLen - length of received data
+ * @return      none.
+ * @note        
+ */
+void tlkmdi_bt_tph_exitLowLatencyMode(void);
+
+/**
+ * @brief       This function handles the OTA data from to phone and send to dongle.
+ * @param[in]   data    - pointer to received data
+ * @param[in]   dataLen - length of received data
+ * @return      none.
+ * @note        
+ */
+void tlkmdi_bt_tph_send_dfu_data(uint8_t *pData, uint8_t dataLen);
+
+/**
+ * @brief       This function handles the change of the usb suspend state at headset.
+ * @param[in]   pData - usb suspend state.
+ * @param[in]   dataLen - data length.
+ * @return      none.
+ * @note        none.
+ */
+void tlkmdi_bt_tph_usb_suspend_handler(void *pData, uint8_t dataLen);
+
+void tlkmdi_bt_tph_appUsbSuspend_register(tlkmdi_bt_tph_appUsbSuspendCallback cb);
+
 #endif

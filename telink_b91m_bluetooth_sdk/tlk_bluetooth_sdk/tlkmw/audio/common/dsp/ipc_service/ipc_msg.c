@@ -25,15 +25,15 @@
 #include "tlkapi/tlkapi.h"
 
 #if (TLK_MW_DSP_COMM_ENABLE)
-    #include "common/tstring.h"
-    #include "tlkmw/audio/tlkmw_audio.h"
-    #include "tlkmw/audio/audio_mw_manager.h"
+#include "common/tstring.h"
+#include "tlkmw/audio/tlkmw_audio.h"
+#include "tlkmw/audio/audio_mw_manager.h"
 
 uint8_t dsp_ipc_flag;
 
-#if(MCU_CORE_TYPE == MCU_CORE_TL752X)
-uint32_t  ipcm_d25_tx_addr = 0xb204b000;
-uint32_t  ipcm_dsp_tx_addr = 0xb204b040;
+#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
+uint32_t ipcm_d25_tx_addr = 0xb204b000;
+uint32_t ipcm_dsp_tx_addr = 0xb204b040;
 #endif
 
 /**
@@ -43,22 +43,22 @@ uint32_t  ipcm_dsp_tx_addr = 0xb204b040;
  */
 audio_ram_code void d25f_send_ipc_message(unsigned int *msg_words)
 {
-    #ifdef SLET_dsp_msg_tx
+#ifdef SLET_dsp_msg_tx
     log_tick_irq(SL_DSP_EN, SLET_dsp_msg_tx);
-    #endif
-    #ifdef SL01_dsp_process
+#endif
+#ifdef SL01_dsp_process
     log_task_begin_irq(SL_DSP_EN, SL01_dsp_process);
-    #endif
+#endif
 
-    #if 0
+#if 0
     gpio_write(GPIO_PF5, 0);
     gpio_write(GPIO_PF5, 1);
     gpio_write(GPIO_PF5, 0);
-    #endif
-#if(MCU_CORE_TYPE == MCU_CORE_TL752X)
-	memcpy((void *)ipcm_d25_tx_addr, (const void *)msg_words, sizeof(uint32_t) * 2);
-	msg_words[0] = ipcm_d25_tx_addr;
-	mailbox_d25f_set_dsp_msg((unsigned int *)msg_words);
+#endif
+#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
+    memcpy((void *)ipcm_d25_tx_addr, (const void *)msg_words, sizeof(uint32_t) * 2);
+    msg_words[0] = ipcm_d25_tx_addr;
+    mailbox_d25f_set_dsp_msg((unsigned int *)msg_words);
 #else
     mailbox_d25f_set_dsp_msg(msg_words);
 #endif
@@ -71,14 +71,14 @@ audio_ram_code void d25f_send_ipc_message(unsigned int *msg_words)
  */
 audio_ram_code void d25f_get_ipc_message(unsigned int *msg_words)
 {
-#if(MCU_CORE_TYPE == MCU_CORE_TL752X)
+#if (MCU_CORE_TYPE == MCU_CORE_TL752X)
     unsigned int msg_word_temp[2] = {0};
-	mailbox_d25f_get_dsp_msg((unsigned int *)msg_word_temp);
-	if (msg_word_temp[0] == ipcm_dsp_tx_addr) {
-	    memcpy((void *)msg_words, (const void *)ipcm_dsp_tx_addr, sizeof(uint32_t) * 2);
-	} else {
-		tlkapi_trace(DSP_DBG_FLAG, DSP_DBG_SIGN, "get dsp share data address error: %d\n", msg_word_temp[0]);
-	}
+    mailbox_d25f_get_dsp_msg((unsigned int *)msg_word_temp);
+    if (msg_word_temp[0] == ipcm_dsp_tx_addr) {
+        memcpy((void *)msg_words, (const void *)ipcm_dsp_tx_addr, sizeof(uint32_t) * 2);
+    } else {
+        tlkapi_trace(DSP_DBG_FLAG, DSP_DBG_SIGN, "get dsp share data address error: %d\n", msg_word_temp[0]);
+    }
 #else
     mailbox_d25f_get_dsp_msg(msg_words);
 #endif
@@ -128,6 +128,23 @@ audio_ram_code uint8_t d25f_send_handshake_msg(void)
     handshake_t handshake;
 
     handshake.d25f_fw_version = D25F_FW_VERSION;
+
+    ret = d25f_send_request_to_dsp(IPC_D25F2DSP_HANDSHAKE, (uint8_t *)(&handshake), IPC_MSG_PAYLOAD_LEN);
+    return ret;
+}
+
+audio_ram_code uint8_t d25f_response_handshake_msg(void)
+{
+    uint8_t              ret;
+    handshake_response_t handshake;
+
+    handshake.d25f_alg_type = 0xc000;
+#if (TLKALG_BONE_CODUCTION_EN)
+    handshake.bbf_type = TLKALG_BBF_ENABLE - 1;
+#else
+    handshake.bbf_type = TLKALG_BBF_ENABLE;
+#endif
+    handshake.alg_dis = 0x80;
 
     ret = d25f_send_request_to_dsp(IPC_D25F2DSP_HANDSHAKE, (uint8_t *)(&handshake), IPC_MSG_PAYLOAD_LEN);
     return ret;

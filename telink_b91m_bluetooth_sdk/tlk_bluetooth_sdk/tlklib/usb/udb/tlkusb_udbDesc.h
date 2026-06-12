@@ -34,12 +34,12 @@ typedef struct
     tlkusb_stdInterfaceDesc_t udbInf;
     tlkusb_stdEndpointDesc_t  udbEdpIn;
     tlkusb_stdEndpointDesc_t  udbEdpOut;
-    #if (TLKUSB_UDB_VCD_ENABLE)
+#if (TLKUSB_UDB_VCD_ENABLE)
     //	tlkusb_stdAssociateDesc_t vcdIAD;
     tlkusb_stdInterfaceDesc_t vcdInf;
     tlkusb_stdEndpointDesc_t  vcdInE;
     tlkusb_stdEndpointDesc_t  vcdOutE;
-    #endif
+#endif
 } tlkusb_udbConfigDesc_t;
 
 

@@ -24,34 +24,53 @@
 #pragma once
 
 
-#define I2S_CODEC_CHIP_NULL		0
+#define I2S_CODEC_CHIP_NULL     0
 #define I2S_CODEC_CHIP_NAU88L21 2
 
-#define I2S_CODEC_SEL			I2S_CODEC_CHIP_NAU88L21
 
 #if (MCU_CORE_TYPE == MCU_CORE_TL721X && TLKDRV_CODEC_I2S_MASTER_ENABLE)
 
+#define I2S_CODEC_SEL I2S_CODEC_CHIP_NAU88L21
 
-#if (I2S_CODEC_SEL ==I2S_CODEC_CHIP_NAU88L21)
-	#include "ex_nau88l21/tlkdrv_nau88l21_interface.h"
-	#include "ex_nau88l21/tlkdrv_nau88l21.h"
+#if (I2S_CODEC_SEL == I2S_CODEC_CHIP_NAU88L21)
+#include "ex_nau88l21/tlkdrv_nau88l21_interface.h"
+#include "ex_nau88l21/tlkdrv_nau88l21.h"
 
-	#define hal_i2s_pin_config 		hal_nau8821_i2s_pin_config
-	#define hal_i2s_config 			hal_nau8821_i2s_config
-	#define hal_i2s_input			hal_nau8821_i2s_input
-	#define hal_i2s_output 			hal_nau8821_i2s_output
+#define hal_i2s_pin_config  hal_nau8821_i2s_pin_config
+#define hal_i2s_config      hal_nau8821_i2s_config
+#define hal_i2s_input       hal_nau8821_i2s_input
+#define hal_i2s_output      hal_nau8821_i2s_output
 
-	#define hal_i2c_init 			hal_nau8821_i2c_init
-	#define hal_i2c_write 			hal_nau8821_i2c_write
-	#define hal_i2c_read 			hal_nau8821_i2c_read
-	#define hal_i2c_update_bits 	hal_nau8821_i2c_update_bits
-	#define hal_i2s_init 			hal_nau8821_i2s_init
+#define hal_i2c_init        hal_nau8821_i2c_init
+#define hal_i2c_write       hal_nau8821_i2c_write
+#define hal_i2c_read        hal_nau8821_i2c_read
+#define hal_i2c_update_bits hal_nau8821_i2c_update_bits
+#define hal_i2s_init        hal_nau8821_i2s_init
 
-	#define regmap_write               hal_nau8821_i2c_write
-	#define regmap_read                hal_nau8821_i2c_read
-	#define regmap_update_bits         hal_nau8821_i2c_update_bits
-	#define ussleep(ms)                delay_ms(ms) //vTaskDelay(pdMS_TO_TICKS(ms));
+#define regmap_write        hal_nau8821_i2c_write
+#define regmap_read         hal_nau8821_i2c_read
+#define regmap_update_bits  hal_nau8821_i2c_update_bits
+#define ussleep(ms)         delay_ms(ms) //vTaskDelay(pdMS_TO_TICKS(ms));
 
 #endif
 
+#elif (MCU_CORE_TYPE == MCU_CORE_TL753X && TLKDRV_CODEC_I2S_MASTER_ENABLE)
+
+#define I2S_CODEC_SEL I2S_CODEC_CHIP_NULL
+
+#define hal_i2s_pin_config
+#define hal_i2s_config
+#define hal_i2s_input
+#define hal_i2s_output
+
+#define hal_i2c_init
+#define hal_i2c_write
+#define hal_i2c_read
+#define hal_i2c_update_bits
+#define hal_i2s_init
+
+#define regmap_write
+#define regmap_read
+#define regmap_update_bits
+#define ussleep(ms) delay_ms(ms) //vTaskDelay(pdMS_TO_TICKS(ms));
 #endif

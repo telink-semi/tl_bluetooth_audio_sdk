@@ -50,6 +50,12 @@ static void tlkmw_fs_mount(FATFS *fs)
         .n_root  = 0,
         .au_size = 64 * 1024,
     };
+    const tlkmw_fs_parm_cfg_t *cfg = tlkmw_fs_diskio_get_parm_cfg();
+    if (cfg != NULL) {
+        opt.fmt     = cfg->fmt;
+        opt.au_size = cfg->clusterSize;
+    }
+
     tlk_printf("Mount FS failed, res = %d, start formatting...", res);
 
     res = f_mkfs("0:", &opt, sector_buf, sizeof(sector_buf));
@@ -84,6 +90,16 @@ void tlkmw_fs_init(void)
 #if TLK_USB_MSC_ENABLE
     tlkmw_msc_init();
 #endif
+}
+
+/**
+ * @brief       This function used to set fs is allowed to sleep
+ * @param[in]   en    - enable allowed. 
+ * @return      none.
+ */
+void tlkmw_fs_allow_sleep(uint8_t en)
+{
+    tlkmw_fs_diskio_allow_sleep(en);
 }
 
 #endif

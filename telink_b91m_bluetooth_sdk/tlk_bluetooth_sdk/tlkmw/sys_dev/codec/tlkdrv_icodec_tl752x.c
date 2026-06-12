@@ -31,7 +31,6 @@
 #include "tlkdrv_icodec_tl752x.h"
 #include "drivers.h"
 
-
 static bool tlkdrv_icodec_isOpen(uint8_t subDev);
 static int  tlkdrv_icodec_init(uint8_t subDev);
 static int  tlkdrv_icodec_open(uint8_t subDev);
@@ -72,7 +71,7 @@ uint8_t  tl751x_codec_hd_channal_table[4]  = {1, 2, 3, 0xff};
 uint8_t  tl751x_codec_cur_power_mode       = 0;
 uint32_t st_audio_sys_clk;
 
-extern unsigned int g_pll1_freq;
+extern unsigned int frac_pll_freq;
 
 typedef enum
 {
@@ -95,12 +94,18 @@ volatile uint16_t        g_codec_micfifo_wptr = 0;
 
 #define CODEC_BUF_BLOCK_SIZE 64
 
+#if AUDIO_PATH_24BITS_EN
+uint8_t codec_data_width = 4;
+#else
+uint8_t codec_data_width = 2;
+#endif
 //extern signed int sin_48k_stereo_24bit[] __attribute__((aligned(4)));
 #if (!TLK_CFG_TEMP_DRAM_OPTM_TPSLL)
 uint32_t audio_buf[DATA_BUFF_LEN];
 uint32_t audio_adc_buf[DATA_BUFF_LEN];
 #else
 _attribute_iram_data_ uint32_t audio_buf[DATA_BUFF_LEN];
+_attribute_iram_data_ uint32_t audio_adc_buf[DATA_BUFF_LEN];
 #endif
 uint32_t    zero_buf[DATA_BLOCK_SIZE];
 block_buf_t audio_block_buf[DATA_BLOCK_NUM];
@@ -123,14 +128,10 @@ void codec_dac_dma_tx_complete_cb(void *arg)
 #if (CODEC_MODE_SEL == BUFF_TO_LINE_OUT_CASE)
     //drv_audio_dac_dma_tx((uint32_t *)((unsigned int)sin_48k_stereo_24bit + DLM_BUS_READ_OFFSET), 128);
 
-    //gpio_set_high_level(GPIO_PB10);
-    //gpio_set_low_level(GPIO_PB10);
-
-
-    int       *p_codec_buf = (int *)gpTlkDrvCodecSpkBuffer;
+    codec_int *p_codec_buf = (codec_int *)gpTlkDrvCodecSpkBuffer;
     codec_int *data        = (codec_int *)audio_block_buf[codec_tx_index].bufAddr;
 
-    for (uint8_t i = 0; i < DATA_BLOCK_SIZE; i++) {
+    for (uint8_t i = 0; i < DATA_BLOCK_SIZE / (codec_data_width / 2); i++) {
         *data++ = p_codec_buf[g_codec_fifo_rptr++];
         if (g_codec_fifo_rptr == CODEC_SPK_FIFO_SAMPLES) {
             g_codec_fifo_rptr = 0;
@@ -169,10 +170,10 @@ void codec_dac_dma_tx_complete_cb(void *arg)
 void codec_adc_dma_rx_complete_cb(void *arg)
 {
     (void)arg;
-    int *record_buff = (int *)gpTlkDrvCodecMicBuffer;
+    codec_int *record_buff = (codec_int *)gpTlkDrvCodecMicBuffer;
 
     if (audio_adc_block_buf[wx_index].stat == AUDIO_BUF_FULL) {
-        //soc_printf("audio buff full!\n");
+        //    	tlkapi_trace(0xFFFFFFFF, "[tl752x_codec]", "audio buff full!");
     }
     audio_adc_block_buf[wx_index].stat = AUDIO_BUF_FULL;
 
@@ -181,11 +182,14 @@ void codec_adc_dma_rx_complete_cb(void *arg)
         wx_index = 0;
     }
 
+    // gpio_set_high_level(GPIO_PB11);
+    // gpio_set_low_level(GPIO_PB11);
+
     codec_int *data = (codec_int *)audio_adc_block_buf[wx_index].bufAddr;
 
     drv_audio_adc_dma_rx((uint32_t *)(audio_adc_block_buf[wx_index].bufAddr + DLM_BUS_READ_OFFSET), DATA_BLOCK_SIZE);
 
-    for (int i = 0; i < DATA_BLOCK_SIZE; i++) {
+    for (int i = 0; i < DATA_BLOCK_SIZE / (codec_data_width / 2); i++) {
         record_buff[g_codec_micfifo_wptr++] = *data++;
         if (g_codec_micfifo_wptr == CODEC_MIC_FIFO_SAMPLES) {
             g_codec_micfifo_wptr = 0;
@@ -221,13 +225,13 @@ static bool tlkdrv_icodec_isOpen(uint8_t subDev)
     }
 
     if (subDev == TLKDRV_CODEC_SUBDEV_MIC) {
-        if (sTlkDrvIcodecCtrl.codec_mic_cfg.IsEn) {
+        if (sTlkDrvIcodecCtrl.codec_mic_cfg.IsOpen) {
             return true;
         } else {
             return false;
         }
     } else if (subDev == TLKDRV_CODEC_SUBDEV_SPK) {
-        if (sTlkDrvIcodecCtrl.codec_spk_cfg.IsEn) {
+        if (sTlkDrvIcodecCtrl.codec_spk_cfg.IsOpen) {
             return true;
         } else {
             return false;
@@ -273,22 +277,24 @@ void tlkdrv_tl752x_codec_hd_init(void)
     audio_buf_init(audio_block_buf, (uint32_t)audio_buf, DATA_BLOCK_SIZE * sizeof(int), DATA_BLOCK_NUM);
     audio_buf_init(audio_adc_block_buf, (uint32_t)audio_adc_buf, DATA_BLOCK_SIZE * sizeof(int), DATA_BLOCK_NUM);
 
-    uint32_t pll_freq = FRACPLL_OUT_FREQ;
-
+    uint32_t         pll_freq   = FRACPLL_OUT_FREQ;
+    cpr_mclk1_init_t mclk1_init = {0};
     if (sTlkDrvIcodecCtrl.codec_spk_cfg.SampleRate == 44100) {
-        pll_freq = 282240000UL;
+        pll_freq        = 282240000UL;
+        mclk1_init.freq = 5644800;
     } else if (sTlkDrvIcodecCtrl.codec_spk_cfg.SampleRate == 48000) {
-        pll_freq = 196608000UL;
+        pll_freq        = 196608000UL;
+        mclk1_init.freq = 6144000;
     }
 
     tlkapi_trace(0xFFFFFFFF, "[tl752x_codec]", "pll_freq %d", pll_freq);
 
-    g_pll1_freq = pll_freq;
+    frac_pll_freq = pll_freq;
 
     drv_cpr_enable_fracpll(pll_freq);
-    cpr_mclk1_init_t mclk1_init;
+
     mclk1_init.source = DRV_CPR_MCLK1_SOURCE_DIVIDED_PLL1;
-    mclk1_init.freq   = pll_freq;
+
     drv_cpr_config_mclk1(&mclk1_init);
 
 #if 0
@@ -386,8 +392,7 @@ static int tlkdrv_icodec_close(uint8_t subDev)
     if ((subDev & TLKDRV_CODEC_SUBDEV_MIC) != 0) {
         sTlkDrvIcodecCtrl.codec_mic_cfg.IsOpen = false;
         sTlkDrvIcodecCtrl.codec_mic_cfg.IsEn   = false;
-        //	        audio_rx_dma_dis(TLKDRV_CODEC_MIC_DMA);
-        //        audio_codec0_set_input_snr_opt(AUDIO_AMIC_ADC_A1_A2,0);
+//        audio_codec0_set_input_snr_opt(AUDIO_AMIC_ADC_A1_A2,0);
 #if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
         //	        audio_codec0_set_micbias(AUDIO_ADC_CH_0 | AUDIO_ADC_CH_4, 0);
 #elif (CODEC_INPUT_MODE == CODEC_INPUT_DMIC)
@@ -414,7 +419,6 @@ static int tlkdrv_icodec_close(uint8_t subDev)
         drv_audio_dac_stop(AUDIO_DAC_CH_STEREO);
 
         //		audio_codec0_set_output_snr_opt(0);
-        //		audio_tx_dma_dis(TLKDRV_CODEC_SPK_DMA);
     }
     //#endif	//#if 0
     return TLK_ENONE;
@@ -818,18 +822,22 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
         memset(&adc_data_format, 0, sizeof(audio_adc_data_format_t));
         adc_data_format.hdma = &audio_adc_dmac_handle;
         adc_data_format.wide = micDWdith;
-#if (micSrc == (AUDIO_ADC_CH_0 | AUDIO_ADC_CH_4))
-        adc_data_format.ch_mode = AUDIO_ADC_MODE_STEREO;
-#else
-        adc_data_format.ch_mode        = AUDIO_ADC_MODE_MONO;
-        adc_data_format.fifo_en_bitmap = AUDIO_ADC_CH_0;
-#endif //#if (micSrc == AUDIO_ADC_CH_0 | AUDIO_ADC_CH_4)
+        if (micSrc == (AUDIO_ADC_CH_0 | AUDIO_ADC_CH_4)) {
+            adc_data_format.ch_mode = AUDIO_ADC_MODE_STEREO;
+        } else {
+            adc_data_format.ch_mode        = AUDIO_ADC_MODE_MONO;
+            adc_data_format.fifo_en_bitmap = AUDIO_ADC_CH_0;
+        }
         adc_data_format.fifo_en_bitmap = micSrc;
         drv_audio_adc_set_dma_data_format(&adc_data_format);
-
+#if AUDIO_ADC_DMA_LLP_EN
+        drv_audio_adc_dmac_llp_head_set(&adc_dmac_llp_config);
+        drv_audio_adc_dmac_llp_node_add(&adc_dmac_llp_config, &adc_dmac_llp_config, (uint32_t *)((uint32_t)gpTlkDrvCodecMicBuffer + DLM_BUS_READ_OFFSET),
+                                        gTlkDrvCodecMicBuffLen / 4);
+#else
         drv_audio_adc_rx_complete_cb_register(codec_adc_dma_rx_complete_cb);
         drv_audio_adc_dma_rx((uint32_t *)(audio_adc_block_buf[0].bufAddr + DLM_BUS_READ_OFFSET), DATA_BLOCK_SIZE);
-
+#endif
         drv_audio_adc_start(micSrc);
 #endif //#if (CODEC_INPUT_MODE == CODEC_INPUT_AMIC)
     }
@@ -875,7 +883,6 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
         //tlkapi_send_string_data(APP_LOG_EN,"tlkdrv_icodec_SPK: enable_2 ",0,0);
         //        if (gpTlkDrvCodecSpkBuffer == NULL || gTlkDrvCodecSpkBuffLen == 0 || spkSrc == 0xFFU || spkSRate == (int)0xffffffff || spkDWdith == 0xFFU) {
         if (spkSrc == 0xFFU || spkSRate == (int)0xffffffff || spkDWdith == 0xFFU) {
-            soc_printf("if (gpTlkDrvCodecSpkBuffer == NULL || gTlkDrvCodecSpkBuffLen == 0 || spkSrc == 0xFFU || spkSRate == (int)0xffffffff || spkDWdith == 0xFFU)!!!\n");
             tlkapi_error(TLKDRV_CODEC_DBG_FLAG, TLKDRV_CODEC_DBG_SIGN, "Param Err:gpTlkDrvCodecSpkBuffer[%x],gTlkDrvCodecSpkBuffLen[%x],spkSrc[%x],spkSRate[%x],spkDWdith[%x]",
                          gpTlkDrvCodecSpkBuffer, gTlkDrvCodecSpkBuffLen, spkSrc, spkSRate, spkDWdith);
             //tlkapi_send_string_data(APP_LOG_EN,"tlkdrv_icodec_SPK: enable_4 ",0,0);
@@ -898,25 +905,25 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
         drv_audio_dac_init();
 
         audio_dac_cfg_t outputParam = {
-            .src = AUDIO_DAC_SRC_PCM,
-            .fs  = spkSRate,
-            // .autx_gain = AUDIO_DAC_AUTX_GAIN_0DB;
-            // .dig_gain = AUDIO_DAC_DIG_GAIN_0DB;
+            .src       = AUDIO_DAC_SRC_PCM,
+            .fs        = spkSRate,
+            .autx_gain = AUDIO_DAC_AUTX_GAIN_0DB,
+            .dig_gain  = AUDIO_DAC_DIG_GAIN_0DB,
         };
 
         drv_audio_dac_open(spkSrc, &outputParam);
 
-        drv_audio_dac_set_autx_gain(spkSrc, AUDIO_DAC_AUTX_GAIN_0DB);
-        drv_audio_dac_set_dig_gain(spkSrc, AUDIO_DAC_DIG_GAIN_0DB);
+        // drv_audio_dac_set_autx_gain(spkSrc, AUDIO_DAC_AUTX_GAIN_0DB);
+        // drv_audio_dac_set_dig_gain(spkSrc, AUDIO_DAC_DIG_GAIN_0DB);
 
         audio_dac_data_format_t dac_data_format;
         memset(&dac_data_format, 0, sizeof(audio_dac_data_format_t));
         dac_data_format.hdma = &audio_dac_dmac_handle;
-#if (spkSrc == AUDIO_DAC_CH_STEREO)
-        dac_data_format.ch_mode = AUDIO_DAC_MODE_STEREO;
-#else
-        dac_data_format.ch_mode = AUDIO_DAC_MODE_MONO;
-#endif //#if (spkSrc == AUDIO_DAC_CH_STEREO)
+        if (spkSrc == AUDIO_DAC_CH_STEREO) {
+            dac_data_format.ch_mode = AUDIO_DAC_MODE_STEREO;
+        } else {
+            dac_data_format.ch_mode = AUDIO_DAC_MODE_MONO;
+        }
         dac_data_format.wide           = spkDWdith;
         dac_data_format.fifo_en_bitmap = spkSrc;
         drv_audio_dac_set_dma_data_format(&dac_data_format);
@@ -926,7 +933,6 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
 
 #if AUDIO_DAC_DMA_LLP_EN
         drv_audio_dac_dmac_llp_head_set(&dac_dmac_llp_config);
-        //audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_FIFO, TLKDRV_CODEC_SPK_DMA, (unsigned short *)gpTlkDrvCodecSpkBuffer, gTlkDrvCodecSpkBuffLen);
         drv_audio_dac_dmac_llp_node_add(&dac_dmac_llp_config, &dac_dmac_llp_config, (uint32_t *)((uint32_t)gpTlkDrvCodecSpkBuffer + DLM_BUS_READ_OFFSET),
                                         gTlkDrvCodecSpkBuffLen / 4);
 #else

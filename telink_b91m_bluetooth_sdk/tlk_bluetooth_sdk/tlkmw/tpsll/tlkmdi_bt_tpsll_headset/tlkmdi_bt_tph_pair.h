@@ -24,8 +24,8 @@
 #ifndef TLKMDI_BT_TPSLL_PAIR_H
 #define TLKMDI_BT_TPSLL_PAIR_H
 
-#define TLK_MDI_TPSLL_TPH_PAIRING_TIMEOUT       30     /* default 30 s*/
-#define TLK_MDI_TPSLL_TIMEOUT                   100000 // 100ms
+#define TLK_MDI_TPSLL_TPH_PAIRING_TIMEOUT 30     /* default 30 s*/
+#define TLK_MDI_TPSLL_TIMEOUT             100000 // 100ms
 
 /**
  * @brief       Initializes the Bluetooth pairing process.
@@ -40,4 +40,10 @@ int tlkmdi_bt_tph_pair_init(void);
  * @note    
  */
 int tlkmdi_bt_tph_pairing_handler(void);
+
+/**
+ * @brief       Sync version to dongle.
+ * @return      None
+ */
+void tlkmdi_tph_version_sync(void);
 #endif

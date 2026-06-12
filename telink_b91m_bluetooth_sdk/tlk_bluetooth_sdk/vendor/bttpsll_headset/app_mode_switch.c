@@ -23,9 +23,10 @@
  *******************************************************************************************************/
 
 #include "tl_common.h"
+#if TLK_STK_BT_ENABLE
 #include "tlkapi/tlkapi.h"
 #include "tlkmw/tlkmw.h"
-#include "tlkmw/ble/le_audio/inc/lea_us_headset.h"
+#include "tlkmw/ble/le_audio/inc/lea_us.h"
 #include "tlkapp/tlkapp.h"
 #define APP_SWITCH_LOG_EN 1
 
@@ -169,7 +170,7 @@ static void app_bt_tph_mode_switch_out(void)
  */
 static void app_lea_mode_switch_in(void)
 {
-    lea_unicast_server_headset_start();
+    lea_unicast_server_start_advertising();
     app_mode_switch_ctrl.in_finish = 1;
     app_switch_mode_task_wake_up();
 }
@@ -181,7 +182,7 @@ static void app_lea_mode_switch_in(void)
  */
 static void app_lea_mode_switch_out(void)
 {
-    lea_unicast_server_headset_stop(app_lea_host_stop_finished_cb);
+    lea_unicast_server_stop_task(app_lea_host_stop_finished_cb);
 }
 
 /**
@@ -284,4 +285,8 @@ void tlkapp_sys_taskInitCompletedHook(void)
     tlkdrv_key_registerVendorConfig1Callback(app_switch_mode_get_exe_ui);
 #endif
     tlksys_timer_createStatic(TLKSYS_TASKID_SYSTEM, &app_mode_switch_timer_handle, 200 * 1000, false, app_mode_switch_timer, NULL);
+
+    tlkmdi_tinySql_setSaveEnable(0);
 }
+
+#endif

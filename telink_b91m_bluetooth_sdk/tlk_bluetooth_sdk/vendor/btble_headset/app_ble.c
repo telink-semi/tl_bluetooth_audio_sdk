@@ -43,9 +43,8 @@ void tlkapp_host_le_init(void)
     //////////////////////////// BLE stack Initialization  Begin //////////////////////////////////
 
     u8 mac_public[6];
-    u8 mac_random_static[6];
 
-    blc_initMacAddress(flash_sector_mac_address, mac_public, mac_random_static);
+    tlkhal_get_bluetooth_mac(mac_public);
 
     ble_host_v1_init();
     ble_host_v1_set_bd_addr(mac_public);

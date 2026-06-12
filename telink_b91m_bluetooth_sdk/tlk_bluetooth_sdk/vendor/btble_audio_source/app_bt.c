@@ -30,39 +30,28 @@
 #include "tlkapp/tlkapp.h"
 #include "tlkmw/tlkmw.h"
 static void app_btmgr_appendProfile(uint16_t aclHandle);
-#if 0
-void app_sdp_data_callback(uint16_t uuid, uint8_t *data, uint16_t dataLen, uint8_t remain_continue_bytes, uint8_t *remail_len_buf)
-{
-	(void ) *data;
-    tlkapi_printf(APP_LOG_EN,
-                  "app_btmgr_aclConnectCB: uuid :0x%x dataLen 0x%x, rcb 0x%x,rL0: 0x%x, rL1:0x%x",
-				  uuid, dataLen, remain_continue_bytes, remain_continue_bytes?remail_len_buf[0]:0, remain_continue_bytes>1?remail_len_buf[1]:0);
 
-	//tlkapi_send_string_data(APP_LOG_EN,"d:", data, dataLen>10?10:dataLen);
-
-	//tlkapi_send_string_data(APP_LOG_EN,"cd:", remail_len_buf, remain_continue_bytes);
-
-}
-#endif
 /**
- * @brief      Callback function when ACL connection is established
- * @param[in]  handle - connection handle
- * @param[in]  status - connection status
- * @param[in]  pBtAddr - bluetooth address of remote device
- * @param[in]  dtype - device type
- * @param[in]  hfp_ChId - HFP channel ID
- * @return     none
+ * @brief       ACL connection callback function
+ * @param[in]   pData: event data
+ * @param[in]   dataLen: event data length
+ * @note        This function handles ACL connection events, including stopping pairing 
+ *              and managing scan modes based on connection status
  */
-static void app_btmgr_aclConnectCB(uint16_t handle, uint8_t status, uint8_t *pBtAddr, uint8_t dtype, uint8_t hfp_ChId)
+static int app_btmgr_aclConnectCB(uint8_t *pData, uint16_t dataLen)
 {
-    (void)dtype;
-    tlkapi_printf(APP_LOG_EN, "app_btmgr_aclConnectCB: 0x%x %d, 0x%08x, hfp_ChId[%d]", handle, status, *(uint32_t *)pBtAddr, hfp_ChId);
-    // btp_sdp_regDataCB(app_sdp_data_callback);
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_connect_evt_format)) {
+        return -TLK_EPARAM;
+    }
+
+    tlkmdi_bt_connect_evt_format *event = (tlkmdi_bt_connect_evt_format *)pData;
+
+    tlkapi_printf(APP_LOG_EN, "app_btmgr_aclConnectCB: 0x%x %d, 0x%08x, hfp_ChId[%d]", event->aclHandle, event->status, *(uint32_t *)event->pBtAddr, event->hfp_channel);
 #if (TLK_CFG_UART_TOOL_ENABLE)
-    tlkapp_btmgr_sendAclConnectEvt(handle, status, pBtAddr);
+    tlkapp_btmgr_sendAclConnectEvt(event->aclHandle, event->status, event->pBtAddr);
 #endif
 
-    if (status == BTH_HCI_ERROR_NONE) {
+    if (event->status == BTH_HCI_ERROR_NONE) {
 #if (TLK_MW_BTPAIRING_ENABLE)
         tlkmdi_btParing_stop();
 #endif
@@ -71,89 +60,94 @@ static void app_btmgr_aclConnectCB(uint16_t handle, uint8_t status, uint8_t *pBt
         } else {
             tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_PAGE_SCAN, 0);
         }
-
-        //if (hfp_ChId == 0 && dtype == BTH_REMOTE_DTYPE_HEADSET) {
-        //  btp_sdpclt_connect(handle);
-        //}
     }
+    return TLK_ENONE;
 }
 
 /**
- * @brief      Callback function when ACL encryption is completed
- * @param[in]  handle - connection handle
- * @param[in]  status - encryption status
- * @param[in]  pBtAddr - bluetooth address of remote device
- * @param[in]  dtype - device type
- * @param[in]  hfp_ChId - HFP channel ID
- * @return     none
+ * @brief       ACL encryption callback function
+ * @param[in]   pData - pointer to the event data
+ * @param[in]   dataLen - length of the event data
+ * @return      TLK_ENONE - success, otherwise failure
+ * @note        This function handles ACL encryption events, connecting SDP client if encryption succeeds
  */
-static void app_btmgr_aclEncryptCB(uint16_t handle, uint8_t status, uint8_t *pBtAddr, uint8_t dtype, uint8_t hfp_ChId)
+static int app_btmgr_aclEncryptCB(uint8_t *pData, uint16_t dataLen)
 {
-    (void)pBtAddr;
-    (void)dtype;
-    tlkapi_printf(APP_LOG_EN, "app_btmgr_aclEncryptCB:hfp_ChId =0x%x", hfp_ChId);
-    if (status == TLK_ENONE) {
-        if (hfp_ChId == 0) {
-            btp_sdpclt_connect(handle);
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_encryption_evt_format)) {
+        return -TLK_ENONE;
+    }
+
+    tlkmdi_bt_encryption_evt_format *event = (tlkmdi_bt_encryption_evt_format *)pData;
+
+    if (event->status == TLK_ENONE) {
+        if (event->hfp_channel == 0) {
+            btp_sdpclt_connect(event->aclHandle);
         } else {
-            app_btmgr_appendProfile(handle);
+            app_btmgr_appendProfile(event->aclHandle);
         }
     }
+    return TLK_ENONE;
 }
 
 /**
- * @brief      Callback function when ACL connection is disconnected
- * @param[in]  handle - connection handle
- * @param[in]  reason - disconnection reason
- * @param[in]  pBtAddr - bluetooth address of remote device
- * @return     none
+ * @brief       ACL disconnection callback function
+ * @param[in]   pData - pointer to the event data
+ * @param[in]   dataLen - length of the event data
+ * @return      TLK_ENONE is success, others is failure
  */
-static void app_btmgr_aclDisconnCB(uint16_t handle, uint8_t reason, uint8_t *pBtAddr)
+static int app_btmgr_aclDisconnCB(uint8_t *pData, uint16_t dataLen)
 {
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_disconnect_evt_format)) {
+        return -TLK_EPARAM;
+    }
+    tlkmdi_bt_disconnect_evt_format *event = (tlkmdi_bt_disconnect_evt_format *)pData;
+
 #if (TLK_CFG_UART_TOOL_ENABLE)
-    tlkapp_btmgr_sendAclDisconnEvt(handle, reason, pBtAddr);
+    tlkapp_btmgr_sendAclDisconnEvt(event->aclHandle, event->reason, event->pBtAddr);
 #endif
 
     tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_PAGE_SCAN, 0);
 
-    uint32_t taskID = handle + ((uint32_t)TLKAUD_TYPE_A2DP_OUT << 16);
+    uint32_t taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_A2DP_OUT << 16);
     tlkapp_audioScheduler_deleteTask(taskID);
-    taskID = handle + ((uint32_t)TLKAUD_TYPE_U2H_VOICE << 16);
+    taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_U2H_VOICE << 16);
     tlkapp_audioScheduler_deleteTask(taskID);
+    return TLK_ENONE;
 }
 
 /**
- * @brief      Callback function when profile connection is established
- * @param[in]  handle - connection handle
- * @param[in]  status - connection status
- * @param[in]  ptype - profile type
- * @param[in]  usrID - user ID
- * @param[in]  pBtAddr - bluetooth address of remote device
- * @param[in]  isFirstProf - flag indicating if this is the first profile connection
- * @return     none
+ * @brief       Profile connection callback function
+ * @param[in]   pData - pointer to the event data
+ * @param[in]   dataLen - length of the event data
+ * @return      TLK_ENONE is success, others is failure
  */
-static void app_btmgr_ProfConnCB(uint16_t handle, uint8_t status, uint8_t ptype, uint8_t usrID, uint8_t *pBtAddr, uint8_t isFirstProf)
+static int app_btmgr_ProfConnCB(uint8_t *pData, uint16_t dataLen)
 {
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_profile_connect_evt_format)) {
+        return -TLK_ENONE;
+    }
+    tlkmdi_bt_profile_connect_evt_format *event = (tlkmdi_bt_profile_connect_evt_format *)pData;
+
     bth_acl_handle_t *pHandle;
-    tlkapi_printf(APP_LOG_EN, "app_btmgr_ProfConnCB:{ptype-%d,usrID-%d,handle-%d,reason-%d} ", ptype, usrID, handle, status);
+
 #if (TLK_CFG_UART_TOOL_ENABLE)
-    if (ptype != BTP_PTYPE_SDP && ptype != BTP_PTYPE_RFC) {
-        tlkapp_btmgr_sendProfConnectEvt(handle, status, ptype, usrID, pBtAddr);
+    if (event->ptype != BTP_PTYPE_SDP && event->ptype != BTP_PTYPE_RFC) {
+        tlkapp_btmgr_sendProfConnectEvt(event->aclHandle, event->status, event->ptype, event->usrID, event->pBtAddr);
     }
 #endif
 
-    if (status != TLK_ENONE) {
-        return;
+    if (event->status != TLK_ENONE) {
+        return TLK_ENONE;
     }
-    if (ptype == BTP_PTYPE_A2DP && usrID == BTP_USRID_SERVER) {
+    if (event->ptype == BTP_PTYPE_A2DP && event->usrID == BTP_USRID_SERVER) {
         tlkapp_audioScheduler_taskInfo_t info = {
             .audioType = TLKAPP_AUDIO_SCHEDULER_AUDIO_TYPE_MUSIC,
             .optype    = TLKAUD_TYPE_A2DP_OUT,
             .priority  = tlkapp_audioScheduler_getDefaultPriority(TLKAUD_TYPE_A2DP_OUT),
             .state     = TLKAPP_AUDIO_SCHEDULER_TASK_STATE_IDLE,
         };
-        uint32_t                          taskID     = handle + ((uint32_t)TLKAUD_TYPE_A2DP_OUT << 16);
-        uint32_t                          sameTaskID = handle + ((uint32_t)TLKAUD_TYPE_U2H_VOICE << 16);
+        uint32_t                          taskID     = event->aclHandle + ((uint32_t)TLKAUD_TYPE_A2DP_OUT << 16);
+        uint32_t                          sameTaskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_U2H_VOICE << 16);
         tlkapp_audioScheduler_extraInfo_t exInfo     = {
 #if (TLK_USB_UAC_ENABLE)
             .stateChangeCB = tlkapp_audioUac_taskStateChgCB,
@@ -161,16 +155,16 @@ static void app_btmgr_ProfConnCB(uint16_t handle, uint8_t status, uint8_t ptype,
         };
         tlkapp_audioScheduler_updateTaskEx(taskID, info, sameTaskID, exInfo);
 
-        btp_avrcp_connect(handle, usrID);
-    } else if (ptype == BTP_PTYPE_HFP && usrID == BTP_USRID_SERVER) {
+        btp_avrcp_connect(event->aclHandle, event->usrID);
+    } else if (event->ptype == BTP_PTYPE_HFP && event->usrID == BTP_USRID_SERVER) {
         tlkapp_audioScheduler_taskInfo_t info = {
             .audioType = TLKAPP_AUDIO_SCHEDULER_AUDIO_TYPE_VOICE,
             .optype    = TLKAUD_TYPE_U2H_VOICE,
             .priority  = tlkapp_audioScheduler_getDefaultPriority(TLKAUD_TYPE_U2H_VOICE),
             .state     = TLKAPP_AUDIO_SCHEDULER_TASK_STATE_IDLE,
         };
-        uint32_t taskID     = handle + ((uint32_t)TLKAUD_TYPE_U2H_VOICE << 16);
-        uint32_t sameTaskID = handle + ((uint32_t)TLKAUD_TYPE_A2DP_OUT << 16);
+        uint32_t taskID     = event->aclHandle + ((uint32_t)TLKAUD_TYPE_U2H_VOICE << 16);
+        uint32_t sameTaskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_A2DP_OUT << 16);
         tlkapp_audioScheduler_updateTask(taskID, info, sameTaskID);
         tlkapp_audioScheduler_extraInfo_t exInfo = {
 #if (TLK_USB_UAC_ENABLE)
@@ -180,59 +174,58 @@ static void app_btmgr_ProfConnCB(uint16_t handle, uint8_t status, uint8_t ptype,
         tlkapp_audioScheduler_updateTaskEx(taskID, info, sameTaskID, exInfo);
     }
 
-    if (isFirstProf) {
-        pHandle = bth_handle_getUsedAcl(handle);
+    if (event->is_first_prof) {
+        pHandle = bth_handle_getUsedAcl(event->aclHandle);
         if (pHandle != NULL) {
-            tlkmdi_tinySql_updatePairingDevice(pBtAddr, &pHandle->devClass, pHandle->linkKey, pHandle->devName);
+            tlkmdi_tinySql_updatePairingDevice(event->pBtAddr, &pHandle->devClass, pHandle->linkKey, pHandle->devName);
         }
         //save device class and linkkey
 
         //save rfc channel id
-        tlkmdi_btacl_item_t *pItem = tlkmdi_btacl_getUsedItem(handle);
+        tlkmdi_btacl_item_t *pItem = tlkmdi_btacl_getUsedItem(event->aclHandle);
         if (pItem == NULL) {
-            return;
+            return TLK_ENOITEM;
         }
         if (pItem->active) {
             tlkmdi_tinySql_setPairingDeviceRfcChid(pItem->btaddr, pItem->hfChannel, TLKMDI_BT_RFC_CHID_HFP);
         }
     }
+    return TLK_ENONE;
 }
 
 /**
- * @brief      Callback function when profile is disconnected
- * @param[in]  handle - connection handle
- * @param[in]  reason - disconnection reason
- * @param[in]  ptype - profile type
- * @param[in]  usrID - user ID
- * @param[in]  pBtAddr - bluetooth address of remote device
- * @return     none
+ * @brief       Profile disconnection callback function
+ * @param[in]   pData - pointer to the event data
+ * @param[in]   dataLen - length of the event data
+ * @return      TLK_ENONE is success, others is failure
  */
-static void app_btmgr_ProfDiscCB(uint16_t handle, uint8_t reason, uint8_t ptype, uint8_t usrID, uint8_t *pBtAddr)
+static int app_btmgr_ProfDiscCB(uint8_t *pData, uint16_t dataLen)
 {
-#if (TLK_CFG_UART_TOOL_ENABLE)
-    if (ptype != BTP_PTYPE_SDP && ptype != BTP_PTYPE_RFC) {
-        tlkapp_btmgr_sendProfDisconnEvt(handle, reason, ptype, usrID, pBtAddr);
+    if (pData == NULL || dataLen < sizeof(tlkmdi_bt_profile_disconnect_evt_format)) {
+        return -TLK_EPARAM;
     }
-#else
-    (void)pBtAddr;
+    tlkmdi_bt_profile_disconnect_evt_format *event = (tlkmdi_bt_profile_disconnect_evt_format *)pData;
+
+#if (TLK_CFG_UART_TOOL_ENABLE)
+    if (event->ptype != BTP_PTYPE_SDP && event->ptype != BTP_PTYPE_RFC) {
+        tlkapp_btmgr_sendProfDisconnEvt(event->aclHandle, event->reason, event->ptype, event->usrID, event->pBtAddr);
+    }
 #endif
 
-    if (ptype == BTP_PTYPE_A2DP && usrID == BTP_USRID_SERVER) {
-        uint32_t taskID = handle + ((uint32_t)TLKAUD_TYPE_A2DP_OUT << 16);
+    if (event->ptype == BTP_PTYPE_A2DP && event->usrID == BTP_USRID_SERVER) {
+        uint32_t taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_A2DP_OUT << 16);
         tlkapp_audioScheduler_deleteTask(taskID);
-    } else if (ptype == BTP_PTYPE_HFP && usrID == BTP_USRID_SERVER) {
-        uint32_t taskID = handle + ((uint32_t)TLKAUD_TYPE_U2H_VOICE << 16);
+    } else if (event->ptype == BTP_PTYPE_HFP && event->usrID == BTP_USRID_SERVER) {
+        uint32_t taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_U2H_VOICE << 16);
         tlkapp_audioScheduler_deleteTask(taskID);
-        taskID = handle + ((uint32_t)TLKAUD_TYPE_CC_BT_VOICE << 16);
+        taskID = event->aclHandle + ((uint32_t)TLKAUD_TYPE_CC_BT_VOICE << 16);
         tlkapp_audioScheduler_deleteTask(taskID);
     }
 
-    tlkapi_printf(APP_LOG_EN, "app_btmgr_ProfDiscCB:{ptype-%d,usrID-%d,handle-%d,reason-%d} ", ptype, usrID, handle, reason);
-
-
-    if (ptype == BTP_PTYPE_SDP && usrID == BTP_USRID_CLIENT) {
-        app_btmgr_appendProfile(handle);
+    if (event->ptype == BTP_PTYPE_SDP && event->usrID == BTP_USRID_CLIENT) {
+        app_btmgr_appendProfile(event->aclHandle);
     }
+    return TLK_ENONE;
 }
 
 /**
@@ -268,36 +261,11 @@ static void app_btmgr_appendProfile(uint16_t aclHandle)
     tlkmdi_btacl_appendProf(aclHandle, BTP_PTYPE_AVRCP, BTP_USRID_NONE, delayMs + 500);
 }
 
-/**
- * @brief      Handle ACL connection request event
- * @param[in]  devClass - device class
- * @param[in]  pBtAddr - bluetooth address of remote device
- * @return     status
- */
-static int app_btacl_requestEvt(uint32_t devClass, uint8_t *pBtAddr)
-{
-    (void)pBtAddr;
-
-    (void)devClass;
-
-    return TLK_ENONE;
-}
-
-/**
- * @brief     Overwrite the hook function when the BT host init complete.
- *            Reg some callbacks
- * @param[in] None.
- * @returns   None.
- */
-void tlkapp_host_bt_taskInitCompletedHook(void)
-{
-    tlkmdi_btacl_regConnectCB(app_btmgr_aclConnectCB);
-    tlkmdi_btacl_regEncryptCB(app_btmgr_aclEncryptCB);
-    tlkmdi_btacl_regDisconnCB(app_btmgr_aclDisconnCB);
-    tlkmdi_btacl_regProfileConnectCB(app_btmgr_ProfConnCB);
-    tlkmdi_btacl_regProfileDisconnCB(app_btmgr_ProfDiscCB);
-    tlkmdi_btacl_regConnectRequsetCB(app_btacl_requestEvt);
-}
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_CONNECT_COMPLETE, app_btmgr_aclConnectCB);
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_DISCONNECT_COMPLETE, app_btmgr_aclDisconnCB);
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_ENCRYPTION_COMPLETE, app_btmgr_aclEncryptCB);
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_PROFILE_CONNECT, app_btmgr_ProfConnCB);
+TLKMW_BT_EVT_REGISTER(TLKMW_BT_PROFILE_DISCONNECT, app_btmgr_ProfDiscCB);
 
 /**
  * @brief     Overwrite the hook function when the BT host task starts.
@@ -324,4 +292,18 @@ __attribute__((noinline)) void tlkusb_debug_shell_hook(uint8_t *pData, uint16_t 
     if (pData[1] == 0x01) {
         tlkmdi_audio_sendStartEvt(TLKAUD_TYPE_A2DP_OUT, 0x08);
     }
+
+#if (TLKCFG_MULTI_MIC_EN)
+    if (pData[1] == 0x11) {
+        extern void tlkmdi_customer_open_codec(void);
+        tlkapi_printf(1, "open codec");
+        tlkmdi_customer_open_codec();
+    }
+
+    if (pData[1] == 0x12) {
+        extern void tlkmdi_customer_close_codec(void);
+        tlkapi_printf(1, "close codec");
+        tlkmdi_customer_close_codec();
+    }
+#endif // #if (TLKCFG_MULTI_MIC_EN)
 }

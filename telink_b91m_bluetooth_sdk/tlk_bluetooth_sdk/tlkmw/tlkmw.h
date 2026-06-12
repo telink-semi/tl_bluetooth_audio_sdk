@@ -34,13 +34,19 @@
 
 #include "tlkmw/sys_dev/tlkmw_sysdev.h"
 
+#if TLK_MW_TINYSQL_V2_ENABLE
+#include "tlkmw/tinysql_v2/tlkmdi_tinySql.h"
+#else
 #include "tlkmw/tinysql/tlkmdi_tinySql.h"
+#endif
 
 #include "tlkmw/tpsll/tlkmdi_bt_tpsll_headset/tlkmdi_bt_tpsll_headset.h"
 
 #include "tlkmw/tpsll/tlkmdi_bt_tpsll_tws/tlkmdi_bt_tpt.h"
 
 #include "tlkmw/tpsll/tlkmdi_tpsll_audio_dongle.h"
+
+#include "tlkmw/tpsll/tlkmdi_bt_tpsll_key.h"
 
 #include "tlkmw/tpsll/tlkmdi_mesh_audio_dongle/tlkmdi_mesh_audio_dongle.h"
 

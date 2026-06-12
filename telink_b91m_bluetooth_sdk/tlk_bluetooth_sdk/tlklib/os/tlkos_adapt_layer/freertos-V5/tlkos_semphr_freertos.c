@@ -27,10 +27,10 @@
 #include "tlklib/os/tlkos_config.h"
 
 #if TLKOS_CFG_FREERTOS_ENABLE
-    #include "tlklib/os/tlkos_api/tlkos_define.h"
-    #include "tlklib/os/3rd-party/freertos-V5/include/FreeRTOS.h"
-    #include "tlklib/os/3rd-party/freertos-V5/include/semphr.h"
-    #include "tlkos_freertos_inner.h"
+#include "tlklib/os/tlkos_api/tlkos_define.h"
+#include "tlklib/os/3rd-party/freertos-V5/include/FreeRTOS.h"
+#include "tlklib/os/3rd-party/freertos-V5/include/semphr.h"
+#include "tlkos_freertos_inner.h"
 
 /**
  * @brief     Creates a binary semaphore.

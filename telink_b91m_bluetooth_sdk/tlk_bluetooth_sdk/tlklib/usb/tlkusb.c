@@ -132,6 +132,7 @@ int tlkusb_close(uint8_t index)
 {
     tlkusb_hal_dp_pullup_en(index, 0);
     tlkusb_hal_gpio_disable(index);
+    tlkusb_module_deinit(gTlkUsbCurModType[index]);
     return TLK_ENONE;
 }
 

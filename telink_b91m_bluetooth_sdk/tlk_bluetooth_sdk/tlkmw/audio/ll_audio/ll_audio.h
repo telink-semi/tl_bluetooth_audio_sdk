@@ -27,7 +27,7 @@
 #include "common/types.h"
 #if (TLKSTK_BT_TPS_ENABLE)
 
-#define TLKALG_DSP_RET_NN_DATA_LEN_LL      (320*2)
+#define TLKALG_DSP_RET_NN_DATA_LEN_LL (320 * 2)
 
 typedef struct
 {
@@ -68,7 +68,7 @@ uint16_t mix_ll_audio_stereo(int16_t *p0, int16_t *p1, uint16_t samples_num);
  * @param      None.
  * @return     None.
  */
-void    ll_audio_mix_bt_music_mode_decoder_task_mcu(void);
+void ll_audio_mix_bt_music_mode_decoder_task_mcu(uint8_t times);
 
 /**
  * @brief       Low latency main loop for mixing with Bluetooth music.
@@ -145,7 +145,7 @@ uint16_t ll_audio_spk_ppm_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_
  */
 void ll_audio_audio_rx(uint32_t tick, uint8_t rx_packet_id, uint8_t wptr, uint8_t *p_data, uint8_t len);
 
-#if (TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
+#if ((TLK_MW_DSP_COMM_ENABLE && !TLKADU_MIDBUF_ENABLE) && !TLK_CFG_HRA_ENABLE)
 
 /**
  * @brief      Process DSP messages for low latency voice communication.
@@ -312,6 +312,13 @@ void ll_audio_switch_in(void);
  * @return     None.
  */
 void ll_audio_switch_out(void);
+
+uint8_t *ll_audio_mix_get_enc_buff_ptr(void);
+void     ll_audio_mix_update_enc_buff_wptr(void);
+void     ll_audio_mix_update_enc_buff_rptr(void);
+uint8_t  ll_audio_mix_enc_buff_available(void);
+void     ll_audio_bt_voice_mix_mode_uplink_xfer(void);
+void     ll_audio_bt_music_mix_mode_uplink_xfer(void);
 
 #endif
 #endif /* TLKMW_AUDIO_LL_AUDIO_LL_AUDIO_H_ */

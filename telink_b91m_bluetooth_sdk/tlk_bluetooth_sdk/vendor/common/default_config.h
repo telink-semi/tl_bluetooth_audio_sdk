@@ -35,14 +35,10 @@
 #define TLK_CFG_FS_ENABLE 0
 #endif
 
-#ifndef TLK_CFG_FLASH_PROT_ENABLE
-#define TLK_CFG_FLASH_PROT_ENABLE 0
+#ifndef TLK_CFG_FS_SECTOR_SIZE
+#define TLK_CFG_FS_SECTOR_SIZE 512
 #endif
 
-
-#ifndef TLK_CFG_RF_SHARED
-#define TLK_CFG_RF_SHARED 0
-#endif
 #ifndef TLK_CFG_AUDIO_CLOCK_LEVEL
 #define TLK_CFG_AUDIO_CLOCK_LEVEL 3
 #endif
@@ -75,7 +71,7 @@
  *  currently, condor and pardus are not support PM sleep mode,like suspend mode, so disable it.
  *  TODO: add support for condor and pardus PM sleep mode.
  */
-#if (MCU_CORE_TYPE == MCU_CORE_TL322X || MCU_CORE_TYPE == MCU_CORE_TL753X)
+#if (MCU_CORE_TYPE == MCU_CORE_TL322X || MCU_CORE_TYPE == MCU_CORE_TL753X || MCU_CORE_TYPE == MCU_CORE_TL652X)
 #undef TLK_CFG_SUSPEND_ENABLE
 #undef BLMS_PM_ENABLE
 #define BLMS_PM_ENABLE         0
@@ -86,62 +82,8 @@
 #define TLK_CFG_SUSPEND_ENABLE 0
 #endif
 
-/** product  Information */
-#ifndef ID_VENDOR
-/** for report */
-#define ID_VENDOR 0x248a
-#endif
-
-#ifndef ID_PRODUCT_BASE
-#define ID_PRODUCT_BASE 0x8800
-#endif
-
-#ifndef STRING_VENDOR
-#define STRING_VENDOR L"Telink"
-#endif
-#ifndef STRING_PRODUCT
-#define STRING_PRODUCT L"2.4G Wireless Audio"
-#endif
-
-#if 0 //(MCU_CORE_TYPE == MCU_CORE_9518)
-#ifndef STRING_SERIAL
-#define STRING_SERIAL L"TLSR9518"
-#endif
-#else
-#ifndef STRING_SERIAL
-#define STRING_SERIAL L"TLSR9518"
-#endif
-#endif
-
-
-#ifndef MIC_RESOLUTION_BIT
-#define MIC_RESOLUTION_BIT 16
-#endif
-
-
-#ifndef MIC_SAMPLE_RATE
-#define MIC_SAMPLE_RATE 16000
-#endif
-
-
-#ifndef TLK_DRV_SPI_ENABLE
-#define TLK_DRV_SPI_ENABLE 0
-#endif
 /////////////////////////////// Add for app_system layer and bt host profile configuration //////////////////////////
 ///////////////////////////////                     Begin                         ////////////////////////////
-#ifndef TLK_APP_VERSION
-#define TLK_APP_VERSION 0x00000000 // Application,
-#endif
-#ifndef TLK_LIB_VERSION
-#define TLK_LIB_VERSION 0x00000000 // Library,
-#endif
-#ifndef TLK_DRV_VERSION
-#define TLK_DRV_VERSION 0x00000000 // Driver,
-#endif
-
-#ifndef TLK_PRT_VERSION
-#define TLK_PRT_VERSION 0x0000 // Protocol,
-#endif
 
 ///////////////////////// APP Configuration//////////////////////////////////////////////////
 
@@ -182,26 +124,22 @@
 #define TLK_CFG_TONE_ENABLE 0
 #endif
 
-#ifndef TLK_MW_TPSLL_ENABLE
-#define TLK_MW_TPSLL_ENABLE 0
-#endif
-
-
-#ifndef TLK_CFG_AUDIO_TEST
-#define TLK_CFG_AUDIO_TEST 0
-#endif
-
-#ifndef TLK_CFG_BT_LE_LINK_NOT_COEX
-#define TLK_CFG_BT_LE_LINK_NOT_COEX 0
-#endif
-
+#define TLK_MW_TINYSQL_V2_ENABLE 0
 
 #ifndef TLK_MW_TINYSQL_ENABLE
+#define TLK_MW_TINYSQL_ENABLE 0
+#endif
+#if TLK_MW_TINYSQL_V2_ENABLE
+#undef TLK_MW_TINYSQL_ENABLE
 #define TLK_MW_TINYSQL_ENABLE 0
 #endif
 
 #ifndef TLK_MW_USER_CTRL_ENABLE
 #define TLK_MW_USER_CTRL_ENABLE 0
+#endif
+
+#ifndef TLK_MW_OTA_ENABLE
+#define TLK_MW_OTA_ENABLE (0 && TLK_MW_USER_CTRL_ENABLE)
 #endif
 
 #ifndef TLK_CFG_TPSLL_HCI_ENABLE
@@ -223,8 +161,16 @@
 #define TLK_USB_UAC_ENABLE 0
 #endif
 
+#ifndef TLK_USB_REMOTEWAKEUP_EN
+#define TLK_USB_REMOTEWAKEUP_EN 0
+#endif
+
 #ifndef TLK_USB_MSC_ENABLE
 #define TLK_USB_MSC_ENABLE 0
+#endif
+
+#ifndef TLK_USB_MSC_READ_ONLY
+#define TLK_USB_MSC_READ_ONLY (0 && TLK_USB_MSC_ENABLE)
 #endif
 
 #if defined(MCU_CORE_N22)
@@ -241,6 +187,9 @@
 #define TLK_CFG_USB_ENABLE (TLK_USB_UDB_ENABLE || TLK_USB_UAC_ENABLE || TLK_USB_MSC_ENABLE)
 #endif
 
+#ifndef TLKALG_PPM_CALC_BY_SAMPLE
+#define TLKALG_PPM_CALC_BY_SAMPLE 0
+#endif
 ///////////////////////// Debug Configuration//////////////////////////////////////////////////
 #ifndef TLK_DEBUG_ENABLE
 #define TLK_DEBUG_ENABLE (1)
@@ -263,6 +212,14 @@
 // Hardware UART
 #ifndef TLKDBG_CFG_HWU_LOG_ENABLE
 #define TLKDBG_CFG_HWU_LOG_ENABLE (0 && TLK_DEBUG_ENABLE)
+#endif
+
+// Gpio Simulation UART
+#ifndef TLKDBG_CFG_GSU_LOG_ENABLE
+#define TLKDBG_CFG_GSU_LOG_ENABLE (0 && TLK_DEBUG_ENABLE)
+#endif
+#ifndef TLKDBG_CFG_GSU_LOG_PIN
+#define TLKDBG_CFG_GSU_LOG_PIN (0)
 #endif
 
 #ifndef TLK_SM_LOG_ENABLE
@@ -299,8 +256,28 @@
 #define TLK_STK_BT_ENABLE 0
 #endif
 
+#ifndef TLK_STK_TPH_ENABLE
+#define TLK_STK_TPH_ENABLE 0
+#endif
+
+#ifndef TLK_STK_TPT_ENABLE
+#define TLK_STK_TPT_ENABLE 0
+#endif
+
+#ifndef TLK_STK_TPDT_ENABLE
+#define TLK_STK_TPDT_ENABLE 0
+#endif
+
 #ifndef TLK_STK_TPD_ENABLE
 #define TLK_STK_TPD_ENABLE 0
+#endif
+
+#ifndef TLK_STK_TPMD_ENABLE
+#define TLK_STK_TPMD_ENABLE 0
+#endif
+
+#ifndef TLK_STK_TPSLL_CONTROLLER_ENABLE
+#define TLK_STK_TPSLL_CONTROLLER_ENABLE (TLK_STK_TPH_ENABLE || TLK_STK_TPT_ENABLE || TLK_STK_TPDT_ENABLE || TLK_STK_TPMD_ENABLE || TLK_STK_TPD_ENABLE)
 #endif
 
 #ifndef TLK_STK_BT_TPSLL_ENABLE
@@ -313,6 +290,10 @@
 
 #ifndef TLKSTK_BT_TPS_ENABLE
 #define TLKSTK_BT_TPS_ENABLE (TLK_STK_BT_TPSLL_ENABLE || TLKSTK_BTTPSLL_TWS_ENABLE)
+#endif
+
+#ifndef TLK_STK_BTBLE_CTKD
+#define TLK_STK_BTBLE_CTKD 0
 #endif
 
 #ifndef TLKSTK_HOST_ENABLE
@@ -443,7 +424,7 @@
 #define TLKBTP_CFG_COVERARTSRV_ENABLE (0 && TLKBTP_CFG_COVERART_ENABLE)
 #endif
 #ifndef TLKBTP_CFG_AVRC_COVER_ART_ENABLE
-#define TLKBTP_CFG_AVRC_COVER_ART_ENABLE (0 && TLKBTP_CFG_AVRCP_ENABLE && TLKBTP_CFG_COVERARTCLT_ENABLE)
+#define TLKBTP_CFG_AVRC_COVER_ART_ENABLE (TLKBTP_CFG_AVRCP_ENABLE && TLKBTP_CFG_COVERARTCLT_ENABLE)
 #endif
 
 #ifndef TLKBTP_CFG_ATT_ENABLE
@@ -460,10 +441,6 @@
 #define TLKBTP_CFG_IAP_ENABLE (0 && TLK_STK_BT_ENABLE)
 #endif
 //end BT host profile configuration
-
-#ifndef TLKAPP_LEMGR_DONGLE_EXT_SCAN_ENABLE
-#define TLKAPP_LEMGR_DONGLE_EXT_SCAN_ENABLE 0
-#endif
 
 ///////////////////////// MW Configuration////////////////////////////////////////////////////
 
@@ -525,20 +502,22 @@
 #define TLK_MW_LEA_A2DP_TO_BIS_ENABLE (0)
 #endif
 
-#define TLK_MW_LE_AUDIO_ENABLE (TLK_MW_LEA_UC_ENABLE || TLK_MW_LEA_US_ENABLE || TLK_MW_LEA_BMS_ENABLE || TLK_MW_LEA_A2DP_TO_BIS_ENABLE || TLK_MW_LEA_BMR_ENABLE)
+#define TLK_MW_LE_AUDIO_ENABLE \
+    (!TLK_MW_LEA_LOW_LATENCY_ENABLE && (TLK_MW_LEA_UC_ENABLE || TLK_MW_LEA_US_ENABLE || TLK_MW_LEA_BMS_ENABLE || TLK_MW_LEA_A2DP_TO_BIS_ENABLE || TLK_MW_LEA_BMR_ENABLE))
+
+#define TLK_MW_LE_AUDIO_LOW_LATENCY_ENABLE \
+    (TLK_MW_LEA_LOW_LATENCY_ENABLE && (TLK_MW_LEA_UC_ENABLE || TLK_MW_LEA_US_ENABLE || TLK_MW_LEA_BMS_ENABLE || TLK_MW_LEA_A2DP_TO_BIS_ENABLE || TLK_MW_LEA_BMR_ENABLE))
 
 #ifndef TLK_MW_AUDIO_ENABLE
-#define TLK_MW_AUDIO_ENABLE (TLK_CFG_TONE_ENABLE || TLKBTP_CFG_HFPHF_ENABLE || TLKBTP_CFG_A2DP_ENABLE || TLK_USB_UAC_ENABLE || TLK_MW_LE_AUDIO_ENABLE || TLKMW_RECORDING_CARD_EN)
+#define TLK_MW_AUDIO_ENABLE                                                                                                                                 \
+    (TLK_CFG_TONE_ENABLE || TLKBTP_CFG_HFPHF_ENABLE || TLKBTP_CFG_A2DP_ENABLE || TLK_USB_UAC_ENABLE || TLK_MW_LE_AUDIO_ENABLE || TLKMW_RECORDING_CARD_EN || \
+     TLK_MW_LE_AUDIO_LOW_LATENCY_ENABLE)
 #endif
 
 
 ///////////////////////// MMI Configuration////////////////////////////////////////////////////
 #ifndef TLK_CFG_SYSTEM_ENABLE
 #define TLK_CFG_SYSTEM_ENABLE (TLK_DEV_KEY_ENABLE || TLK_DEV_LED_ENABLE || TLK_CFG_USB_ENABLE || TLK_MW_TINYSQL_ENABLE || TLK_CFG_UART_TOOL_ENABLE)
-#endif
-
-#ifndef TLKAPP_LEA_US_STATE_CONTROL_ENABLE
-#define TLKAPP_LEA_US_STATE_CONTROL_ENABLE (0 && TLK_MW_AUDIO_ENABLE)
 #endif
 
 #ifndef TLKAPP_LEMGR_ENABLE
@@ -565,6 +544,10 @@
 
 #ifndef TLKDRV_CODEC_ICODEC_ENABLE
 #define TLKDRV_CODEC_ICODEC_ENABLE (0 && TLK_DEV_CODEC_ENABLE)
+#endif
+
+#ifndef TLKDRV_CODEC_COLD_START_ENABLE
+#define TLKDRV_CODEC_COLD_START_ENABLE (0 && TLK_DEV_CODEC_ENABLE)
 #endif
 
 #ifndef TLKDRV_CODEC_I2S_SLAVE_ENABLE
@@ -628,9 +611,11 @@
 #elif (MCU_CORE_TYPE == MCU_CORE_TL751X)
 #define TLKHW_TYPE TLKHW_TL751X_EVK_C1T360A20
 #elif (MCU_CORE_TYPE == MCU_CORE_TL752X)
-//#define TLKHW_TYPE TLKHW_TL752X_50PIN//TLKHW_TL752X_96PIN//TLKHW_TL752X_50PIN
+//#define TLKHW_TYPE TLKHW_TL752X_52PIN//TLKHW_TL752X_96PIN//TLKHW_TL752X_52PIN
 
-#define TLKHW_TYPE TLKHW_TL752X_96PIN //TLKHW_TL752X_96PIN//TLKHW_TL752X_50PIN
+#define TLKHW_TYPE TLKHW_TL752X_96PIN //TLKHW_TL752X_96PIN//TLKHW_TL752X_52PIN
+#elif (MCU_CORE_TYPE == MCU_CORE_TL753X)
+#define TLKHW_TYPE TLKHW_TL753X_EVK_C1T413A20_V1_0
 #else
 #error "SDK do not support this MCU!"
 #endif
@@ -646,13 +631,23 @@
 #include "vendor/common/boards/TL721X_C1T315A20.h"
 #elif (TLKHW_TYPE == BOARD_721X_EVK_C1TXA104_V1_1)
 #include "vendor/common/boards/TL721X_C1TXA104_V1_1.h"
+#elif (TLKHW_TYPE == BOARD_721X_EVK_C1T315A87_V1_0)
+#include "vendor/common/boards/TL721X_C1T315A87_V1_1.h"
 /*751x*/
 #elif (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A20_V1_0)
 #include "vendor/common/boards/TL751X_C1T368A20_V1_0.h"
+#elif (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_0)
+#include "vendor/common/boards/TL751X_C1T368A87_V1_0.h"
+#elif (TLKHW_TYPE == TLKHW_TL751X_EVK_C1T368A87_V1_2)
+#include "vendor/common/boards/TL751X_C1T368A87_V1_2.h"
 #elif (TLKHW_TYPE == TLKHW_TL3228_EVK_C1T371A20_V1_1)
 #include "vendor/common/boards/TL3228_C1T371A20_V1_1.h"
+
 /******************do not modify this file end****************************/
 
+/*652x*/
+#elif (TLKHW_TYPE == TLKHW_TL652X_FPGA)
+#include "vendor/common/boards/TL652X_FPGA.h"
 #else
 #error "need board config"
 #endif

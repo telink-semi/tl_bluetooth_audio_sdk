@@ -30,7 +30,7 @@
 #define SBC_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
 
 /*! Version number to ensure header and binary are matching. */
-#define SBC_VERSION           SBC_VERSION_INT(0, 5, 4)
+#define SBC_VERSION           SBC_VERSION_INT(0, 5, 8)
 
 #define SBC_MAX_CHANNELS      2
 #define SBC_X_BUFFER_SIZE     328
@@ -45,25 +45,34 @@
 /* support 4 subbans float process */
 //#define F_FLOAT
 
+
+#define OPT_24BIT_EN 0 //only support 8subbands and mono
+#if OPT_24BIT_EN
+#define F_FLOAT
+#endif
+
 /* support 4 subbands odd DCT process  */
 //#define ENC_DCT
 
+//#define nullptr 0
+//#define tlkapi_trace(flags, pSign, format, args...) tlkdbg_trace(flags, pSign, nullptr, 0, format, ##args)
 
 #ifdef F_FLOAT
-    #define OUT_24BIT 1
-    #define OUT_32BIT 0
+#define OUT_16BIT 0
+#define OUT_24BIT 1
+#define OUT_32BIT 0
 #else
-    #define OUT_16BIT 1
+#define OUT_16BIT 1
 #endif
 
 #ifdef __riscv
-    #ifdef F_FLOAT
-        #define SBC_8SUBBANDS_ASM 0
-    #else
-        #define SBC_8SUBBANDS_ASM 1 //default setting of 1 in case of 8subbands FIXED
-    #endif
+#ifdef F_FLOAT
+#define SBC_8SUBBANDS_ASM 0
 #else
-    #define SBC_8SUBBANDS_ASM 0
+#define SBC_8SUBBANDS_ASM 1 //default setting of 1 in case of 8subbands FIXED
+#endif
+#else
+#define SBC_8SUBBANDS_ASM 0
 #endif
 
 typedef unsigned char u8;
@@ -124,14 +133,15 @@ typedef struct _SBC_CFG_Param
     u8       sbc_channel;
     u8       msbc;
     u8       sbc_subbands;
+
 } SBC_CFG_Param;
 
 #ifndef SBC_SYNCWORD
-    #define SBC_SYNCWORD 0x9C
+#define SBC_SYNCWORD 0x9C
 #endif
 
 #ifndef MSBC_SYNCWORD
-    #define MSBC_SYNCWORD 0xAD
+#define MSBC_SYNCWORD 0xAD
 #endif
 
 #ifdef __XTENSA__
@@ -139,7 +149,9 @@ int tlka_sbc_enc_get_size(u8 msbc);
 int tlka_sbc_dec_get_size(u8 msbc);
 #else
 int tlka_sbc_enc_get_size(void);
+int tlka_sbc_enc_get_scratch_size(void);
 int tlka_sbc_dec_get_size(void);
+int tlka_sbc_dec_get_scratch_size(void);
 #endif
 
 /*init sbc enc/dec*/
@@ -170,9 +182,9 @@ void tlka_sbc_set_dec_blocks_bitpool(sbc_dec_para_t *decoder_p, u8 blocks, u8 bi
 * 			0: frame header error							*
 *-----------------------------------------------------------*/
 #ifdef F_FLOAT
-uint32_t tlka_sbc_dec_process(sbc_dec_para_t *decoder, const uint8_t *buf, uint32_t len, uint32_t *outbuf, uint32_t *out_len, int msbc, uint8_t sbc_out_chn_mask);
+uint32_t tlka_sbc_dec_process(sbc_dec_para_t *decoder, const uint8_t *buf, uint32_t len, uint32_t *outbuf, uint32_t *out_len, int msbc, uint8_t sbc_out_chn_mask, void *scratch);
 #else
-uint32_t tlka_sbc_dec_process(sbc_dec_para_t *decoder, const uint8_t *buf, uint32_t len, uint16_t *outbuf, uint32_t *out_len, int msbc, uint8_t sbc_out_chn_mask);
+uint32_t tlka_sbc_dec_process(sbc_dec_para_t *decoder, const uint8_t *buf, uint32_t len, uint16_t *outbuf, uint32_t *out_len, int msbc, uint8_t sbc_out_chn_mask, void *scratch);
 #endif
 
 /*----------------------------------------------------------*
@@ -185,15 +197,16 @@ uint32_t tlka_sbc_dec_process(sbc_dec_para_t *decoder, const uint8_t *buf, uint3
 * outbuf 	: output buffer                               	*
 * out_len 	: encoder output frmae len                    	*
 * msbc 		: 1->msbc   0->sbc              	          	*
+* scratch	: scratch buffer								*
 * 														  	*
 * return 	: codesize									  	*
 * 		   	  0 -> encoder error						  	*
 *-----------------------------------------------------------*/
 
 #ifdef F_FLOAT
-uint32_t tlka_sbc_enc_process(sbc_enc_para_t *encoder, float *buf, uint16_t len, uint8_t *outbuf, uint32_t *out_len, int msbc);
+uint32_t tlka_sbc_enc_process(sbc_enc_para_t *encoder, float *buf, uint16_t len, uint8_t *outbuf, uint32_t *out_len, int msbc, void *scratch);
 #else
-uint32_t tlka_sbc_enc_process(sbc_enc_para_t *encoder, int16_t *buf, uint16_t len, uint8_t *outbuf, uint32_t *out_len, int msbc);
+uint32_t tlka_sbc_enc_process(sbc_enc_para_t *encoder, int16_t *buf, uint16_t len, uint8_t *outbuf, uint32_t *out_len, int msbc, void *scratch);
 #endif
 
 /* only use for hifi5 */

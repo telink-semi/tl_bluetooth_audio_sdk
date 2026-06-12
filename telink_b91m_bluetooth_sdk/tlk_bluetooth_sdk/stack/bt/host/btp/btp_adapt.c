@@ -28,7 +28,7 @@
 #include "tl_common.h"
 #if (TLK_STK_BT_ENABLE)
 
-int btp_timer_create(TlkApiTimer_t *pTimer,uint32_t periodUs,uint32_t autoReload, TlkApiTimerCB_t timerCB, void* userArg)
+int btp_timer_create(TlkApiTimer_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void *userArg)
 {
     return tlksys_timer_createStatic(TLKSYS_TASKID_HOST, pTimer, periodUs, autoReload, timerCB, userArg);
 }

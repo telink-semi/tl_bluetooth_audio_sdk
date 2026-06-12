@@ -1389,7 +1389,7 @@ void tlkmdi_interphone_fifo_irq_handler_func(void)
             uint8_t *pdes = (uint8_t *)data_buff;
 #if TLKALG_AGC_ENABLE
             adc_mono_int agc_out_buff[320];
-            tlkalg_agc_proc_behind_nn((uint8_t *)data_buff, (uint8_t *)agc_out_buff);
+            tlkalg_agc_proc_behind_nn((uint8_t *)data_buff, (uint8_t *)agc_out_buff, ALG_WIDTH_16);
             pdes = (uint8_t *)agc_out_buff;
 #endif
             tlkmdi_interphone_data_mixing(pdes);
@@ -1437,7 +1437,7 @@ void tlkmdi_interphone_dsp_msg_process_callback(uint8_t enc_buff_wptr, uint8_t t
 #if TLKALG_AGC_ENABLE
     adc_mono_int agc_out_buff[320];
 #if !PLAY_STEREO_DATA
-    tlkalg_agc_proc_behind_nn(pcm_data, (uint8_t *)agc_out_buff);
+    tlkalg_agc_proc_behind_nn(pcm_data, (uint8_t *)agc_out_buff, ALG_WIDTH_16);
     pcm_data = (uint8_t *)agc_out_buff;
 #else
     adc_mono_int  agc_in_buff[320];
@@ -1448,7 +1448,7 @@ void tlkmdi_interphone_dsp_msg_process_callback(uint8_t enc_buff_wptr, uint8_t t
         agc_in_buff[i] = psrc[2 * i];
         //    	rawdata_buff[i] = psrc[2*i+1];
     }
-    tlkalg_agc_proc_behind_nn((uint8_t *)agc_in_buff, (uint8_t *)agc_out_buff);
+    tlkalg_agc_proc_behind_nn((uint8_t *)agc_in_buff, (uint8_t *)agc_out_buff, ALG_WIDTH_16);
     for (int j = 0; j < 320; j++) {
         pdes[2 * j] = agc_out_buff[j];
         //    	pdes[2*j+1] = rawdata_buff[j];
@@ -1652,7 +1652,7 @@ bool tlkmdi_interphone_fill_BtDownBuff(uint8_t *pData, uint16_t dataLen)
 void tlkmdi_interphone_sync_BtUpBuff(uint16_t sample)
 {
     s_interphone_ctl.up_buff_rptr = (s_interphone_ctl.up_buff_wptr - sample * sizeof(codec_int)) & (s_interphone_ctl.up_buff_len - 1);
-    tlkapi_printf(APP_LOG_EN, "sync BtDownBuff wptr rptr %d %d", s_interphone_ctl.up_buff_wptr, s_interphone_ctl.up_buff_rptr);
+    tlkapi_printf(APP_LOG_EN, "sync BtUpBuff wptr rptr %d %d", s_interphone_ctl.up_buff_wptr, s_interphone_ctl.up_buff_rptr);
 }
 
 /**

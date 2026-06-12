@@ -33,5 +33,4 @@
 #include "stack/pm/os_sup/os_sup.h"
 
 
-
 #endif // _STACK_H_

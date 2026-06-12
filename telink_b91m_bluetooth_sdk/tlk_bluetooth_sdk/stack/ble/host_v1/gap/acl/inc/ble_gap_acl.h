@@ -43,6 +43,16 @@ struct ble_host_gap_acl_connection_param
     BLE_HOST_GAP_ACL_UPDATE_CONN_PARAMS_ALL(conn_interval_min_ms, conn_interval_max_ms, conn_latency_count, supervision_timeout_ms, 0, 0, cb)
 
 /**
+ *   @brief Read channel map of ACL connection.
+ *
+ *   @param[in] conn_handle ACL Connection handle.
+ *   @param[out] channel_map Channel map of ACL connection.
+ *
+ *   @return BLE_HOST_ERR_SUCC if read success, otherwise error code.
+ */
+int ble_host_gap_acl_read_channel_map(uint16_t conn_handle, uint64_t *p_channel_map);
+
+/**
  *   @brief Update connection parameters of ACL connection(only for central role).
  *
  *   @param[in] conn_handle ACL Connection handle.

@@ -26,4 +26,4 @@
 #include "tlkmw/audio/common/host_interface/bt/tlkmdi_audio_btif_audio.h"
 #include "tlkmw/audio/common/host_interface/bt/tlkmdi_audio_btif_volume.h"
 #include "tlkmw/audio/common/host_interface/bt/core/tlkmdi_audio_btif_core.h"
-
+#include "tlkmw/audio/common/host_interface/bt/a2dp/tlkmdi_audio_btif_a2dp.h"

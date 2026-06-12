@@ -23,11 +23,13 @@
  *******************************************************************************************************/
 #ifndef _TLKMDI_RECORDING_CARD_H_
 #define _TLKMDI_RECORDING_CARD_H_
+
 typedef struct
 {
-    bool    busy;
-    bool    first_frame;
-    bool	nn_alg_en;
+    bool          busy;
+    bool          first_frame;
+    bool          nn_alg_en;
+    bool          alg_stat_chg;
     unsigned char gain;
 } tlkmdi_recording_card_t;
 
@@ -66,5 +68,7 @@ void tlkmdi_recording_card_alg_en(bool en);
  * @return      none.
  */
 void tlkmdi_recording_card_gain_set(unsigned char gain);
+
+void tlkmdi_audio_spi_data_init(void);
 
 #endif

@@ -29,16 +29,16 @@
 #include "stack/bt/host/btp/avrcp/cover_art/btp_coverArt.h"
 #include "stack/bt/host/btp/avrcp/cover_art/btp_coverArtClt.h"
 #include "stack/bt/host/bth/bth_stdio.h"
+#include "string.h"
 
 #define TLKMDI_BTA2DP_DBG_FLAG ((TLK_MAJOR_DBGID_MDI_BT << 24) | (TLK_MINOR_DBGID_MDI_BT_A2DP << 16) | TLK_DEBUG_DBG_FLAG_ALL)
 #define TLKMDI_BTA2DP_DBG_SIGN "[MA2DP]"
 
 #if (TLK_STK_BT_ENABLE)
 #if (TLKBTP_CFG_A2DPSNK_ENABLE)
-static TlkApiTimer_t audio_threshold_check_timer;
-static uint8_t       audio_threshold_check_cnt = 0;
+static TlkApiTimer_t s_tlkmdi_a2dp_threshold_check_timer;
+static uint8_t       s_tlkmdi_a2dp_threshold_check_cnt = 0;
 #endif
-static int  tlkmdi_btavrcp_volumeChangeEvt(uint8_t *pData, uint16_t dataLen);
 static int  tlkmdi_btavrcp_peerEvtMaskEvt(uint8_t *pData, uint16_t dataLen);
 static int  tlkmdi_btavrcp_trackChangeEvt(uint8_t *pData, uint16_t dataLen);
 static int  tlkmdi_btavrcp_playbackPosChgEvt(uint8_t *pData, uint16_t dataLen);
@@ -52,28 +52,8 @@ static void tlkmdi_btBrowsing_insCompleteCB(uint16_t aclHandle, uint8_t pduID, u
 #if (TLKBTP_CFG_AVRC_COVER_ART_ENABLE)
 extern btp_coverArt_item_t *btp_coverArt_getUsedNode(uint16_t aclHandle, uint8_t usrID);
 static int                  tlkmdi_btavrcp_coverArtGetImageEvt(uint8_t *pData, uint16_t dataLen);
-static void                 tlkmdi_bta2dp_timer(TlkApiTimerHandle_t pTimer, void *userArg);
 
-typedef struct
-{
-    uint16_t      totalLen;
-    uint16_t      sendNumb;
-    uint16_t      recvNumb;
-    uint8_t       isBusy;
-    uint8_t       resv;
-    TlkApiTimer_t timer;
-    tlkapi_fifo_t fifo;
-} tlkmdi_bta2dp_report_t;
-
-static tlkmdi_bta2dp_report_t sTlkMdiImageReport;
-
-static uint8_t                             sTlkMdiCoverBuffer[TLKMDI_COVER_ART_BUFFER_TOTAL_SIZE];  // total size-2048
-__attribute__((aligned(4))) static uint8_t sTlkMdiCoverSendBuff[TLKMDI_COVER_ART_BUFFER_SEND_SIZE]; // send frame size - 128
-
-// only for test.
-static uint32_t sTlkMdiCoverArtRecvLen  = 0;
-static uint32_t sTlkMdiCoverArtWriteLen = 0;
-static uint32_t sTlkMdiCoverArtSendLen  = 0;
+static uint32_t sTlkMdiCoverArtRecvLen = 0;
 
 #endif
 #endif
@@ -132,30 +112,30 @@ static int tlkmdi_bta2dp_statusChgCB(uint8_t *pData, uint16_t dataLen)
  * @param[in]   userArg - the user argument.
  * @return      none.
 */
-static void tlkmdi_bt_audio_threshold_check_timer(TlkApiTimerHandle_t pTimer, void *userArg)
+static void tlkmdi_bt_s_tlkmdi_a2dp_threshold_check_timer(TlkApiTimerHandle_t pTimer, void *userArg)
 {
     (void)pTimer;
     (void)userArg;
 
     uint16_t handle = (uint32_t)userArg & 0xFFFF;
-    tlk_printf("tlkmdi_bt_audio_threshold_check_timer handle[%d]", handle);
+    tlk_printf("tlkmdi_bt_s_tlkmdi_a2dp_threshold_check_timer handle[%d]", handle);
     bool threshold_flag = tlkmdi_audio_get_threshold_flag();
 
-    if (audio_threshold_check_cnt > 0) {
-        audio_threshold_check_cnt--;
+    if (s_tlkmdi_a2dp_threshold_check_cnt > 0) {
+        s_tlkmdi_a2dp_threshold_check_cnt--;
     }
 
     if (threshold_flag == false) {
         /*Effective music package detected.*/
         tlkmdi_audio_set_check_threshold_flag(false);
-        tlksys_timer_stop(TLKSYS_TASKID_HOST, &audio_threshold_check_timer);
+        tlksys_timer_stop(TLKSYS_TASKID_HOST, &s_tlkmdi_a2dp_threshold_check_timer);
         return;
     }
 
-    if (audio_threshold_check_cnt == 0 && !btp_avrcp_remoteIsPlaying(handle)) {
+    if (s_tlkmdi_a2dp_threshold_check_cnt == 0 && !btp_avrcp_remoteIsPlaying(handle)) {
         tlkmdi_audio_set_check_threshold_flag(false);
         tlkmdi_bta2dp_sendHostMusicStateChgEvt(handle, TLK_STATE_PAUSED);
-        tlksys_timer_stop(TLKSYS_TASKID_HOST, &audio_threshold_check_timer);
+        tlksys_timer_stop(TLKSYS_TASKID_HOST, &s_tlkmdi_a2dp_threshold_check_timer);
         return;
     }
     tlksys_timer_reStart(TLKSYS_TASKID_HOST, pTimer);
@@ -192,7 +172,11 @@ static int tlkmdi_btavrcp_statusChgCB(uint8_t *pData, uint16_t dataLen)
     } else if (pEvt->status == BTP_AVRCP_PLAY_STATE_PAUSED || pEvt->status == BTP_AVRCP_PLAY_STATE_STOPPED) {
 #if (TLKSTK_BT_TPS_ENABLE)
         uint8_t audioMode = app_tph_headset_get_mode();
+#if (TLK_STK_TPH_ENABLE)
         if ((audioMode & TPH_HOST_MODE_BT_MUSIC) != 0 && (audioMode & TPH_HOST_MODE_DONGLE_AUDIO) != 0) {
+#elif (TLK_STK_TPT_ENABLE)
+        if ((audioMode & TPT_HOST_MODE_BT_MUSIC) != 0 && (audioMode & TPT_HOST_MODE_DONGLE_AUDIO) != 0) {
+#endif
             tlkapi_warn(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_statusChgCB: not allowed exit mix mode!");
             return TLK_ENONE;
         }
@@ -204,9 +188,10 @@ static int tlkmdi_btavrcp_statusChgCB(uint8_t *pData, uint16_t dataLen)
             tlkmdi_bta2dp_sendHostMusicStateChgEvt(pEvt->handle, TLK_STATE_PAUSED);
         } else {
             tlkmdi_audio_set_check_threshold_flag(true);
-            tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &audio_threshold_check_timer, 1000000, false, tlkmdi_bt_audio_threshold_check_timer, (void *)(uint32_t)pEvt->handle);
-            tlksys_timer_reStart(TLKSYS_TASKID_HOST, &audio_threshold_check_timer);
-            audio_threshold_check_cnt = 6; //500ms * 6
+            tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &s_tlkmdi_a2dp_threshold_check_timer, 1000000, false, tlkmdi_bt_s_tlkmdi_a2dp_threshold_check_timer,
+                                      (void *)(uint32_t)pEvt->handle);
+            tlksys_timer_reStart(TLKSYS_TASKID_HOST, &s_tlkmdi_a2dp_threshold_check_timer);
+            s_tlkmdi_a2dp_threshold_check_cnt = 6; //500ms * 6
         }
 #else
         tlkmdi_bta2dp_sendHostMusicStateChgEvt(pEvt->handle, TLK_STATE_PAUSED);
@@ -237,18 +222,15 @@ BTP_EVT_REGISTER(BTP_EVTID_COVER_ART_GET_IMAGE, tlkmdi_btavrcp_coverArtGetImageE
 int tlkmdi_bta2dp_init(void)
 {
     // Register AVRCP instruction completion callback
+    (void)tlkmdi_btavrcp_insCompleteCB;
+#if (TLKBTP_CFG_AVRCP_ENABLE)
     btp_avrcp_regInsCompleteCB(tlkmdi_btavrcp_insCompleteCB);
+#endif
 #if (TLKBTP_CFG_AVRCP_BROWSING_ENABLE)
     // Register browsing items report and instruction completion callbacks
     btp_browsing_regItemsReportCB(tlkmdi_btBrowsing_itemsReportCB);
     btp_browsing_regInsCompleteCB(tlkmdi_btBrowsing_insCompleteCB);
 #endif // #if (TLKBTP_CFG_AVRCP_BROWSING_ENABLE)
-
-#if (TLKBTP_CFG_AVRC_COVER_ART_ENABLE)
-    // Initialize image report structure and FIFO buffer for cover art
-    tmemset(&sTlkMdiImageReport, 0, sizeof(tlkmdi_bta2dp_report_t));
-    tlkapi_fifo_init(&sTlkMdiImageReport.fifo, TLKAPI_FIFO_CFG_NONE, sTlkMdiCoverBuffer, TLKMDI_COVER_ART_BUFFER_TOTAL_SIZE);
-#endif // #if (TLKBTP_CFG_AVRC_COVER_ART_ENABLE)
 
     return TLK_ENONE;
 }
@@ -272,7 +254,7 @@ void tlkmdi_bta2dp_connectEvt(uint16_t aclHandle, uint8_t usrID)
  * @param[in]   dataLen - the length of the event data.
  * @return      TLK_ENONE if success, otherwise error code.
 */
-static int tlkmdi_btavrcp_volumeChangeEvt(uint8_t *pData, uint16_t dataLen)
+__attribute__((weak)) int tlkmdi_btavrcp_volumeChangeEvt(uint8_t *pData, uint16_t dataLen)
 {
     (void)dataLen;
     uint8_t                     isIos = 0;
@@ -315,20 +297,19 @@ static int tlkmdi_btavrcp_peerEvtMaskEvt(uint8_t *pData, uint16_t dataLen)
     (void)dataLen;
     btp_avrcpPeerEvtMaskEvt_t *pEvt = (btp_avrcpPeerEvtMaskEvt_t *)pData;
     if (btp_a2dp_isSrc(pEvt->handle)) {
-        //btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_VOLUME_CHANGED);
+        btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_VOLUME_CHANGED);
     } else if (btp_a2dp_isSnk(pEvt->handle)) {
 #if (TLKBTP_CFG_AVRCP_BROWSING_ENABLE)
         btp_browsing_connect(pEvt->handle);
 #endif
         btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_PLAYBACK_STATUS_CHANGED);
-        //btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_TRACK_CHANGED);
-        //btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_PLAYBACK_POS_CHANGED);
-        //btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_PLAYER_APP_SETTING_CHANGED);
-        // btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_ADDRESSED_PLAYER_CHANGED);
+        btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_TRACK_CHANGED);
     } else {
+        /*A2dp is not connected.*/
         bth_acl_handle_t *pHandle = bth_handle_getConnAcl(pEvt->handle);
         if ((pHandle != NULL) && (pHandle->curRole == BTH_ROLE_SLAVE)) {
             btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_PLAYBACK_STATUS_CHANGED);
+            btp_avrcp_sendRegEventNotify(pEvt->handle, BTP_AVRCP_EVTID_TRACK_CHANGED);
         }
     }
     return TLK_ENONE;
@@ -342,6 +323,7 @@ static int tlkmdi_btavrcp_peerEvtMaskEvt(uint8_t *pData, uint16_t dataLen)
 */
 static int tlkmdi_btavrcp_trackChangeEvt(uint8_t *pData, uint16_t dataLen)
 {
+    (void)pData;
     (void)dataLen;
 #if ((!TLKBTP_CFG_AVRCP_BROWSING_ENABLE) || (!TLKBTP_CFG_AVRC_COVER_ART_ENABLE))
     (void)pData;
@@ -454,48 +436,6 @@ static int tlkmdi_btavrcp_playerAddressChgEvt(uint8_t *pData, uint16_t dataLen)
     return TLK_ENONE;
 }
 #if (TLKBTP_CFG_AVRC_COVER_ART_ENABLE)
-/**
- * @brief       This function handles timer expiration for A2DP cover art transmission.
- * @param[in]   pTimer  - the timer handle.
- * @param[in]   userArg - the user argument.
- * @return      none.
-*/
-static void tlkmdi_bta2dp_timer(TlkApiTimerHandle_t pTimer, void *userArg)
-{
-    uint16_t len;
-
-    btp_coverArt_item_t *pCoverArt;
-
-    pCoverArt = (btp_coverArt_item_t *)userArg;
-
-    if (!sTlkMdiImageReport.isBusy) {
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_bta2dp_timer timer isbusy");
-        return;
-    }
-
-    if (!tlkapi_fifo_isEmpty(&sTlkMdiImageReport.fifo)) {
-        len = tlkapi_fifo_read(&sTlkMdiImageReport.fifo, sTlkMdiCoverSendBuff, TLKMDI_COVER_ART_BUFFER_SEND_SIZE);
-        if (len <= 0) {
-            tlkapi_error(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_bta2dp_timer read length error.");
-            return;
-        }
-#if (TLK_CFG_UART_TOOL_ENABLE)
-        tlkmdi_comm_sendCoverDat(sTlkMdiCoverSendBuff, len);
-#endif
-        sTlkMdiCoverArtSendLen += len;
-        sTlkMdiImageReport.sendNumb++;
-
-        //		tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, ">>> readLen[%d] sendLen[%d] sendNumb[%d]",
-        //			len, sTlkMdiCoverArtSendLen, sTlkMdiImageReport.sendNumb);
-    } else {
-        sTlkMdiImageReport.isBusy = false;
-        btp_coverArtclt_getImageGoOn(pCoverArt);
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_bta2dp_timer fifo is empty.");
-        return;
-    }
-
-    tlksys_timer_reStart(TLKSYS_TASKID_HOST, pTimer);
-}
 
 /**
  * @brief       This function handles cover art get image events from AVRCP.
@@ -505,8 +445,8 @@ static void tlkmdi_bta2dp_timer(TlkApiTimerHandle_t pTimer, void *userArg)
 */
 static int tlkmdi_btavrcp_coverArtGetImageEvt(uint8_t *pData, uint16_t dataLen)
 {
+    (void)dataLen;
     btp_coverArtGetImageEvt_t *pEvt;
-    int                        tmpLen = 0;
 
     btp_coverArt_item_t *pCoverArt;
 
@@ -527,33 +467,15 @@ static int tlkmdi_btavrcp_coverArtGetImageEvt(uint8_t *pData, uint16_t dataLen)
         tlkapi_error(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_coverArtGetImageEvt: no coverArt item");
         return -TLK_ENOITEM;
     }
+    /*TODO: Customer display mode to be confirmed*/
+    if (pEvt->isFirst) {}
 
-    if (pEvt->obex_state == 0xA0 || pEvt->obex_state == 0x90) {
+    if (pEvt->obex_state == 0xA0) { //'0xa0 == obex_ok'
         sTlkMdiCoverArtRecvLen += pEvt->bodyLen;
-
-        if (tlkapi_fifo_idleLen(&sTlkMdiImageReport.fifo) >= pEvt->bodyLen) {
-            // if(tlkapi_fifo_write(&sTlkMdiImageReport.fifo, pEvt->pBody, pEvt->bodyLen) > 0 &&
-            // (!sTlkMdiImageReport.isBusy)){
-
-            tmpLen = tlkapi_fifo_write(&sTlkMdiImageReport.fifo, pEvt->pBody, pEvt->bodyLen);
-            sTlkMdiCoverArtWriteLen += tmpLen;
-            if (!sTlkMdiImageReport.isBusy) {
-                sTlkMdiImageReport.isBusy = true;
-                tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &sTlkMdiImageReport.timer, TLKMDI_COVER_ART_SERIAL_TRAN_INTV, false, tlkmdi_bta2dp_timer, pCoverArt, );
-                tlksys_timer_reStart(TLKSYS_TASKID_HOST, &sTlkMdiImageReport.timer);
-            }
-        } else {
-            tlkapi_error(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_coverArtGetImageEvt no enougn. idle[%d] need[%d]",
-                         tlkapi_fifo_idleLen(&sTlkMdiImageReport.fifo), pEvt->bodyLen);
-            return -TLK_ENOMEM;
-        }
-
-        if (pEvt->obex_state == 0xA0) {
-            tlkapi_info(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_coverArtGetImageEvt status-%d, recLen-%d, totalLen-%d, writeLen-%d sendLen-%d",
-                        pEvt->status, sTlkMdiCoverArtRecvLen, pEvt->totalLen, sTlkMdiCoverArtWriteLen, sTlkMdiCoverArtSendLen);
-            sTlkMdiImageReport.totalLen = sTlkMdiCoverArtRecvLen;
-            sTlkMdiCoverArtRecvLen      = 0;
-        }
+        tlk_printf("[obex_ok!!!!] sTlkMdiCoverArtTotalLen [%d], totalLen [%d]", sTlkMdiCoverArtRecvLen, pEvt->totalLen);
+        sTlkMdiCoverArtRecvLen = 0;
+    } else if (pEvt->obex_state == 0x90) { // obex continue
+        sTlkMdiCoverArtRecvLen += pEvt->bodyLen;
     } else {
         tlkapi_error(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_coverArtGetImageEvt: error status[0x%0x]", pEvt->obex_state);
         return -TLK_ESTATUS;
@@ -561,6 +483,7 @@ static int tlkmdi_btavrcp_coverArtGetImageEvt(uint8_t *pData, uint16_t dataLen)
 
     return TLK_ENONE;
 }
+
 
 #endif
 /**
@@ -575,41 +498,19 @@ static int tlkmdi_btavrcp_coverArtGetImageEvt(uint8_t *pData, uint16_t dataLen)
 static void tlkmdi_btavrcp_insCompleteCB(uint16_t aclHandle, uint8_t pduID, uint8_t status, void *pParam, uint16_t paramLen)
 {
     (void)paramLen;
-#if (!TLKBTP_CFG_COVERARTCLT_ENABLE)
     (void)aclHandle;
-#endif
+
     if (status != BTP_AVRCP_STATUS_CODE_OPERATE_WITHOUT_ERROR) {
         tlkapi_error(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB: pduID[0x%02x], status[%d]", pduID, status);
         return;
     }
     if (pduID == BTP_AVRCP_PDUID_GET_PLAY_STATUS) {
         btp_avrcp_getPlayStatusRsp_t *pRsp = (btp_avrcp_getPlayStatusRsp_t *)pParam;
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_GET_PLAY_STATUS:");
         tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "songLength: %dms, songPosition: %dms, playStatus: %d", pRsp->songLength, pRsp->songPosition,
                      pRsp->playStatus);
-    } else if (pduID == BTP_AVRCP_PDUID_LIST_PAS_ATTRS) { // ListPlayerApplicationSettingAttributes, AV/C STATUS
-        //		btp_avrcp_listPasAttrRsp_t *pRsp = (btp_avrcp_listPasAttrRsp_t*)pParam;
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_LIST_PAS_ATTRS:");
-    } else if (pduID == BTP_AVRCP_PDUID_LIST_PAS_VALUES) { // ListPlayerApplicationSettingValues, AV/C STATUS
-        //		btp_avrcp_listPasValueRsp_t *pRsp = (btp_avrcp_listPasValueRsp_t*)pParam;
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_LIST_PAS_VALUES:");
-    } else if (pduID == BTP_AVRCP_PDUID_GET_CUR_PAS_VALUR) { // GetCurrentPlayerApplicationSettingValue, AV/C STATUS
-        //		btp_avrcp_getCurlistPasValueRsp_t *pRsp = (btp_avrcp_getCurlistPasValueRsp_t*)pParam;
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_GET_CUR_PAS_VALUR:");
-    } else if (pduID == BTP_AVRCP_PDUID_SET_PAS_VALUE) { // AV/C CONTROL, AV/C CONTROL
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_SET_PAS_VALUE:");
-    } else if (pduID == BTP_AVRCP_PDUID_GET_PAS_ATTR_TEXT) { // GetPlayerApplicationSettingAttributeText , AV/C STATUS
-        //		btp_avrcp_getPasAttrTextRsp_t *pRsp = (btp_avrcp_getPasAttrTextRsp_t*)pParam;
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_GET_PAS_ATTR_TEXT:");
-    } else if (pduID == BTP_AVRCP_PDUID_GET_PAS_VALUE_TEXT) { // GetPlayerApplicationSettingValueText, AV/C STATUS
-        //		btp_avrcp_getPasValueTextRsp_t *pRsp = (btp_avrcp_getPasValueTextRsp_t*)pParam;
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_GET_PAS_VALUE_TEXT:");
-    } else if (pduID == BTP_AVRCP_PDUID_INFORM_DISPLAY_CHARSET) { // GetPlayerApplicationSettingValueText, AV/C CONTROL
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_INFORM_DISPLAY_CHARSET:");
-    } else if (pduID == BTP_AVRCP_PDUID_INFORM_BATTERY_STATUS) { // InfomBatteryStatusOfCT, AV/C CONTROL
-        tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_INFORM_BATTERY_STATUS:");
     } else if (pduID == BTP_AVRCP_PDUID_GET_ELEMENT_ATTR) { // Metadata Attributes for Current Media Item
         btp_avrcp_getElementAttrRsp_t *pRsp = (btp_avrcp_getElementAttrRsp_t *)pParam;
+        (void)pRsp;
 
         tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_GET_ELEMENT_ATTR: number[%d]", pRsp->number);
 
@@ -617,7 +518,9 @@ static void tlkmdi_btavrcp_insCompleteCB(uint16_t aclHandle, uint8_t pduID, uint
 
         btp_coverArt_item_t *pCoverArt = btp_coverArt_getUsedNode(aclHandle, BTP_USRID_CLIENT);
         if (pCoverArt == NULL) {
-            tlkapi_error(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB	pCoverArt note error");
+            // tlkapi_error(TLKMDI_BTA2DP_DBG_FLAG,
+            //              TLKMDI_BTA2DP_DBG_SIGN,
+            //              "tlkmdi_btavrcp_insCompleteCB	pCoverArt note error");
             return;
         }
 
@@ -626,54 +529,91 @@ static void tlkmdi_btavrcp_insCompleteCB(uint16_t aclHandle, uint8_t pduID, uint
         uint16_t tmpLen  = 0;
         bool     isGet   = false;
 
-        memset(buffer, 0, 256);
+        tmemset(buffer, 0, 256);
         for (uint8_t index = 0; index < pRsp->number; index++) {
-            if (pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_TITLE || pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_ARTIST_NAME ||
-                pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_COVER_ART) {
-                buffer[buffLen++] = (pRsp->attID[index] & 0xFF);
-                buffer[buffLen++] = (pRsp->charSet[index] & 0xFF);
-                buffer[buffLen++] = ((pRsp->charSet[index] >> 8) & 0xFF);
-                buffer[buffLen++] = (pRsp->length[index] & 0xFF);
-                buffer[buffLen++] = ((pRsp->length[index] >> 8) & 0xFF);
-                tmemcpy(buffer + buffLen, pRsp->pValue[index], pRsp->length[index]);
-                buffLen += pRsp->length[index];
+            if (pRsp->attID[index] != BTP_ELEMENTS_ATTR_ID_TITLE && pRsp->attID[index] != BTP_ELEMENTS_ATTR_ID_ARTIST_NAME &&
+                pRsp->attID[index] != BTP_ELEMENTS_ATTR_ID_ALBUM_NAME && pRsp->attID[index] != BTP_ELEMENTS_ATTR_ID_COVER_ART) {
+                continue;
+            }
 
-                if (pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_TITLE) {
-                    tmpLen = (pRsp->length[index] > IMAGE_TITLE_LEN_MAX) ? IMAGE_TITLE_LEN_MAX : pRsp->length[index];
-                    tmemset(pCoverArt->unit.imgTitle, 0, IMAGE_TITLE_LEN_MAX);
-                    tmemcpy(pCoverArt->unit.imgTitle, pRsp->pValue[index], tmpLen);
+            buffer[buffLen++] = (pRsp->attID[index] & 0xFF);
+            buffer[buffLen++] = (pRsp->charSet[index] & 0xFF);
+            buffer[buffLen++] = ((pRsp->charSet[index] >> 8) & 0xFF);
+            buffer[buffLen++] = (pRsp->length[index] & 0xFF);
+            buffer[buffLen++] = ((pRsp->length[index] >> 8) & 0xFF);
+            tmemcpy(buffer + buffLen, pRsp->pValue[index], pRsp->length[index]);
+            buffLen += pRsp->length[index];
+
+            if (pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_TITLE) {
+                tmpLen = (pRsp->length[index] > IMAGE_TITLE_LEN_MAX) ? IMAGE_TITLE_LEN_MAX : pRsp->length[index];
+                tmemset(pCoverArt->unit.imgTitle, 0, IMAGE_TITLE_LEN_MAX);
+                tmemcpy(pCoverArt->unit.imgTitle, pRsp->pValue[index], tmpLen);
+            }
+
+            if (pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_ARTIST_NAME) {
+                tmpLen = (pRsp->length[index] > IMAGE_ARTIST_LEN_MAX) ? IMAGE_ARTIST_LEN_MAX : pRsp->length[index];
+
+                if (tmpLen == 0 || tmemcmp(pCoverArt->unit.imgArtist, pRsp->pValue[index], tmpLen) == 0) {
+                    isGet = false;
+                    continue;
                 }
 
-                if (pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_ARTIST_NAME) {
-                    tmpLen = (pRsp->length[index] > IMAGE_ARTIST_LEN_MAX) ? IMAGE_ARTIST_LEN_MAX : pRsp->length[index];
-
-                    if (tmpLen == 0 || tmemcmp(pCoverArt->unit.imgArtist, pRsp->pValue[index], tmpLen) == 0) {
-                        continue;
-                    }
-
-                    if (strstr(pRsp->pValue[index], pCoverArt->unit.imgArtist) != NULL) {
-                        tmemset(pCoverArt->unit.imgArtist, 0, IMAGE_ARTIST_LEN_MAX);
-                        tmemcpy(pCoverArt->unit.imgArtist, pRsp->pValue[index], tmpLen);
-                        continue;
-                    }
-
-                    if (tmemcmp(pCoverArt->unit.imgArtist, pRsp->pValue[index], strlen(pCoverArt->unit.imgArtist)) == 0) {
-                        tmemset(pCoverArt->unit.imgArtist, 0, IMAGE_ARTIST_LEN_MAX);
-                        tmemcpy(pCoverArt->unit.imgArtist, pRsp->pValue[index], tmpLen);
-                        continue;
-                    }
-
-                    isGet = true;
+                /*The content that each device receives is not fixed every time. It could be a portion of the overall content.*/
+                if (strstr((char *)pRsp->pValue[index], (char *)pCoverArt->unit.imgArtist) != NULL ||
+                    strstr((char *)pCoverArt->unit.imgArtist, (char *)pRsp->pValue[index]) != NULL) {
                     tmemset(pCoverArt->unit.imgArtist, 0, IMAGE_ARTIST_LEN_MAX);
                     tmemcpy(pCoverArt->unit.imgArtist, pRsp->pValue[index], tmpLen);
+                    isGet = false;
+                    continue;
                 }
 
-                if (pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_COVER_ART) {
-                    tmpLen = (pRsp->length[index] > IMAGE_HANDLE_LEN_MAX) ? IMAGE_HANDLE_LEN_MAX : pRsp->length[index];
-                    if (tmemcmp(pCoverArt->unit.imgHandle, pRsp->pValue[index], tmpLen) != 0 && isGet) {
-                        pCoverArt->unit.imgHandleLen = tmpLen;
-                        tmemset(pCoverArt->unit.imgHandle, 0, IMAGE_HANDLE_LEN_MAX);
-                        tmemcpy(pCoverArt->unit.imgHandle, pRsp->pValue[index], tmpLen);
+                // if (tmemcmp(pCoverArt->unit.imgArtist, pRsp->pValue[index], strlen((char*)pCoverArt->unit.imgArtist)) ==
+                //     0) {
+                //     tmemset(pCoverArt->unit.imgArtist, 0, IMAGE_ARTIST_LEN_MAX);
+                //     tmemcpy(pCoverArt->unit.imgArtist, pRsp->pValue[index], tmpLen);
+                //     continue;
+                // }
+                isGet = true;
+                tlk_printf("BTP_ELEMENTS_ATTR_ID_ARTIST_NAME true");
+                tlkapi_array(TLKMDI_BTA2DP_DBG_FLAG, "[BIP]", "old:", pCoverArt->unit.imgArtist, tmpLen);
+                tlkapi_array(TLKMDI_BTA2DP_DBG_FLAG, "[BIP]", "new:", pRsp->pValue[index], tmpLen);
+
+                tmemset(pCoverArt->unit.imgArtist, 0, IMAGE_ARTIST_LEN_MAX);
+                tmemcpy(pCoverArt->unit.imgArtist, pRsp->pValue[index], tmpLen);
+            }
+
+            if (pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_ALBUM_NAME) {
+                tmpLen = (pRsp->length[index] > IMAGE_ARTIST_LEN_MAX) ? IMAGE_ARTIST_LEN_MAX : pRsp->length[index];
+
+                if (tmpLen == 0 || tmemcmp(pCoverArt->unit.imgAblum, pRsp->pValue[index], tmpLen) == 0) {
+                    isGet = false;
+                    continue;
+                }
+
+                isGet = true;
+
+                tlk_printf("BTP_ELEMENTS_ATTR_ID_ALBUM_NAME true");
+                tlkapi_array(TLKMDI_BTA2DP_DBG_FLAG, "[BIP]", "old:", pCoverArt->unit.imgAblum, tmpLen);
+                tlkapi_array(TLKMDI_BTA2DP_DBG_FLAG, "[BIP]", "new:", pRsp->pValue[index], tmpLen);
+
+                tmemset(pCoverArt->unit.imgAblum, 0, IMAGE_ARTIST_LEN_MAX);
+                tmemcpy(pCoverArt->unit.imgAblum, pRsp->pValue[index], tmpLen);
+            }
+
+            if (pRsp->attID[index] == BTP_ELEMENTS_ATTR_ID_COVER_ART) {
+                tmpLen = (pRsp->length[index] > IMAGE_HANDLE_LEN_MAX) ? IMAGE_HANDLE_LEN_MAX : pRsp->length[index];
+
+                if (tmemcmp(pCoverArt->unit.imgHandle, pRsp->pValue[index], tmpLen) != 0) {
+                    tlk_printf("BTP_ELEMENTS_ATTR_ID_COVER_ART true isGet: %d", isGet);
+                    tlkapi_array(TLKMDI_BTA2DP_DBG_FLAG, "[BIP]", "old:", pCoverArt->unit.imgHandle, tmpLen);
+                    tlkapi_array(TLKMDI_BTA2DP_DBG_FLAG, "[BIP]", "new:", pRsp->pValue[index], tmpLen);
+
+                    pCoverArt->unit.imgHandleLen = tmpLen;
+                    tmemset(pCoverArt->unit.imgHandle, 0, IMAGE_HANDLE_LEN_MAX);
+                    tmemcpy(pCoverArt->unit.imgHandle, pRsp->pValue[index], tmpLen);
+
+                    if (isGet) {
+                        tlk_printf("Start get image");
                         pCoverArt->flags |= BTP_COVERARTC_FLAG_WAIT_GET_IMAGE_HANDLE;
                         btp_coverArtclt_startGetImage(aclHandle);
                     }
@@ -681,11 +621,14 @@ static void tlkmdi_btavrcp_insCompleteCB(uint16_t aclHandle, uint8_t pduID, uint
             }
         }
 
-        if (pCoverArt->isReport) {
+        /*The APP must enable the function allowing external devices to display lyrics; otherwise, this feature will only trigger once when switching songs.*/
+        /*TODO: It is necessary to confirm the display method of the customer.*/
+        if (1 || pCoverArt->isReport) {
             //send report
+            //Send to UART Tool, just test for CoverArt.
+            tlkmdi_comm_sendEvt(TLKPRT_COMM_MTYPE_AUDIO, TLKPRT_COMM_EVTID_AUDIO_LYRICS_REPORT, buffer, buffLen);
         }
 #endif
-
 
     } else if (pduID == BTP_AVRCP_PDUID_SET_ABSOLUTE_VOLUME) { // Absolute Volume
         tlkapi_trace(TLKMDI_BTA2DP_DBG_FLAG, TLKMDI_BTA2DP_DBG_SIGN, "tlkmdi_btavrcp_insCompleteCB-BTP_AVRCP_PDUID_SET_ABSOLUTE_VOLUME:");

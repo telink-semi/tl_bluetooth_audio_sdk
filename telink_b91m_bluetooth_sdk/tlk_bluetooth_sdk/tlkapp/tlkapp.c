@@ -32,7 +32,7 @@
 void tlkapp_create_allTasks(void)
 {
 #if (TLK_CFG_SYSTEM_ENABLE)
-    tlksys_task_create(TLKSYS_TASKID_SYSTEM, tlkapp_system_getTaskCfg()); 
+    tlksys_task_create(TLKSYS_TASKID_SYSTEM, tlkapp_system_getTaskCfg());
 #endif
 #if (TLKSTK_HOST_ENABLE)
     tlksys_task_create(TLKSYS_TASKID_HOST, tlkapp_host_getTaskCfg());
@@ -42,12 +42,11 @@ void tlkapp_create_allTasks(void)
     tlksys_task_create(TLKSYS_TASKID_AUDIO, tlkapp_audio_getTaskCfg());
 #endif
 #if (TLKAPP_LEMGR_ENABLE)
-    tlksys_task_create(TLKSYS_TASKID_LEMGR, tlkapp_lemgr_getTaskCfg());//TODO: clean it
+    tlksys_task_create(TLKSYS_TASKID_LEMGR, tlkapp_lemgr_getTaskCfg()); //TODO: clean it
 #endif
 
     tlksys_task_create(TLKSYS_TASKID_USER, tlkapp_user_getTaskCfg());
 }
-
 
 /**
  * @brief       Gets the task configuration for the user task.
@@ -55,7 +54,7 @@ void tlkapp_create_allTasks(void)
  * @param[in]   none.
  * @return      Returns a pointer to the user task configuration, or NULL if not implemented.
  */
-__attribute__((weak))  const tlksys_task_cfg_t * tlkapp_user_getTaskCfg(void)
+__attribute__((weak)) const tlksys_task_cfg_t *tlkapp_user_getTaskCfg(void)
 {
     return NULL;
 }

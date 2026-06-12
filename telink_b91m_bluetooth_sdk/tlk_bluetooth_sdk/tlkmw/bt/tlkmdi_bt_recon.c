@@ -78,7 +78,7 @@ uint8_t *tlkmdi_btRecon_getPageAddr(void)
  * @return      True: need run contiune, false stop.
  * @note        none.
  */
-static void tlkmdi_btRecon_timer(TlkApiTimerHandle_t pTimer, void* userArg)
+static void tlkmdi_btRecon_timer(TlkApiTimerHandle_t pTimer, void *userArg)
 {
     (void)userArg;
     int ret = 0;
@@ -93,7 +93,7 @@ static void tlkmdi_btRecon_timer(TlkApiTimerHandle_t pTimer, void* userArg)
     } else if (sTlkMdiBtReconCtrl.state == TLKMDI_BTRECON_STATE_INTERVAL) {
         tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_BOTH_DISABLE, 0);
         sTlkMdiBtReconCtrl.state = TLKMDI_BTRECON_STATE_START;
-    }else if(sTlkMdiBtReconCtrl.state == TLKMDI_BTRECON_CANCEL_SCAN){
+    } else if (sTlkMdiBtReconCtrl.state == TLKMDI_BTRECON_CANCEL_SCAN) {
         tlkmdi_btSet_scan(TLKMDI_BTSCAN_MODE_BOTH_DISABLE, 0);
         sTlkMdiBtReconCtrl.state = TLKMDI_BTRECON_STATE_START;
     }
@@ -142,7 +142,7 @@ static void tlkmdi_btRecon_timer(TlkApiTimerHandle_t pTimer, void* userArg)
  * @return      True: need run contiune, false stop.
  * @note        none.
  */
-static void tlkmdi_btRecon_check_timer(TlkApiTimerHandle_t pTimer, void* userArg)
+static void tlkmdi_btRecon_check_timer(TlkApiTimerHandle_t pTimer, void *userArg)
 {
     (void)pTimer;
     (void)userArg;
@@ -207,7 +207,7 @@ static void tlkmdi_btRecon_check_timer(TlkApiTimerHandle_t pTimer, void* userArg
 int tlkmdi_btRecon_start(uint8_t *pPageAddr, uint32_t devClass, uint8_t retry_num)
 {
     int ret = 0;
-    if(tlkmdi_bt_isReady() == false){
+    if (tlkmdi_bt_isReady() == false) {
         return -TLK_ENOREADY;
     }
     if (sTlkMdiBtReconCtrl.state != TLKMDI_BTRECON_STATE_IDLE) {
@@ -222,8 +222,8 @@ int tlkmdi_btRecon_start(uint8_t *pPageAddr, uint32_t devClass, uint8_t retry_nu
     sTlkMdiBtReconCtrl.retry_num = retry_num;
     sTlkMdiBtReconCtrl.devClass  = devClass;
 
-    tlksys_timer_createStatic(TLKSYS_TASKID_HOST,&sTlkMdiBtReconCtrl.timer_recon, TLKMDI_BTRECON_PAGE_INTERVAL, false, tlkmdi_btRecon_timer, &sTlkMdiBtReconCtrl);
-    tlksys_timer_createStatic(TLKSYS_TASKID_HOST,&sTlkMdiBtReconCtrl.timer_state_check, TLKMDI_BTRECON_CHECK_INTERVAL, false, tlkmdi_btRecon_check_timer, &sTlkMdiBtReconCtrl);
+    tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &sTlkMdiBtReconCtrl.timer_recon, TLKMDI_BTRECON_PAGE_INTERVAL, false, tlkmdi_btRecon_timer, &sTlkMdiBtReconCtrl);
+    tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &sTlkMdiBtReconCtrl.timer_state_check, TLKMDI_BTRECON_CHECK_INTERVAL, false, tlkmdi_btRecon_check_timer, &sTlkMdiBtReconCtrl);
     ret = tlkmdi_btacl_connect(sTlkMdiBtReconCtrl.pageAddr, sTlkMdiBtReconCtrl.devClass, TLKMDI_BTRECON_PAGE_INTERVAL);
     if (ret == TLK_ENONE) {
         sTlkMdiBtReconCtrl.retry_num--;

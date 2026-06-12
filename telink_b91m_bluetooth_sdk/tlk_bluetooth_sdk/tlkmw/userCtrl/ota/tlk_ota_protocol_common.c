@@ -28,9 +28,9 @@
 #include "general_protocol/tlk_ota_general_protocol.h"
 #include "ble_previous_protocol/tlk_ota_ble_previous_protocol.h"
 
-#if (TLK_MW_USER_CTRL_ENABLE)
+#if (TLK_MW_OTA_ENABLE)
 
-int TLK_MW_USER_CTRL_ENABLE_VALUE = 1;
+int TLK_MW_OTA_ENABLE_VALUE = 1;
 
 /*Here is the user area saving format. Applicable only to the current SDK.*/
 static tlkapi_save_ctrl_t sTlk_boot_ota_cfg_ctrl;
@@ -52,18 +52,21 @@ int tlk_nvds_ota_usercfg_load(uint8_t *pBuffer, uint32_t buffLen, void *UserArg)
     }
     /*If there is no need for dynamic calculation of the backup address, there is no need to pay attention to it.*/
     /*Load Boot and OTA Configuration Zone, save User Info Zone Addr.*/
-    tlkapi_save3_init(&sTlk_boot_ota_cfg_ctrl, TLKMW_OTA_COMMON_SAVE_SIGN, TLKMW_OTA_COMMON_SAVE_VER, sizeof(sTlk_boot_and_ota_cfg_t), TLKMW_TINYSQL_OTA_INFO_ADDR0,
-                      TLKMW_TINYSQL_OTA_INFO_ADDR1);
+    tlkhal_flash_unlock();
+    tlkhal_flash_lock_ex(TLKHAL_FLASH_LOCK_BOOT_AREA);
+    tlkapi_save3_init(&sTlk_boot_ota_cfg_ctrl, TLKMW_OTA_COMMON_SAVE_SIGN, TLKMW_OTA_COMMON_SAVE_VER, sizeof(sTlk_boot_and_ota_cfg_t), TLKMW_TINYSQL_OTA_INFO_ADDR0);
 
     int ret = tlkapi_save3_load(&sTlk_boot_ota_cfg_ctrl, pBuffer, buffLen);
     if (ret < (int)buffLen) {
         memset(pBuffer, 0XFFFFFFFF, buffLen);
     }
-    if (tlkapi_save3_migrate(&sTlk_boot_ota_cfg_ctrl, pBuffer, buffLen) == TLK_ENONE) {
-        return OTA_NONE;
-    } else {
-        return -OTA_LOADERR;
+    int ota_ret = OTA_NONE;
+    if (tlkapi_save3_migrate(&sTlk_boot_ota_cfg_ctrl, pBuffer, buffLen) != TLK_ENONE) {
+        ota_ret = -OTA_LOADERR;
     }
+    tlkhal_flash_unlock();
+    tlkhal_flash_lock_ex(TLKHAL_FLASH_LOCK_EXCEPT_HIGH_128K);
+    return ota_ret;
 }
 
 /**
@@ -80,12 +83,15 @@ int tlk_nvds_ota_usercfg_save(uint8_t *pBuffer, uint32_t buffLen, void *UserArg)
     if (pBuffer == NULL || buffLen < sizeof(sTlk_boot_and_ota_cfg_t)) {
         return -OTA_SAVEERR;
     }
-
-    if (tlkapi_save3_smartSave(&sTlk_boot_ota_cfg_ctrl, pBuffer, buffLen) == TLK_ENONE) {
-        return OTA_NONE;
-    } else {
-        return -OTA_SAVEERR;
+    int ota_ret = OTA_NONE;
+    tlkhal_flash_unlock();
+    tlkhal_flash_lock_ex(TLKHAL_FLASH_LOCK_BOOT_AREA);
+    if (tlkapi_save3_smartSave(&sTlk_boot_ota_cfg_ctrl, pBuffer, buffLen) != TLK_ENONE) {
+        ota_ret = -OTA_SAVEERR;
     }
+    tlkhal_flash_unlock();
+    tlkhal_flash_lock_ex(TLKHAL_FLASH_LOCK_EXCEPT_HIGH_128K);
+    return ota_ret;
 }
 
 static nvds_ota_Interface_t sTlk_ota_interface;
@@ -100,7 +106,7 @@ static sTlkMwOtaCommon_t    sTlkMwCommonCtrl;
  */
 void *nvds_ota_malloc(uint32_t dataLen)
 {
-    return tlkos_malloc(dataLen);
+    return tlkos_calloc(dataLen);
 }
 
 /**
@@ -112,6 +118,42 @@ void *nvds_ota_malloc(uint32_t dataLen)
 void nvds_ota_free(void *pBuffer)
 {
     tlkos_free(pBuffer);
+}
+
+/**
+ * @brief      Write data to flash memory
+ * @param[in]  addr - Flash address to write to
+ * @param[in]  len  - Length of data to write
+ * @param[in]  buf  - Pointer to data buffer
+ * @return     none
+ * @note       User needs to implement this function
+ */
+void tlk_nvds_ota_write(unsigned long addr, unsigned long len, unsigned char *buf)
+{
+    (void)addr;
+    (void)len;
+    (void)buf;
+    tlkhal_flash_unlock();
+    tlkhal_flash_lock_ex(TLKHAL_FLASH_LOCK_BOOT_AREA);
+    flash_write_page(addr, len, buf);
+    tlkhal_flash_unlock();
+    tlkhal_flash_lock_ex(TLKHAL_FLASH_LOCK_EXCEPT_HIGH_128K);
+}
+
+/**
+ * @brief      Erase flash sector
+ * @param[in]  addr - Address of sector to erase
+ * @return     none
+ * @note       User needs to implement this function
+ */
+void tlk_nvds_ota_eraseSector(unsigned long addr)
+{
+    (void)addr;
+    tlkhal_flash_unlock();
+    tlkhal_flash_lock_ex(TLKHAL_FLASH_LOCK_BOOT_AREA);
+    flash_erase_sector(addr);
+    tlkhal_flash_unlock();
+    tlkhal_flash_lock_ex(TLKHAL_FLASH_LOCK_EXCEPT_HIGH_128K);
 }
 
 /**
@@ -168,14 +210,15 @@ int tlkmw_ota_common_init(void)
 
     tlk_nvds_ota_interface_init(&sTlk_ota_interface);
     /*If there is no need for dynamic calculation of the backup address, there is no need to pay attention to it.*/
-    if (sTlk_ota_interface.nvds_ota_user_load != NULL && sTlk_ota_interface.nvds_ota_user_load((uint8_t *)&sTlk_boot_ota_cfg, sizeof(sTlk_boot_and_ota_cfg_t), NULL) == OTA_NONE) {
+    if (sTlk_ota_interface->nvds_ota_user_load != NULL &&
+        sTlk_ota_interface->nvds_ota_user_load((uint8_t *)&sTlk_boot_ota_cfg, sizeof(sTlk_boot_and_ota_cfg_t), NULL) == OTA_NONE) {
         unsigned int address             = tlk_nvds_get_full_size() + TLK_CFG_FLASH_PBAP_LIST_ADDR - 0x100000; //The corresponding offset for the last 1M.
         sTlk_boot_ota_cfg.user_area_addr = address;
 
         tlk_nvds_ota_userarea_addr_save((uint8_t *)&sTlk_boot_ota_cfg, sizeof(sTlk_boot_and_ota_cfg_t), NULL);
     }
 
-    if (tlk_ota_general_protocol_init(&sTlk_ota_interface) != OTA_NONE) {
+    if (tlk_ota_general_protocol_init(sTlk_ota_interface) != OTA_NONE) {
         return -OTA_INITERR;
     }
     if (tlk_ota_ble_previous_protocol_init(&sTlk_ota_interface) != OTA_NONE) {
@@ -185,34 +228,70 @@ int tlkmw_ota_common_init(void)
     return OTA_NONE;
 }
 
-/**
- * @brief      Register channel send interface for OTA
- * @param[in]  channel - communication channel
- * @param[in]  send    - send function pointer
- * @param[out] none
- * @return     none
- */
-void tlkmw_ota_register_chn_send_interface(uint8_t channel, int (*send)(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg))
+sTlkMwUnitIntf_t *tlkmw_ota_get_chn_interface(uint8_t channel)
 {
-    if (channel >= TLKMW_OTA_TRANS_CHN_MAX || send == NULL) {
-        return;
+    for (uint8_t index = 0; index < TLKMW_OTA_SUPPORT_CHN_NUM; index++) {
+        if (sTlkMwCommonCtrl.intf[index].channel == channel) {
+            return &sTlkMwCommonCtrl.intf[index];
+        }
     }
-    sTlkMwCommonCtrl.intf[channel].send = send;
+    return NULL;
 }
 
-/**
- * @brief      Register channel receive interface for OTA
- * @param[in]  channel - communication channel
- * @param[in]  recv    - receive function pointer
- * @param[out] none
- * @return     none
- */
-void tlkmw_ota_register_chn_recv_interface(uint8_t channel, int (*recv)(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg))
+uint32_t tlkmw_ota_common_get_param(uint8_t param_type, void *userArg)
 {
-    if (channel >= TLKMW_OTA_TRANS_CHN_MAX || recv == NULL) {
-        return;
+    sTlkMwUnitIntf_t *pIntf = tlkmw_ota_get_chn_interface(sTlkMwCommonCtrl.optChn);
+    if (pIntf != NULL && pIntf->get_ota_param != NULL) {
+        return pIntf->get_ota_param(sTlkMwCommonCtrl.busy_taskID, param_type, userArg);
     }
-    sTlkMwCommonCtrl.intf[channel].recv = recv;
+
+    return 0;
+}
+
+int tlkmw_ota_register_chn_interface(sTlkMwUnitIntf_t *pInterface)
+{
+    if (pInterface == NULL) {
+        return -OTA_PARAMERR;
+    }
+
+    if (pInterface->channel == 0 || pInterface->channel >= TLKMW_OTA_TRANS_CHN_MAX) {
+        return -OTA_PARAMERR;
+    }
+
+    if (pInterface->recv == NULL) { //Use default recv function.
+        pInterface->recv = tlk_ota_general_protocol_recv_data;
+    }
+
+    uint8_t first_empty = TLKMW_OTA_SUPPORT_CHN_NUM;
+
+    for (uint8_t index = 0; index < TLKMW_OTA_SUPPORT_CHN_NUM; index++) {
+        if (sTlkMwCommonCtrl.intf[index].channel == pInterface->channel) {
+            OTA_PRINTF("Channel[%d] already registered, now replace it.", pInterface->channel);
+            if (pInterface->send != NULL) {
+                sTlkMwCommonCtrl.intf[index].send = pInterface->send;
+            }
+            if (pInterface->recv != NULL) {
+                sTlkMwCommonCtrl.intf[index].recv = pInterface->recv;
+            }
+            if (pInterface->get_ota_param != NULL) {
+                sTlkMwCommonCtrl.intf[index].get_ota_param = pInterface->get_ota_param;
+            }
+            return OTA_NONE;
+        }
+        if ((TLKMW_OTA_SUPPORT_CHN_NUM == first_empty) && (sTlkMwCommonCtrl.intf[index].channel == TLKMW_OTA_TRANS_CHN_NONE)) {
+            first_empty = index;
+        }
+    }
+
+    if (first_empty < TLKMW_OTA_SUPPORT_CHN_NUM) {
+        sTlkMwCommonCtrl.intf[first_empty].channel       = pInterface->channel;
+        sTlkMwCommonCtrl.intf[first_empty].send          = pInterface->send;
+        sTlkMwCommonCtrl.intf[first_empty].recv          = pInterface->recv;
+        sTlkMwCommonCtrl.intf[first_empty].get_ota_param = pInterface->get_ota_param;
+        return OTA_NONE;
+    }
+
+    return -OTA_REGISTERERR;
 }
 
 /**
@@ -248,7 +327,7 @@ int tlk_ota_notify_status(uint8_t *pBuffer, uint32_t buffLen, void *UserArg)
 {
     (void)UserArg;
     sTlkMwNotifyEvent_t *notify_event = (sTlkMwNotifyEvent_t *)pBuffer;
-    notify_event->taskID              = sTlkMwCommonCtrl.taskID;
+    notify_event->taskID              = sTlkMwCommonCtrl.busy_taskID;
 
     for (uint8_t i = 0; i < TLKMW_OTA_NOTIFY_ARRAY_NUM; i++) {
         if (sTlkMwCommonCtrl.notifyCB[i].threadID != 0xFFFF) {
@@ -266,7 +345,18 @@ int tlk_ota_notify_status(uint8_t *pBuffer, uint32_t buffLen, void *UserArg)
  */
 uint32_t tlkmw_ota_common_get_busy_taskid(void)
 {
-    return sTlkMwCommonCtrl.taskID;
+    return sTlkMwCommonCtrl.busy_taskID;
+}
+
+/**
+ * @brief      Get busy channel for OTA
+ * @param[in]  none
+ * @param[out] none
+ * @return     uint8_t - busy channel
+ */
+uint8_t tlkmw_ota_common_get_busy_channel(void)
+{
+    return sTlkMwCommonCtrl.optChn;
 }
 
 /**
@@ -279,10 +369,10 @@ uint32_t tlkmw_ota_common_get_busy_taskid(void)
  */
 void tlkmw_ota_common_send_data(uint8_t *pData, uint16_t dataLen, void *UserArg)
 {
-    if (sTlkMwCommonCtrl.intf[sTlkMwCommonCtrl.optChn].send == NULL) {
-        return;
+    sTlkMwUnitIntf_t *pIntf = tlkmw_ota_get_chn_interface(sTlkMwCommonCtrl.optChn);
+    if (pIntf != NULL && pIntf->send != NULL) {
+        pIntf->send(sTlkMwCommonCtrl.busy_taskID, pData, dataLen, UserArg);
     }
-    sTlkMwCommonCtrl.intf[sTlkMwCommonCtrl.optChn].send(sTlkMwCommonCtrl.taskID, pData, dataLen, UserArg);
 }
 
 /**
@@ -300,12 +390,11 @@ void tlkmw_ota_common_recv_data(uint32_t taskID, uint8_t channel, uint8_t *pData
         return;
     }
 
-    /*Only supporting multiple OTA channels, should attention taskID and channel.*/
-    if (sTlkMwCommonCtrl.taskID == 0) {
-        sTlkMwCommonCtrl.taskID = taskID;
+    if (sTlkMwCommonCtrl.busy_taskID == 0) {
+        sTlkMwCommonCtrl.busy_taskID = taskID;
     }
 
-    if (taskID != sTlkMwCommonCtrl.taskID) {
+    if (taskID != sTlkMwCommonCtrl.busy_taskID) {
         return;
     }
 
@@ -316,11 +405,10 @@ void tlkmw_ota_common_recv_data(uint32_t taskID, uint8_t channel, uint8_t *pData
         return;
     }
 
-    if (sTlkMwCommonCtrl.intf[sTlkMwCommonCtrl.optChn].recv == NULL) {
-        return;
+    sTlkMwUnitIntf_t *pIntf = tlkmw_ota_get_chn_interface(sTlkMwCommonCtrl.optChn);
+    if (pIntf != NULL && pIntf->recv != NULL) {
+        pIntf->recv(sTlkMwCommonCtrl.busy_taskID, pData, dataLen, NULL);
     }
-
-    sTlkMwCommonCtrl.intf[sTlkMwCommonCtrl.optChn].recv(sTlkMwCommonCtrl.taskID, pData, dataLen, NULL);
 }
 
 /**
@@ -331,22 +419,31 @@ void tlkmw_ota_common_recv_data(uint32_t taskID, uint8_t channel, uint8_t *pData
  */
 void tlkmw_ota_common_reset(void)
 {
-    uint16_t remain_size = sizeof(sTlkMwUnitIntf_t) * TLKMW_OTA_TRANS_CHN_MAX + sizeof(sTlkMwNotifyUnit_t) * TLKMW_OTA_NOTIFY_ARRAY_NUM;
+    uint16_t remain_size = sizeof(sTlkMwUnitIntf_t) * TLKMW_OTA_SUPPORT_CHN_NUM + sizeof(sTlkMwNotifyUnit_t) * TLKMW_OTA_NOTIFY_ARRAY_NUM;
     OTA_MEMSET(&sTlkMwCommonCtrl, 0, sizeof(sTlkMwOtaCommon_t) - remain_size);
 }
 
 #else
+
 /**
- * @brief      Register channel send interface for OTA
- * @param[in]  channel - communication channel
- * @param[in]  send    - send function pointer
+ * @brief      Send data via OTA common interface
+ * @param[in]  pData   - pointer to data buffer
+ * @param[in]  dataLen - length of data
+ * @param[in]  UserArg - user argument
  * @param[out] none
  * @return     none
  */
-void tlkmw_ota_register_chn_send_interface(uint8_t channel, int (*send)(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg))
+void tlkmw_ota_common_send_data(uint8_t *pData, uint16_t dataLen, void *UserArg)
 {
-    (void)channel;
-    (void)send;
+    (void)pData;
+    (void)dataLen;
+    (void)UserArg;
+}
+
+int tlkmw_ota_register_chn_interface(sTlkMwUnitIntf_t *pInterface)
+{
+    (void)pInterface;
+    return -TLK_ENOSUPPORT;
 }
 
 /**
@@ -360,10 +457,10 @@ int tlkmw_ota_register_notify_callback(uint16_t threadID, void (*notify)(void *p
 {
     (void)threadID;
     (void)notify;
-    return -OTA_MEMORYERR;
+    return -TLK_ENOSUPPORT;
 }
 
-#endif //TLK_MW_USER_CTRL_ENABLE
+#endif //TLK_MW_OTA_ENABLE
 
 
 /**

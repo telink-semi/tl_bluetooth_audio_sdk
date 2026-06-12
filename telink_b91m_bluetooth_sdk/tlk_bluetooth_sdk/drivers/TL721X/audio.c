@@ -779,10 +779,21 @@ void audio_data_fifo_input_path_sel(audio_fifo_chn_e fifo_chn, audio_mux_ain_e a
  */
 void audio_set_stream_output_sample_rate(audio_stream_output_src_e output_src, audio_sample_rate_e rate)
 {
+#ifndef PROJ_BLE_AUDIO_LL
     unsigned int *step_index[2] = {audio_stream_output_mono_step, audio_stream_output_stereo_step};
 
     audio_set_ascl_channel(ASCL0, (audio_channel_select_e)output_src);
     audio_set_ascl_tune_step(ASCL0, step_index[output_src][rate]);
+#else
+    (void)rate;
+    (void)audio_stream_output_mono_step;
+    (void)audio_stream_output_stereo_step;
+    unsigned int step_l= 0x001;
+    unsigned int step_h= 12288;
+    unsigned int step = ((step_h)<<12)|step_l;
+    audio_set_ascl_channel(ASCL0, (audio_channel_select_e)output_src);
+    audio_set_ascl_tune_step(ASCL0, step);
+#endif
 }
 
 /**
@@ -844,7 +855,11 @@ void audio_codec_stream0_input_init(audio_codec_stream0_input_t *audio_codec)
 void audio_stream_output_config(audio_stream_output_src_e chn, audio_sample_rate_e rate)
 {
     /***sdm and i2s0 share a common clock***/
+#ifndef PROJ_BLE_AUDIO_LL
     audio_set_i2s0_clk(1, sys_clk.pll_clk / 2); // sdm clk is currently configured for 2m.
+#else
+    audio_set_i2s0_clk(16, 1875);
+#endif
     audio_ascl_lerp_en(ASCL0);
     audio_set_stream_output_sample_rate(chn, rate);
     audio_set_ascl_gain(ASCL0, ASCL_OUT_D_GAIN_0_DB);

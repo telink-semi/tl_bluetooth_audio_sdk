@@ -39,12 +39,12 @@ void tlkipc_hal_mailbox_init(void)
 {
 #if defined(MCU_CORE_N22)
     mailbox_set_irq_mask(FLD_MAILBOX_D25F_TO_N22_IRQ);
-	clic_set_priority(IRQ_IPCM,IRQ_PRI_LEV3);
+    clic_set_priority(IRQ_IPCM, IRQ_PRI_LEV3);
     clic_interrupt_vector_en(IRQ_IPCM);
     clic_interrupt_enable(IRQ_IPCM);
 #else
     mailbox_set_irq_mask(FLD_MAILBOX_N22_TO_D25F_IRQ);
-	plic_set_priority(IRQ_IPCM, 3);
+    plic_set_priority(IRQ_IPCM, 3);
     plic_interrupt_enable(IRQ_IPCM);
 #endif
 }
@@ -52,19 +52,20 @@ void tlkipc_hal_mailbox_init(void)
 _attribute_ram_code_sec_ void tlkipc_hal_mailbox_send_by_reg(void *pData)
 {
 #ifdef MCU_CORE_N22
-	mailbox_n22_set_d25f_msg((unsigned int*)pData);
+    mailbox_n22_set_d25f_msg((unsigned int *)pData);
 #else
-	mailbox_d25f_set_n22_msg((unsigned int*)pData);
+    mailbox_d25f_set_n22_msg((unsigned int *)pData);
 #endif
 }
 
 _attribute_ram_code_sec_ void tlkipc_hal_mailbox_send(void *pData, uint32_t dataLen)
 {
-	if(dataLen > TLK_MAILBOX_DRV_CAPACITY){
-		tlkipc_hal_mailbox_send_by_ram(pData,dataLen);
-	}
-	tlkipc_hal_mailbox_send_by_reg(pData);
+    if (dataLen > TLK_MAILBOX_DRV_CAPACITY) {
+        tlkipc_hal_mailbox_send_by_ram(pData, dataLen);
+    }
+    tlkipc_hal_mailbox_send_by_reg(pData);
 }
+
 _attribute_ram_code_sec_ uint8_t tlkipc_hal_is_mailbox_busy(void)
 {
 #ifdef MCU_CORE_N22
@@ -78,23 +79,23 @@ _attribute_ram_code_sec_ uint8_t tlkipc_hal_is_mailbox_busy(void)
         return true;
     }
 #endif
-	return false;
+    return false;
 }
 
 #ifdef MCU_CORE_N22
 _attribute_ram_code_sec_ void tlk_controller_core_ipc_irq_handler(void)
 {
-    if ((mailbox_get_irq_status() & FLD_MAILBOX_D25F_TO_N22_IRQ) == 0){
-		return;
-	}
-	uint32_t msg[2] = {0};
-	mailbox_n22_get_d25f_msg((unsigned int*)msg);
-	uint8_t isFirst = tlkipc_mailbox_first_receive_check_hook(msg[0]);
-	if(!isFirst){
-		tlkipc_hal_mailbox_get_by_ram(msg);
-		tlkipc_mailbox_receive_hook((uint8_t *)msg);
-	}
-	mailbox_clr_irq_status(FLD_MAILBOX_D25F_TO_N22_IRQ);
+    if ((mailbox_get_irq_status() & FLD_MAILBOX_D25F_TO_N22_IRQ) == 0) {
+        return;
+    }
+    uint32_t msg[2] = {0};
+    mailbox_n22_get_d25f_msg((unsigned int *)msg);
+    uint8_t isFirst = tlkipc_mailbox_first_receive_check_hook(msg[0]);
+    if (!isFirst) {
+        tlkipc_hal_mailbox_get_by_ram(msg);
+        tlkipc_mailbox_receive_hook((uint8_t *)msg);
+    }
+    mailbox_clr_irq_status(FLD_MAILBOX_D25F_TO_N22_IRQ);
 }
 CLIC_ISR_REGISTER(tlk_controller_core_ipc_irq_handler, IRQ_IPCM)
 
@@ -102,15 +103,15 @@ CLIC_ISR_REGISTER(tlk_controller_core_ipc_irq_handler, IRQ_IPCM)
 _attribute_ram_code_sec_ void tlk_main_core_ipc_irq_handler(void)
 {
     if ((mailbox_get_irq_status() & FLD_MAILBOX_N22_TO_D25F_IRQ) == 0) {
-		return;
-	}
-	uint32_t msg[2] = {0};
-	tlkipc_hal_mailbox_get_by_ram(msg);
-	uint8_t isFirst = tlkipc_mailbox_first_receive_check_hook(msg[0]);
-	if(!isFirst){
-		tlkipc_mailbox_receive_hook((uint8_t *)msg);
-	}
-	mailbox_clr_irq_status(FLD_MAILBOX_N22_TO_D25F_IRQ);
+        return;
+    }
+    uint32_t msg[2] = {0};
+    tlkipc_hal_mailbox_get_by_ram(msg);
+    uint8_t isFirst = tlkipc_mailbox_first_receive_check_hook(msg[0]);
+    if (!isFirst) {
+        tlkipc_mailbox_receive_hook((uint8_t *)msg);
+    }
+    mailbox_clr_irq_status(FLD_MAILBOX_N22_TO_D25F_IRQ);
 }
 #endif
 

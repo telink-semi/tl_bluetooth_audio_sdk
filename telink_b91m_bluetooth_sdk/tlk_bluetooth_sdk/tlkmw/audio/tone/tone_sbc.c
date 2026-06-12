@@ -32,6 +32,9 @@
 #define SBC_BNUM 128
 #endif
 #if TONE_SBC_EN
+int   tone_sbc_dec_scratch_size = 48;
+void *tone_sbc_dec_scratch;
+
 SBC_CFG_Param g_sbc_tone_param = {
     .sbc_blocks     = 16,
     .sbc_bitpool    = 25,
@@ -129,7 +132,18 @@ int tone_sbc_dec(unsigned char *ps, int len, unsigned char *pd)
 
     uint32_t dlen = 0;
 #if TLKALG_SBC_DEC_ENABLE
-    tlka_sbc_dec_process((sbc_dec_para_t *)g_tone_sbc_dec_buf, (const uint8_t *)ps, (uint32_t)len, (uint16_t *)pd, &dlen, 0x00, 0x01);
+    tone_sbc_dec_scratch = (void *)tlkalg_malloc_func(tone_sbc_dec_scratch_size);
+    if (tone_sbc_dec_scratch == NULL) {
+        tlkapi_trace(0xFFFFFFFF, "[TONE SBC]", "tone sbc decoder scratch NULL");
+        return 0;
+    }
+
+    tlka_sbc_dec_process((sbc_dec_para_t *)g_tone_sbc_dec_buf, (const uint8_t *)ps, (uint32_t)len, (uint16_t *)pd, &dlen, 0x00, 0x01, tone_sbc_dec_scratch);
+
+    if (tone_sbc_dec_scratch != NULL) {
+        tlkalg_free_func(tone_sbc_dec_scratch);
+        tone_sbc_dec_scratch = NULL;
+    }
 #else
     (void)len;
 #endif

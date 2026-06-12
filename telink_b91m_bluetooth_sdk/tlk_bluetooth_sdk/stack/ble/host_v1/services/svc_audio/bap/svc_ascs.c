@@ -115,22 +115,24 @@ static const uint8_t ascsSourceASEValue[APP_AUDIO_ASCSS_SRC_ASE_CNT][2] = {
 };
 #endif
 
+#if (APP_AUDIO_ASCSS_SINK_ASE_CNT + APP_AUDIO_ASCSS_SOURCE_ASE_CNT) > 0
 static const uint16_t ascsASEValueLen = 2;
+#endif
 
 #define ATTS_CHAR_ASCS_ASE_UUID(uuid, value) \
     ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadNotify), ATTS_CHAR_UUID_DEFINE(ATT_PERMISSIONS_ENCRYPT_READ, uuid, ascsASEValueLen, 2, value, ATTS_SET_READ_CALLBACK)
 
-#define ATTS_CHAR_ASCS_SINK_ASE(value) ATTS_CHAR_ASCS_ASE_UUID(characteristicSinkAseUuid, value)
-#define ATTS_CHAR_ASCS_SRC_ASE(value)  ATTS_CHAR_ASCS_ASE_UUID(characteristicSourceAseUuid, value)
+#define ATTS_CHAR_ASCS_SINK_ASE(value) ATTS_CHAR_ASCS_ASE_UUID(characteristicSinkAseAttUuid, value)
+#define ATTS_CHAR_ASCS_SRC_ASE(value)  ATTS_CHAR_ASCS_ASE_UUID(characteristicSourceAseAttUuid, value)
 
 /*
  * @brief the structure for default ASCS service List.
  */
 static const struct atts_attribute ascsList[] = {
-    ATTS_PRIMARY_SERVICE(serviceAudioStreamControlUuid),
+    ATTS_PRIMARY_SERVICE(serviceAudioStreamControlAttUuid),
 
     //ASE Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteWriteWithoutNotify, characteristicAseControlPointUuid),
+    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteWriteWithoutNotify, characteristicAseControlPointAttUuid),
     ATTS_COMMON_CCC_DEFINE_WCB,
 
 //Sink ASE

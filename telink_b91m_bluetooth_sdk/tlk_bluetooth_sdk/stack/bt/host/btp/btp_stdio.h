@@ -53,6 +53,7 @@
 #include "stack/bt/host/btp/browsing/btp_browsing.h"
 #include "stack/bt/host/btp/browsing/btp_browsingRecv.h"
 #include "stack/bt/host/btp/browsing/btp_browsingSend.h"
+
 #include "stack/bt/host/btp/hfp/btp_hfp.h"
 
 #include "stack/bt/host/btp/hid/btp_hid.h"

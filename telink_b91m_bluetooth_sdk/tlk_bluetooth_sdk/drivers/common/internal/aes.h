@@ -29,11 +29,11 @@
 
 #if (MCU_AES_USE_BT_CEVA_CORE_HARDWARE_AES)
 
-    #if (MCU_SUPPORT_BT_CLASSIC_FUNCTION_EN)
+#if (MCU_SUPPORT_BT_CLASSIC_FUNCTION_EN)
 void aes_encryption_le(u8 *key, u8 *plaintext, u8 *encrypted_data);
-    #else
-        #define aes_encryption_le aes_encryption_hw
-    #endif
+#else
+#define aes_encryption_le aes_encryption_hw
+#endif
 
 void aes_encryption_be(u8 *key, u8 *plaintext, u8 *encrypted_data);
 

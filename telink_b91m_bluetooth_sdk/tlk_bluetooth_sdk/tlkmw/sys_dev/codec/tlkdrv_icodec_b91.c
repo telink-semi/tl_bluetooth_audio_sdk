@@ -395,8 +395,8 @@ static int tlkdrv_icodec_enable(uint8_t bitDepth, uint8_t channel, uint32_t samp
 
     audio_reset();
     codec_reset();
-    dma_chn_dis(TLKDRV_CODEC_MIC_DMA);
-    dma_chn_dis(TLKDRV_CODEC_SPK_DMA);
+    dma_chn_dis(gTlkdrvCodecMicDmaChn);
+    dma_chn_dis(gTlkdrvCodecSpkDmaChn);
 
     //	gpio_function_en(I2S_BCK_PC3);
     //	gpio_function_en(I2S_ADC_LR_PC4);
@@ -404,8 +404,8 @@ static int tlkdrv_icodec_enable(uint8_t bitDepth, uint8_t channel, uint32_t samp
     //	gpio_function_en(I2S_DAC_LR_PC6);
     //	gpio_function_en(I2S_DAC_DAT_PC7);
     audio_init(AMIC_IN_TO_BUF_TO_LINE_OUT, rate, bitDepth);
-    audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_DMA, (uint16_t *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
-    audio_tx_dma_chain_init(TLKDRV_CODEC_SPK_DMA, (uint16_t *)gpTlkDrvCodecSpkBuffer, gTlkDrvCodecSpkBuffLen);
+    audio_rx_dma_chain_init(gTlkdrvCodecMicDmaChn, (uint16_t *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+    audio_tx_dma_chain_init(gTlkdrvCodecSpkDmaChn, (uint16_t *)gpTlkDrvCodecSpkBuffer, gTlkDrvCodecSpkBuffLen);
 
     //	audio_set_codec_supply(CODEC_2P8V);
 
@@ -418,8 +418,8 @@ static int tlkdrv_icodec_enable(uint8_t bitDepth, uint8_t channel, uint32_t samp
  */
 static void tlkdrv_icodec_disable(void)
 {
-    dma_chn_dis(TLKDRV_CODEC_MIC_DMA);
-    dma_chn_dis(TLKDRV_CODEC_SPK_DMA);
+    dma_chn_dis(gTlkdrvCodecMicDmaChn);
+    dma_chn_dis(gTlkdrvCodecSpkDmaChn);
 
     audio_reset();
     codec_reset();

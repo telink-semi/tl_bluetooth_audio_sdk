@@ -29,9 +29,13 @@
 
 uint8_t        *g_nn_ns_buf_ptr = NULL;
 NN_NS_PARA_STRU g_nn_ns_para    = {
-       .n_fft          = 1024,
-       .n_framesize    = 320,
-       .n_target_level = target_unlimited,
+       .n_fft = 1024,
+#if (TLKALG_NN_NS_TYPE == TLKALG_NN_NS_16K_20MS)
+    .n_framesize = 320,
+#elif (TLKALG_NN_NS_TYPE == TLKALG_NN_NS_48K_10MS)
+    .n_framesize = 480,
+#endif
+    .n_target_level = target_unlimited,
 };
 
 /**

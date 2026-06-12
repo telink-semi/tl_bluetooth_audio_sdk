@@ -33,16 +33,9 @@
 #define BLUETOOTH_CONTROLLER_MODE BT_BLE_CONTROLLER_MODE
 
 
-#if EBQ_BT_CTRLER_ONLY_TEST_MODE
-    #ifdef BLUETOOTH_CONTROLLER_MODE
-        #undef BLUETOOTH_CONTROLLER_MODE
-    #endif
-    #define BLUETOOTH_CONTROLLER_MODE BT_CONTROLLER_ONLY_MODE
-#endif
-
-#define SDK_RELEASE 1
+#define SDK_RELEASE               1
 #if (MCU_CORE_TYPE == MCU_CORE_TL752X)
-#define HCI_TR_EN   0
+#define HCI_TR_EN 0
 #else
-#define HCI_TR_EN   1
+#define HCI_TR_EN 1
 #endif

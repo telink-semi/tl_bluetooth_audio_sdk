@@ -26,7 +26,7 @@
 #include "tlkapi/tlkapi.h"
 #if (TLK_MW_AUDIO_ENABLE)
 
-#if (MCU_CORE_TYPE == MCU_CORE_TL721X||MCU_CORE_TYPE == MCU_CORE_TL322X ||MCU_CORE_TYPE == MCU_CORE_TL752X)
+#if (MCU_CORE_TYPE == MCU_CORE_TL721X || MCU_CORE_TYPE == MCU_CORE_TL322X || MCU_CORE_TYPE == MCU_CORE_TL752X)
 #define TMR_IRQ_BIT FLD_TMR0_MODE_IRQ
 #else
 #define TMR_IRQ_BIT TMR_STA_TMR0
@@ -66,17 +66,17 @@ _attribute_ram_code_sec_ void tlkmdi_audio_stop_timer(void)
  */
 _attribute_ram_code_sec_ void tlkmdi_audio_set_timer(uint32_t cap_tick)
 {
-#if(MCU_CORE_TL752X_TEMP)
-//    timer_set_init_tick(TIMER0, 0);
+#if (MCU_CORE_TL752X_TEMP)
+    //    timer_set_init_tick(TIMER0, 0);
     timer_init(TIMER0);
-    timer_set_clk(16000000);
+    timer_set_clk();
     timer_set_cap_tick(TIMER0, cap_tick * sys_clk.pclk);
 #else
     timer_set_init_tick(TIMER0, 0);
     timer_set_cap_tick(TIMER0, cap_tick * sys_clk.pclk);
 #endif
     tlkhal_timer_cfg_t pCfg = {
-        .chn = TIMER0,
+        .chn  = TIMER0,
         .mode = TIMER_MODE_SYSCLK,
     };
     tlkhal_timer_set_mode(&pCfg);
@@ -90,7 +90,7 @@ _attribute_ram_code_sec_ void tlkmdi_audio_set_timer(uint32_t cap_tick)
 _attribute_ram_code_sec_ void tlkmdi_audio_task_set_next_irq(uint32_t tus)
 {
     tlkhal_timer_cfg_t pCfg = {
-        .chn = TIMER0,
+        .chn  = TIMER0,
         .mode = TIMER_MODE_SYSCLK,
     };
     tlkhal_timer_stop(&pCfg);
@@ -99,7 +99,7 @@ _attribute_ram_code_sec_ void tlkmdi_audio_task_set_next_irq(uint32_t tus)
     timer_set_cap_tick(TIMER0, tus * sys_clk.pclk);
 #else
     timer_init(TIMER0);
-    timer_set_clk(16000000);
+    timer_set_clk();
     timer_set_cap_tick(TIMER0, tus * sys_clk.pclk);
 #endif
     tlkhal_timer_set_mode(&pCfg);

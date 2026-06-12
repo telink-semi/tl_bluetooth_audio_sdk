@@ -35,25 +35,33 @@ extern TlkUsbReportUacStatusCB sTlkUsbReportUacStatusCB;
 
 typedef struct
 {
-    bool    iso_in_en;  /*iso in  stream enable*/
-    bool    iso_out_en; /*iso out stream enable*/
+    bool    iso_in_en;   /*iso in  stream enable*/
+    bool    iso_out_en;  /*iso out stream enable*/
+    bool    iso_out1_en; /*iso out stream enable*/
     uint8_t out_mute;
+    uint8_t out1_mute;
     uint8_t in_mute;
 
     uint16_t in_volume;
     uint16_t out_volume;
+    uint16_t out1_volume;
     uint16_t out_vol_step;
+    uint16_t out1_vol_step;
     uint16_t in_vol_step;
 
-    int32_t  in_w;     /**< Write position of bi buffer. */
-    int32_t  in_r;     /**< Read position of bi buffer. */
-    int32_t  out_w;    /**< Write position of bo buffer. */
-    int32_t  out_r;    /**< Read position of bo buffer. */
-    uint32_t tick_in;  /**< Tick time of iso-in interrupt. */
-    uint32_t tick_out; /**< Tick time of iso-out interrupt. */
+    int32_t  in_w;      /**< Write position of bi buffer. */
+    int32_t  in_r;      /**< Read position of bi buffer. */
+    int32_t  out_w;     /**< Write position of bo buffer. */
+    int32_t  out_r;     /**< Read position of bo buffer. */
+    int32_t  out1_w;    /**< Write position of bo buffer. */
+    int32_t  out1_r;    /**< Read position of bo buffer. */
+    uint32_t tick_in;   /**< Tick time of iso-in interrupt. */
+    uint32_t tick_out;  /**< Tick time of iso-out interrupt. */
+    uint32_t tick_out1; /**< Tick time of iso-out interrupt. */
 
     uint32_t in_sample_rate;
     uint32_t out_sample_rate;
+    uint32_t out1_sample_rate;
     uint32_t pend_tick; /*Just used for Headphone storage during btsco, uac triggers sco setup again between sco disconnection and detach.*/
 
     int32_t ppm_in_w;  /**< Write position of bi buffer. */
@@ -77,6 +85,9 @@ typedef struct
 
 #if (TLKUSB_AUD_SPK_RESOLUTION_BIT == 24)
     uint32_t iso_out[APP_USB_ISO_OUT_BUFF_SIZE]; /**< Buffer used to store data fetched from the iso out endpoint */
+#if (TLK_USB_UAC_DUAL_SOUNDCARD_MODE)
+    uint32_t iso_out1[APP_USB_ISO_OUT_BUFF_SIZE]; /**< Buffer used to store data fetched from the iso out endpoint */
+#endif
 #if TLKALG_PPM_SPK_ENABLE && TLKALG_PPM_MIC_ENABLE
     uint32_t ppm_out[APP_USB_PPM_OUT_BUFF_SIZE]; /**< Buffer used to store data fetched from the iso out endpoint */
 #else
@@ -84,6 +95,9 @@ typedef struct
 #endif
 #else
     uint16_t iso_out[APP_USB_ISO_OUT_BUFF_SIZE]; /**< Buffer used to store data fetched from the iso out endpoint */
+#if (TLK_USB_UAC_DUAL_SOUNDCARD_MODE)
+    uint16_t iso_out1[APP_USB_ISO_OUT_BUFF_SIZE]; /**< Buffer used to store data fetched from the iso out endpoint */
+#endif
 #if ((MCU_CORE_TYPE != MCU_CORE_TL322X))
     uint16_t ppm_out[APP_USB_PPM_OUT_BUFF_SIZE]; /**< Buffer used to store data fetched from the iso out endpoint */
 #endif
@@ -166,6 +180,7 @@ void tlkusb_uac_clear_iso_out_buffer();
  * @return      none.
  */
 void tlkusb_uac_reset_out_config();
+void tlkusb_uac_reset_out1_config();
 
 /**
  * @brief       This function resets the USB UAC input configuration.
@@ -318,6 +333,7 @@ uint32_t tlkusb_uac_get_iso_in_SampleRate();
  * @return      ISO OUT sample rate.
  */
 uint32_t tlkusb_uac_get_iso_out_SampleRate();
+uint32_t tlkusb_uac_get_iso_out1_SampleRate();
 
 /**
  * @brief       This function gets the ISO IN bit depth.
@@ -383,4 +399,8 @@ extern void tlkusb_uacirq_handler(void);
 void               tlkusb_uac_set_state(tlkusb_uac_state_e state);
 tlkusb_uac_state_e tlkusb_uac_get_state(void);
 void               tlkusb_uac_update_pending_tick();
+
+int tlkusb_uac_get_iso_in_en(void);
+int tlkusb_uac_get_iso_out_en(void);
+int tlkusb_uac_get_iso_out1_en(void);
 #endif // TLKUSB_AUDIO_H

@@ -32,11 +32,11 @@
  * @param[in]   dataLen  - Length of the data.
  * @return      none.
  */
-static void tlkapp_host_tpt_recvSendKeyDeal(uint8_t *pData,uint16_t dataLen)
+static void tlkapp_host_tpt_recvSendKeyDeal(uint8_t *pData, uint16_t dataLen)
 {
-    (void) dataLen;
+    (void)dataLen;
     uint8_t key = pData[0];
-    tlkmdi_bt_tpt_sendHidkey(0XFFF0,key);
+    tlkmdi_bt_tpt_sendHidkey(0XFFF0, key);
 }
 
 /**
@@ -48,31 +48,30 @@ static void tlkapp_host_tpt_recvSendKeyDeal(uint8_t *pData,uint16_t dataLen)
  */
 int tlkapp_host_tpt_msgHandle(uint16_t msgID, uint8_t *pData, uint16_t dataLen)
 {
-    (void) pData;
-    (void) dataLen;
-    switch(msgID){
-
-        case TLKSYS_TPT_MSGID_3S_PAIR:
-        	tlkmdi_bt_tpt_pair_start_req(TPT_HOST_HEADSET_SETUP_MODE_3S,pData);
-            break;
-        case TLKSYS_TPT_MSGID_10S_PAIR:
-        	tlkmdi_bt_tpt_pair_start_req(TPT_HOST_HEADSET_SETUP_MODE_10S,pData);
-            break;
-        case TLKSYS_TPT_MSGID_ENTER_LOW_LATENCY_MODE:
-        	tlkmdi_bt_tpt_pair_start_req(TPT_HOST_HEADSET_SETUP_MODE_ULTRA_LOW_LATENCY,pData);
-            break;           
-        case TLKSYS_TPT_MSGID_START_HANDOVER:
-            tlkmdi_bt_tpt_handover_start();
-            break;
-        case TLKSYS_TPT_MSGID_SEND_KEY:
-            tlkapp_host_tpt_recvSendKeyDeal(pData,dataLen);
-            break;
-        case TLKSYS_TPT_MSGID_SHUT_DOWN:
-            tlksys_pm_setChn(TLKSYS_PM_CHN_SYS,0,0);
-            tlkmdi_bt_tpt_shut_down();
-            break;
-        default:
-            return -TLK_ENOSUPPORT;
+    (void)pData;
+    (void)dataLen;
+    switch (msgID) {
+    case TLKSYS_TPT_MSGID_3S_PAIR:
+        tlkmdi_bt_tpt_pair_start_req(TPT_HOST_HEADSET_SETUP_MODE_3S, pData);
+        break;
+    case TLKSYS_TPT_MSGID_10S_PAIR:
+        tlkmdi_bt_tpt_pair_start_req(TPT_HOST_HEADSET_SETUP_MODE_10S, pData);
+        break;
+    case TLKSYS_TPT_MSGID_ENTER_LOW_LATENCY_MODE:
+        tlkmdi_bt_tpt_pair_start_req(TPT_HOST_HEADSET_SETUP_MODE_ULTRA_LOW_LATENCY, pData);
+        break;
+    case TLKSYS_TPT_MSGID_START_HANDOVER:
+        tlkmdi_bt_tpt_handover_start();
+        break;
+    case TLKSYS_TPT_MSGID_SEND_KEY:
+        tlkapp_host_tpt_recvSendKeyDeal(pData, dataLen);
+        break;
+    case TLKSYS_TPT_MSGID_SHUT_DOWN:
+        tlksys_pm_setChn(TLKSYS_PM_CHN_SYS, 0, 0);
+        tlkmdi_bt_tpt_shut_down();
+        break;
+    default:
+        return -TLK_ENOSUPPORT;
     }
     return TLK_ENONE;
 }

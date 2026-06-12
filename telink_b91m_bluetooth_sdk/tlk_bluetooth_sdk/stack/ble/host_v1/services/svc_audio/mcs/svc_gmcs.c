@@ -85,87 +85,6 @@
 
 #define GMCS_START_HDL SERVICE_GENERIC_MEDIA_CONTROL_HDL
 
-static const uint8_t  gmcsMediaPlayerNameValue    = 0x00;
-static const uint16_t gmcsMediaPlayerNameValueLen = 1;
-
-#if LE_AUDIO_GMCS_MEDIA_PLAYER_ICON_OBJECT_ID
-static const uint8_t  gmcsMediaPlayerIconObjectIDValue[6];
-static const uint16_t gmcsMediaPlayerIconObjectIDValueLen = 6;
-#endif
-
-#if LE_AUDIO_GMCS_MEDIA_PLAYER_ICON_URL
-static const uint8_t  gmcsMediaPlayerIconURLValue    = 0x00;
-static const uint16_t gmcsMediaPlayerIconURLValueLen = 1;
-#endif
-
-static const uint8_t  gmcsTrackTitleValue    = 0x00;
-static const uint16_t gmcsTrackTitleValueLen = 1;
-
-static const uint32_t gmcsTrackDurationValue    = 0xFFFFFFFF;
-static const uint16_t gmcsTrackDurationValueLen = 4;
-
-static const uint32_t gmcsTrackPositionValue    = 0xFFFFFFFF;
-static const uint16_t gmcsTrackPositionValueLen = 4;
-
-#if LE_AUDIO_GMCS_PLAYBACK_SPEED
-static const char     gmcsPlaybackSpeedValue    = 0;
-static const uint16_t gmcsPlaybackSpeedValueLen = 1;
-#endif
-
-#if LE_AUDIO_GMCS_SEEKING_SPEED
-static const char     gmcsSeekingSpeedValue    = 0;
-static const uint16_t gmcsSeekingSpeedValueLen = 1;
-#endif
-
-#if LE_AUDIO_GMCS_CURRENT_TRACK_OBJECT_ID
-static const uint8_t  gmcsCurrentTrackSegmentsObjectIDValue[6];
-static const uint16_t gmcsCurrentTrackSegmentsObjectIDValueLen = 6;
-
-static const uint8_t  gmcsCurrentTrackObjectIDValue[6];
-static const uint16_t gmcsCurrentTrackObjectIDValueLen = 6;
-
-static const uint8_t  gmcsNextTrackObjectIDValue[6];
-static const uint16_t gmcsNextTrackObjectIDValueLen = 6;
-
-static const uint8_t  gmcsParentGroupTrackObjectIDValue[6];
-static const uint16_t gmcsParentGroupTrackObjectIDValueLen = 6;
-
-static const uint8_t  gmcsCurrentGroupTrackObjectIDValue[6];
-static const uint16_t gmcsCurrentGroupTrackObjectIDValueLen = 6;
-#endif
-
-#if LE_AUDIO_GMCS_PLAYING_ORDER
-static const uint8_t  gmcsPlayingOrderValue    = 0x01;
-static const uint16_t gmcsPlayingOrderValueLen = 1;
-#endif
-
-#if LE_AUDIO_GMCS_PLAYING_ORDERS_SUPPORTED
-static const uint16_t gmcsPlayingOrderSupportedValue;
-static const uint16_t gmcsPlayingOrderSupportedValueLen = 2;
-#endif
-
-static const uint8_t  gmcsMediaStateValue    = 0x00;
-static const uint16_t gmcsMediaStateValueLen = 1;
-
-#if LE_AUDIO_GMCS_MEDIA_CONTROL_POINT
-static const uint8_t  gmcsMediaControlPointValue[5];
-static const uint16_t gmcsMediaControlPointValueLen = 5;
-
-static const uint32_t gmcsMediaControlPointSupportedValue;
-static const uint16_t gmcsMediaControlPointSupportedValueLen = 4;
-#endif
-
-#if LE_AUDIO_GMCS_SEARCH_RESULTS_OBJECT_ID
-static const uint8_t  gmcsSearchResultsObjectIDValue[6];
-static const uint16_t gmcsSearchResultsObjectIDValueLen = 6;
-
-static const uint8_t  gmcsSearchControlPointValue    = 0x00;
-static const uint16_t gmcsSearchControlPointValueLen = 1;
-#endif
-
-static const uint8_t  gmcsCCIDValue    = 0x00;
-static const uint16_t gmcsCCIDValueLen = sizeof(gmcsCCIDValue);
-
 #if LE_AUDIO_GMCS_SUPPORT_OTS
 extern const uint16_t otsIncludeValue[3];
 #endif
@@ -174,111 +93,111 @@ extern const uint16_t otsIncludeValue[3];
  * @brief the structure for default GMCS service List.
  */
 static const struct atts_attribute gmcsList[] = {
-    ATTS_PRIMARY_SERVICE(serviceGenericMediaControlUuid),
+    ATTS_PRIMARY_SERVICE(serviceGenericMediaControlAttUuid),
 
 #if LE_AUDIO_GMCS_SUPPORT_OTS
     ATTS_INCLUDE_DEFINE(&otsIncludeValue),
 #endif
     //Media Player Name
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicMediaPlayerNameUuid, gmcsMediaPlayerNameValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicMediaPlayerNameAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_GMCS_MEDIA_PLAYER_ICON_OBJECT_ID
     //Media Player Icon Object ID
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropRead, characteristicMediaPlayerIconObjectIdUuid, gmcsMediaPlayerIconObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropRead, characteristicMediaPlayerIconObjectIdAttUuid),
 #endif
 
 #if LE_AUDIO_GMCS_MEDIA_PLAYER_ICON_URL
     //Media Player Icon URL
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropRead, characteristicMediaPlayerIconUrlUuid, gmcsMediaPlayerIconURLValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropRead, characteristicMediaPlayerIconUrlAttUuid),
 #endif
 
     //Track Changed
-    ATTS_CHAR_UUID_NOTIF_ONLY(characteristicTrackChangedUuid),
+    ATTS_CHAR_UUID_NOTIF_ONLY(characteristicTrackChangedAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Track Title
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicTrackTitleUuid, gmcsTrackTitleValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicTrackTitleAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Track Duration
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicTrackDurationUuid, gmcsTrackDurationValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicTrackDurationAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Track Position
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_RWCB(charPropReadWriteWriteWithoutNotify, characteristicTrackPositionUuid, gmcsTrackPositionValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_NULL(charPropReadWriteWriteWithoutNotify, characteristicTrackPositionAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_GMCS_PLAYBACK_SPEED
     //Playback Speed
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_RWCB(charPropReadWriteWriteWithoutNotify, characteristicPlaybackSpeedUuid, gmcsPlaybackSpeedValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_NULL(charPropReadWriteWriteWithoutNotify, characteristicPlaybackSpeedAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_GMCS_SEEKING_SPEED
     //Seeking Speed
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicSeekingSpeedUuid, gmcsSeekingSpeedValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicSeekingSpeedAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_GMCS_CURRENT_TRACK_OBJECT_ID
     //Current Track Segments Object ID
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropRead, characteristicCurrentTrackSegmentsObjectIdUuid, gmcsCurrentTrackSegmentsObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropRead, characteristicCurrentTrackSegmentsObjectIdAttUuid),
 
     //Current Track Object ID
-    ATTS_CHAR_UUID_ENCR_RDWR_POINT_RWCB(charPropReadWriteWriteWithoutNotify, characteristicCurrentTrackObjectIdUuid, gmcsCurrentTrackObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_NULL(charPropReadWriteWriteWithoutNotify, characteristicCurrentTrackObjectIdAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Next Track Object ID
-    ATTS_CHAR_UUID_ENCR_RDWR_POINT_RWCB(charPropReadWriteWriteWithoutNotify, characteristicNextTrackObjectIdUuid, gmcsNextTrackObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_NULL(charPropReadWriteWriteWithoutNotify, characteristicNextTrackObjectIdAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Parent Group Object ID
-    ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicParentGroupObjectIdUuid, gmcsParentGroupTrackObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicParentGroupObjectIdAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Current Group Object ID
-    ATTS_CHAR_UUID_ENCR_RDWR_POINT_RWCB(charPropReadWriteWriteWithoutNotify, characteristicCurrentGroupObjectIdUuid, gmcsCurrentGroupTrackObjectIDValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_NULL(charPropReadWriteWriteWithoutNotify, characteristicCurrentGroupObjectIdAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_GMCS_PLAYING_ORDER
     //Playing Order
-    ATTS_CHAR_UUID_ENCR_RDWR_ENTITY_RWCB(charPropReadWriteWriteWithoutNotify, characteristicPlayingOrderUuid, gmcsPlayingOrderValue),
+    ATTS_CHAR_UUID_ENCR_RDWR_NULL(charPropReadWriteWriteWithoutNotify, characteristicPlayingOrderAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_GMCS_PLAYING_ORDERS_SUPPORTED
     //Playing Order Supported
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropRead, characteristicPlayingOrdersSupportedUuid, gmcsPlayingOrderSupportedValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropRead, characteristicPlayingOrdersSupportedAttUuid),
 #endif
 
     //Media State
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicMediaStateUuid, gmcsMediaStateValue),
+    ATTS_CHAR_UUID_ENCR_READ_NULL(charPropReadNotify, characteristicMediaStateAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
 #if LE_AUDIO_GMCS_MEDIA_CONTROL_POINT
     //Media Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_POINT_CB(charPropWriteWriteWithoutNotify, characteristicMediaControlPointUuid, gmcsMediaControlPointValue),
+    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteWriteWithoutNotify, characteristicMediaControlPointAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Media Control Point Supported
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicMediaCtrlPointOpSupportedUuid, gmcsMediaControlPointSupportedValue),
+    ATTS_CHAR_UUID_READ_NULL(charPropReadNotify, characteristicMediaCtrlPointOpSupportedAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
 #if LE_AUDIO_GMCS_SEARCH_RESULTS_OBJECT_ID
     //Search Control Point
-    ATTS_CHAR_UUID_ENCR_WRITE_ENTITY_CB(charPropWriteWriteWithoutNotify, characteristicSearchControlPointUuid, gmcsSearchControlPointValue),
+    ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWriteWriteWithoutNotify, characteristicSearchControlPointAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 
     //Search Results Object ID
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicSearchResultsObjectIdUuid, gmcsSearchResultsObjectIDValue),
+    ATTS_CHAR_UUID_READ_NULL(charPropReadNotify, characteristicSearchResultsObjectIdAttUuid),
     ATTS_COMMON_CCC_DEFINE,
 #endif
 
     //Content Control ID(CCID)
-    ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropRead, characteristicContentControlIdUuid, gmcsCCIDValue),
+    ATTS_CHAR_UUID_READ_NULL(charPropRead, characteristicContentControlIdAttUuid),
 };
 
 /*

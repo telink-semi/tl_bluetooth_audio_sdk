@@ -26,8 +26,7 @@
 #include "stack/system/system.h"
 #include "stack/pm/pm_sys.h"
 #include "tlkmw_pm.h"
-//#include "stack/debug/debug_internal.h"
-
+#include "tlkmw/tpsll/tlkmdi_tpsll_audio_dongle.h"
 //for N22 controller: default enable, for D25F Host: configure by user
 #if (TLK_CFG_SUSPEND_ENABLE)
 
@@ -50,16 +49,39 @@ static _always_inline int tlkmw_pm_tick1_exceed_tick2(uint32_t tick1, uint32_t t
  * @param[in]  n - data length of event
  * @return     none
  */
-_attribute_ram_code_ static void tlkmw_pm_enter(u8 e, u8 *p, int n)
+_attribute_ram_code_ static void tlkmw_pm_enter(uint8_t e, uint8_t *p, int n)
 {
     (void)e;
     (void)p;
     (void)n;
-    //DBG_COMMON_CHN5_HIGH;
+#if defined(MCU_CORE_TL752X_D25F)
+    tlksdk_pm_setWakeupSource(PM_D25F_WAKEUP_RTC); //default configuration,timer wakeup
+#elif defined(MCU_CORE_TL752X_N22)
+    tlksdk_pm_setWakeupSource(PM_N22_WAKEUP_RTC); //default configuration,timer wakeup
+#else
+    tlksdk_pm_setWakeupSource(PM_WAKEUP_TIMER); //default configuration,timer wakeup
+#endif
     /* suspend time > 50ms.add GPIO wake_up */
     if (tlkmw_pm_tick1_exceed_tick2(tlksdk_pm_getWakeupSystemTick(), clock_time() + 50 * SYSTEM_TIMER_TICK_1MS)) {
+#if defined(MCU_CORE_TL752X_D25F)
+        tlksdk_pm_setWakeupSource(PM_D25F_WAKEUP_PAD); //GPIO PAD wake_up
+#elif defined(MCU_CORE_TL752X_N22)
+        tlksdk_pm_setWakeupSource(PM_N22_WAKEUP_PAD); //GPIO PAD wake_up
+#else
         tlksdk_pm_setWakeupSource(PM_WAKEUP_PAD); //GPIO PAD wake_up
+#endif
     }
+
+#if (MCU_CORE_TYPE == CHIP_TYPE_TL721X) && (TLK_STK_TPD_ENABLE)
+    tlksdk_pm_setWakeupSource(PM_WAKEUP_PAD);
+    /* tpsll audio dongle suspend without connection. */
+    tlksdk_pm_removeWakeupSource(PM_WAKEUP_TIMER);
+    tlkmdi_tpd_pm_enter_config();
+#endif
+
+#if (TLK_USB_REMOTEWAKEUP_EN)
+    tlksdk_pm_setWakeupSource(PM_WAKEUP_CORE);
+#endif
 }
 
 /**
@@ -69,37 +91,54 @@ _attribute_ram_code_ static void tlkmw_pm_enter(u8 e, u8 *p, int n)
  * @param[in]  n - data length of event
  * @return     none
  */
-_attribute_ram_code_ static void tlkmw_pm_exit(u8 e, u8 *p, int n)
+_attribute_ram_code_ static void tlkmw_pm_exit(uint8_t e, uint8_t *p, int n)
 {
     (void)e;
     (void)p;
     (void)n;
 
+    uint8_t  buffer[8];
+    uint8_t  buffLen   = 0;
+    uint32_t exit_tick = clock_time() | 1;
+    (void)buffer;
+    (void)buffLen;
+    (void)exit_tick;
+
+    buffer[buffLen++] = false; // false - exit PM   true - enter PM
+    buffer[buffLen++] = (exit_tick & 0xFF000000) >> 24;
+    buffer[buffLen++] = (exit_tick & 0xFF0000) >> 16;
+    buffer[buffLen++] = (exit_tick & 0xFF00) >> 8;
+    buffer[buffLen++] = (exit_tick & 0xFF);
+
     /* Only for TL751x suspend solution */
 #if (MCU_CORE_TYPE == CHIP_TYPE_TL751X && !defined(MCU_CORE_N22))
-    if (!tlksdk_pm_isSleepTickCheckBypass()) {
-        u8 suspend_entered = *(u8 *)p;
+    uint8_t suspend_entered = *p;
 
-        if (suspend_entered) {
-            //DBG_COMMON_CHN5_TOGGLE;
-            //DBG_COMMON_CHN5_TOGGLE;
-            sys_n22_init(0x50020000);
-            sys_n22_start();
-            //DBG_COMMON_CHN5_TOGGLE;
-            //DBG_COMMON_CHN5_TOGGLE;
-
-        } else {
-            //DBG_COMMON_CHN5_TOGGLE;
-            //DBG_COMMON_CHN5_TOGGLE;
-            //DBG_COMMON_CHN5_TOGGLE;
-            //DBG_COMMON_CHN5_TOGGLE;
-            //DBG_COMMON_CHN5_TOGGLE;
-            //DBG_COMMON_CHN5_TOGGLE;
-        }
+    if (suspend_entered) {
+        extern unsigned int g_sleep_n22_tick;
+        g_sleep_n22_tick = 0;
+        sys_n22_init(0x50020000);
+        sys_n22_start();
     }
+    if ((p[0] & PM_WAKEUP_PAD) || (p[0] & PM_WAKEUP_CORE)) {
+/* here executed earlier than TLKSYS_TASK_EVT_SYS_USB_EXIT_SUSPEND, set PM busy first. */
+#if (TLK_USB_UAC_AUDIO_LOCAL_ENABLE)
+        tlksys_pm_setChn(TLK_PM_BUSY_CHN_USB, 0, 1);
+        if ((p[0] & PM_WAKEUP_PAD)) {
+            tlksys_sendMsgFromTimer(TLKSYS_TASKID_SYSTEM, TLKSYS_SYS_MSGID_PM_STATE_CHANGE, buffer, buffLen);
+        }
 #endif
+    }
+#elif (MCU_CORE_TYPE == CHIP_TYPE_TL721X)
+#if TLK_STK_TPD_ENABLE
+    uint8_t wakeup_src = p[0];
+    if (wakeup_src & PM_WAKEUP_PAD) {
+        tlksys_sendMsgFromTimer(TLKSYS_TASKID_SYSTEM, TLKSYS_SYS_MSGID_PM_STATE_CHANGE, buffer, buffLen);
+        tlkmdi_tpsll_audio_dongle_ReconHeadset_fromSuspend();
+    }
+#endif //TLK_STK_TPD_ENABLE
 
-    //DBG_COMMON_CHN5_LOW;
+#endif
 }
 
 /**
@@ -109,30 +148,23 @@ _attribute_ram_code_ static void tlkmw_pm_exit(u8 e, u8 *p, int n)
  */
 __attribute__((weak)) void tlkmdi_pm_init(void)
 {
-    //DBG_COMMON_CHN5_TOGGLE;
-    //DBG_COMMON_CHN6_TOGGLE;
-    //DBG_COMMON_CHN7_TOGGLE;
-    //DBG_COMMON_CHN8_TOGGLE;
-    //DBG_COMMON_CHN9_TOGGLE;
-    //DBG_COMMON_CHN5_TOGGLE;
-    //DBG_COMMON_CHN6_TOGGLE;
-    //DBG_COMMON_CHN7_TOGGLE;
-    //DBG_COMMON_CHN8_TOGGLE;
-    //DBG_COMMON_CHN9_TOGGLE;
-
     tlksdk_pm_init();
     tlksdk_pm_enableWfiMode(1);
-    //tlksdk_pm_setWakeupEarlyUs(TLK_CFG_RTOS_ENABLE ? 100 : 80); //TODO:
-    tlksdk_pm_setWakeupSource(PM_WAKEUP_PAD); //default enable PAD wake_up src
+#if defined(MCU_CORE_TL752X_D25F)
+    tlksdk_pm_setWakeupSource(PM_D25F_WAKEUP_PAD | PM_D25F_WAKEUP_RTC); //default enable PAD wake_up src
+#elif defined(MCU_CORE_TL752X_N22)
+    tlksdk_pm_setWakeupSource(PM_N22_WAKEUP_PAD | PM_N22_WAKEUP_RTC); //default enable PAD wake_up src
+#else
+    tlksdk_pm_setWakeupSource(PM_WAKEUP_PAD | PM_WAKEUP_TIMER); //default enable PAD wake_up src
+#endif
     tlksdk_pm_registerPmEventCallback(PM_EV_FLAG_SLEEP_ENTER, &tlkmw_pm_enter);
     tlksdk_pm_registerPmEventCallback(PM_EV_FLAG_SUSPEND_EXIT, &tlkmw_pm_exit);
     tlksdk_pm_enableSleep(PM_SLEEP_ENABLE);
 
 /* Only for TL751x suspend solution */
 #if (MCU_CORE_TYPE == CHIP_TYPE_TL751X && !defined(MCU_CORE_N22))
-    pm_set_suspend_power_cfg(FLD_PD_ZB_EN, 0);
-    tlksdk_pm_setDeepsleepRetentionEarlyWakeupTiming(2450);
-    tlkmw_pm_enableControllerCoreSleepCheck(0);
+    pm_ext_32k_rc_set_suspend_power_cfg(FLD_PD_ZB_EN, 0);
+    tlksdk_pm_setDeepsleepRetentionEarlyWakeupTiming(3000);
 #endif
 }
 
@@ -143,17 +175,8 @@ __attribute__((weak)) void tlkmdi_pm_init(void)
  */
 __attribute__((weak)) void tlkmdi_pm_process(void) //Only used for dual core mode, N22 controller project
 {
-#if (0) // UI logic if needed
-    if (0) {
-        tlksdk_pm_enableSleep(PM_SLEEP_DISABLE);
-    } else {
-        tlksdk_pm_enableSleep(PM_SLEEP_ENABLE);
-    }
-#endif
 #if (!MCU_CORE_TL752X_TEMP)
     tlksdk_pm_enterSleep(SUSPEND_MODE, 0);
-#else
-
 #endif
 }
 
@@ -173,17 +196,3 @@ __attribute__((weak)) void tlkmdi_pm_init(void) {}
 __attribute__((weak)) void tlkmdi_pm_process(void) {}
 
 #endif
-
-/**
- * @brief      Enable or disable controller core sleep check
- * @param[in]  en - Enable flag. Non-zero to disable sleep check, zero to enable sleep check
- * @return     none
- */
-void tlkmw_pm_enableControllerCoreSleepCheck(uint8_t en)
-{
-    (void)en;
-#if TLK_CFG_SUSPEND_ENABLE
-    uint8_t enable = en ? 0 : 1;
-    tlksdk_pm_bypassSleepTickCheck(enable);
-#endif
-}

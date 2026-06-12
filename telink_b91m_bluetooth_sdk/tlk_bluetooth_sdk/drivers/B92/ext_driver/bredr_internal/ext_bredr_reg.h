@@ -31,11 +31,11 @@
 #define EM_DLM_EN 1
 
 #if EM_DLM_EN
-    #define EM_BASE_DRAM_OFFSET 0x00000
-    #define DRAM_ADDR           0x00080000
+#define EM_BASE_DRAM_OFFSET 0x00000
+#define DRAM_ADDR           0x00080000
 #else
-    #define EM_BASE_IRAM_OFFSET 0x00200
-    #define IRAM_ADDR           0x00000000
+#define EM_BASE_IRAM_OFFSET 0x00200
+#define IRAM_ADDR           0x00000000
 #endif
 
 #define reg_zb_mst_mod               REG_ADDR8(0x1401d2)
@@ -57,8 +57,8 @@
 #define RADIOCNTL30                  (0x16007c)
 #define TIMGENCNTL0                  (0x1600e0)
 
-#define TXMICVAL0      (0x801600c8)
-#define RXMICVAL0      (0x801600cc)
+#define TXMICVAL0                    (0x801600c8)
+#define RXMICVAL0                    (0x801600cc)
 
 #define TL_MODEM                     (0x80170400)
 #define MODEM_TX_CTRL_0              (0x170480)

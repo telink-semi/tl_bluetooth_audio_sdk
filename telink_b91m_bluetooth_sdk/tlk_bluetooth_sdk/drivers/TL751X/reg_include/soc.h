@@ -387,6 +387,8 @@ enum
     FLD_RECO_CLK_SEL = BIT(1),
 };
 
+#define reg_product_id0 REG_ADDR8(SC_BASE_ADDR + 0x3e)
+#define reg_product_id1 REG_ADDR8(SC_BASE_ADDR + 0x3f)
 #define reg_clk_dsp_set REG_ADDR8(SC_BASE_ADDR + 0x55)
 
 enum

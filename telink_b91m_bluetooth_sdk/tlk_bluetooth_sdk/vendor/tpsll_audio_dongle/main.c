@@ -29,7 +29,6 @@
 #include "app_config.h"
 #include "app.h"
 
-
 /**
  * @brief       Overwrite this function to set platform(mcu) config.
  * @param[in]   none
@@ -39,17 +38,14 @@ const tlksys_hal_platform_init_cfg_t *tlksys_hal_port_getPlatformInitCfg(void)
 {
     static const tlksys_hal_platform_init_cfg_t cfg = {
         .clockLevel = 4,
-        #if DBG_WFI_ENABLE
+#if (DEBUG_LOW_POWER_ENABLE || TLK_CFG_SUSPEND_ENABLE)
         .gpioCfg = TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN,
-        #endif
-
-        #if (TLK_CFG_FLASH_PROT_ENABLE)
-        .flashProtectEn = 1,
-        #endif
+#else
+        .gpioCfg = TLKSYS_HAL_INIT_GPIO_CFG_NORMAL,
+#endif
     };
     return &cfg;
-} 
-
+}
 
 /**
  * @brief      Hook function called when system initialization is finished
@@ -63,7 +59,6 @@ void tlksys_initFinishedHook(void)
     tlk_rf_init();
     tlkapp_init();
 }
-
 
 /**
  * @brief       This is main function

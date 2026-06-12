@@ -64,11 +64,11 @@ _attribute_ram_code_sec_ uint8_t app_trap_handler(uint32_t mtval, uint32_t mepc,
 
     core_interrupt_disable();
     while (1) {
-    #if (TLKDBG_CFG_UDB_LOG_ENABLE)
+#if (TLKDBG_CFG_UDB_LOG_ENABLE)
         tlk_udb_usb_handle_irq();
-    #elif(TLK_DEBUG_ENABLE)
+#elif (TLK_DEBUG_ENABLE)
         tlkdbg_handler();
-    #endif
+#endif
     }
 
     return 0;
@@ -91,11 +91,11 @@ _attribute_ram_code_sec_ void trap_entry(void)
     mstatus = read_csr(NDS_MSTATUS);
     mcause  = read_csr(NDS_MCAUSE);
     mdcause = read_csr(NDS_MDCAUSE);
-    #if (TLK_DEBUG_ENABLE)
+#if (TLK_DEBUG_ENABLE)
     app_trap_handler(mtval, mepc, mstatus, mcause, mdcause, ra);
-    #else
+#else
     mcu_reboot();
-    #endif
+#endif
 }
 
 /**
@@ -114,17 +114,17 @@ _attribute_retention_code_ void stimer_irq_handler(void)
     // DBG_CHN15_HIGH;
     // DBG_COMMON_CHN1_TOGGLE;
 
-    tlksdk_irq_handler(IRQ_SYSTIMER);
+    tlk_sys_irq_handler(IRQ_SYSTIMER);
 
     // DBG_CHN15_LOW;
     // DBG_COMMON_CHN1_TOGGLE;
 }
 
-    #if MCU_CORE_N22
+#if MCU_CORE_N22
 CLIC_ISR_REGISTER(stimer_irq_handler, IRQ_SYSTIMER)
-    #else
+#else
 PLIC_ISR_REGISTER(stimer_irq_handler, IRQ_SYSTIMER)
-    #endif
+#endif
 
 /**
  * @brief       BLE RF interrupt handler
@@ -136,16 +136,16 @@ _attribute_retention_code_ void ble_rf_irq_handler(void)
     // DBG_CHN14_HIGH;
     // DBG_COMMON_CHN0_TOGGLE;
 
-    tlksdk_irq_handler(IRQ_ZB_RT);
+    tlk_sys_irq_handler(IRQ_ZB_RT);
 
     // DBG_CHN14_LOW;
     // DBG_COMMON_CHN0_TOGGLE;
 }
-    #if MCU_CORE_N22
+#if MCU_CORE_N22
 CLIC_ISR_REGISTER(ble_rf_irq_handler, IRQ_ZB_RT)
-    #else
+#else
 PLIC_ISR_REGISTER(ble_rf_irq_handler, IRQ_ZB_RT)
-    #endif
+#endif
 
 
 /**
@@ -156,16 +156,16 @@ PLIC_ISR_REGISTER(ble_rf_irq_handler, IRQ_ZB_RT)
 _attribute_retention_code_ void bt_rf_irq_handler(void)
 {
     // DBG_COMMON_CHN2_TOGGLE;
-    tlksdk_irq_handler(IRQ_ZB_BT);
+    tlk_sys_irq_handler(IRQ_ZB_BT);
     // DBG_COMMON_CHN2_TOGGLE;
 }
-    #if MCU_CORE_N22
+#if MCU_CORE_N22
 CLIC_ISR_REGISTER(bt_rf_irq_handler, IRQ_ZB_BT)
-    #else
+#else
 PLIC_ISR_REGISTER(bt_rf_irq_handler, IRQ_ZB_BT)
-    #endif
+#endif
 
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
 
 /**
 * @brief		BT RF DM interrupt handler.
@@ -174,7 +174,7 @@ PLIC_ISR_REGISTER(bt_rf_irq_handler, IRQ_ZB_BT)
 */
 _attribute_retention_code_ void bt_rf_dm_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_ZB_BT_DM);
+    tlk_sys_irq_handler(IRQ_ZB_BT_DM);
 }
 #if MCU_CORE_N22
 CLIC_ISR_REGISTER(bt_rf_dm_irq_handler, IRQ_ZB_BT_DM)

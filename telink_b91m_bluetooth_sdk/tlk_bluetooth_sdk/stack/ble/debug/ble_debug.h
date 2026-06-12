@@ -79,6 +79,4 @@ void blc_debug_addStackLog(stk_log_msk_t mask);
 void blc_debug_removeStackLog(stk_log_msk_t mask);
 
 
-
-
 #endif /* STACK_BLE_DEBUG_H_ */

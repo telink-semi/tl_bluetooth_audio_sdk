@@ -33,9 +33,7 @@ static TlkOsMutexHandle_t sTlkSysTmrMutexHandles[TLKSYS_TASKID_MAXNUM] = {0};
  */
 void tlksys_timer_coreInit(void)
 {
-    for(size_t i = 0 ;i < TLKSYS_TASKID_MAXNUM; i++){
-        tlkos_recursiveMutex_create(&sTlkSysTmrMutexHandles[i]);
-    }
+    tlkos_recursiveMutex_createMultiple(sTlkSysTmrMutexHandles, TLKSYS_TASKID_MAXNUM);
 }
 
 /**
@@ -48,13 +46,13 @@ void tlksys_timer_coreInit(void)
  * @param[in] userArg : User argument for callback
  * @returns  Result of timer creation.
  */
-int tlksys_timer_createStatic(uint16_t taskID, TlkApiTimer_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void* userArg)
+int tlksys_timer_createStatic(uint16_t taskID, TlkApiTimer_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void *userArg)
 {
-    (void) taskID;
-    if(tlkapi_timer_isStarted(pTimer)){
+    (void)taskID;
+    if (tlkapi_timer_isStarted(pTimer)) {
         return -TLK_EREPEAT;
     }
-    memset(pTimer,0,sizeof(TlkApiTimer_t));
+    memset(pTimer, 0, sizeof(TlkApiTimer_t));
     return tlkapi_timer_createStatic(pTimer, periodUs, autoReload, timerCB, userArg);
 }
 
@@ -68,9 +66,9 @@ int tlksys_timer_createStatic(uint16_t taskID, TlkApiTimer_t *pTimer, uint32_t p
  * @param[in] userArg : User argument for callback
  * @returns  Result of timer creation.
  */
-int tlksys_timer_create(uint16_t taskID, TlkApiTimerHandle_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void* userArg)
+int tlksys_timer_create(uint16_t taskID, TlkApiTimerHandle_t *pTimer, uint32_t periodUs, uint32_t autoReload, TlkApiTimerCB_t timerCB, void *userArg)
 {
-    (void) taskID;
+    (void)taskID;
     return tlkapi_timer_create(pTimer, periodUs, autoReload, timerCB, userArg);
 }
 
@@ -85,7 +83,7 @@ int tlksys_timer_destroy(uint16_t taskID, TlkApiTimerHandle_t pTimer)
     tlkos_mutex_lock(sTlkSysTmrMutexHandles[taskID]);
     int ret = tlkapi_timer_destroy(tlksys_task_getTimerList(taskID), pTimer);
     tlkos_mutex_unlock(sTlkSysTmrMutexHandles[taskID]);
-    tlksys_task_setEvt(taskID,TLKSYS_TASK_EVT_CORE);
+    tlksys_task_setEvt(taskID, TLKSYS_TASK_EVT_CORE);
     return ret;
 }
 
@@ -98,9 +96,9 @@ int tlksys_timer_destroy(uint16_t taskID, TlkApiTimerHandle_t pTimer)
 int tlksys_timer_start(uint16_t taskID, TlkApiTimerHandle_t pTimer)
 {
     tlkos_mutex_lock(sTlkSysTmrMutexHandles[taskID]);
-    int ret = tlkapi_timer_start(tlksys_task_getTimerList(taskID),pTimer);
+    int ret = tlkapi_timer_start(tlksys_task_getTimerList(taskID), pTimer);
     tlkos_mutex_unlock(sTlkSysTmrMutexHandles[taskID]);
-    tlksys_task_setEvt(taskID,TLKSYS_TASK_EVT_CORE);
+    tlksys_task_setEvt(taskID, TLKSYS_TASK_EVT_CORE);
     return ret;
 }
 
@@ -115,7 +113,7 @@ int tlksys_timer_reStart(uint16_t taskID, TlkApiTimerHandle_t pTimer)
     tlkos_mutex_lock(sTlkSysTmrMutexHandles[taskID]);
     int ret = tlkapi_timer_reStart(tlksys_task_getTimerList(taskID), pTimer);
     tlkos_mutex_unlock(sTlkSysTmrMutexHandles[taskID]);
-    tlksys_task_setEvt(taskID,TLKSYS_TASK_EVT_CORE);
+    tlksys_task_setEvt(taskID, TLKSYS_TASK_EVT_CORE);
     return ret;
 }
 
@@ -130,7 +128,7 @@ int tlksys_timer_stop(uint16_t taskID, TlkApiTimerHandle_t pTimer)
     tlkos_mutex_lock(sTlkSysTmrMutexHandles[taskID]);
     int ret = tlkapi_timer_stop(tlksys_task_getTimerList(taskID), pTimer);
     tlkos_mutex_unlock(sTlkSysTmrMutexHandles[taskID]);
-    tlksys_task_setEvt(taskID,TLKSYS_TASK_EVT_CORE);
+    tlksys_task_setEvt(taskID, TLKSYS_TASK_EVT_CORE);
     return ret;
 }
 
@@ -146,6 +144,6 @@ int tlksys_timer_setPeriod(uint16_t taskID, TlkApiTimerHandle_t pTimer, uint32_t
     tlkos_mutex_lock(sTlkSysTmrMutexHandles[taskID]);
     int ret = tlkapi_timer_setPeriod(tlksys_task_getTimerList(taskID), pTimer, periodUs);
     tlkos_mutex_unlock(sTlkSysTmrMutexHandles[taskID]);
-    tlksys_task_setEvt(taskID,TLKSYS_TASK_EVT_CORE);
+    tlksys_task_setEvt(taskID, TLKSYS_TASK_EVT_CORE);
     return ret;
 }

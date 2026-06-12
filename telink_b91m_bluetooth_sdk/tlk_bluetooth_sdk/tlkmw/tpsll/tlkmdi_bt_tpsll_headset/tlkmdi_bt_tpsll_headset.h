@@ -25,7 +25,6 @@
 #define TLKMDI_BT_TPSLL_HEADSET_H
 
 #include "tlkmw/tpsll/tlkmdi_bt_tpsll_headset/tlkmdi_bt_tph.h"
-#include "tlkmw/tpsll/tlkmdi_bt_tpsll_headset/tlkmdi_bt_tph_key.h"
 #include "tlkmw/tpsll/tlkmdi_bt_tpsll_headset/tlkmdi_bt_tph_pair.h"
 
 #endif

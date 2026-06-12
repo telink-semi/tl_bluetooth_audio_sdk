@@ -26,7 +26,7 @@
 #include "tlkalg_ppm_interface.h"
 
 #ifndef TICK_PER_US
-    #define TICK_PER_US 24
+#define TICK_PER_US 24
 #endif
 #define TICK_SAMPLERATE_COEFF      (48 / TICK_PER_US)
 #define REF_SAMPLES                256
@@ -48,14 +48,14 @@ typedef enum
 
 typedef struct
 {
-    uint8_t st;
-    uint8_t num;
-    uint8_t ref_mode;                 //refer to tlku2s_ppm_ref_mode_e
-    uint8_t valid;
-    bool    down_ppm_set; /**< A flag to indicate that ppm processing needs to be initialized. */
-    bool    up_ppm_set;
-    uint16_t  resv2byte;
- 
+    uint8_t  st;
+    uint8_t  num;
+    uint8_t  ref_mode; //refer to tlku2s_ppm_ref_mode_e
+    uint8_t  valid;
+    bool     down_ppm_set; /**< A flag to indicate that ppm processing needs to be initialized. */
+    bool     up_ppm_set;
+    uint16_t resv2byte;
+
     uint32_t t_m_last;
     uint32_t t_m_ref;
 
@@ -77,8 +77,8 @@ typedef struct
                               spk: alg output sample number subtract input number  */
     bool     start_flag;
     uint16_t resv2byte;
-    uint32_t tick_last;   /*last ticks*/
-    uint32_t tick_rem;    /*remain ticks, not enough one millisecond*/
+    uint32_t tick_last; /*last ticks*/
+    uint32_t tick_rem;  /*remain ticks, not enough one millisecond*/
 } tlku2h_ppm_para_t;
 
 extern int32_t           g_usb_resample_diff;
@@ -131,14 +131,14 @@ int16_t tlkalg_u2s_ppm_get_val(void);
  * @param[in]   val     - The PPM value to set.
  * @return      none.
  */
-void    tlkalg_u2s_ppm_set_val(int16_t val);
+void tlkalg_u2s_ppm_set_val(int16_t val);
 
 /**
  * @brief       This function sets the PPM mode.
  * @param[in]   mode    - The mode to set.
  * @return      none.
  */
-void                  tlkalg_u2s_ppm_set_mode(tlku2s_ppm_ref_mode_e mode);
+void tlkalg_u2s_ppm_set_mode(tlku2s_ppm_ref_mode_e mode);
 
 /**
  * @brief       This function retrieves the current PPM mode.
@@ -151,6 +151,6 @@ tlku2s_ppm_ref_mode_e tlkalg_u2s_ppm_get_mode(void);
  * @param[in]   tick    - The current tick value.
  * @return      none.
  */
-void                  tlkalg_u2s_ppm_calculation(uint32_t tick);
+void tlkalg_u2s_ppm_calculation(uint32_t tick);
 
 #endif

@@ -53,7 +53,7 @@
 #define HCI_EVT_LE_META                       0x3E
 #define HCI_EVT_AUTH_PAYLOAD_TIMEOUT_EXPIRED  0x57
 #define HCI_EVT_HT_ERR_FLAG                   0xF0
-#define HCI_EVT_VENDOR_SPECIFIC_DEBUGGING      0xFF
+#define HCI_EVT_VENDOR_SPECIFIC_DEBUGGING     0xFF
 
 // LE Meta Event Codes
 #define HCI_SUB_EVT_LE_CONNECTION_COMPLETE                            0x01 //core_4.0
@@ -137,18 +137,18 @@ TBD	LE CS Test End Complete event
 
 //Event mask - last octet
 #define HCI_EVT_MASK_NONE                                     0x00000000
-#define HCI_EVT_MASK_INQUIRY_COMPLETE                         0x00000001                      // 0
-#define HCI_EVT_MASK_INQUIRY_RESULT                           0x00000002                      // 1
-#define HCI_EVT_MASK_CONNECTION_COMPLETE                      0x00000004                      // 2
-#define HCI_EVT_MASK_CONNECTION_REQUEST                       0x00000008                      // 3
-#define HCI_EVT_MASK_DISCONNECTION_COMPLETE                   0x00000010                      // 4
-#define HCI_EVT_MASK_AUTHENTICATION_COMPLETE                  0x00000020                      // 5
-#define HCI_EVT_MASK_REMOTE_NAME_REQUEST_COMPLETE             0x00000040                      // 6
-#define HCI_EVT_MASK_ENCRYPTION_CHANGE                        0x00000080                      // 7
-#define HCI_EVT_MASK_CHANGE_CONNECTION_LINK_KEY_COMPLETE      0x00000100                      // 8
-#define HCI_EVT_MASK_MASTER_LINK_KEY_COMPLETE                 0x00000200                      // 9
-#define HCI_EVT_MASK_READ_REMOTE_SUPPORTED_FEATURES_COMPLETE  0x00000400                      // 10
-#define HCI_EVT_MASK_READ_REMOTE_VERSION_INFORMATION_COMPLETE 0x00000800                      // 11
+#define HCI_EVT_MASK_INQUIRY_COMPLETE                         0x00000001 // 0
+#define HCI_EVT_MASK_INQUIRY_RESULT                           0x00000002 // 1
+#define HCI_EVT_MASK_CONNECTION_COMPLETE                      0x00000004 // 2
+#define HCI_EVT_MASK_CONNECTION_REQUEST                       0x00000008 // 3
+#define HCI_EVT_MASK_DISCONNECTION_COMPLETE                   0x00000010 // 4
+#define HCI_EVT_MASK_AUTHENTICATION_COMPLETE                  0x00000020 // 5
+#define HCI_EVT_MASK_REMOTE_NAME_REQUEST_COMPLETE             0x00000040 // 6
+#define HCI_EVT_MASK_ENCRYPTION_CHANGE                        0x00000080 // 7
+#define HCI_EVT_MASK_CHANGE_CONNECTION_LINK_KEY_COMPLETE      0x00000100 // 8
+#define HCI_EVT_MASK_MASTER_LINK_KEY_COMPLETE                 0x00000200 // 9
+#define HCI_EVT_MASK_READ_REMOTE_SUPPORTED_FEATURES_COMPLETE  0x00000400 // 10
+#define HCI_EVT_MASK_READ_REMOTE_VERSION_INFORMATION_COMPLETE 0x00000800 // 11
 
 #define HCI_EVT_MASK_ENCRYPTION_KEY_REFRESH_COMPLETE          (((unsigned long long)1) << 47) // 47
 

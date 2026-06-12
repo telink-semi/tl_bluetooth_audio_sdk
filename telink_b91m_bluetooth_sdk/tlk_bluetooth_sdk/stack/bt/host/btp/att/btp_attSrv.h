@@ -31,9 +31,9 @@
 #if (TLKBTP_CFG_ATTSRV_ENABLE)
 
 
-    #define BTP_ATTSRV_SERVICE_NUMB 8
+#define BTP_ATTSRV_SERVICE_NUMB 8
 
-    #define BTP_ATTSRV_BUFFER_SIZE  256
+#define BTP_ATTSRV_BUFFER_SIZE  256
 
 typedef enum
 {

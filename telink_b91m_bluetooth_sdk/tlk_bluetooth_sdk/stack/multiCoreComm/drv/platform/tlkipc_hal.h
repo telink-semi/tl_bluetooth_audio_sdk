@@ -26,7 +26,7 @@
  *
  *******************************************************************************************************/
 #if (MCU_CORE_TYPE != MCU_CORE_TL752X)
-#define TLKIPC_HAL_RAM_SECTION 
+#define TLKIPC_HAL_RAM_SECTION
 #else
 #define TLKIPC_HAL_RAM_SECTION __attribute__((section(".dualcore_sharm")))
 #endif

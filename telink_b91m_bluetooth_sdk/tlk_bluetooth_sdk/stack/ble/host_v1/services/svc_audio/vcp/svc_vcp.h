@@ -30,7 +30,7 @@
 //VCP: Volume Control Profile
 
 #ifndef LEA_VCP_INCLUDED_VOCS_SERVER_NUM
-#define LEA_VCP_INCLUDED_VOCS_SERVER_NUM    (0)
+#define LEA_VCP_INCLUDED_VOCS_SERVER_NUM (0)
 #endif
 
 /**

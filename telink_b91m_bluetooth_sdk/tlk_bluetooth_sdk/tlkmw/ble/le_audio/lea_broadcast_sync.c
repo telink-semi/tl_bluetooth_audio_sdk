@@ -67,6 +67,7 @@
 
 #include "tlkapi/tlkapi_debug.h"
 #include "stack/ble/controller/ll/iso/iso.h"
+#include "inc/lea_cfg.h"
 #include "inc/lea_broadcast_sync.h"
 
 
@@ -281,7 +282,7 @@ static struct lea_bmr_stream_param s_bis_sync_stream = {
     .frame_duration     = LEA_SELECT_FRAME_DURATION_10,
     .frame_octets       = 120,
     .all_location       = LEA_LOCATION_FRONT_LEFT | LEA_LOCATION_FRONT_RIGHT,
-    .presentation_delay = 40000, // default use 40ms
+    .presentation_delay = 15000, // default use 15ms
     .num                = 2,
     .bmr_config[0] =
         {
@@ -370,12 +371,15 @@ static void ble_big_sync_create(void)
         s_bis_sync_param.big_sync_state                           = APP_BIG_SYNC_STATE_SYNCING;
         struct ble_host_gap_big_sync_create_param big_sync_create = {
             .big_handle  = s_bis_sync_param.big_sync_handle,
-            .sync_handle = s_bis_sync_param.big_sync_handle,
+            .sync_handle = s_bis_sync_param.pa_sync_handle,
             .enc         = 0,
             .num_bis     = 2,
             .bis_index   = {1, 2},
         };
-
+#ifdef BROADCAST_CODE
+        big_sync_create.enc = 1;
+        memcpy(big_sync_create.broadcast_code, BROADCAST_CODE, sizeof(BROADCAST_CODE) - 1);
+#endif
         ble_host_gap_big_sync_create(&big_sync_create, &s_big_sync);
     }
 }

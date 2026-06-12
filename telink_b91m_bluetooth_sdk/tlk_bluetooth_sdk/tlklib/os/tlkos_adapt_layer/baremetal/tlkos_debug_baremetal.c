@@ -32,7 +32,7 @@
  * @brief       Get core information for baremetal implementation
  * @return      NULL - baremetal implementation does not provide core information.
  */
-const char* tlkos_debug_getCoreInfo(void)
+const char *tlkos_debug_getCoreInfo(void)
 {
     return NULL;
 }

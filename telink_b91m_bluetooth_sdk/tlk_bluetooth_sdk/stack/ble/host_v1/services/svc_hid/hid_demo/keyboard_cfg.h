@@ -27,13 +27,13 @@
  *******************************************************************************************************/
 
 
-#define HID_INPUT_REPORT_NUM            2
-#define HID_OUTPUT_REPORT_NUM           1
-#define HID_FEATURE_REPORT_NUM          0
+#define HID_INPUT_REPORT_NUM   2
+#define HID_OUTPUT_REPORT_NUM  1
+#define HID_FEATURE_REPORT_NUM 0
 
-#define HID_INPUT_REPORT_1_ID           BLE_HOST_HID_REPORT_ID_KEYBOARD_INPUT
-#define HID_INPUT_REPORT_2_ID           BLE_HOST_HID_REPORT_ID_CONSUME_CONTROL_INPUT
-#define HID_OUTPUT_REPORT_1_ID          BLE_HOST_HID_REPORT_ID_KEYBOARD_INPUT
+#define HID_INPUT_REPORT_1_ID  BLE_HOST_HID_REPORT_ID_KEYBOARD_INPUT
+#define HID_INPUT_REPORT_2_ID  BLE_HOST_HID_REPORT_ID_CONSUME_CONTROL_INPUT
+#define HID_OUTPUT_REPORT_1_ID BLE_HOST_HID_REPORT_ID_KEYBOARD_INPUT
 
 // extern const unsigned char tlk_hid_keyboard_report_map[];
 // extern const unsigned short tlk_hid_keyboard_report_map_len;

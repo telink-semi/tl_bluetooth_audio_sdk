@@ -37,30 +37,10 @@ uint8_t tlkmdi_tinySql_getWorkMode(void);
 void tlkmdi_tinySql_setWorkMode(uint8_t mode);
 
 /**
- * @brief       Get the current USB mode setting.
- * @return      Current USB mode.
- */
-uint8_t tlkmdi_tinySql_getUsbMode(void);
-
-/**
- * @brief       Set the USB mode with a given value.
- * @param[in]   mode - The new USB mode to be set. It must be within the range 0 to 5.
- * @return      none.
- */
-void tlkmdi_tinySql_setUsbMode(uint8_t mode);
-
-/**
  * @brief       Get the USB ID.
  * @return      Current USB ID.
  */
 uint16_t tlkmdi_tinySql_getUsbID(void);
-
-/**
- * @brief       Set the USB ID with a given value.
- * @param[in]   usbID - The new USB ID to be set.
- * @return      none.
- */
-void tlkmdi_tinySql_setUsbID(uint16_t usbID);
 
 /**
  * @brief       Get the Bluetooth device name.

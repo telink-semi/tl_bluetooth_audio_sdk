@@ -26,7 +26,7 @@
 #include "stack/btble.h"
 #include "tlkapi/tlkapi.h"
 #include "app_config.h"
-#if (CONTROLLER_MODE == BLE_CONTROLLER)
+#if (CHECK_BLE_CONTROLLER)
 struct TRAP_VAL
 {
     uint32_t mcause;
@@ -63,11 +63,11 @@ _attribute_ram_code_sec_ uint8_t app_trap_handler(uint32_t mtval, uint32_t mepc,
 
     core_interrupt_disable();
     while (1) {
-    #if (TLKDBG_CFG_UDB_LOG_ENABLE)
+#if (TLKDBG_CFG_UDB_LOG_ENABLE)
         tlk_udb_usb_handle_irq();
-    #elif(TLK_DEBUG_ENABLE)
+#elif (TLK_DEBUG_ENABLE)
         tlkdbg_handler();
-    #endif
+#endif
     }
 
     return 0;
@@ -90,11 +90,11 @@ _attribute_ram_code_sec_ void trap_entry(void)
     mstatus = read_csr(NDS_MSTATUS);
     mcause  = read_csr(NDS_MCAUSE);
     mdcause = read_csr(NDS_MDCAUSE);
-    #if (TLK_DEBUG_ENABLE)
+#if (TLK_DEBUG_ENABLE)
     app_trap_handler(mtval, mepc, mstatus, mcause, mdcause, ra);
-    #else
+#else
     mcu_reboot();
-    #endif
+#endif
 }
 
 /**
@@ -104,14 +104,14 @@ _attribute_ram_code_sec_ void trap_entry(void)
  */
 _attribute_retention_code_ void stimer_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_SYSTIMER);
+    tlk_sys_irq_handler(IRQ_SYSTIMER);
 }
 
-    #if MCU_CORE_N22
+#if MCU_CORE_N22
 CLIC_ISR_REGISTER(stimer_irq_handler, IRQ_SYSTIMER)
-    #else
+#else
 PLIC_ISR_REGISTER(stimer_irq_handler, IRQ_SYSTIMER)
-    #endif
+#endif
 
 /**
  * @brief       BLE RF interrupt handler
@@ -120,13 +120,13 @@ PLIC_ISR_REGISTER(stimer_irq_handler, IRQ_SYSTIMER)
  */
 _attribute_retention_code_ void ble_rf_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_ZB_RT);
+    tlk_sys_irq_handler(IRQ_ZB_RT);
 }
-    #if MCU_CORE_N22
+#if MCU_CORE_N22
 CLIC_ISR_REGISTER(ble_rf_irq_handler, IRQ_ZB_RT)
-    #else
+#else
 PLIC_ISR_REGISTER(ble_rf_irq_handler, IRQ_ZB_RT)
-    #endif
+#endif
 
 #if MCU_CORE_TYPE != MCU_CORE_TL322X
 /**
@@ -136,12 +136,12 @@ PLIC_ISR_REGISTER(ble_rf_irq_handler, IRQ_ZB_RT)
  */
 _attribute_retention_code_ void bt_rf_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_ZB_BT);
+    tlk_sys_irq_handler(IRQ_ZB_BT);
 }
-    #if MCU_CORE_N22
+#if MCU_CORE_N22
 CLIC_ISR_REGISTER(bt_rf_irq_handler, IRQ_ZB_BT)
-    #else
+#else
 PLIC_ISR_REGISTER(bt_rf_irq_handler, IRQ_ZB_BT)
-    #endif
+#endif
 #endif
 #endif

@@ -33,7 +33,7 @@ static tlk_pt_ack_cb tlkmdi_pt_ack_cb = NULL;
  */
 void tlkmdi_pt_ack(tlk_pt_msg_t *msg)
 {
-    if(tlkmdi_pt_ack_cb){
+    if (tlkmdi_pt_ack_cb) {
         tlkmdi_pt_ack_cb(msg);
     }
 }
@@ -53,14 +53,13 @@ void tlkmdi_pt_setAckCB(tlk_pt_ack_cb cb)
  */
 void tlkmdi_pt_cmd_exe(tlk_pt_msg_t *msg)
 {
-    (void) msg;
+    (void)msg;
 #if TLK_CFG_PRODUCT_TEST_ENABLE
     extern tlk_pt_cmdFunc_t tlkmdi_bt_tpt_pt_getCmdHandlerFunc(uint16_t cmd);
-    tlk_pt_cmdFunc_t func = tlkmdi_bt_tpt_pt_getCmdHandlerFunc(msg->cmd);
-    if(func == NULL){
+    tlk_pt_cmdFunc_t        func = tlkmdi_bt_tpt_pt_getCmdHandlerFunc(msg->cmd);
+    if (func == NULL) {
         return;
     }
     func(msg);
 #endif
 }
-

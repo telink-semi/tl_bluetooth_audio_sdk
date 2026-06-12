@@ -51,7 +51,7 @@ void tlkmdi_audio_btif_regMusicVolChgCB(TlkMdiAudBtifVolChgCB cb);
  * @param[out]  isIos - Pointer to store iOS device flag
  * @return      TLK_ENONE: success; Others: failure
  */
-int tlkmdi_audio_btif_getVolumeStep(uint16_t handle, uint8_t isMusic,uint8_t *step,uint8_t *isIos);
+int tlkmdi_audio_btif_getVolumeStep(uint16_t handle, uint8_t isMusic, uint8_t *step, uint8_t *isIos);
 
 /**
  * @brief       Operate volume (increase or decrease)
@@ -60,6 +60,6 @@ int tlkmdi_audio_btif_getVolumeStep(uint16_t handle, uint8_t isMusic,uint8_t *st
  * @param[in]   isMusic - Music or voice flag
  * @return      TLK_ENONE: success; Others: failure
  */
-int tlkmdi_audio_btif_VolumeOperate(uint16_t handle, uint8_t isInc ,uint8_t isMusic);
+int tlkmdi_audio_btif_VolumeOperate(uint16_t handle, uint8_t isInc, uint8_t isMusic);
 
 #endif // TLKMDI_AUDIO_BT_INTERFACE_VOLUME_H

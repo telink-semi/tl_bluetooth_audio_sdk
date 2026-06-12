@@ -24,25 +24,30 @@
 #ifndef __BT_VOICE_H__
 #define __BT_VOICE_H__
 
-#define SPK_ENC_BUFF_NUM          8
-#define SPK_ENC_BUFF_SIZE         64
-#define SPK_PCM_BUFF_NUM          8
-#define SPK_PCM_BUFF_SIZE         (120 * 2)
+#define SPK_ENC_BUFF_NUM              8
+#define SPK_ENC_BUFF_NUM_FORWARD      4
+#define SPK_ENC_BUFF_SIZE             64
+#define SPK_PCM_BUFF_NUM              8
+#define SPK_PCM_BUFF_SIZE             (120 * 2)
 
-#define BT_VOICE_PCM_SAMPLES      120
+#define BT_VOICE_PCM_SAMPLES          120
 
-#define MIC_ENC_BUFF_NUM          8
-#define MIC_ENC_BUFF_SIZE         64
-#define MIC_PCM_BUFF_NUM          8
-#define MIC_PCM_BUFF_SIZE         (120 * 2)
+#define MIC_ENC_BUFF_NUM              8
+#define MIC_ENC_BUFF_SIZE             64
+#define MIC_PCM_BUFF_NUM              8
+#define MIC_PCM_BUFF_SIZE             (120 * 2)
 
-#define BT_VOICE_FLAG_PACKET_LOSS 1
+#define BT_VOICE_FLAG_PACKET_LOSS     1
 
-extern uint8_t         *g_spk_enc_buff_ptr;
-extern uint8_t         *g_mic_enc_buff_ptr;
-extern volatile uint8_t g_use_silent_pkt_replace;
-extern uint8_t          g_msbc_enc_id;
-extern volatile uint8_t g_first_esco_assembling;
+#define TLKALG_DSP_RET_NN_DATA_LEN    (320 * 2)
+#define SPK_BUFF_TOTAL_SIZE           (SPK_ENC_BUFF_SIZE * SPK_ENC_BUFF_NUM)
+#define MIC_BUFF_TOTAL_SIZE           (MIC_ENC_BUFF_SIZE * MIC_ENC_BUFF_NUM)
+
+#define TLKMDI_BT_VOICE_ENC_BUFF_SIZE (SCO_ENC_QUEUE_NUM * SPK_BUFF_TOTAL_SIZE + SCO_ENC_QUEUE_NUM * MIC_BUFF_TOTAL_SIZE)
+
+extern uint8_t *g_spk_enc_buff_ptr[SCO_ENC_QUEUE_NUM];
+extern uint8_t *g_mic_enc_buff_ptr[SCO_ENC_QUEUE_NUM];
+extern uint8_t  g_msbc_enc_id;
 
 enum
 {
@@ -54,10 +59,19 @@ enum
 /** BT voices status */
 enum
 {
-    BT_VOICE_ST_IDLE        = 0,
-    BT_VOICE_ST_INIT        = 1,
-    BT_VOICE_ST_MIC_READY   = 32,
-    BT_VOICE_ST_CODEC_READY = SPK_ENC_BUFF_NUM * 2, // 16
+    BT_VOICE_ST_IDLE               = 0,
+    BT_VOICE_ST_INIT               = 1,
+    BT_VOICE_ST_MIC_READY          = 32,
+    BT_VOICE_ST_CODEC_READY        = SPK_ENC_BUFF_NUM * 2, // 16
+    BT_VOICE_FORWARD_ST_IDLE       = 0xF0,
+    BT_VOICE_FORWARD_ST_1ST_SCO_RX = 0xF1,
+};
+
+enum
+{
+    BT_VOICE_PLAYBACK_MODE         = 0,
+    BT_VOICE_FORWARD_MODE          = 1,
+    BT_VOICE_FORWARD_WITH_ALG_MODE = 2,
 };
 
 typedef int (*bt_voice_dec_func_callback_t)(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel);
@@ -69,27 +83,29 @@ typedef struct
 {
     int16_t  sync_ppm;
     uint16_t sync_samples;
-    uint16_t sync_tick_ref;    /**< task tick */
-    uint8_t   sync_enc_buf_num;
-    uint8_t   sync_frac;
-    uint8_t sync_id;
-    uint8_t sync_play_countdown;
+    uint16_t sync_tick_ref; /**< task tick */
+    uint8_t  sync_enc_buf_num;
+    uint8_t  sync_frac;
+    uint8_t  sync_id;
+    uint8_t  sync_play_countdown;
 } tws_voice_sync_cfg_t;
 
 typedef struct
 {
-    uint32_t tick;
+    uint32_t sco_rx_tick;
+
     uint32_t status;
+    uint8_t  sco_forward_state[SCO_ENC_QUEUE_NUM];
 
-    uint8_t spk_enc_rptr;
-    uint8_t spk_enc_wptr;
-    uint8_t spk_pcm_rptr;
-    uint8_t spk_pcm_wptr;
+    uint8_t spk_enc_rptr[SCO_ENC_QUEUE_NUM];
+    uint8_t spk_enc_wptr[SCO_ENC_QUEUE_NUM];
+    uint8_t spk_pcm_rptr[SCO_ENC_QUEUE_NUM];
+    uint8_t spk_pcm_wptr[SCO_ENC_QUEUE_NUM];
 
-    uint8_t mic_enc_rptr;
-    uint8_t mic_enc_wptr;
-    uint8_t mic_pcm_rptr;
-    uint8_t mic_pcm_wptr;
+    uint8_t mic_enc_rptr[SCO_ENC_QUEUE_NUM];
+    uint8_t mic_enc_wptr[SCO_ENC_QUEUE_NUM];
+    uint8_t mic_pcm_rptr[SCO_ENC_QUEUE_NUM];
+    uint8_t mic_pcm_wptr[SCO_ENC_QUEUE_NUM];
 
     uint32_t init;
     uint32_t tick_frame;
@@ -98,24 +114,27 @@ typedef struct
 
     bt_voice_dec_func_callback_t dec_func;
     bt_voice_enc_func_callback_t enc_func;
-    bt_voice_plc_func_callback_t plc_func;
-
+#if (SCO_FORWARD_WITH_ALG)
+    bt_voice_dec_func_callback_t dec_forward_func;
+    bt_voice_enc_func_callback_t enc_forward_func;
+#endif
     uint16_t samples_cur;
     uint16_t samples;
 
-    uint32_t sync_tick_ref;    /**< task tick */
+    uint32_t sync_tick_ref; /**< task tick */
     uint16_t sync_samples_peer;
 
     // sync info 10 bytes
     int16_t  sync_ppm;
     uint16_t sync_samples;
     uint16_t sync_tick;
-    uint8_t   sync_enc_buf_num;
-    uint8_t   sync_frac;
-    uint8_t sync_id;
-    uint8_t sync_play_countdown;
+    uint8_t  sync_enc_buf_num;
+    uint8_t  sync_frac;
+    uint8_t  sync_id;
+    uint8_t  sync_play_countdown;
 
     uint8_t sync_init;
+    uint8_t codec_sync_init;
 
     uint8_t sco_data_ready;
 #if AUDIO_TWS_MODE
@@ -125,12 +144,15 @@ typedef struct
     uint8_t rcv_sync_info;
 
     uint8_t mic_state;
+
+    uint8_t bt_voice_mode;
+    uint8_t sco_proc_id;
 } __attribute__((aligned(4))) bt_voice_cfg_t;
 
 extern bt_voice_cfg_t bt_voice_cfg;
 
-extern uint8_t  bt_voice_hfp_codec;
-extern uint8_t *g_mic_enc_buff_ptr;
+extern uint8_t  bt_voice_hfp_codec[SCO_ENC_QUEUE_NUM];
+extern uint8_t *g_mic_enc_buff_ptr[SCO_ENC_QUEUE_NUM];
 extern uint8_t  msbc_silence_pkt[60];
 
 /** 
@@ -175,16 +197,17 @@ void bt_voice_reset(void);
  * @param[in]  len    - SCO data length
  * @return     None
  */
-void bt_voice_receive_sco_frame(uint8_t id, uint8_t *p_data, uint16_t len);
+void bt_voice_receive_sco_frame(uint8_t id, uint8_t *p_data, uint16_t len, uint16_t sco_handle);
 
 /**
  * @brief   Controller calls this function to post encoded PCM data to controller buffer
  * @param[in]  id     - frame ID
  * @param[in]  p_data - address to restore encoded PCM data
  * @param[in]  len    - data length
+ * @param[in]  sco_handle - SCO connection handle
  * @return     None
  */
-void bt_voice_mic_enc_get_frame(uint8_t id, uint8_t *p_data, uint16_t len);
+void bt_voice_mic_enc_get_frame(uint8_t id, uint8_t *p_data, uint16_t len, uint16_t sco_handle);
 
 /**
  * @brief   Get voice PCM data, process with EQ and encode PCM data
@@ -315,6 +338,8 @@ void tlkmdi_btvoice_switch_in(uint16_t handle);
  * @returns    None
  */
 void tlkmdi_btvoice_switch_out(uint16_t handle);
+
+void bt_voice_set_mode(uint8_t mode);
 
 #if TLKMW_INTERPHONE_EN
 /**

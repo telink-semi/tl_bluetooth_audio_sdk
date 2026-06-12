@@ -46,8 +46,8 @@
  ****************************************************************************************
  */
 
-#include <stdint.h>       // standard definitions
-#include <stddef.h>       // standard definitions
+#include <stdint.h> // standard definitions
+#include <stddef.h> // standard definitions
 
 /*
  * MACRO DEFINITIONS
@@ -76,23 +76,22 @@
  * @param[in] p_env   Pointer to environment that will be used as callback parameter.
  ****************************************************************************************
  */
-typedef void (*co_time_timer_cb)(void* p_env);
+typedef void (*co_time_timer_cb)(void *p_env);
 
 /// Timer structure
 typedef struct co_time_timer
 {
     /// Pointer to next timer in timer list
-    struct co_time_timer * p_next;
+    struct co_time_timer *p_next;
     /// Pointer to environment that will be used as callback parameter.
-    void*                  p_env;
+    void *p_env;
     /// Callback to execute in background context upon timer expiration
-    co_time_timer_cb       cb;
+    co_time_timer_cb cb;
     /// Expiration time [0-31] part (in milliseconds)
-    uint32_t               exp_time_ms_lsb;
+    uint32_t exp_time_ms_lsb;
     /// Timer bit field (@see enum co_time_timer_bf)
-    uint32_t               timer_bf;
+    uint32_t timer_bf;
 } co_time_timer_t;
-
 
 /// Time Structure
 typedef struct co_time
@@ -100,9 +99,8 @@ typedef struct co_time
     /// Current time [0-31] part (in milliseconds)
     uint32_t ms_lsb;
     /// Current time [32-39] part (in milliseconds)
-    uint8_t  ms_msb;
+    uint8_t ms_msb;
 } co_time_t;
-
 
 /*
  * CONSTANT DECLARATIONS
@@ -121,7 +119,7 @@ typedef struct co_time
  * @param[in] init_type  Type of initialization (@see enum rwip_init_type)
  ****************************************************************************************
  */
-void co_time_init(uint8_t init_type);
+void tlk_bt_ctrl_co_time_init(uint8_t init_type);
 
 /*
  ****************************************************************************************
@@ -142,7 +140,7 @@ void co_time_init(uint8_t init_type);
  *
  ****************************************************************************************
  */
-co_time_t co_time_get(void);
+co_time_t tlk_bt_ctrl_co_time_get(void);
 
 /**
  ****************************************************************************************
@@ -156,7 +154,7 @@ co_time_t co_time_get(void);
  * @param[in] delta_time_ms_msb Delta time [32-39] part (in milliseconds)
  ****************************************************************************************
  */
-void co_time_compensate(uint32_t delta_time_ms_lsb, uint8_t delta_time_ms_msb);
+void tlk_bt_ctrl_co_time_compensate(uint32_t delta_time_ms_lsb, uint8_t delta_time_ms_msb);
 
 /**
  ****************************************************************************************
@@ -167,7 +165,7 @@ void co_time_compensate(uint32_t delta_time_ms_lsb, uint8_t delta_time_ms_msb);
  * @param[in] p_env      Pointer to be passed to the callback
  ****************************************************************************************
  */
-void co_time_timer_init(co_time_timer_t* p_timer, co_time_timer_cb cb, void* p_env);
+void tlk_bt_ctrl_co_time_timer_init(co_time_timer_t *p_timer, co_time_timer_cb cb, void *p_env);
 
 /**
  ****************************************************************************************
@@ -179,7 +177,7 @@ void co_time_timer_init(co_time_timer_t* p_timer, co_time_timer_cb cb, void* p_e
  * @param[in] delay_ms   Duration before expiration of the timer (in milliseconds).
  ****************************************************************************************
  */
-void co_time_timer_set(co_time_timer_t* p_timer, uint32_t delay_ms);
+void tlk_bt_ctrl_co_time_timer_set(co_time_timer_t *p_timer, uint32_t delay_ms);
 
 /**
  ****************************************************************************************
@@ -192,7 +190,7 @@ void co_time_timer_set(co_time_timer_t* p_timer, uint32_t delay_ms);
  * @param[in] delay_ms_msb  Duration before expiration of the timer [32-39] part (in milliseconds)
  ****************************************************************************************
  */
-void co_time_timer_long_set(co_time_timer_t* p_timer, uint32_t delay_ms_lsb, uint8_t delay_ms_msb);
+void tlk_bt_ctrl_co_time_timer_long_set(co_time_timer_t *p_timer, uint32_t delay_ms_lsb, uint8_t delay_ms_msb);
 
 /**
  ****************************************************************************************
@@ -205,7 +203,7 @@ void co_time_timer_long_set(co_time_timer_t* p_timer, uint32_t delay_ms_lsb, uin
  * @param[in] period_ms  Periodic duration (in milliseconds). Range [10, 48388607] max ~2 hours
  ****************************************************************************************
  */
-void co_time_timer_periodic_set(co_time_timer_t* p_timer, uint32_t period_ms);
+void tlk_bt_ctrl_co_time_timer_periodic_set(co_time_timer_t *p_timer, uint32_t period_ms);
 
 /**
  ****************************************************************************************
@@ -214,7 +212,7 @@ void co_time_timer_periodic_set(co_time_timer_t* p_timer, uint32_t period_ms);
  * @param[in] p_timer    Pointer to the timer structure.
  ****************************************************************************************
  */
-void co_time_timer_stop(co_time_timer_t* p_timer);
+void tlk_bt_ctrl_co_time_timer_stop(co_time_timer_t *p_timer);
 
 /// @} CO_TIME
 #endif

@@ -319,7 +319,7 @@ BaseType_t xQueueGenericReset( QueueHandle_t xQueue,
 /*-----------------------------------------------------------*/
 
 #if ( configSUPPORT_STATIC_ALLOCATION == 1 )
-    _attribute_os_core_code_ram_sec_
+    _attribute_os_core_code_flash_sec_
     QueueHandle_t xQueueGenericCreateStatic( const UBaseType_t uxQueueLength,
                                              const UBaseType_t uxItemSize,
                                              uint8_t * pucQueueStorage,
@@ -381,7 +381,7 @@ BaseType_t xQueueGenericReset( QueueHandle_t xQueue,
 /*-----------------------------------------------------------*/
 
 #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
-    _attribute_os_core_code_ram_sec_
+    _attribute_os_core_code_flash_sec_
     QueueHandle_t xQueueGenericCreate( const UBaseType_t uxQueueLength,
                                        const UBaseType_t uxItemSize,
                                        const uint8_t ucQueueType )
@@ -488,7 +488,7 @@ static void prvInitialiseNewQueue( const UBaseType_t uxQueueLength,
 /*-----------------------------------------------------------*/
 
 #if ( configUSE_MUTEXES == 1 )
-    _attribute_os_core_code_ram_sec_
+    _attribute_os_core_code_flash_sec_
     static void prvInitialiseMutex( Queue_t * pxNewQueue )
     {
         if( pxNewQueue != NULL )
@@ -518,7 +518,7 @@ static void prvInitialiseNewQueue( const UBaseType_t uxQueueLength,
 /*-----------------------------------------------------------*/
 
 #if ( ( configUSE_MUTEXES == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) )
-    _attribute_os_core_code_ram_sec_
+    _attribute_os_core_code_flash_sec_
     QueueHandle_t xQueueCreateMutex( const uint8_t ucQueueType )
     {
         QueueHandle_t xNewQueue;
@@ -534,7 +534,7 @@ static void prvInitialiseNewQueue( const UBaseType_t uxQueueLength,
 /*-----------------------------------------------------------*/
 
 #if ( ( configUSE_MUTEXES == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
-    _attribute_os_core_code_ram_sec_
+    _attribute_os_core_code_flash_sec_
     QueueHandle_t xQueueCreateMutexStatic( const uint8_t ucQueueType,
                                            StaticQueue_t * pxStaticQueue )
     {
@@ -710,7 +710,7 @@ static void prvInitialiseNewQueue( const UBaseType_t uxQueueLength,
 /*-----------------------------------------------------------*/
 
 #if ( ( configUSE_COUNTING_SEMAPHORES == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
-    _attribute_os_core_code_ram_sec_
+    _attribute_os_core_code_flash_sec_
     QueueHandle_t xQueueCreateCountingSemaphoreStatic( const UBaseType_t uxMaxCount,
                                                        const UBaseType_t uxInitialCount,
                                                        StaticQueue_t * pxStaticQueue )
@@ -740,7 +740,7 @@ static void prvInitialiseNewQueue( const UBaseType_t uxQueueLength,
 /*-----------------------------------------------------------*/
 
 #if ( ( configUSE_COUNTING_SEMAPHORES == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) )
-    _attribute_os_core_code_ram_sec_
+    _attribute_os_core_code_flash_sec_
     QueueHandle_t xQueueCreateCountingSemaphore( const UBaseType_t uxMaxCount,
                                                  const UBaseType_t uxInitialCount )
     {
@@ -2022,7 +2022,7 @@ UBaseType_t uxQueueMessagesWaitingFromISR( const QueueHandle_t xQueue )
     return uxReturn;
 } /*lint !e818 Pointer cannot be declared const as xQueue is a typedef not pointer. */
 /*-----------------------------------------------------------*/
-_attribute_os_core_code_ram_sec_
+_attribute_os_core_code_flash_sec_
 void vQueueDelete( QueueHandle_t xQueue )
 {
     Queue_t * const pxQueue = xQueue;

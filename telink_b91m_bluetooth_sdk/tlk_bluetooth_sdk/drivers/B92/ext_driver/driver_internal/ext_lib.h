@@ -216,12 +216,10 @@ extern unsigned int ota_program_offset;
  */
 void mcu_oscillator_crystal_calibration(void);
 
-typedef int (*suspend_handler_t)(void);
 typedef void (*check_32k_clk_handler_t)(void);
 typedef unsigned int (*pm_get_32k_clk_handler_t)(void);
 typedef unsigned int (*pm_tim_recover_handler_t)(unsigned int);
 
-extern suspend_handler_t        func_before_suspend;
 extern check_32k_clk_handler_t  pm_check_32k_clk_stable;
 extern pm_get_32k_clk_handler_t pm_get_32k_tick;
 extern pm_tim_recover_handler_t pm_tim_recover;

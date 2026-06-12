@@ -716,9 +716,9 @@ static inline void rf_rx_acc_code_pipe_en(rf_channel_e pipe)
  *                        the access_code channel (5) is enabled.
  * @return      none
  */
-static inline void rf_tx_acc_code_pipe_en(rf_channel_e pipe)
+static inline void rf_tx_acc_code_pipe_en(unsigned char pipe)
 {
-    write_reg8(0x170215, (read_reg8(0x170215) & 0xf8) | pipe); //Tx_Channel_man[2:0]
+    write_reg8(0x170215, ((read_reg8(0x170215) & 0xf8) | (pipe&0x07)) | BIT(4)); //Tx_Channel_man[2:0]
 }
 
 /**

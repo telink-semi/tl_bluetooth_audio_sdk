@@ -35,11 +35,11 @@ static TlkApiTimer_t sTlkmdiDebugTimer = {0};
  * @param[in]   userArg   - user argument.
  * @return      none.
  */
-static void tlkmdi_debug_timer(TlkApiTimerHandle_t pTimer, void* userArg)
+static void tlkmdi_debug_timer(TlkApiTimerHandle_t pTimer, void *userArg)
 {
-    (void) userArg;
+    (void)userArg;
     tlkdbg_handler();
-    if(tlkdbg_handler_getNextIntvUs() != TLKOS_WAIT_FOREVER){
+    if (tlkdbg_handler_getNextIntvUs() != TLKOS_WAIT_FOREVER) {
         return;
     }
     tlksys_timer_stop(TLKSYS_TASKID_SYSTEM, pTimer);

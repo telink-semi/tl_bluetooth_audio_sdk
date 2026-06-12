@@ -105,6 +105,7 @@ void tlkmdi_bt_tpt_init(void)
 
     /* Register HCI and SCO data receive callbacks for TPSLL share memory */
     tlk_d25f_register_hci_receive_cb(TLK_SHARE_MEMORY_MESSAGE_TYPE_TPSLL, tlktpsll_hci_recvC2HData);
+    tlk_d25f_register_sync_receive_cb(TLK_SHARE_MEMORY_MESSAGE_TYPE_TPSLL, tlktpsll_hci_sco_recvC2HData);
 
     /* Register mailbox message callbacks for handover operations */
     tlk_mailbox_register_message_cb(TLK_MESSAGE_FROM_N22_TO_D25F_HANDOVER_MASK_SET_EVT, tlkmdi_bt_tpt_handover_setMask);
@@ -178,7 +179,7 @@ void tlkmdi_bt_tpt_init(void)
     tlksys_timer_createStatic(TLKSYS_TASKID_HOST, &sTlkMdiBtTpsllTwsCtrl.handoverTimer, 10 * 1000, false, tlkmdi_bt_tpt_handover_timer, NULL);
 
     /* Initialize key handling and data synchronization modules */
-    tlkmdi_bt_tph_key_init();
+    tlkmdi_bt_tpsll_key_init();
     tlkmdi_bt_tpt_data_sync_init();
 
 #if TLK_DEV_SY5500_ENABLE
@@ -194,8 +195,8 @@ void tlkmdi_bt_tpt_init(void)
  * @brief       Start the TWS pairing process for dual headset reconnection
  * @param[in]   none
  * @return      none
- * @note        This function initializes the pairing mode to normal mode, sets up the headset 
- *              access code and channel ID, configures timeout and status for waiting N22 ready, 
+ * @note        This function initializes the pairing mode to normal mode, sets up the headset
+ *              access code and channel ID, configures timeout and status for waiting N22 ready,
  *              and starts the timer for the TWS pairing process.
  */
 void tlkmdi_bt_tpt_start(void)
@@ -258,7 +259,7 @@ void tlkmdi_bt_tpt_pair_start_req(uint8_t isRefactory, uint8_t *peerMac)
  * @param[in]   data: Pointer to the data containing pairing mode information
  * @param[in]   dataLen: Length of the data (unused in current implementation)
  * @return      none
- * @note        
+ * @note
  */
 void tlkmdi_bt_tpt_pair_start_sync_from_remote(void *data, uint16_t dataLen)
 {
@@ -272,13 +273,13 @@ void tlkmdi_bt_tpt_pair_start_sync_from_remote(void *data, uint16_t dataLen)
 /**
  * @brief       Start the TWS pairing process
  * @param[in]   isRefactory - Pairing mode, refer to tpt_headset_setup_mode_for_host_e
- * @param[in]   peerMac - Peer device MAC address, if NULL triggers wireless pairing, 
+ * @param[in]   peerMac - Peer device MAC address, if NULL triggers wireless pairing,
  *              if not NULL indicates pairing with charging box
  * @return      none
  * @note        This function initializes the pairing process based on the specified mode.
- *              For 10-second pairing mode, it clears pairing information and handles 
+ *              For 10-second pairing mode, it clears pairing information and handles
  *              charging box pairing if peerMac is provided. It also handles termination
- *              of existing Bluetooth connections if needed and sets up appropriate 
+ *              of existing Bluetooth connections if needed and sets up appropriate
  *              timeouts and statuses for the pairing process.
  */
 void tlkmdi_bt_tpt_pair_start(uint8_t isRefactory, uint8_t *peerMac)
@@ -390,7 +391,7 @@ static void tlkmdi_bt_tpt_pair_enter(bool isSingle)
  * @note        This function handles the different states of the TWS pairing process,
  *              managing transitions between states such as disconnecting existing connections,
  *              setting up new connections, and handling timeouts.
- *              
+ *
  *              The function operates as a state machine with the following key states:
  *              - TLKMDI_BT_TPT_PAIR_STATUS_BT_DISCON_WAITING: Waiting for BT disconnection
  *              - TLKMDI_BT_TPT_PAIR_STATUS_BT_DISCONNECTED: BT has been disconnected
@@ -523,8 +524,8 @@ bool tlkmdi_bt_tpt_pair_procs()
  *              - true: Set headset as single device
  *              - false: Continue with normal dual headset reconnection flow
  * @return      bool - Returns true if operating in single mode, false otherwise
- * @note        This function handles the reconnection process for TWS headsets. 
- *              In single mode, it configures the headset as a standalone device. 
+ * @note        This function handles the reconnection process for TWS headsets.
+ *              In single mode, it configures the headset as a standalone device.
  *              In dual mode, it manages reconnection of both Bluetooth and dongle connections.
  *              Slave headsets in dual mode will exit without performing reconnection.
  */
@@ -565,7 +566,7 @@ static bool tlkmdi_bt_tpt_recon_enter(bool isSingle)
  * @param[in]   none
  * @return      bool - Returns true if TWS is connected and device is master, otherwise returns false or true based on conditions
  * @note        This function handles reconnection logic differently for master and slave devices.
- *              Master device initiates reconnection procedure, while slave device stops pairing 
+ *              Master device initiates reconnection procedure, while slave device stops pairing
  *              and disables scanning when TWS is connected.
  */
 bool tlkmdi_bt_tpt_recon_procs()
@@ -589,13 +590,13 @@ bool tlkmdi_bt_tpt_recon_procs()
 }
 
 /**
- * @brief       This function attempts to reconnect to the last paired Bluetooth device. 
- *              If the last paired device is successfully retrieved, it initiates the 
- *              reconnection process; otherwise, it enables scanning mode to discover 
+ * @brief       This function attempts to reconnect to the last paired Bluetooth device.
+ *              If the last paired device is successfully retrieved, it initiates the
+ *              reconnection process; otherwise, it enables scanning mode to discover
  *              new devices.
  * @param[in]   retryNum - Number of reconnect attempts
- * 
- * Note:        The actual reconnection is only performed when the TLK_MW_BTREC_ENABLE 
+ *
+ * Note:        The actual reconnection is only performed when the TLK_MW_BTREC_ENABLE
  *              macro is enabled, otherwise only the scanning mode is set.
  */
 static void tlkmdi_bt_tpt_reconBt(uint8_t retryNum)
@@ -696,7 +697,7 @@ static void tlkmdi_bt_tpt_timer(TlkApiTimerHandle_t pTimer, void *userArg)
         if (sTlkMdiBtTptStateChgCB != NULL) { /* Only for updating LED pattern as idle */
             sTlkMdiBtTptStateChgCB(TLKMDI_TPT_STATE_CHANGE_CB_DISCONNECT);
         }
-        if (sTlkMdiBtTpsllTwsCtrl.pair_mode == TPH_HOST_DISCONNECT_REASON_HEADSET_START_3S_SETUP) {
+        if (sTlkMdiBtTpsllTwsCtrl.pair_mode == TPT_HOST_DISCONNECT_REASON_HEADSET_START_3S_SETUP) {
             tlkmdi_bt_tpt_dongle_reconStart();
         }
     }
@@ -845,10 +846,10 @@ static int tlkmdi_bt_tpt_headset_disconnect_CB(uint8_t *pData, uint16_t dataLen)
  * @brief       TWS headset setup timeout callback function
  * @param[in]   pData - pointer to data (unused)
  * @param[in]   dataLen - data length (unused)
- * @return      TLK_ENONE if operation succeeds, -TLK_EFAULT if current status is not 
+ * @return      TLK_ENONE if operation succeeds, -TLK_EFAULT if current status is not
  *              TLKMDI_BT_TPT_RECON_STATUS_TWS_RECONNECTING or TLKMDI_BT_TPT_PAIR_STATUS_TWS_SYNC_WAITING
- *              
- * @note        This function only operates when the device is in specific states, resetting 
+ *
+ * @note        This function only operates when the device is in specific states, resetting
  *              the timeout counter to prevent timeout from occurring
  */
 int tlkmdi_bt_tpt_headset_setupTimeoutCB(uint8_t *pData, uint16_t dataLen)
@@ -867,8 +868,8 @@ int tlkmdi_bt_tpt_headset_setupTimeoutCB(uint8_t *pData, uint16_t dataLen)
  * @brief       Exit the ultra low latency mode for TWS headset
  * @return      none
  * @note        This function handles the transition from ultra low latency mode back to normal mode.
- *              It performs necessary synchronization with the peer headset and initiates 
- *              reconnection procedures. The function only operates when currently in 
+ *              It performs necessary synchronization with the peer headset and initiates
+ *              reconnection procedures. The function only operates when currently in
  *              ultra low latency mode and when dongle is connected without active BT ACL links.
  */
 void tlkmdi_bt_tpt_headset_exitLowLatencyMode(void)
@@ -906,7 +907,7 @@ void tlkmdi_bt_tpt_headset_exitLowLatencyMode(void)
  * @param[in]   data    - pointer to received data
  * @param[in]   dataLen - length of received data
  * @return      none.
- * @note        
+ * @note
  */
 void tlkmdi_bt_tpt_headset_recvPeerExitLowLatencyHandler(void *data, uint16_t dataLen)
 {
@@ -929,7 +930,7 @@ void tlkmdi_bt_tpt_headset_recvPeerExitLowLatencyHandler(void *data, uint16_t da
  *              is not in slave mode, then sends access code and channel ID command
  *              and starts connection setup.
  * @return      none.
- * @note        
+ * @note
  */
 void tlkmdi_bt_tpt_dongle_reconStart(void)
 {
@@ -952,7 +953,7 @@ void tlkmdi_bt_tpt_dongle_reconStart(void)
  * @brief       Power on reconnection for TWS dongle.
  * @param[in]   none.
  * @return      TLK_ENONE - success.
- * @note        
+ * @note
  */
 int tlkmdi_bt_tpt_dongle_powerOnRecon(void)
 {
@@ -980,7 +981,7 @@ int tlkmdi_bt_tpt_dongle_powerOnRecon(void)
  * @brief       This function starts the pairing process between TWS master headset and dongle.
  * @param[in]   timeout    - pairing timeout value in units of 100ms.
  * @return      none.
- * @note        
+ * @note
  */
 void tlkmdi_bt_tpt_dongle_paringStart(uint16_t timeout) // unit:ms  timeout*100ms
 {
@@ -1000,7 +1001,7 @@ void tlkmdi_bt_tpt_dongle_paringStart(uint16_t timeout) // unit:ms  timeout*100m
  * @param[in]   pData    - pointer to the new dongle MAC address data.
  * @param[in]   dataLen  - length of the data.
  * @return      TLK_ENONE if successful, -TLK_EPARAM if parameters invalid.
- * @note        
+ * @note
  */
 static int tlkmdi_bt_tpt_dongle_macUpdateHandler(uint8_t *pData, uint16_t dataLen)
 {
@@ -1110,7 +1111,7 @@ static int tlkmdi_bt_tpt_dongle_disconnHandler(uint8_t *pData, uint16_t dataLen)
  * @param[in]   pData    - pointer to the data buffer containing profile information.
  * @param[in]   dataLen  - length of the data in the buffer.
  * @return      TLK_ENONE - operation completed successfully.
- * @note        
+ * @note
  */
 int tlkmdi_bt_tpt_virtualLink_masterSyncProfileInfoHandler(uint8_t *pData, uint16_t dataLen)
 {
@@ -1224,7 +1225,7 @@ int tlkmdi_bt_tpt_virtualLink_slaveScoSetupCompleteHandler(uint8_t *pData, uint1
     } else {
         hfp_codec = HFP_CODEC_ID_CVSD;
     }
-    btif_set_hfp_codec(hfp_codec);
+    btif_set_hfp_codec(SCO_ENC_QUEUE_ID_HF, hfp_codec);
     tlk_printf("<bt_tws> [info] tws_slaveScoSetupCompleteHandler: airMode-%d, hfp_codec-%d", airMode, hfp_codec);
 
     return TLK_ENONE;
@@ -1235,7 +1236,7 @@ int tlkmdi_bt_tpt_virtualLink_slaveScoSetupCompleteHandler(uint8_t *pData, uint1
  *              Depending on the device role (master or slave), it either starts the handover command
  *              or requests a handover from the master device.
  * @return      none.
- * @note        
+ * @note
  */
 void tlkmdi_bt_tpt_handover_start()
 {
@@ -1278,11 +1279,11 @@ _attribute_ram_code_sec_ void tlkmdi_bt_tpt_handover_extraceHostInfoHandler(uint
 }
 
 /**
- * @brief       When handover, the master headset collects some states and parameters from app     
+ * @brief       When handover, the master headset collects some states and parameters from app
  * @param[in]   aclHandle - the acl handle
- * @param[out]  pInfo - Synchronize the app parameters for the future new master headset 
+ * @param[out]  pInfo - Synchronize the app parameters for the future new master headset
  * @return      none
- * @note        
+ * @note
  */
 void tlkmdi_bt_tpt_handover_getAppInfo(uint16_t aclHandle, btp_tws_get_bt_app_state_info_t *pInfo)
 {
@@ -1307,8 +1308,8 @@ void tlkmdi_bt_tpt_handover_getAppInfo(uint16_t aclHandle, btp_tws_get_bt_app_st
         pInfo->status_held  = (pCtrl->held_status & 0x0F);
     }
     audioMode = app_tph_headset_get_mode();
-    if (audioMode & TPH_HOST_MODE_DONGLE_ACTIVE) {
-        if (audioMode & TPH_HOST_MODE_DONGLE_PHONE) {
+    if (audioMode & TPT_HOST_MODE_DONGLE_ACTIVE) {
+        if (audioMode & TPT_HOST_MODE_DONGLE_PHONE) {
             pInfo->dongleVoice = 1;
         }
     }
@@ -1321,12 +1322,12 @@ uint8_t bt_tpt_handover_success = 0;
 
 /**
  * @brief       Handle TWS handover success event
- * @param[in]   pData    - Pointer to the data containing handover information, 
+ * @param[in]   pData    - Pointer to the data containing handover information,
  *                         with the first byte representing the new role
  * @param[in]   dataLen  - Length of the data in bytes
  * @return      TLK_ENONE - Operation completed successfully
  * @note        This function processes the handover success event, updates the device role,
- *              handles specific actions based on the new role (master/slave/single), 
+ *              handles specific actions based on the new role (master/slave/single),
  *              and manages reconnection of Bluetooth and dongle connections as needed.
  */
 static int tlkmdi_bt_tpt_handover_success(uint8_t *pData, uint16_t dataLen)
@@ -1394,12 +1395,12 @@ uint8_t tlkmdi_bt_tpt_handover_isBusy()
 }
 
 /**
- * @brief       When handover, the slave headset receives the HOST sync info sent by the master headset 
- *              and makes this info effective at the upper layer of slave headset.     
- * @param[in]   pData - refoer to "bttpsll_tws_handover_host_status_info_t"  
- * @param[in]   dataLen - the "pData" length  
+ * @brief       When handover, the slave headset receives the HOST sync info sent by the master headset
+ *              and makes this info effective at the upper layer of slave headset.
+ * @param[in]   pData - refoer to "bttpsll_tws_handover_host_status_info_t"
+ * @param[in]   dataLen - the "pData" length
  * @return      none
- * @note        
+ * @note
  */
 static int tlkmdi_bt_tpt_handover_slaveInfoSync(uint8_t *pData, uint16_t dataLen)
 {
@@ -1527,7 +1528,7 @@ _attribute_ram_code_sec_ void tlkmdi_bt_tpt_handover_clearMask(uint8_t *pData)
  * @brief       This function checks if there is a successful page and connecting status for TWS handover.
  * @param[out]  pHandle    - pointer to store the handle of the connected ACL link.
  * @return      true if there is a valid ACL link and handover can proceed, false otherwise.
- * @note        
+ * @note
  */
 static bool tlkmdi_bt_tpt_pageSuccessAndConnecting(uint16_t *pHandle)
 {
@@ -1556,7 +1557,7 @@ static bool tlkmdi_bt_tpt_pageSuccessAndConnecting(uint16_t *pHandle)
  * @param[in]   userArg  - User argument passed to timer (unused)
  * @return      None
  * @note        This function checks if the device is in shutdown state and if so,
- *              disables the BT_TPT power management channel. It's called when the 
+ *              disables the BT_TPT power management channel. It's called when the
  *              TPT power off timer expires.
  */
 static void tlkmdi_bt_tpt_powerOffTimer(TlkApiTimerHandle_t pTimer, void *userArg)
@@ -1569,11 +1570,11 @@ static void tlkmdi_bt_tpt_powerOffTimer(TlkApiTimerHandle_t pTimer, void *userAr
 }
 
 /**
- * @brief       check bt status.   
+ * @brief       check bt status.
  * @param[in]   isClose - true: check BT status, if recon or pair is busy or connected close and disconn BT.
  *                        false: only check bt status.
  * @return      when true return disconn result, when false return BT status.
- * @note        
+ * @note
  */
 static bool tlkmdi_bt_tpt_check_terminate_bt(bool isClose)
 {
@@ -1638,7 +1639,7 @@ bool tlkmdi_bt_tpt_isSlave()
 /**
  * @brief       Check if the current TWS role is single mode
  * @return      true if current role is single mode, false otherwise
- * @note        This function checks whether the TWS is operating in 
+ * @note        This function checks whether the TWS is operating in
  *              single mode, which means only one device is active without a paired TWS partner.
  */
 bool tlkmdi_bt_tpt_isSingle()
@@ -1680,8 +1681,8 @@ bool tlkmdi_bt_tpt_isLeft()
  *              - BTH_TPT_TWS_ROLE_ARBITER: Arbiter role in TWS connection
  *              - BTH_TPT_TWS_ROLE_SLAVE: Slave role in TWS connection
  *              - BTH_TPT_TWS_ROLE_OBSERVER: Observer role in TWS connection
- * @note        This function returns the current TWS (True Wireless Stereo) role 
- *              stored in the global control structure. The role determines the 
+ * @note        This function returns the current TWS (True Wireless Stereo) role
+ *              stored in the global control structure. The role determines the
  *              device's behavior in a TWS system.
  */
 uint8_t tlkmdi_bt_tpt_getRole()
@@ -1751,7 +1752,7 @@ void tlkmdi_bt_tpt_shut_down(void)
  * @param[in]   none.
  * @param[out]  none.
  * @return      uint8_t - the current audio channel, ALG_CHANNEL_LEFT or ALG_CHANNEL_RIGHT.
- * @note        
+ * @note
  */
 uint8_t tlkmdi_bt_tpt_audio_getCurChannel(void)
 {
@@ -1773,7 +1774,7 @@ uint8_t tlkmdi_bt_tpt_audio_getCurChannel(void)
  * @param[in]   length        - the length of PCM data to process.
  * @param[in]   channel       - the audio channel to extract (ALG_CHANNEL_LEFT, ALG_CHANNEL_RIGHT or ALG_CHANNEL_STEREO).
  * @return      1 if successfully extracted mono data from stereo, 0 if stereo channel is selected.
- * @note        
+ * @note
  */
 uint8_t tlkmdi_bt_tpt_audio_getMonoPcmData(codec_mono_int *pcm_stereo, codec_mono_int *pcm_mono, uint16_t length, uint8_t channel)
 {
@@ -1806,7 +1807,7 @@ uint8_t tlkmdi_bt_tpt_audio_getMonoPcmData(codec_mono_int *pcm_stereo, codec_mon
  * @brief       Print debug information about various Bluetooth addresses and channel information via trace output
  * @param       none
  * @return      none
- * @note        This function prints local address, peer address, generated address, 
+ * @note        This function prints local address, peer address, generated address,
  *              new allocated address, current address pointer, AC channel and BLE channel info,
  *              and the local Bluetooth device name for debugging purposes.
  */
@@ -1826,7 +1827,7 @@ void tlkmdi_bt_tpt_debug_printf_addr_info(void)
 /**
  * @brief       Handle TPSLL-related TWS operations by extracting handover information
  * @return      none
- * @note        This function extracts the handover information and stores it in the 
+ * @note        This function extracts the handover information and stores it in the
  *              btHoAddr buffer of the global control structure
  */
 static void tlkmdi_bt_tpt_tpsllHandler(void)
@@ -1838,7 +1839,7 @@ static void tlkmdi_bt_tpt_tpsllHandler(void)
  * @brief       This event will trigger within 40ms, before audio path actually switch to 5ms sequence.
  *              when in dongle music, this event will trigger per 5ms.
  * @return      none
- * @note        
+ * @note
  */
 static void tlkmdi_bt_tpt_latencyModeChangeHandler(void)
 {
@@ -1849,10 +1850,10 @@ static void tlkmdi_bt_tpt_latencyModeChangeHandler(void)
 }
 
 /**
- * @brief       This event is used to notify the slave of the current A2DP status of the music 
+ * @brief       This event is used to notify the slave of the current A2DP status of the music
  *              when exiting the BT sniff mode.
  * @return      none
- * @note        
+ * @note
  */
 static void tlkmdi_bt_tpt_musicStatusNotifyHandler(void)
 {

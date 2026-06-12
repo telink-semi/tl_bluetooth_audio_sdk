@@ -76,7 +76,9 @@ interrupt stack after the scheduler has started. */
 #ifdef configISR_STACK_SIZE_WORDS
     PRIVILEGED_DATA static __attribute__ ((aligned(16))) StackType_t xISRStack[ configISR_STACK_SIZE_WORDS ] = { 0 };
     PRIVILEGED_DATA StackType_t xISRStackTop = ( StackType_t ) &( xISRStack[ configISR_STACK_SIZE_WORDS & ~portBYTE_ALIGNMENT_MASK ] );
-
+#if ( configHSP_ENABLE == 1 )
+    PRIVILEGED_DATA StackType_t xISRStackBase = ( StackType_t ) &( xISRStack[0] );
+#endif
     /* Don't use 0xa5 as the stack fill bytes as that is used by the kernel for
     the task stacks, and so will legitimately appear in many positions within
     the ISR stack. */
@@ -217,6 +219,7 @@ void vPortEndScheduler( void )
 void vAssertCalled( const char * pcFile, unsigned long ulLine ){
     ( void ) pcFile; ( void ) ulLine; 
 //  printf("assert fail: %s, %d\r\n", pcFile, ulLine);
+    // __asm__ volatile("ecall" ::: "memory");
 }
 
 
@@ -237,6 +240,9 @@ _attribute_data_retention_sec_ volatile unsigned int  g_plic_switch_sp_flag=0;
 
 _attribute_data_retention_sec_ static __attribute__ ((aligned(16))) unsigned long plicISRStack[ TLKOS_CFG_PLIC_STACK_SIZE_WORD ] = { 0 };
 _attribute_data_retention_sec_ unsigned long tlk_plicISRStackTop = ( unsigned long ) &( plicISRStack[ TLKOS_CFG_PLIC_STACK_SIZE_WORD & ~0x000f ] );
+#if( configHSP_ENABLE == 1 )
+_attribute_data_retention_sec_ unsigned long tlk_plicISRStackBase = ( unsigned long ) &( plicISRStack[0] );
+#endif
 extern void vPortRestoreActiveTask();
 
 
@@ -448,6 +454,28 @@ _attribute_os_core_code_ram_sec_
 void xPortIrqHandler(uint32_t mcause, uint32_t mepc)
 {
 	(void) mepc;
+#if ( configHSP_ENABLE == 1 )
+    unsigned int mcause_low = mcause & 0x3FF;
+    if(!((mcause_low == 0x20) || (mcause_low == 0x21))){//stack overflow
+        core_set_msp_bound(xISRStackBase);
+#if( configRECORD_STACK_HIGH_ADDRESS == 1 )
+        core_set_msp_base(xISRStackTop);
+        unsigned int ctl = 0x23;
+#else
+        unsigned int ctl = 0x21;
+#endif
+        write_csr(NDS_MHSP_CTL, ctl);
+    }else{
+        core_interrupt_disable();
+        AAA_OS_mcause  = read_csr(NDS_MCAUSE);
+        AAA_OS_mepc    = read_csr(NDS_MEPC);
+        AAA_OS_mdcause = read_csr(NDS_MDCAUSE);
+        AAA_OS_mtval   = read_csr(NDS_MTVAL);
+        AAA_OS_mstatus = read_csr(NDS_MSTATUS);
+        while(1);
+    }
+#endif
+
 	if(mcause == (MCAUSE_INT + IRQ_M_TIMER)){
 		tlkos_debug_ioCtrl(TLKOS_DEBUG_IO_MTI,1);
 		mtime_handler();
@@ -461,7 +489,7 @@ void xPortIrqHandler(uint32_t mcause, uint32_t mepc)
     }else{
 		tlkos_debug_ioCtrl(TLKOS_DEBUG_IO_EXCEPT,1);
 		except_handler();
-		tlkos_debug_ioCtrl(TLKOS_DEBUG_IO_EXCEPT,1);
+		tlkos_debug_ioCtrl(TLKOS_DEBUG_IO_EXCEPT,0);
     }
 }
 

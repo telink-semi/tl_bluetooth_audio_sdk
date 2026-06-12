@@ -51,12 +51,8 @@ static bool tlkmdi_bthfpag_sendOkCmd(uint16_t aclHandle);
 static bool tlkmdi_bthfpag_sendErrorCmd(uint16_t aclHandle);
 #if TLKMDI_AG_CALL_SETUP
 static void                 tlkmdi_hfpag_resetCall(tlkmdi_hfpag_unit_t *pCall);
-static bool                 tlkmdi_bthfpag_sendCievCmd(uint16_t aclHandle, uint8_t indicators, uint8_t indValue);
-static bool                 tlkmdi_btbthfpag_recvClccCmdDeal(uint16_t aclHandle);
 static bool                 tlkmdi_bthfpag_recvAtdCmdDeal(uint16_t aclHandle, uint8_t *pNumber, uint8_t numbLen);
-static bool                 tlkmdi_bthfpag_recvAtaCmdDeal(uint16_t aclHandle);
 static bool                 tlkmdi_bthfpag_recvCindCmdDeal(uint16_t aclHandle);
-static bool                 tlkmdi_bthfpag_recvChupCmdDeal(uint16_t aclHandle);
 static bool                 tlkmdi_bthfpag_recvChldCmdDeal(uint16_t aclHandle, uint8_t *pData, uint16_t dataLen);
 static void                 tlkmdi_bthfpag_pushClccCmdDeal(uint16_t aclHandle, tlkmdi_hfpag_unit_t *pCall, uint8_t index);
 static uint                 tlkmdi_bthfpag_getCallUnitCount(void);
@@ -89,6 +85,12 @@ int tlkmdi_bthfpag_init(void)
     return TLK_ENONE;
 }
 
+tlkmdi_hfpag_ctrl_t *tlkmdi_hfpag_getItem(uint16_t handle)
+{
+    (void)handle;
+    return &sTlkMdiHfpAgCtrl;
+}
+
 /**
  * @brief       Callback function for SCO connection status
  * @param[in]   aclHandle   - The ACL connection handle.
@@ -96,13 +98,18 @@ int tlkmdi_bthfpag_init(void)
  * @param[in]   isConn      - Connection status, 1 is connected, 0 is disconnected.
  * @return      none.
  */
-void tlkmdi_bthfag_scoActive(uint16_t aclHandle, uint16_t scoHandle, bool isConn)
+__attribute__((weak)) void tlkmdi_bthfag_scoActive(uint16_t aclHandle, uint16_t scoHandle, bool isConn)
 {
     (void)scoHandle;
+    if (aclHandle != btp_hfp_getAgHandle()) {
+        return;
+    }
+
     if (isConn) {
         tlkmdi_bthfpag_sendCievCmd(aclHandle, TLKMDI_BTAG_INDIC_CALL, TLKMDI_BTAG_CALL_IN_PROGRESS);
         tlkmdi_bthfpag_sendCievCmd(aclHandle, TLKMDI_BTAG_INDIC_CALLSETUP, TLKMDI_BTAG_CALLSETUP_NOT_SETUP);
     } else {
+        tlkmdi_bthfpag_hungupCall();
     }
 }
 
@@ -242,7 +249,7 @@ int tlkmdi_bthfpag_reset(void)
     tlksys_timer_stop(TLKSYS_TASKID_HOST, &sTlkMdiBtAgCtrl.timer);
     STATIC_ASSERT_THIS_FILE(IS_4BYTE_ALIGN(sizeof(sTlkMdiBtAgCtrl)));
     memset(&sTlkMdiBtAgCtrl, 0, sizeof(sTlkMdiBtAgCtrl));
-
+    memset(&sTlkMdiHfpAgCtrl, 0, sizeof(sTlkMdiHfpAgCtrl));
     return TLK_ENONE;
 }
 
@@ -274,130 +281,6 @@ int tlkmdi_bthfpag_sendMute(uint8_t *pBtAddr, uint8_t micSpk, uint8_t enable)
     if (ret != TLK_ENONE) {
         tlkapi_error(TLKMDI_BTAG_DBG_FLAG, TLKMDI_BTAG_DBG_SIGN, "tlkmdi_bthfpag_muteMic: send mute failure");
         return ret;
-    }
-
-    return TLK_ENONE;
-}
-
-/**
- * @brief       Set the microphone gain by bluetooth address
- * @param[in]   pBtAddr     - The bluetooth device address.
- * @param[in]   volume      - The volume level(0-15).
- * @return      TLK_ENONE is success, others is failure.
- */
-int tlkmdi_bthfpag_setVgm(uint8_t *pBtAddr, uint8_t volume)
-{
-    int               ret;
-    uint8_t           tempLen;
-    uint8_t           buffLen;
-    char              buffer[20];
-    bth_acl_handle_t *pHandle;
-
-    if (volume > 15) {
-        return -TLK_EPARAM;
-    }
-    buffLen           = 0;
-    buffer[buffLen++] = '\r';
-    buffer[buffLen++] = '\n';
-    tempLen           = strlen("+VGM=");
-    tmemcpy(buffer + buffLen, "+VGM=", tempLen);
-    buffLen += tempLen;
-    tempLen = (uint8_t)tlkapi_decToStr((char *)(buffer + buffLen), volume, 2, true);
-    buffLen += tempLen;
-    buffer[buffLen++] = '\r';
-    buffer[buffLen++] = '\n';
-
-    pHandle = bth_handle_searchConnAcl(pBtAddr);
-    if (pHandle == NULL) {
-        tlkapi_trace(TLKMDI_BTAG_DBG_FLAG, TLKMDI_BTAG_DBG_SIGN, "tlkmdi_bthfpag_setVgm: rejected - no connected ACL device ");
-        return TLK_ESTATUS;
-    }
-    ret = btp_hfpag_send(pHandle->aclHandle, (uint8_t *)buffer, buffLen);
-    if (ret != TLK_ENONE) {
-        tlksys_timer_reStart(TLKSYS_TASKID_HOST, &sTlkMdiBtAgCtrl.timer);
-    } else {
-        btp_send_hfpagVolumeChangedEvt(pHandle->aclHandle, BTP_HFP_VOLUME_TYPE_MIC, volume);
-    }
-
-    return TLK_ENONE;
-}
-
-/**
- * @brief       Set the microphone gain by ACL handle
- * @param[in]   aclHandle   - The ACL connection handle.
- * @param[in]   volume      - The volume level(0-15).
- * @return      TLK_ENONE is success, others is failure.
- */
-int tlkmdi_bthfpag_setVgmbyHandle(uint16_t aclHandle, uint8_t volume)
-{
-    int     ret;
-    uint8_t tempLen;
-    uint8_t buffLen;
-    char    buffer[20];
-
-    if (bth_handle_getConnAcl(aclHandle) == NULL || volume > 15) {
-        return -TLK_EPARAM;
-    }
-
-    buffLen           = 0;
-    buffer[buffLen++] = '\r';
-    buffer[buffLen++] = '\n';
-    tempLen           = strlen("+VGM=");
-    tmemcpy(buffer + buffLen, "+VGM=", tempLen);
-    buffLen += tempLen;
-    tempLen = (uint8_t)tlkapi_decToStr((char *)(buffer + buffLen), volume, 2, true);
-    buffLen += tempLen;
-    buffer[buffLen++] = '\r';
-    buffer[buffLen++] = '\n';
-
-    ret = btp_hfpag_send(aclHandle, (uint8_t *)buffer, buffLen);
-    if (ret != TLK_ENONE) {
-        tlksys_timer_reStart(TLKSYS_TASKID_HOST, &sTlkMdiBtAgCtrl.timer);
-    } else {
-        btp_send_hfpagVolumeChangedEvt(aclHandle, BTP_HFP_VOLUME_TYPE_MIC, volume);
-    }
-
-    return TLK_ENONE;
-}
-
-/**
- * @brief       Set the speaker gain by bluetooth address
- * @param[in]   pBtAddr     - The bluetooth device address.
- * @param[in]   volume      - The volume level(0-15).
- * @return      TLK_ENONE is success, others is failure.
- */
-int tlkmdi_bthfpag_setVgs(uint8_t *pBtAddr, uint8_t volume)
-{
-    int               ret;
-    uint8_t           tempLen;
-    uint8_t           buffLen;
-    char              buffer[32];
-    bth_acl_handle_t *pHandle;
-
-    if (volume > 15) {
-        return -TLK_EPARAM;
-    }
-    buffLen           = 0;
-    buffer[buffLen++] = '\r';
-    buffer[buffLen++] = '\n';
-    tempLen           = strlen("+VGS=");
-    tmemcpy(buffer + buffLen, "+VGS=", tempLen);
-    buffLen += tempLen;
-    tempLen = (uint8_t)tlkapi_decToStr((char *)(buffer + buffLen), volume, 2, true);
-    buffLen += tempLen;
-    buffer[buffLen++] = '\r';
-    buffer[buffLen++] = '\n';
-
-    pHandle = bth_handle_searchConnAcl(pBtAddr);
-    if (pHandle == NULL) {
-        tlkapi_error(TLKMDI_BTAG_DBG_FLAG, TLKMDI_BTAG_DBG_SIGN, "tlkmdi_bthfpag_setVgs: rejected - no connected ACL device ");
-        return TLK_ESTATUS;
-    }
-    ret = btp_hfpag_send(pHandle->aclHandle, (uint8_t *)buffer, buffLen);
-    if (ret != TLK_ENONE) {
-        tlksys_timer_reStart(TLKSYS_TASKID_HOST, &sTlkMdiBtAgCtrl.timer);
-    } else {
-        btp_send_hfpagVolumeChangedEvt(pHandle->aclHandle, BTP_HFP_VOLUME_TYPE_SPK, volume);
     }
 
     return TLK_ENONE;
@@ -848,6 +731,16 @@ static void tlkmdi_bthfpag_timer(TlkApiTimerHandle_t pTimer, void *userArg)
     }
 }
 
+__attribute__((weak)) void tlkmdi_bthfpag_recvBCSCmdDeal(uint16_t aclHandle, uint8_t *pData, uint16_t dataLen)
+{
+    (void)aclHandle;
+    (void)pData;
+    (void)dataLen;
+    if (sTlkMdiScoCodecBcsResult == TRUE) {
+        sTlkMdiScoCodecBcsResult = FALSE;
+    }
+}
+
 /**
  * @brief       Receive command callback function
  * @param[in]   aclHandle   - The ACL connection handle.
@@ -864,21 +757,18 @@ static int tlkmdi_bthfpag_recvCmdCB(uint16_t aclHandle, uint8_t *pCmd, uint8_t c
 
     tlkapi_array(TLKMDI_BTAG_DBG_FLAG, TLKMDI_BTAG_DBG_SIGN, "tlkmdi_bthfpag_recvCmdCB: ", pCmd, cmdLen);
     if (cmdLen >= 5 && tmemcmp(pCmd, "AT+BCS", 6) == 0) {
-        if (sTlkMdiScoCodecBcsResult == TRUE) {
-            sTlkMdiScoCodecBcsResult = FALSE;
-        }
-        tlkmdi_bthfpag_sendOkCmd(aclHandle);
-        return TLK_ENONE;
+        tlkmdi_bthfpag_recvBCSCmdDeal(aclHandle, pCmd, cmdLen);
+        return -TLK_ESTATUS;
     } else if (cmdLen >= 8 && tmemcmp(pCmd, "AT+BRSF=", 8) == 0) {
         tlkapi_strToUint32((char *)(pCmd + 8), cmdLen - 8, &(sTlkMdiBtAgCtrl.feature));
         return -TLK_ESTATUS; // Just get the HF feature, then hand off to the lower layers to process the command
     }
 #if (TLKMDI_AG_CALL_SETUP)
     else if (cmdLen >= 7 && tmemcmp(pCmd, "AT+BLDN", 7) == 0) {
-        tlkmdi_bthfpag_sendErrorCmd(aclHandle);
+        tlkmdi_hfpag_recvBLDNCmdDeal(aclHandle);
         return TLK_ENONE;
     } else if (cmdLen >= 7 && tmemcmp(pCmd, "AT+CLCC", 7) == 0) {
-        tlkmdi_btbthfpag_recvClccCmdDeal(aclHandle);
+        tlkmdi_hfpag_recvClccCmdDeal(aclHandle);
         return TLK_ENONE;
     } else if (cmdLen >= 8 && tmemcmp(pCmd, "AT+CMER=", 8) == 0) {
         if (cmdLen < 15) {
@@ -921,7 +811,6 @@ static int tlkmdi_bthfpag_recvCmdCB(uint16_t aclHandle, uint8_t *pCmd, uint8_t c
         return TLK_ENONE;
     } else if (cmdLen >= 7 && tmemcmp(pCmd, "AT+CHUP", 7) == 0) {
         tlkmdi_bthfpag_recvChupCmdDeal(aclHandle);
-        tlkapi_trace(0xffffffff, "AG", "receiver AT+CHUP");
         tlksys_sendMsg(TLKSYS_TASKID_AUDIO, TLKSYS_AUD_MSGID_CALL_HUNGUP, NULL, 0); //contact ziyu ,have bug!
 
         return TLK_ENONE;
@@ -943,7 +832,7 @@ static int tlkmdi_bthfpag_recvCmdCB(uint16_t aclHandle, uint8_t *pCmd, uint8_t c
         uint8_t tempLen  = strlen(pTempStr);
         btp_hfpag_send(aclHandle, (uint8_t *)pTempStr, tempLen);
         tlkmdi_bthfpag_sendOkCmd(aclHandle);
-        tlkmdi_bthfpag_setVgmbyHandle(aclHandle, 15);
+        btp_hfpag_setMicVolumeByHandle(aclHandle, 15);
         btp_hfpag_connectCompleteEvt(aclHandle);
         return TLK_ENONE;
     } else if (cmdLen >= 9 && tmemcmp(pCmd, "AT+CHLD=", 8) == 0) {
@@ -951,6 +840,13 @@ static int tlkmdi_bthfpag_recvCmdCB(uint16_t aclHandle, uint8_t *pCmd, uint8_t c
             tlkmdi_bthfpag_sendOkCmd(aclHandle);
         } else {
             tlkmdi_bthfpag_sendErrorCmd(aclHandle);
+        }
+        return TLK_ENONE;
+    } else if (cmdLen >= 9 && tmemcmp(pCmd, "AT+BVRA=", 8) == 0) {
+        if (false == tlkmdi_hfpag_recvBVRACmdDeal(aclHandle, pCmd, cmdLen)) {
+            tlkmdi_bthfpag_sendErrorCmd(aclHandle);
+        } else {
+            tlkmdi_bthfpag_sendOkCmd(aclHandle);
         }
         return TLK_ENONE;
     } else {
@@ -1009,17 +905,18 @@ static bool tlkmdi_bthfpag_sendErrorCmd(uint16_t aclHandle)
  * @param[in]   indValue    - Indicator value.
  * @return      true is success, false is failure.
  */
-static bool tlkmdi_bthfpag_sendCievCmd(uint16_t aclHandle, uint8_t indicators, uint8_t indValue)
+bool tlkmdi_bthfpag_sendCievCmd(uint16_t aclHandle, uint8_t indicators, uint8_t indValue)
 {
     uint8_t tempLen;
     uint8_t buffLen;
     char    buffer[20];
 
-    tlkapi_trace(TLKMDI_BTAG_DBG_FLAG, TLKMDI_BTAG_DBG_SIGN, "tlkmdi_bthfpag_sendCievCmd: indicators %d indValue %d", indicators, indValue);
     if (aclHandle == 0 || indicators == 0 || indicators > 7) {
-        tlkapi_error(TLKMDI_BTAG_DBG_FLAG, TLKMDI_BTAG_DBG_SIGN, "tlkmdi_bthfpag_sendCievCmd: error param");
         return false;
     }
+
+    tlkapi_trace(TLKMDI_BTAG_DBG_FLAG, TLKMDI_BTAG_DBG_SIGN, "tlkmdi_bthfpag_sendCievCmd: indicators %d indValue %d", indicators, indValue);
+
     if ((sTlkMdiHfpAgAttr & TLKMDI_BTAG_ATTR_CIEV) == 0) {
         tlkapi_error(TLKMDI_BTAG_DBG_FLAG, TLKMDI_BTAG_DBG_SIGN, "tlkmdi_bthfpag_sendCievCmd: error attribute %d", sTlkMdiHfpAgAttr);
         return false;
@@ -1078,9 +975,8 @@ static void tlkmdi_hfpag_resetCall(tlkmdi_hfpag_unit_t *pCall)
  * @param[in]   aclHandle   - The ACL connection handle.
  * @return      true is success, false is failure.
  */
-static bool tlkmdi_btbthfpag_recvClccCmdDeal(uint16_t aclHandle)
+__attribute__((weak)) bool tlkmdi_hfpag_recvClccCmdDeal(uint16_t aclHandle)
 {
-    tlkmdi_bthfpag_sendOkCmd(aclHandle);
     if (sTlkMdiHfpAgCtrl.unit[0].status != TLK_STATE_CLOSED) {
         tlkmdi_bthfpag_pushClccCmdDeal(aclHandle, &sTlkMdiHfpAgCtrl.unit[0], 0);
     }
@@ -1089,6 +985,17 @@ static bool tlkmdi_btbthfpag_recvClccCmdDeal(uint16_t aclHandle)
     }
     tlkmdi_bthfpag_sendOkCmd(aclHandle);
 
+    return true;
+}
+
+/**
+ * @brief       Handle AT+BLDN command
+ * @param[in]   aclHandle   - The ACL connection handle.
+ * @return      true is success, false is failure.
+ */
+__attribute__((weak)) bool tlkmdi_hfpag_recvBLDNCmdDeal(uint16_t aclHandle)
+{
+    tlkmdi_bthfpag_sendErrorCmd(aclHandle);
     return true;
 }
 
@@ -1115,7 +1022,7 @@ static bool tlkmdi_bthfpag_recvAtdCmdDeal(uint16_t aclHandle, uint8_t *pNumber, 
  * @param[in]   aclHandle   - The ACL connection handle.
  * @return      true is success, false is failure.
  */
-static bool tlkmdi_bthfpag_recvAtaCmdDeal(uint16_t aclHandle)
+__attribute__((weak)) bool tlkmdi_bthfpag_recvAtaCmdDeal(uint16_t aclHandle)
 {
     tlkmdi_hfpag_unit_t *pCall;
 
@@ -1216,7 +1123,7 @@ static bool tlkmdi_bthfpag_recvCindCmdDeal(uint16_t aclHandle)
  * @param[in]   aclHandle   - The ACL connection handle.
  * @return      true is success, false is failure.
  */
-static bool tlkmdi_bthfpag_recvChupCmdDeal(uint16_t aclHandle)
+__attribute__((weak)) bool tlkmdi_bthfpag_recvChupCmdDeal(uint16_t aclHandle)
 {
     if (tlkmdi_bthfpag_getCallUnitCount() == 0) {
         tlkmdi_bthfpag_sendErrorCmd(aclHandle);
@@ -1225,6 +1132,14 @@ static bool tlkmdi_bthfpag_recvChupCmdDeal(uint16_t aclHandle)
     tlkmdi_bthfpag_sendOkCmd(aclHandle);
     tlkmdi_bthfpag_hungupCall();
     return true;
+}
+
+__attribute__((weak)) bool tlkmdi_hfpag_recvBVRACmdDeal(uint16_t aclHandle, uint8_t *pData, uint16_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    (void)aclHandle;
+    return false;
 }
 
 /**

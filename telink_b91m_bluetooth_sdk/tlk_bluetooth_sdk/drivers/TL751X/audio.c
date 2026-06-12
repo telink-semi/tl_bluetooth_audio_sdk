@@ -2225,6 +2225,20 @@ void audio_i2s_config_init(audio_i2s_config_t *i2s_config)
 }
 
 /**
+ * @brief     This function configures i2s clk pin for extern codec clk,mclk=PLL1(36.864M)*(div_numerator/div_denominator)
+ * @param[in] i2s_select i2s channel.
+ * @param[in] mclk_pin -mclk output pin.
+ * @param[in] div_numerator   - the dividing factor of div_numerator (15bits valid).
+ * @param[in] div_denominator - the dividing factor of div_denominator(16bits valid).
+ * @return    none.
+ */
+void audio_set_i2s_clk_as_mclk(i2s_select_e i2s_select, gpio_func_pin_e mclk_pin, unsigned short div_numerator, unsigned short div_denominator)
+{
+    audio_i2s_set_clk(i2s_select, div_numerator, div_denominator);
+    gpio_set_mux_function(mclk_pin, I2S0_CLK + (i2s_select) * 6);
+    gpio_function_dis((gpio_pin_e)mclk_pin);
+}
+/**
  * @}
  */
 
@@ -2803,9 +2817,12 @@ void audio_codec0_set_dmic_a_pin(gpio_func_pin_e dmic0_data, gpio_func_pin_e dmi
     gpio_input_en((gpio_pin_e)dmic0_data);
     gpio_set_mux_function(dmic0_data, DMIC0_DAT_I);
     gpio_function_dis((gpio_pin_e)dmic0_data);
+
     /* codec0 dmic0 clock1. */
-    gpio_set_mux_function(dmic0_clk1, DMIC0_CLK0);
-    gpio_function_dis((gpio_pin_e)dmic0_clk1);
+    if (dmic0_clk1 != GPIO_NONE_PIN) {
+		gpio_set_mux_function(dmic0_clk1, DMIC0_CLK0);
+		gpio_function_dis((gpio_pin_e)dmic0_clk1);
+    }
     /* codec0 dmic1 clock2. */
     if (dmic0_clk2 != GPIO_NONE_PIN) {
         gpio_set_mux_function(dmic0_clk2, DMIC0_CLK1);
@@ -2827,8 +2844,10 @@ void audio_codec0_set_dmic_b_pin(gpio_func_pin_e dmic1_data, gpio_func_pin_e dmi
     gpio_set_mux_function(dmic1_data, DMIC1_DAT_I);
     gpio_function_dis((gpio_pin_e)dmic1_data);
     /* codec0 dmic1 clock1. */
-    gpio_set_mux_function(dmic1_clk1, DMIC1_CLK0);
-    gpio_function_dis((gpio_pin_e)dmic1_clk1);
+    if (dmic1_clk1 != GPIO_NONE_PIN) {
+		gpio_set_mux_function(dmic1_clk1, DMIC1_CLK0);
+		gpio_function_dis((gpio_pin_e)dmic1_clk1);
+    }
     /* codec0 dmic1 clock2. */
     if (dmic1_clk2 != GPIO_NONE_PIN) {
         gpio_set_mux_function(dmic1_clk2, DMIC1_CLK1);
@@ -2850,8 +2869,10 @@ void audio_codec1_set_dmic_a_pin(gpio_func_pin_e dmic2_data, gpio_func_pin_e dmi
     gpio_set_mux_function(dmic2_data, DMIC2_DAT_I);
     gpio_function_dis((gpio_pin_e)dmic2_data);
     /* codec1 dmic2 clock1. */
-    gpio_set_mux_function(dmic2_clk1, DMIC2_CLK0);
-    gpio_function_dis((gpio_pin_e)dmic2_clk1);
+    if (dmic2_clk1 != GPIO_NONE_PIN) {
+		gpio_set_mux_function(dmic2_clk1, DMIC2_CLK0);
+		gpio_function_dis((gpio_pin_e)dmic2_clk1);
+    }
     /* codec1 dmic2 clock2. */
     if (dmic2_clk2 != GPIO_NONE_PIN) {
         gpio_set_mux_function(dmic2_clk2, DMIC2_CLK1);

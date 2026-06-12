@@ -24,10 +24,9 @@
 #include "tl_common.h"
 #include "tlkapi/tlkapi.h"
 #if (TLK_CFG_UART_TOOL_ENABLE)
-    #include "tlkalg/digest/crc/tlkalg_crc.h"
-    #include "tlkspto.h"
-    #include "tlkspto_recv.h"
-    #include "drivers.h"
+#include "tlkalg/digest/crc/tlkalg_crc.h"
+#include "tlkspto.h"
+#include "tlkspto_recv.h"
 
 
 static void tlkspto_recv_normalPacketDeal(uint8_t ptype, uint8_t *pData, uint16_t dataLen);
@@ -51,21 +50,8 @@ void tlkspto_recv_regCB(TlkCpcRecvCB recvCB)
  */
 void tlkspto_recv_reset(void)
 {
-    spTlkSptoRecvCtrl.mstate    = TLKSPTO_RECV_MSTATE_HEAD;
-    spTlkSptoRecvCtrl.recvLens  = 0;
-    spTlkSptoRecvCtrl.busyTimer = 0;
-}
-
-/**
- * @brief       Set receive buffer.
- * @param[in]   pBuffer - Buffer pointer.
- * @param[in]   buffLen - Buffer length.
- * @return      none.
- */
-void tlkspto_recv_setBuffer(uint8_t *pBuffer, uint16_t buffLen)
-{
-    spTlkSptoRecvCtrl.pBuffer = pBuffer;
-    spTlkSptoRecvCtrl.buffLen = buffLen;
+    spTlkSptoRecvCtrl.mstate   = TLKSPTO_RECV_MSTATE_HEAD;
+    spTlkSptoRecvCtrl.recvLens = 0;
 }
 
 /**
@@ -76,8 +62,8 @@ void tlkspto_recv_setBuffer(uint8_t *pBuffer, uint16_t buffLen)
  */
 void tlkspto_recv_handler(uint8_t *pData, uint16_t dataLen)
 {
-    int    indexI;
-    int    indexJ;
+    int      indexI;
+    int      indexJ;
     uint16_t tempVar0;
     uint16_t tempVar1;
 
@@ -85,7 +71,6 @@ void tlkspto_recv_handler(uint8_t *pData, uint16_t dataLen)
         return;
     }
 
-    //	tlkapi_array(TLKSPTO_DBG_FLAG, TLKSPTO_DBG_SIGN, "tlkcpc2_recv_handler 01: ", pData, dataLen);
     for (indexI = 0; indexI < dataLen; indexI++) {
         if (pData[indexI] == TLKSPTO_FRAME_HEAD_SIGN) {
             spTlkSptoRecvCtrl.mstate   = TLKSPTO_RECV_MSTATE_BODY;
@@ -98,7 +83,7 @@ void tlkspto_recv_handler(uint8_t *pData, uint16_t dataLen)
                 spTlkSptoRecvCtrl.recvLens = 0;
             }
         } else if (spTlkSptoRecvCtrl.mstate == TLKSPTO_RECV_MSTATE_BODY) {
-            if (spTlkSptoRecvCtrl.recvLens < spTlkSptoRecvCtrl.buffLen) {
+            if (spTlkSptoRecvCtrl.recvLens < sizeof(spTlkSptoRecvCtrl.pBuffer)) {
                 spTlkSptoRecvCtrl.pBuffer[spTlkSptoRecvCtrl.recvLens++] = pData[indexI];
             } else {
                 spTlkSptoRecvCtrl.mstate   = TLKSPTO_RECV_MSTATE_HEAD;
@@ -183,7 +168,7 @@ static void tlkspto_recv_normalPacketDeal(uint8_t ptype, uint8_t *pData, uint16_
     if (ptype == TLKPRT_COMM_PTYPE_CMD || ptype == TLKPRT_COMM_PTYPE_EVT) {
         uint16_t lens;
         uint16_t msgID;
-        uint8_t mtype;
+        uint8_t  mtype;
         mtype = pData[0];
         msgID = pData[1] | ((pData[3] & 0xF0) << 8);
         lens  = pData[2] | ((pData[3] & 0x0F) << 8);
@@ -194,7 +179,7 @@ static void tlkspto_recv_normalPacketDeal(uint8_t ptype, uint8_t *pData, uint16_
     } else if (ptype == TLKPRT_COMM_PTYPE_DAT) {
         uint32_t numb;
         uint16_t lens;
-        uint8_t datID;
+        uint8_t  datID;
         datID = pData[0];
         numb  = (((uint32_t)pData[2]) << 8) | pData[1] | (((uint32_t)pData[4] & 0xF0) << 12);
         lens  = (((uint16_t)pData[4] & 0x0F) << 8) | pData[3];

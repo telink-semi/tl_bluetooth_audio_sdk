@@ -201,7 +201,7 @@ __attribute__((always_inline)) inline uint32_t tlkhal_uart_getRxDoneStatus(uint8
 __attribute__((always_inline)) inline void tlkhal_uart_clrRxDoneStatus(uint8_t port, void *futureUse)
 {
     (void)futureUse;
-    TLKHAL_ASSERT(port <= UART1);
+    TLKHAL_ASSERT(port <= UART3);
     uart_clr_irq_status(port, UART_RXDONE_IRQ_STATUS);
 }
 #endif

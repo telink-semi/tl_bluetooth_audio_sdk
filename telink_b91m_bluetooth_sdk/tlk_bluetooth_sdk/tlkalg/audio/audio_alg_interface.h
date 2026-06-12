@@ -40,8 +40,14 @@
 #ifndef TLKALG_MSBC_ENABLE
 #define TLKALG_MSBC_ENABLE 0
 #endif
+#ifndef TLKALG_MSBC_ENABLE_CH2
+#define TLKALG_MSBC_ENABLE_CH2 0
+#endif
 #ifndef TLKALG_CVSD_ENABLE
 #define TLKALG_CVSD_ENABLE 0
+#endif
+#ifndef TLKALG_CVSD_ENABLE_CH2
+#define TLKALG_CVSD_ENABLE_CH2 0
 #endif
 #ifndef TLKALG_AAC_DEC_ENABLE
 #define TLKALG_AAC_DEC_ENABLE 0
@@ -78,8 +84,11 @@
 #ifndef TLKALG_HIGH_PERFORMANCE_EN
 #define TLKALG_HIGH_PERFORMANCE_EN 0
 #endif
-#ifndef TLKALG_HIGH_PERFORMANCE_24BITS_EN
-#define TLKALG_HIGH_PERFORMANCE_24BITS_EN 0
+#ifndef TLKALG_PPM_SPK_24BIT_ENABLE
+#define TLKALG_PPM_SPK_24BIT_ENABLE 0
+#endif
+#ifndef TLKALG_PPM_MIC_24BIT_ENABLE
+#define TLKALG_PPM_MIC_24BIT_ENABLE 0
 #endif
 #ifndef TLKALG_ASRC_48TO441_ENABLE
 #define TLKALG_ASRC_48TO441_ENABLE 0
@@ -125,6 +134,9 @@
 #ifndef TLKALG_NN_NS_VAD_ENABLE
 #define TLKALG_NN_NS_VAD_ENABLE 0
 #endif
+#ifndef TLKALG_BBF_ENABLE
+#define TLKALG_BBF_ENABLE 0
+#endif
 #ifndef TLKALG_ANS_SPK_ENABLE
 #define TLKALG_ANS_SPK_ENABLE 0
 #endif
@@ -157,12 +169,6 @@ typedef enum
 
 typedef enum
 {
-    ALG_SIZE_TYPE_ENCODER = 1, /* encoder size */
-    ALG_SIZE_TYPE_SCRATCH = 2, /* scratch size */
-} ALG_SIZE_TYPE;
-
-typedef enum
-{
     ALG_WIDTH_16 = 16,
     ALG_WIDTH_20 = 20,
     ALG_WIDTH_24 = 24,
@@ -177,8 +183,12 @@ typedef enum
     ALG_LC3_DEC,
     ALG_CVSD_ENC,
     ALG_CVSD_DEC,
+    ALG_CVSD_ENC_CH2,
+    ALG_CVSD_DEC_CH2,
     ALG_MSBC_ENC,
     ALG_MSBC_DEC,
+    ALG_MSBC_ENC_CH2,
+    ALG_MSBC_DEC_CH2,
     ALG_LC3_PLUS_ENC,
     ALG_LC3_PLUS_DEC,
     ALG_OPUS_ENC,
@@ -212,9 +222,10 @@ typedef enum
     ALG_LC3_24BIT_DEC,
     ALG_VAD,
     ALG_PPM_SPK_24BIT,
+    ALG_PPM_MIC_24BIT,
     ALG_NN_NS,
     ALG_NN_NS_VAD,
-    //ALG_PPM_MIC_24BIT,
+    ALG_BBF,
     ALG_DEFAULT,
     ALG_TYPE_MAX
 } audio_alg_type_e;

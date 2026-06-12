@@ -79,7 +79,7 @@ struct ke_env_tag
 };
 
 /// Kernel environment
-extern struct ke_env_tag ke_env;
+extern struct ke_env_tag tlk_bt_ctrl_g_ke_env;
 
 /// @} ENV
 

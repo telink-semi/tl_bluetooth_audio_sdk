@@ -39,171 +39,53 @@
 #include "../../inc/svc.h"
 #include "../../inc/svc_format.h"
 
+#include "vendor/common/user_config.h"
 #include "../svc_audio.h"
+#include "svc_aics.h"
 
-// todo:
-#define APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM 0
+#define AICS_START_HDL SERVICE_AUDIO_INPUT_CONTROL_HDL
 
-#define AICS_START_HDL                         SERVICE_AUDIO_INPUT_CONTROL_HDL
+#if LEA_AICS_SERVICE_COUNT > 0
+static const uint8_t defaultAicsAudioInputStateValue[]       = {0x00, 0x00, 0x00, 0x00};
+static const uint8_t defaultAicsGainSettingPropertiesValue[] = {0x00, 0x00, 0x00};
+static const uint8_t defaultAicsAudioInputTypeValue          = 0x00;
+static const uint8_t defaultAicsAudioInputStatusValue        = 0x00;
+static const uint8_t defaultAicsAudioInputDescriptionValue[] = {'A', 'I', 'C', 'S'};
 
-#define AICS_INPUT_DESC_MAX_SIZE               50
+static const uint16_t defaultAicsAudioInputStateValueLen       = sizeof(defaultAicsAudioInputStateValue);
+static const uint16_t defaultAicsGainSettingPropertiesValueLen = sizeof(defaultAicsGainSettingPropertiesValue);
+static const uint16_t defaultAicsAudioInputTypeValueLen        = sizeof(defaultAicsAudioInputTypeValue);
+static const uint16_t defaultAicsAudioInputStatusValueLen      = sizeof(defaultAicsAudioInputStatusValue);
+static const uint16_t defaultAicsAudioInputDescriptionValueLen = sizeof(defaultAicsAudioInputDescriptionValue);
 
-const uint16_t gAicsInDescMaxSize = AICS_INPUT_DESC_MAX_SIZE;
+#define LEA_AUDIO_AICS_SERVICE_DEFAULT_SERVICE_LIST                                                                                                                          \
+    ATTS_SECONDARY_SERVICE(serviceAudioInputControlAttUuid), /* < Audio Input State */                                                                                       \
+        ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropReadNotify, characteristicAudioInputStateAttUuid, defaultAicsAudioInputStateValue),                                        \
+        ATTS_COMMON_CCC_DEFINE,                                                                                                             /** < Gain Setting Properties */ \
+        ATTS_CHAR_UUID_ENCR_READ_POINT_CB(charPropRead, characteristicGainSettingsAttributeAttUuid, defaultAicsGainSettingPropertiesValue), /** < Audio Input Type */        \
+        ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropRead, characteristicAudioInputTypeAttUuid, defaultAicsAudioInputTypeValue),              /* < Audio Input Status */       \
+        ATTS_CHAR_UUID_ENCR_READ_ENTITY_CB(charPropReadNotify, characteristicAudioInputStatusAttUuid, defaultAicsAudioInputStatusValue),                                     \
+        ATTS_COMMON_CCC_DEFINE,                                                                     /* < Audio Input Control Point */                                        \
+        ATTS_CHAR_UUID_ENCR_WRITE_NULL(charPropWrite, characteristicAudioInputControlPointAttUuid), /* < Audio Input Description */                                          \
+        ATTS_CHAR_UUID_ENCR_RDWR_POINT_RWCB(charPropReadWriteWithoutNotify, characteristicAudioInputDescriptionAttUuid, defaultAicsAudioInputDescriptionValue),              \
+        ATTS_COMMON_CCC_DEFINE
 
-#define AICS_AUDIO_IN_STATE_FIX_LEN      4
-#define AICS_GAIN_SET_PROPERTIES_FIX_LEN 3
-#define AICS_AUDIO_IN_TYPE_FIX_LEN       1
-#define AICS_AUDIO_IN_STATUS_FIX_LEN     1
-
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 0
-static const uint16_t aicsAudioInputStateValueLen       = AICS_AUDIO_IN_STATE_FIX_LEN;
-static const uint16_t aicsGainSettingPropertiesValueLen = AICS_GAIN_SET_PROPERTIES_FIX_LEN;
-static const uint16_t aicsAudioInputTypeValueLen        = AICS_AUDIO_IN_TYPE_FIX_LEN;
-static const uint16_t aicsAudioInputStatusValueLen      = AICS_AUDIO_IN_STATUS_FIX_LEN;
-#endif
-
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 0
-_attribute_ble_data_retention_ uint8_t  aicsAudioInputStateValue[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM][AICS_AUDIO_IN_STATE_FIX_LEN];
-_attribute_ble_data_retention_ uint8_t  aicsGainSettingPropertiesValue[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM][AICS_GAIN_SET_PROPERTIES_FIX_LEN];
-_attribute_ble_data_retention_ uint8_t  aicsAudioInputTypeValue[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM];
-_attribute_ble_data_retention_ uint8_t  aicsAudioInputStatusValue[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM];
-_attribute_ble_data_retention_ uint8_t  aicsAudioInputDescriptionValue[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM][AICS_INPUT_DESC_MAX_SIZE];
-_attribute_ble_data_retention_ uint16_t aicsAudioInputDescriptionValueLen[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM];
-#endif
-
-#define ATTS_CHAR_AUDIO_INPUT_STATE(value)                \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadNotify), \
-        ATTS_CHAR_UUID_DEFINE(ATT_PERMISSIONS_ENCRYPT_READ, characteristicAudioInputStateUuid, aicsAudioInputStateValueLen, AICS_AUDIO_IN_STATE_FIX_LEN, value, 0)
-
-#define ATTS_CHAR_GAIN_SETTING(value)                                                                                                            \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropRead), ATTS_CHAR_UUID_DEFINE(ATT_PERMISSIONS_ENCRYPT_READ, characteristicGainSettingsAttributeUuid, \
-                                                                          aicsGainSettingPropertiesValueLen, AICS_GAIN_SET_PROPERTIES_FIX_LEN, value, 0)
-
-#define ATTS_CHAR_AUDIO_INPUT_TYPE(value)           \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropRead), \
-        ATTS_CHAR_UUID_DEFINE(ATT_PERMISSIONS_ENCRYPT_READ, characteristicAudioInputTypeUuid, aicsAudioInputTypeValueLen, AICS_AUDIO_IN_TYPE_FIX_LEN, value, 0)
-
-#define ATTS_CHAR_AUDIO_INPUT_STATUS(value)               \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadNotify), \
-        ATTS_CHAR_UUID_DEFINE(ATT_PERMISSIONS_ENCRYPT_READ, characteristicAudioInputStatusUuid, aicsAudioInputStatusValueLen, AICS_AUDIO_IN_STATUS_FIX_LEN, value, 0)
-
-#define ATTS_CHAR_AUDIO_INPUT_CTRL_POINT()                                                                                                                  \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropWrite),                                                                                                        \
-    {                                                                                                                                                       \
-        ATT_PERMISSIONS_ENCRYPT_WRITE, ATT_16_UUID_LEN, (uint8_t *)(size_t)characteristicAudioInputControlPointUuid, NULL, 0, NULL, ATTS_SET_WRITE_CALLBACK \
-    }
-
-#define ATTS_CHAR_AUDIO_INPUT_DESC(value, len)                                                                                             \
-    ATTS_CHARACTERISTIC_DECLARATIONS(charPropReadWriteWithoutNotify),                                                                      \
-        ATTS_CHAR_UUID_DEFINE(ATT_PERMISSIONS_ENCRYPT_RDWR, characteristicAudioInputDescriptionUuid, len, AICS_INPUT_DESC_MAX_SIZE, value, \
-                              ATTS_SET_WRITE_CALLBACK | ATTS_SET_ALLOW_WRITE | ATTS_SET_VARIABLE_LEN)
-
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 0
 /*
  * @brief the structure for default AICS service List.
  */
 static const struct atts_attribute aicsList[] = {
-    ATTS_SECONDARY_SERVICE(serviceAudioInputControlUuid),
-
-    //Audio Input State
-    ATTS_CHAR_AUDIO_INPUT_STATE(&aicsAudioInputStateValue[0][0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Gain Setting Properties
-    ATTS_CHAR_GAIN_SETTING(&aicsGainSettingPropertiesValue[0][0]),
-
-    //Audio Input Type
-    ATTS_CHAR_AUDIO_INPUT_TYPE(&aicsAudioInputTypeValue[0]),
-
-    //Audio Input Status
-    ATTS_CHAR_AUDIO_INPUT_STATUS(&aicsAudioInputStatusValue[0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Audio Input Control Point
-    ATTS_CHAR_AUDIO_INPUT_CTRL_POINT(),
-
-    //Audio Input Description
-    ATTS_CHAR_AUDIO_INPUT_DESC(&aicsAudioInputDescriptionValue[0][0], aicsAudioInputDescriptionValueLen[0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 1
-    ATTS_SECONDARY_SERVICE(serviceAudioInputControlUuid),
-
-    //Audio Input State
-    ATTS_CHAR_AUDIO_INPUT_STATE(&aicsAudioInputStateValue[1][0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Gain Setting Properties
-    ATTS_CHAR_GAIN_SETTING(&aicsGainSettingPropertiesValue[1][0]),
-
-    //Audio Input Type
-    ATTS_CHAR_AUDIO_INPUT_TYPE(&aicsAudioInputTypeValue[1]),
-
-    //Audio Input Status
-    ATTS_CHAR_AUDIO_INPUT_STATUS(&aicsAudioInputStatusValue[1]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Audio Input Control Point
-    ATTS_CHAR_AUDIO_INPUT_CTRL_POINT(),
-
-    //Audio Input Description
-    ATTS_CHAR_AUDIO_INPUT_DESC(&aicsAudioInputDescriptionValue[1][0], aicsAudioInputDescriptionValueLen[1]),
-    ATTS_COMMON_CCC_DEFINE,
+    LEA_AUDIO_AICS_SERVICE_DEFAULT_SERVICE_LIST,
+#if LEA_AICS_SERVICE_COUNT > 1
+    LEA_AUDIO_AICS_SERVICE_DEFAULT_SERVICE_LIST,
 #endif
-
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 2
-    ATTS_SECONDARY_SERVICE(serviceAudioInputControlUuid),
-
-    //Audio Input State
-    ATTS_CHAR_AUDIO_INPUT_STATE(&aicsAudioInputStateValue[2][0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Gain Setting Properties
-    ATTS_CHAR_GAIN_SETTING(&aicsGainSettingPropertiesValue[2][0]),
-
-    //Audio Input Type
-    ATTS_CHAR_AUDIO_INPUT_TYPE(&aicsAudioInputTypeValue[2]),
-
-    //Audio Input Status
-    ATTS_CHAR_AUDIO_INPUT_STATUS(&aicsAudioInputStatusValue[2]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Audio Input Control Point
-    ATTS_CHAR_AUDIO_INPUT_CTRL_POINT(),
-
-    //Audio Input Description
-    ATTS_CHAR_AUDIO_INPUT_DESC(&aicsAudioInputDescriptionValue[2][0], aicsAudioInputDescriptionValueLen[2]),
-    ATTS_COMMON_CCC_DEFINE,
+#if LEA_AICS_SERVICE_COUNT > 2
+    LEA_AUDIO_AICS_SERVICE_DEFAULT_SERVICE_LIST,
 #endif
-
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 3
-    ATTS_SECONDARY_SERVICE(serviceAudioInputControlUuid),
-
-    //Audio Input State
-    ATTS_CHAR_AUDIO_INPUT_STATE(&aicsAudioInputStateValue[3][0]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Gain Setting Properties
-    ATTS_CHAR_GAIN_SETTING(&aicsGainSettingPropertiesValue[3][0]),
-
-    //Audio Input Type
-    ATTS_CHAR_AUDIO_INPUT_TYPE(&aicsAudioInputTypeValue[3]),
-
-    //Audio Input Status
-    ATTS_CHAR_AUDIO_INPUT_STATUS(&aicsAudioInputStatusValue[3]),
-    ATTS_COMMON_CCC_DEFINE,
-
-    //Audio Input Control Point
-    ATTS_CHAR_AUDIO_INPUT_CTRL_POINT(),
-
-    //Audio Input Description
-    ATTS_CHAR_AUDIO_INPUT_DESC(&aicsAudioInputDescriptionValue[3][0], aicsAudioInputDescriptionValueLen[3]),
-    ATTS_COMMON_CCC_DEFINE,
+#if LEA_AICS_SERVICE_COUNT > 3
+    LEA_AUDIO_AICS_SERVICE_DEFAULT_SERVICE_LIST,
 #endif
 };
-#endif
 
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 0
 /*
  * @brief the structure for default AICS service group.
  */
@@ -212,22 +94,22 @@ _attribute_ble_data_retention_ static struct atts_group svcAicsGroup = {
 };
 #endif
 
-#define AICS_SVC_HDL_COUNT   ARRAY_SIZE(aicsList) / APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM //15
+#define AICS_SVC_HDL_COUNT   ARRAY_SIZE(aicsList) / LEA_AICS_SERVICE_COUNT //15
 
 #define AICS_START_HANDLE(n) (AICS_START_HDL + (AICS_SVC_HDL_COUNT) * (n))
 #define AICS_END_HANDLE(n)   (AICS_START_HANDLE(n) + AICS_SVC_HDL_COUNT - 1)
 
-const uint16_t aicsIncludeValue[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM][3] = {
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 0
+const uint16_t aicsIncludeValue[LEA_AICS_SERVICE_COUNT][3] = {
+#if LEA_AICS_SERVICE_COUNT > 0
     {AICS_START_HANDLE(0), AICS_END_HANDLE(0), SERVICE_UUID_AUDIO_INPUT_CONTROL},
 #endif
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 1
+#if LEA_AICS_SERVICE_COUNT > 1
     {AICS_START_HANDLE(1), AICS_END_HANDLE(1), SERVICE_UUID_AUDIO_INPUT_CONTROL},
 #endif
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 2
+#if LEA_AICS_SERVICE_COUNT > 2
     {AICS_START_HANDLE(2), AICS_END_HANDLE(2), SERVICE_UUID_AUDIO_INPUT_CONTROL},
 #endif
-#if APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM > 3
+#if LEA_AICS_SERVICE_COUNT > 3
     {AICS_START_HANDLE(3), AICS_END_HANDLE(3), SERVICE_UUID_AUDIO_INPUT_CONTROL},
 #endif
 };
@@ -240,7 +122,7 @@ const uint16_t aicsIncludeValue[APP_AUDIO_AICS_SERVER_MAX_INSTANCE_NUM][3] = {
  */
 void blc_svc_addAicsGroup(void)
 {
-#if APP_AUDIO_VCS_INCLUDE_AICS_INSTANCE_NUM > 0
+#if LEA_AICS_SERVICE_COUNT > 0
     svcAicsGroup.endHandle = svcAicsGroup.startHandle + ARRAY_SIZE(aicsList) - 1;
     blc_gatts_addAttributeServiceGroup(&svcAicsGroup);
 #endif
@@ -253,7 +135,7 @@ void blc_svc_addAicsGroup(void)
  */
 void blc_svc_removeAicsGroup(void)
 {
-#if APP_AUDIO_VCS_INCLUDE_AICS_INSTANCE_NUM > 0
+#if LEA_AICS_SERVICE_COUNT > 0
     blc_gatts_removeAttributeServiceGroup(AICS_START_HDL);
 #endif
 }
@@ -266,7 +148,7 @@ void blc_svc_removeAicsGroup(void)
  */
 void blc_svc_aicsCbackRegister(atts_r_cb_t readCback, atts_w_cb_t writeCback)
 {
-#if APP_AUDIO_VCS_INCLUDE_AICS_INSTANCE_NUM > 0
+#if LEA_AICS_SERVICE_COUNT > 0
     svcAicsGroup.readCallback  = readCback;
     svcAicsGroup.writeCallback = writeCback;
 #else
@@ -274,3 +156,7 @@ void blc_svc_aicsCbackRegister(atts_r_cb_t readCback, atts_w_cb_t writeCback)
     (void)writeCback;
 #endif
 }
+
+#if LEA_AICS_SERVICE_COUNT > 4
+#error "LEA_AICS_SERVICE_COUNT should be less than or equal to 4"
+#endif

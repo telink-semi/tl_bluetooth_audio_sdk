@@ -31,19 +31,14 @@
  * @param[in]	none
  * @return      Platform initialization configuration structure
  */
-const tlksys_hal_platform_init_cfg_t * tlksys_hal_port_getPlatformInitCfg(void)
+const tlksys_hal_platform_init_cfg_t *tlksys_hal_port_getPlatformInitCfg(void)
 {
     static const tlksys_hal_platform_init_cfg_t cfg = {
         .clockLevel = TLK_CFG_AUDIO_CLOCK_LEVEL,
-        .gpioCfg = TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN,
-
-        #if (TLK_CFG_FLASH_PROT_ENABLE)
-        .flashProtectEn = 1,
-        #endif
-    };//all default config
+        .gpioCfg    = TLKSYS_HAL_INIT_GPIO_CFG_SHUTDOWN,
+    }; //all default config
     return &cfg;
 }
-
 
 /**
  * @brief       This is main function
@@ -56,11 +51,11 @@ int main(void)
 
     tlksys_start(tlkapp_create_allTasks);
     //*note: if use rtos,code will end in tlksys_start*/
-    
-    while(1){
-        #if !TLK_CFG_RTOS_ENABLE
+
+    while (1) {
+#if !TLK_CFG_RTOS_ENABLE
         tlksys_handler();
-        #endif
+#endif
     }
     return 0;
 }

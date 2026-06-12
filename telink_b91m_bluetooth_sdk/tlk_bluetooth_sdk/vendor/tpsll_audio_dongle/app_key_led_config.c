@@ -33,7 +33,6 @@ static const uint16_t sApp_key_default_config[TLKDRV_KEY_MAX_NUMB][TLKDRV_KEY_EV
 #ifdef KEY1_ID
     [0] =
         {
-            [TLKDRV_KEY_EVTID_CLICK]  = KEY_EVT_MODE_MUSIC_PLAY_PAUSE,
             [TLKDRV_KEY_EVTID_DCLICK] = KEY_EVT_MODE_TPD_ENABLE_PAIRING_MODE,
         },
 #endif
@@ -58,7 +57,7 @@ static const uint16_t sApp_key_default_config[TLKDRV_KEY_MAX_NUMB][TLKDRV_KEY_EV
 #ifdef KEY4_ID
     [3] =
         {
-            [TLKDRV_KEY_EVTID_CLICK] = KEY_EVT_MODE_TPD_USB_MODE_SWITCH,
+            [TLKDRV_KEY_EVTID_4CLICK] = KEY_EVT_MODE_TPD_USB_MODE_SWITCH,
         },
 #endif
 };

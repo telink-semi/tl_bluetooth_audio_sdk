@@ -36,6 +36,15 @@
 int ble_host_hci_le_read_local_supported_features(struct ble_hci_le_rd_loc_supp_feat_rp *p_le_local_supp_feat);
 
 /**
+ *  @brief Reads the all local supported features for the HCI LE.
+ *
+ *  @param[out] p_le_local_supp_feat Pointer to the structure to store the response parameters.
+ *
+ *  @return int Returns 0 on success, or an error code on failure.
+ */
+int ble_host_hci_le_read_all_local_supported_features(struct ble_hci_le_rd_all_loc_supp_feat_rp *p_le_local_supp_feat);
+
+/**
  * @brief LE connection update ACL parameter.
  *
  * @param[in] p_conn_update Pointer to th structure to LE connection update command parameters.
@@ -79,6 +88,24 @@ int ble_host_hci_le_remote_connection_parameter_request_negative_reply(const str
  *   @return int Returns 0 on success, or an error code on failure.
  */
 int ble_host_hci_le_set_data_len(const struct ble_hci_le_set_data_len_cp *p_set_data_len);
+
+/**
+ *    @brief Reads the suggested default data length for the HCI LE.
+ *
+ *    @param[out] p_data_len Pointer to the structure to store the response parameters.
+ *
+ *    @return int Returns 0 on success, or an error code on failure.
+ */
+int ble_host_hci_le_read_suggested_default_data_length(struct ble_hci_le_rd_sugg_def_data_len_rp *p_data_len);
+
+/**
+ *    @brief Writes the suggested default data length for the HCI LE.
+ *
+ *    @param[in] p_data_len Pointer to the structure to store the response parameters.
+ *
+ *    @return int Returns 0 on success, or an error code on failure.
+ */
+int ble_host_hci_le_write_suggested_default_data_length(const struct ble_hci_le_wr_sugg_def_data_len_cp *p_data_len);
 
 /**
  *   @brief Sets the PHY for the specified connection handle.

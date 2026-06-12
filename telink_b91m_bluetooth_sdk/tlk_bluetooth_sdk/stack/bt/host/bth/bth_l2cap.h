@@ -38,12 +38,13 @@
 #define BTH_L2CAP_MPS_MAX_SIZE     668 //
 
 /* base frame */
-#define BTH_L2CAP_SIG_CID            0x0001
-#define BTH_L2CAP_CONNECTIONLESS_CID 0x0002
+#define BTH_L2CAP_SIG_CID               0x0001
+#define BTH_L2CAP_CONNECTIONLESS_CID    0x0002
+#define BTH_L2CAP_SERCURITY_MANAGER_CID 0x0007
 
 
-#define BTH_L2CAP_CFG_EFS_ENABLE     0
-#define BTH_L2CAP_CFG_QOS_ENABLE     0
+#define BTH_L2CAP_CFG_EFS_ENABLE        0
+#define BTH_L2CAP_CFG_QOS_ENABLE        0
 
 typedef int (*bth_l2cap_eventCallback_t)(uint8_t evtID, uint16_t psmID, uint8_t *pData, uint16_t dataLen);
 typedef void (*bth_l2cap_rdataCallback_t)(uint16_t psmID, uint16_t chnID, uint16_t handle, uint8_t *pData, uint16_t dataLen);
@@ -279,12 +280,12 @@ typedef struct
     uint16_t chnID;
     uint16_t sumLen;
     uint16_t curLen;
-    uint8_t  buffer[BTH_L2CAP_MTU_MAX_SIZE];
+    uint8_t *buffer; //[BTH_L2CAP_MTU_MAX_SIZE];
 } bth_l2cap_acldata_t;
 
 typedef struct
 {
-    uint8_t              mpsBuffer[BTH_L2CAP_MPS_MAX_SIZE + 12]; // 10 -> 12
+    //uint8_t               mpsBuffer[BTH_L2CAP_MPS_MAX_SIZE + 12]; // 10 -> 12
     bth_l2cap_service_t *service;
     bth_l2cap_channel_t *channel;
     bth_l2cap_acldata_t *aclData;

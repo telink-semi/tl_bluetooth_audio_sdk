@@ -90,9 +90,8 @@ typedef enum
     AUD_BTIF_AVRCP_KEYID_RESERVED_6          = 0x76,
 } AUD_BTIF_AVRCP_KEYID_ENUM;
 
-
 typedef void (*TlkMdiAudBtifMusicStateChgCB)(uint16_t handle, uint8_t state);
-typedef void (*TlkMdiAudBtifVoiceStateChgCB)(uint16_t aclHandle,uint16_t scoHandle, uint8_t isStart ,uint8_t codecType);
+typedef void (*TlkMdiAudBtifVoiceStateChgCB)(uint16_t aclHandle, uint16_t scoHandle, uint8_t isStart, uint8_t codecType);
 
 /**
  * @brief       Trigger one avrcp key press and release
@@ -116,7 +115,7 @@ int tlkmdi_audio_btif_setIncPeerPwrMax(uint16_t handle, uint8_t enable);
  * @param[in]   isPushBack - Whether to add at the end of callback array
  * @return      TLK_ENONE: success; TLK_EPARAM: invalid parameter; TLK_EQUOTA: no space for new callback
  */
-int tlkmdi_audio_btif_addMusicStateChgCB(TlkMdiAudBtifMusicStateChgCB cb,uint8_t isPushBack);
+int tlkmdi_audio_btif_addMusicStateChgCB(TlkMdiAudBtifMusicStateChgCB cb, uint8_t isPushBack);
 
 /**
  * @brief       Add voice state change callback function

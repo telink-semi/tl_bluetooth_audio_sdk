@@ -34,10 +34,6 @@ void             *g_aac_dec_env_buf_ptr = NULL;
 void             *g_aac_scratch_buf_ptr = NULL;
 HANDLE_AACDECODER aacDecoder_handle;
 
-TLKA_AAC_DEC_CFG_PARAS aacParas = {
-    .chIdx = AAC_CHANNEL_DEFAULT, /**< the output channels is matched with input bitstream */
-};
-
 /**
  * @brief       Calculate the size required for AAC decoding and scratch buffer
  * @param[in]   channel - the number of channels
@@ -73,7 +69,9 @@ int8_t tlkalg_aac_dec_init(uint8_t *p_buff, uint8_t channel)
     g_aac_dec_env_buf_ptr = p_buff;
     g_aac_scratch_buf_ptr = p_buff + ((tlka_aac_dec_get_size() + 3) / 4 * 4);
 
-    aacParas.chIdx    = AAC_CHANNEL_DEFAULT; //AAC_CHANNEL_LEFT	AAC_CHANNEL_DEFAULT
+    TLKA_AAC_DEC_CFG_PARAS aacParas = {
+        .chIdx = AAC_CHANNEL_DEFAULT, /**< the output channels is matched with input bitstream */
+    };
     aacDecoder_handle = tlka_aac_dec_init(&aacParas, g_aac_dec_env_buf_ptr, g_aac_scratch_buf_ptr);
 
     return 0;

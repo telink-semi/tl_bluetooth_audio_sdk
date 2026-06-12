@@ -80,11 +80,6 @@
 #define HCI_EVT_AUTH_PAYL_TO_EXP                 0x57
 
 
-/// begin: vendor-independent hci event
-#define HCI_EVT_ACL_ESTABLISH 0x60
-/// end: vendor-independent hci event
-
-
 // LE Meta Event Codes
 #define HCI_SUB_EVT_LE_CONNECTION_COMPLETE                         0x01 //core_4.0
 #define HCI_SUB_EVT_LE_ADVERTISING_REPORT                          0x02 //core_4.0
@@ -258,7 +253,6 @@
 #define HCI_CMD_READ_BD_ADDR                           0x09
 
 
-
 // Status Parameters
 //-- OGF --
 #define HCI_CMD_STATUS_PARAM_OPCODE_OGF 0x14 //0x05 <<2
@@ -416,6 +410,8 @@
 // Vendor specific Commands
 //-- OGF --
 #define HCI_CMD_VENDOR_OPCODE_OGF 0xFC //0x3f <<2 = 0xFC
+#define HCI_CMD_RD_TCF_INFO       0x19
+
 //-- OCF --
 #define HCI_TELINK_READ_REG          0x01
 #define HCI_TELINK_WRITE_REG         0x02

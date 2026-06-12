@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #cfg here
-single_firmware="../../../boot_loader/721x/wifi_tl721x.bin"
+single_firmware="../../../boot_loader/TL721X/wifi.bin"
 d25fBinVersion="1"
 singleBinType="15"
 #cfg here

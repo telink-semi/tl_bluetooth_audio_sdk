@@ -30,3 +30,12 @@
  */
 void tlkhal_dma_clearTcIrq(uint32_t dmaChn);
 
+uint8_t tlkhal_dma_malloc_ex(uint8_t notAcceptChn0);
+
+uint8_t tlkhal_dma_malloc(void);
+
+void tlkhal_dma_free(uint8_t chn);
+
+uint32_t tlkhal_dma_getIdleNum(void);
+
+uint32_t tlkhal_dma_getChnPoolMask(void);

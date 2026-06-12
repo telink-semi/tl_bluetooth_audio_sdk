@@ -37,6 +37,7 @@ void tlkhal_usb_hw_init(uint8_t port_id, void *userArg)
     (void)port_id;
     (void)userArg;
 }
+
 /**
  * @brief  Initialize USB function
  * @param[in] port_id : USB port ID
@@ -50,6 +51,7 @@ void tlkhal_usb_function_init(uint8_t port_id, TLKHAL_USB_MODE_ENUM usb_mode, vo
     (void)usb_mode;
     (void)userArg;
 }
+
 /**
  * @brief  USB interrupt handler
  * @param[in] port_id : USB port ID

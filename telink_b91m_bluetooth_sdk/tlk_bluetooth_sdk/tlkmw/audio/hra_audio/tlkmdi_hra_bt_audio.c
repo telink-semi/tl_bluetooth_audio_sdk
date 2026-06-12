@@ -25,6 +25,7 @@
 #include "drivers.h"
 #include "tlkapi/tlkapi.h"
 #include "tlkmw/tlkmw.h"
+#include "stack/bt/host/btp/spp/btp_spp.h"
 #if (TLK_CFG_HRA_ENABLE)
 
 #define TLKMDI_HRA_MUSIC_CHN_NUM 2
@@ -97,7 +98,63 @@ void tlkmdi_hra_bt_audio_proc(void)
     tlkmdi_hra_bt_audio_send_data_to_dsp();
 }
 
-// volatile short data_buff[16 * MCU2DSP_DATA_MS * TLKMDI_HRA_MUSIC_CHN_NUM*2];
+#if BT_VOICE_SPP_TEST
+uint32_t   len_spkinput  = 0;
+uint32_t   len_spkoutput = 0;
+uint32_t   len_micinput  = 0;
+uint32_t   len_micoutput = 0;
+static int flag_num      = 0;
+static int flag_dec_out  = 0;
+
+int16_t             buff_spkw[128];
+int16_t             buff_spkr[120];
+int16_t             buff_micw[128];
+int16_t             buff_micr[120];
+codec_mono_int      data_spkbuff_dec_out[240];
+codec_mono_int      data_micbuff_dec_out[240];
+int16_t             data_spkbuff_enc[120 * 2];
+int16_t             data_spkbuff_dec[120 * 2];
+int16_t             data_micbuff_enc[120 * 2];
+int16_t             data_micbuff_dec[120 * 2];
+static unsigned int buff_wptr       = 0;
+static unsigned int buff_rptr       = 0;
+static unsigned int dec_spkout_wptr = 0;
+static unsigned int dec_micout_wptr = 0;
+static unsigned int spk_count       = 0;
+static unsigned int mic_count       = 0;
+
+
+#define SPP_BUFF_BLOCK_NUM 10
+uint8_t          spp_buff_rptr                      = 0;
+uint8_t          spp_buff_wptr                      = 0;
+volatile uint8_t spp_buff[128 * SPP_BUFF_BLOCK_NUM] = {0};
+static uint8_t   time_count                         = 0;
+
+void tlk_send_mic_and_spk_data_by_spp(void)
+{
+    int8_t blocks_in_buff = 0;
+    blocks_in_buff        = spp_buff_wptr - spp_buff_rptr;
+    if (blocks_in_buff < 0) {
+        blocks_in_buff += SPP_BUFF_BLOCK_NUM;
+    }
+
+    tlkmdi_btacl_item_t *pItem = NULL;
+    pItem                      = tlkmdi_btacl_getConnItemByIndex(0);
+
+    if (blocks_in_buff > 1) {
+        if (pItem) {
+            int ret = btp_spp_sendData(pItem->handle, NULL, 0, (uint8_t *)(spp_buff + spp_buff_rptr * 128), 128 * 2);
+
+            if (0 == ret) {
+                spp_buff_rptr = (spp_buff_rptr + 2) % SPP_BUFF_BLOCK_NUM;
+            } else {
+            }
+        }
+    }
+}
+#endif
+
+
 /**
  * @brief   Send BT audio data to DSP
  * @param   None
@@ -143,6 +200,10 @@ void tlkmdi_hra_bt_audio_send_data_to_dsp(void)
             uint16_t       sample_num = 16 * MCU2DSP_DATA_MS;
             codec_mono_int data_buff[16 * MCU2DSP_DATA_MS * (2 + 1)]; //16k | 2ms | 1chn_spk | 2chn_mic
             hra_codec_int  music_stereo[16 * MCU2DSP_DATA_MS];
+#if BT_VOICE_SPP_TEST
+            int16_t data_micbuff[16 * MCU2DSP_DATA_MS];
+            int16_t data_spkbuff[16 * MCU2DSP_DATA_MS];
+#endif
 
             // gpio_set_high_level(GPIO_CHANNEL2);
             bool ret = tlkmdi_hra_get_data_mid_spk_buff((uint8_t *)music_stereo, sample_num * sizeof(hra_codec_int));
@@ -168,6 +229,80 @@ void tlkmdi_hra_bt_audio_send_data_to_dsp(void)
             tlkdrv_codec_readMicData((uint8_t *)(data_buff + sample_num), sample_num * sizeof(adc_int), 0);
 #endif
 
+
+#if BT_VOICE_SPP_TEST
+            for (int i = 0; i < 16 * MCU2DSP_DATA_MS; i++) {
+                data_spkbuff[i] = (data_buff[i] >> 8) & 0xffff;                            //get spk data(24bit -> 16bit)
+                data_micbuff[i] = (data_buff[2 * i + 16 * MCU2DSP_DATA_MS] >> 8) & 0xffff; //get left_mic data(24bit -> 16bit)
+            }
+
+            for (int i = 0; i < 16 * MCU2DSP_DATA_MS; i++) {
+                data_buff[i]                            = 0; //clear spk data
+                data_buff[2 * i + 16 * MCU2DSP_DATA_MS] = 0; //clear mic data
+            }
+
+            for (int i = 0; i < 16 * MCU2DSP_DATA_MS; i++) {
+                buff_spkw[buff_wptr] = data_spkbuff[i];
+                buff_spkr[buff_rptr] = buff_spkw[buff_wptr];
+
+                buff_micw[buff_wptr] = data_micbuff[i];
+                buff_micr[buff_rptr] = buff_micw[buff_wptr];
+
+                buff_wptr = (buff_wptr + 1) % 128; //8ms
+
+                if (buff_rptr == 119) {
+                    flag_num = 1;
+                }
+
+                buff_rptr = (buff_rptr + 1) % 120; //7.5ms
+
+                {
+                    //enc and dec
+                    if (flag_num) {
+                        len_spkinput  = tlkalg_msbc_enc_spkbuf_process((uint8_t *)buff_spkr, (uint8_t *)data_spkbuff_enc, 120 * 2, 0, 3);
+                        len_spkoutput = tlkalg_msbc_dec_spkbuf_process((uint8_t *)data_spkbuff_enc, (uint8_t *)data_spkbuff_dec, (uint16_t)(len_spkinput), 0, 3);
+
+                        for (uint32_t j = 0; j < len_spkoutput; j++) {                                   //len_spkoutput == 120 in theory
+                            data_spkbuff_dec_out[dec_spkout_wptr++] = (int32_t)data_spkbuff_dec[j] << 8; //16bit -> 24bit
+                            dec_spkout_wptr %= 240;
+                        }
+
+                        len_micinput  = tlkalg_msbc_enc_micbuf_process((uint8_t *)buff_micr, (uint8_t *)data_micbuff_enc, 120 * 2, 0, 3);
+                        len_micoutput = tlkalg_msbc_dec_micbuf_process((uint8_t *)data_micbuff_enc, (uint8_t *)data_micbuff_dec, (uint16_t)(len_micinput), 0, 3);
+
+                        for (uint32_t j = 0; j < len_micoutput; j++) {                                   //len_micoutput == 120 in theory
+                            data_micbuff_dec_out[dec_micout_wptr++] = (int32_t)data_micbuff_dec[j] << 8; //16bit -> 24bit
+                            dec_micout_wptr %= 240;
+                        }
+
+                        //push enc data to spp_buff
+                        memcpy((void *)&spp_buff[spp_buff_wptr * 128], (const void *)&data_spkbuff_enc[0],
+                               (uint16_t)(6 + len_spkinput + 1)); //6:packet head, len_micinput(57):packet data, 1:parity bit
+                        memcpy((void *)&spp_buff[spp_buff_wptr * 128 + 64], (const void *)&data_micbuff_enc[0], (uint16_t)(6 + len_micinput + 1));
+
+
+                        spp_buff_wptr = (spp_buff_wptr + 1) % SPP_BUFF_BLOCK_NUM;
+                        time_count++;
+                        flag_num = 0;
+                        flag_dec_out++;
+                    }
+
+                    if (flag_dec_out >= 2) { //already get 15ms data
+
+                        if (2 == time_count) {
+                            tlk_send_mic_and_spk_data_by_spp(); //spp out-15ms send once
+                            time_count %= 2;
+                        }
+
+                        data_buff[i]                            = data_spkbuff_dec_out[spk_count++]; // test spk
+                        data_buff[2 * i + 16 * MCU2DSP_DATA_MS] = data_micbuff_dec_out[mic_count++]; // test mic
+                        spk_count %= 240;
+                        mic_count %= 240;
+                    }
+                }
+            }
+#endif
+
             // gpio_set_low_level(GPIO_CHANNEL2);
 
             // #if TLKALG_MIC_SPK_MONO_ENABLE
@@ -181,6 +316,7 @@ void tlkmdi_hra_bt_audio_send_data_to_dsp(void)
             // #else
             // tlkdrv_codec_readMicData((uint8_t *)(data_buff + 16 * MCU2DSP_DATA_MS), sample_num * sizeof(adc_int), 0);
             // #endif
+
             if (ret) {
                 app_dsp_context_t *p_dsp_app_ctx = d25f_get_dsp_app_ctx(HRA_VOICE_ID);
                 p_dsp_app_ctx->alg_type          = HRA_VOICE;

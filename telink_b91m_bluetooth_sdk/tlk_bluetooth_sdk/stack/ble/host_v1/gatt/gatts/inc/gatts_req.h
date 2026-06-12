@@ -66,4 +66,3 @@ typedef void (*gatts_confirm_callback)(uint16_t conn_handle);
  *   @return BLE_HOST_ERR_SUCC if the indication is sent successfully.
  */
 int ble_gatts_indicate(uint16_t conn_handle, uint16_t attr_handle, const uint8_t *value, uint16_t len, gatts_confirm_callback cb);
-

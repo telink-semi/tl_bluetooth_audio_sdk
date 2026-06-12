@@ -44,20 +44,20 @@ int tlkmdi_tinySql_newPhoneBook(uint8_t *btMac);
  * @param[in]   dataLen - Length of the data in bytes.
  * @return      Status code, 0 for success, negative for error.
  */
-int tlkmdi_tinySql_addPbapItemBlock(bool isLastOne,uint16_t itemsNum, void *data, uint16_t dataLen);
+int tlkmdi_tinySql_addPbapItemBlock(bool isLastOne, uint16_t itemsNum, void *data, uint16_t dataLen);
 
 /**
  * @brief       Get the MAC address associated with the phone book.
  * @param[out]  recbuffer - Buffer to store the retrieved MAC address.
  * @return      Status code, 0 for success, negative for error.
  */
-int tlkmdi_tinySql_getPhoneBookMac(uint8_t * recbuffer);
+int tlkmdi_tinySql_getPhoneBookMac(uint8_t *recbuffer);
 
 /**
  * @brief       Get a pointer to the MAC address associated with the phone book.
  * @return      Pointer to the MAC address, or NULL if phone book is not in OK state.
  */
-const uint8_t * tlkmdi_tinySql_getPhoneBookMacPointer(void);
+const uint8_t *tlkmdi_tinySql_getPhoneBookMacPointer(void);
 
 /**
  * @brief       Get the total number of items in the phone book.
@@ -71,4 +71,4 @@ uint16_t tlkmdi_tinySql_getPhoneBookItemNum(void);
  * @param[in]   oneItemLen - Length of each item in the phone book.
  * @return      Pointer to the found item, or NULL if not found.
  */
-const void *tlkmdi_tinySql_searchPhoneBook(tlkMdiTinySqlSearchFunc searchFunc,uint16_t oneItemLen);
+const void *tlkmdi_tinySql_searchPhoneBook(tlkMdiTinySqlSearchFunc searchFunc, uint16_t oneItemLen);

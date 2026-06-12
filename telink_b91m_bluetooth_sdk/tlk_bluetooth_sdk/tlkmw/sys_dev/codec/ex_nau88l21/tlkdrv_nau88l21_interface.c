@@ -35,14 +35,22 @@ extern unsigned short audio_i2s_8k_config[5];
 
 void hal_nau8821_i2c_init(void)
 {
+    static uint8_t hal_nau8821_i2c_tx_dma = 0xff;
+    static uint8_t hal_nau8821_i2c_rx_dma = 0xff;
+    if (hal_nau8821_i2c_rx_dma == 0xff) {
+        hal_nau8821_i2c_rx_dma = tlkhal_dma_malloc();
+    }
+    if (hal_nau8821_i2c_tx_dma == 0xff) {
+        hal_nau8821_i2c_tx_dma = tlkhal_dma_malloc();
+    }
     i2c_set_pin(I2C_GPIO_SDA_PIN, I2C_GPIO_SCL_PIN);
-    i2c_set_tx_dma_config(I2C_TX_DMA_CHN);
-    i2c_set_rx_dma_config(I2C_RX_DMA_CHN);
+    i2c_set_tx_dma_config(hal_nau8821_i2c_tx_dma);
+    i2c_set_rx_dma_config(hal_nau8821_i2c_rx_dma);
     i2c_master_init();
     i2c_set_master_clk((unsigned char)(sys_clk.pclk * 1000 * 1000 / (4 * I2C_CLK_SPEED)));
 }
 
-__attribute__((section(".ram_code"))) void hal_nau8821_i2c_write(uint8_t addr, uint16_t reg, uint16_t value)
+void hal_nau8821_i2c_write(uint8_t addr, uint16_t reg, uint16_t value)
 {
     unsigned char write_buf[4];
     int           ref = 0;
@@ -57,7 +65,7 @@ __attribute__((section(".ram_code"))) void hal_nau8821_i2c_write(uint8_t addr, u
     while (i2c_master_busy() && !clock_time_exceed(ref, 50 * 1000));
 }
 
-__attribute__((section(".ram_code"))) uint8_t hal_nau8821_i2c_read(uint8_t addr, uint16_t reg, uint16_t *data, uint8_t len)
+uint8_t hal_nau8821_i2c_read(uint8_t addr, uint16_t reg, uint16_t *data, uint8_t len)
 {
     (void)len;
     unsigned char write_buf[4];
@@ -119,7 +127,7 @@ audio_i2s_input_output_t hal_nau8821_i2s_input = {
     .data_width    = I2S_BIT_16_DATA,
     .i2s_ch_sel    = I2S_CHANNEL_STEREO,
     .fifo_chn      = TLKDRV_CODEC_MIC_FIFO,
-    .dma_num       = I2S_MIC_DMA,
+    .dma_num       = 6,
     .data_buf      = NULL,
     .data_buf_size = 0,
 };
@@ -129,7 +137,7 @@ audio_i2s_input_output_t hal_nau8821_i2s_output = {
     .data_width    = I2S_BIT_16_DATA,
     .i2s_ch_sel    = I2S_CHANNEL_STEREO,
     .fifo_chn      = TLKDRV_CODEC_SPK_FIFO,
-    .dma_num       = I2S_SPK_DMA,
+    .dma_num       = 7,
     .data_buf      = NULL,
     .data_buf_size = 0,
 };

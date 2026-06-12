@@ -66,10 +66,10 @@ _attribute_ram_code_sec_ uint8_t app_trap_handler(uint32_t mtval, uint32_t mepc,
 
     core_interrupt_disable();
     while (1) {
-    #if (TLK_CFG_USB_ENABLE && TLKDBG_CFG_UDB_LOG_ENABLE)
+#if (TLK_CFG_USB_ENABLE && TLKDBG_CFG_UDB_LOG_ENABLE)
         tlk_udb_usb_handle_irq();
-    #endif
-//         DBG_JUNWEI_CHN9_TOGGLE;
+#endif
+        //         DBG_JUNWEI_CHN9_TOGGLE;
     }
     return 0;
 }
@@ -88,7 +88,7 @@ _attribute_ram_code_sec_noinline_ void trap_entry(void) __attribute__((interrupt
  */
 _attribute_ram_code_sec_ void trap_entry(void)
 {
-    #if (TLK_DEBUG_ENABLE)
+#if (TLK_DEBUG_ENABLE)
     register uint32_t ra asm("x1");
 
     uint32_t mtval, mepc, mstatus, mcause, mdcause;
@@ -99,9 +99,9 @@ _attribute_ram_code_sec_ void trap_entry(void)
     mdcause = read_csr(NDS_MDCAUSE);
 
     app_trap_handler(mtval, mepc, mstatus, mcause, mdcause, ra);
-    #else
+#else
     mcu_reboot();
-    #endif
+#endif
 }
 
 /**
@@ -113,7 +113,7 @@ _attribute_retention_code_ void stimer_irq_handler(void)
 {
     DBG_CHN15_HIGH;
 
-    tlksdk_irq_handler(IRQ_SYSTIMER);
+    tlk_sys_irq_handler(IRQ_SYSTIMER);
 
     DBG_CHN15_LOW;
 }
@@ -128,7 +128,7 @@ _attribute_retention_code_ void ble_rf_irq_handler(void)
 {
     DBG_CHN14_HIGH;
 
-    tlksdk_irq_handler(IRQ_ZB_RT);
+    tlk_sys_irq_handler(IRQ_ZB_RT);
 
     DBG_CHN14_LOW;
 }
@@ -139,11 +139,11 @@ CLIC_ISR_REGISTER(ble_rf_irq_handler, IRQ_ZB_RT)
  * @param[in]   none
  * @return      none
  */
-_attribute_retention_code_ void tpsll_bbtimer_irq_handler(void)
+_attribute_retention_code_ void tlk_tpsll_bbtimer_irq_handler(void)
 {
-    tpt_bbtimer_irq_handler();
+    tlk_tpsll_tpt_bbtimer_irq_handler();
 }
-CLIC_ISR_REGISTER(tpsll_bbtimer_irq_handler, IRQ_TIMER_BB)
+CLIC_ISR_REGISTER(tlk_tpsll_bbtimer_irq_handler, IRQ_TIMER_BB)
 
 /**
  * @brief       BT RF interrupt handler
@@ -152,7 +152,7 @@ CLIC_ISR_REGISTER(tpsll_bbtimer_irq_handler, IRQ_TIMER_BB)
  */
 _attribute_retention_code_ void bt_rf_irq_handler(void)
 {
-    tlksdk_irq_handler(IRQ_ZB_BT);
+    tlk_sys_irq_handler(IRQ_ZB_BT);
 }
 CLIC_ISR_REGISTER(bt_rf_irq_handler, IRQ_ZB_BT)
 

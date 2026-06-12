@@ -24,6 +24,29 @@
 #include "tl_common.h"
 #include "drivers.h"
 #if MCU_CORE_TYPE == MCU_CORE_TL751X
+
+static inline void tlkhal_core_pmp_enable(void)
+{
+#define PMPCFG_LAXWR(l, a, x, w, r) (((l) << 7) | ((a) << 3) | ((x) << 2) | ((w) << 1) | ((r) << 0))
+    extern uint32_t _RAMCODE_VMA_START;
+    extern uint32_t _RAMCODE_VMA_END;
+
+    uint32_t pmpcfg = 0;
+
+    //step0: lock [0, 0x20000) ram to avoid use NULL addr.
+    write_csr(NDS_PMPADDR0, ((0x20000UL) >> 2));
+    pmpcfg = PMPCFG_LAXWR(1, 1, 0, 0, 0);
+    write_csr(NDS_PMPCFG0, ((read_csr(NDS_PMPCFG0) & (~((0xFF) << ((0 % 4) << 3)))) | (((long)pmpcfg) << ((0 % 4) << 3))));
+
+    //step1: lock ram_code,can't be written.
+    write_csr(NDS_PMPADDR1, ((uint32_t)(&_RAMCODE_VMA_START)) >> 2);
+    pmpcfg = PMPCFG_LAXWR(1, 1, 1, 1, 1);
+    write_csr(NDS_PMPCFG0, ((read_csr(NDS_PMPCFG0) & (~((0xFF) << ((1 % 4) << 3)))) | (((long)pmpcfg) << ((1 % 4) << 3))));
+    write_csr(NDS_PMPADDR2, ((uint32_t)(&_RAMCODE_VMA_END)) >> 2);
+    pmpcfg = PMPCFG_LAXWR(1, 1, 1, 0, 1);
+    write_csr(NDS_PMPCFG0, ((read_csr(NDS_PMPCFG0) & (~((0xFF) << ((2 % 4) << 3)))) | (((long)pmpcfg) << ((2 % 4) << 3))));
+}
+
 /**
  * @brief  Initialize HAL platform
  * @param  None.
@@ -31,22 +54,16 @@
  */
 void tlksys_hal_platform_init(void)
 {
+    (void)tlkhal_core_pmp_enable;
+    // tlkhal_core_pmp_enable();
     const tlksys_hal_platform_init_cfg_t *pCfg = tlksys_hal_port_getPlatformInitCfg();
     if (pCfg == NULL) {
         return;
     }
-    extern void tlkapp_flash_prot_init(unsigned char flash_protect_en);
-    tlkapp_flash_prot_init(pCfg->flashProtectEn);
 
-    extern void tlkapp_flash_enable_4line(unsigned char en);
-    switch (pCfg->flashLineCfg) {
-    case TLKSYS_HAL_INIT_FLASH_LINE_CFG_4LINE_DIS:
-        tlkapp_flash_enable_4line(0);
-        break;
-    default:
-        tlkapp_flash_enable_4line(1);
-        break;
-    }
+    tlkhal_flash_init(!pCfg->flashProtectClose);
+    tlkhal_flash_4line_enable();
+
     switch (pCfg->powerCfg) {
     case TLKSYS_HAL_INIT_POWER_CFG_LDO:
         sys_init(LDO_AVDD_LDO_DVDD, VBAT_MAX_VALUE_GREATER_THAN_3V6);
@@ -81,11 +98,6 @@ void tlksys_hal_platform_init(void)
         break;
     }
 
-#if (1) //current driver add this, need check latter TODO:
-//The A1 Chip consistency is poor, one is that some chips do not meet the DVDD2>=DVDD1>=0.8 this requirement,
-//two is that some chips AVDD1/AVDD2 does not meet the theoretical design value (ldo power supply mode reference value: 1.04v/1.8v):
-//When the performance test, the actual measurement of the default voltage, whether to adjust the corresponding voltage block to meet the above conditions.
-#if defined(MCU_CORE_TL751X)
     if (g_chip_version == CHIP_VERSION_A1) {
         if (pCfg->powerCfg == TLKSYS_HAL_INIT_POWER_CFG_LDO) {
             pm_set_avdd1(PM_AVDD1_VOLTAGE_1V075);                     //target 1.04
@@ -98,26 +110,9 @@ void tlksys_hal_platform_init(void)
             pm_set_bk3(PM_BK2_3_4_VOLTAGE_0V93);                             //target 0.8
         }
     }
-#endif
 
-#if (defined(MCU_CORE_TL751X) && !defined(MCU_CORE_TL751X_N22) && DCDC_WORKAROUND_MODE)
-    if (pm_get_dcdc_power() != 0x00) {
-        lpc_set_input_chn(LPC_INPUT_PF6);
-        lpc_set_input_ref(LPC_NORMAL, LPC_REF_820MV);
-        lpc_set_scaling_coeff(LPC_SCALING_PER100);
-        lpc_power_on();
-        pm_set_wakeup_src(PM_WAKEUP_COMPARATOR);
-        pm_clr_irq_status(FLD_WAKEUP_STATUS_ALL);
-        plic_interrupt_enable(IRQ_PM_LVL);
-        core_interrupt_enable();
-    }
-#endif
-#endif
 
     switch (pCfg->lpTmrCfg) {
-    case TLKSYS_HAL_INIT_LP_TMR_CFG_32kXTAL:
-        blc_pm_select_external_32k_crystal(); //NOT supported, error_code
-        break;
     default:
         blc_pm_select_internal_32k_crystal();
         break;

@@ -37,9 +37,9 @@
  */
 void ble_stack_init(void)
 {
-    uint8_t mac[6], mac_random[6];
+    uint8_t mac[6];
 
-    blc_initMacAddress(flash_sector_mac_address, mac, mac_random);
+    tlkhal_get_bluetooth_mac(mac);
 
     ble_host_v1_init();
     ble_host_v1_set_bd_addr(mac);
@@ -67,26 +67,29 @@ const tlksys_hal_platform_init_cfg_t *tlksys_hal_port_getPlatformInitCfg(void)
 void tlksys_initFinishedHook(void)
 {
 #if (BLE_CONTROLLER_INITIAL_EN) /*bt controller initial*/
-#if (!MCU_DUAL_CORE_ENABLE && (MCU_CORE_TYPE == CHIP_TYPE_TL751X) ||  (MCU_CORE_TYPE == CHIP_TYPE_TL322X))
-	sys_n22_init(0x20100000);
+#if (!MCU_DUAL_CORE_ENABLE && (MCU_CORE_TYPE == CHIP_TYPE_TL751X) || (MCU_CORE_TYPE == CHIP_TYPE_TL322X))
+    sys_n22_init(0x20100000);
 #endif
     rf_module_init();
 
     /* initialize some basic MCU hardware */
-    tlksdk_init_mcu_hardware();
+    tlk_sys_init_mcu_hardware();
 
     /*initialize BR/EDR core*/
     controller_init(BLE_only, HCI_TR_SOC, NULL, NULL);
     //////////////////////////// basic hardware Initialization  End /////////////////////////////////
 
 
-    tlksdk_sch_init();
+    tlk_sch_init();
 #endif
 
-
+#if (MCU_CORE_TYPE == CHIP_TYPE_TL721X)
+    rf_set_power_level_index(RF_POWER_INDEX_P11p00dBm);
+#endif
 }
 
 int INIT(APP_DEMO_SELECT)(void);
+
 /**
  * @brief  Initialize BLE host LE application.
  *          Initialize BLE stack and selected demo application.
@@ -98,6 +101,7 @@ void tlkapp_host_le_init(void)
 }
 
 int START(APP_DEMO_SELECT)(void);
+
 /**
  * @brief  Start BLE host LE application.
  *          Start the selected demo application.
@@ -120,9 +124,9 @@ int main(void)
 
 #if (!TLK_CFG_RTOS_ENABLE)
     while (1) {
-    #if (BLE_CONTROLLER_INITIAL_EN)
-        tlksdk_main_loop();
-    #endif
+#if (BLE_CONTROLLER_INITIAL_EN)
+        tlk_sys_main_loop();
+#endif
         tlksys_handler();
     }
 #endif

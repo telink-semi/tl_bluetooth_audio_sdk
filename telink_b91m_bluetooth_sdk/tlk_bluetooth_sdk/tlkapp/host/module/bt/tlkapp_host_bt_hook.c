@@ -23,6 +23,8 @@
  *******************************************************************************************************/
 #include "tl_common.h"
 #if (TLK_STK_BT_ENABLE)
+#include "stack/bt/host/bth/bth_stdio.h"
+#include "stack/bt/host/btp/btp_stdio.h"
 
 /**
  * @brief     Provides a hook function when the BT host task init completed.
@@ -37,5 +39,19 @@ __attribute__((weak)) void tlkapp_host_bt_taskInitCompletedHook(void) {}
  * @returns   None.
  */
 __attribute__((weak)) void tlkapp_host_bt_taskStartHook(void) {}
+
+/**
+ * @brief     Provides a hook function to select the handle that is used to trigger siri(assistant).
+ * @param[in] None.
+ * @returns   bt handle that is used to trigger siri(assistant).
+ */
+__attribute__((weak)) uint16_t tlkapp_host_bt_selectHandleToTriggerSiriHook(void)
+{
+#if (TLKBTP_CFG_HFPHF_ENABLE)
+    return btp_hfphf_getCurHandle();
+#else
+    return 0;
+#endif
+}
 
 #endif // #if (TLK_STK_BT_ENABLE)

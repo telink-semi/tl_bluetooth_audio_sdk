@@ -211,11 +211,8 @@ void bth_sco_connectEvt(uint8_t status, uint16_t handle, uint8_t btaddr[6], uint
  *******************************************************************************/
 void bth_sco_disconnEvt(uint16_t handle, uint8_t reason);
 
-
-int bth_sco_getHandle(uint16_t aclHandle, uint16_t offset, uint8_t *pScoHandle);
 int bth_sco_getAirModeByAclHandle(uint16_t aclHandle, uint8_t *pAirMode);
 int bth_sco_setAirModeByAclHandle(uint16_t aclHandle, uint8_t airMode);
-int bth_sco_setTxRxBandwidth(uint32_t txBandwidth, uint32_t rxBandwidth);
 
 
 #endif // BTH_SCO_H

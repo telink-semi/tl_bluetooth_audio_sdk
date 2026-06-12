@@ -31,20 +31,19 @@
 
 #include "stack/ble/ble_format.h"
 
-#define IUT_HCI_VENDOR_LOG_EN   (1 & IUT_HCI_LOG_EN)
-#define IUT_HCI_VENDOR_WARN_EN  (1 & IUT_HCI_VENDOR_LOG_EN)
-#define IUT_HCI_VENDOR_ERROR_EN (1 & IUT_HCI_VENDOR_LOG_EN)
+#define IUT_HCI_VENDOR_LOG_EN                          (1 & IUT_HCI_LOG_EN)
+#define IUT_HCI_VENDOR_WARN_EN                         (1 & IUT_HCI_VENDOR_LOG_EN)
+#define IUT_HCI_VENDOR_ERROR_EN                        (1 & IUT_HCI_VENDOR_LOG_EN)
 
 
-#define HCI_EVT_VENDOR_SPECIFIC_SUBCODE_CHN_MAP_REPORT     0X01
+#define HCI_EVT_VENDOR_SPECIFIC_SUBCODE_CHN_MAP_REPORT 0X01
 
 typedef struct
 {
-	u8  subCode;
-	u8  chn[5];
-	u16 handle;
-}hci_evt_vendor_reportMap_t;
-
+    u8  subCode;
+    u8  chn[5];
+    u16 handle;
+} hci_evt_vendor_reportMap_t;
 
 //HCI VS Command (Controller and baseband.)
 //-- OGF --
@@ -64,7 +63,7 @@ typedef enum
     HCI_TELINK_READ_FREQ_OFFSET  = 0x09,
     HCI_TELINK_SET_SCAN_FILTER   = 0x0a, //MESH
 
-    HCI_EBQ_TEST_CASE_LOG = 0xE2,        //EBQ log case name and timestamp
+    HCI_EBQ_TEST_CASE_LOG = 0xE2, //EBQ log case name and timestamp
     HCI_TELINK_VENDOR_MAX_CBC
 } hci_vendor_cab_e;
 

@@ -22,12 +22,12 @@
  *
  *******************************************************************************************************/
 #include "tl_common.h"
-#if TLK_CFG_FS_ENABLE && MCU_CORE_TYPE == CHIP_TYPE_TL721X
+#include "../tlkmw_fs_diskio.h"
+#if TLK_CFG_FS_ENABLE && MCU_CORE_TYPE == CHIP_TYPE_TL721X && TLKMW_FS_DISK_IO_SELECT == TLKMW_FS_DISK_IO_SPI_SDIO
 #include "drivers.h"
 #include "sd_nand.h"
 #include "hal_spi.h"
 #include "tlkapi/tlkapi.h"
-#include "../tlkmw_fs_diskio.h"
 
 #define SD_NAND_POWER_ON_PIN GPIO_PA2
 
@@ -855,6 +855,7 @@ static void sd_nand_power_off(void)
     gpio_set_output_en(SD_NAND_POWER_ON_PIN, 1);
     gpio_set_gpio_en(SD_NAND_POWER_ON_PIN);
     gpio_set_up_down_res(SD_NAND_POWER_ON_PIN, GPIO_PIN_PULLDOWN_100K);
+    hal_spi_master_deinit();
 }
 
 /**

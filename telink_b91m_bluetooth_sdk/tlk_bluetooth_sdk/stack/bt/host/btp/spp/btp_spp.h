@@ -33,11 +33,11 @@ typedef void (*BtpSppRecvDataCB)(uint16_t aclHandle, uint8_t rfcHandle, uint8_t 
 
 typedef struct
 {
-    uint8_t state;
-    uint8_t rfcHandle;
+    uint8_t  state;
+    uint8_t  rfcHandle;
     uint16_t aclHandle;
-    uint8_t credit;
-    uint8_t resv001;
+    uint8_t  credit;
+    uint8_t  resv001;
     uint16_t mtuSize;
     uint16_t channelID;
     uint16_t res;

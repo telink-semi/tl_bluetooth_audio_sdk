@@ -27,7 +27,6 @@
 #include "stack/tpsll/tpsll.h"
 
 #if (TLKBTP_CFG_HFP_ENABLE && TLKBTP_CFG_A2DPSNK_ENABLE)
-//extern volatile uint8_t g_timer1_irq_process_is_ongoing;
 #if AUDIO_TWS_MODE
 
 /**
@@ -63,7 +62,7 @@ _attribute_ram_code_sec_ uint8_t bt_audio_sync_update(uint32_t tick, uint8_t *p_
                     codec_mute_playback_buffer();
                 }
             } else {
-                if (audio_ctl_cc_check_is_bt_mode() && !tph_bt_audio_is_phone() && g_timer1_irq_process_is_ongoing == 0) {
+                if (audio_ctl_cc_check_is_bt_mode() && !tlk_tpsll_tph_bt_audio_is_phone() && !bt_audio_irq_task_is_running()) {
                     g_bt_audio_task_env.tick_irq = clock_time() + 1500 * TICK_PER_US;
                     tlkmdi_audio_task_set_next_irq(1500);
 

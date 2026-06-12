@@ -57,6 +57,8 @@ struct ble_pacsc_register_param
 {
 };
 
+#define BLE_PACSC_INITIAL_PARAMS NULL
+
 /**
  *   @brief Register the LE Audio Published Audio Capabilities Service (PACS) client control.
  *
@@ -90,6 +92,34 @@ void ble_lea_register_PACS_client_event_callback(ble_pacsc_event_callback event_
 int ble_pacsc_get_sink_audio_locations(uint16_t conn_handle, uint32_t *out_sink_audio_locations);
 
 /**
+ *   @brief Write the Sink Audio Locations of the PACS client.
+ *
+ *   @param[in] conn_handle Connection handle to the PACS client.
+ *   @param[in] sink_audio_locations The Sink Audio Locations to be written.
+ *   @param[in] callback Pointer to the callback function to be called when the write operation is complete.
+ *
+ *   @return BLE_HOST_ERR_SUCC if the operation is successful, otherwise an error code.
+ *          - BLE_PRF_ERR(BLE_PRF_ERR_INVALID_CONN_HANDLE) if the connection handle is invalid.
+ *          - BLE_PRF_ERR(BLE_PRF_ERR_SET_ATTR_NOT_SUPPORTED) if the remote not support sink audio locations.
+ *
+ *   @note The function only writes remote sink audio locations, if want update local remote sink audio locations, should
+ *         call ble_pacsc_read_sink_audio_locations() function for update local sink audio locations.
+ */
+int ble_pacsc_write_sink_audio_locations(uint16_t conn_handle, uint32_t sink_audio_locations, prf_write_callback callback);
+
+/**
+ *   @brief Read the Sink Audio Locations of the PACS client.
+ *
+ *   @param[in] conn_handle Connection handle to the PACS client.
+ *   @param[in] callback Pointer to the callback function to be called when the read operation is complete.
+ *
+ *   @return BLE_HOST_ERR_SUCC if the operation is successful, otherwise an error code.
+ *          - BLE_PRF_ERR(BLE_PRF_ERR_INVALID_CONN_HANDLE) if the connection handle is invalid.
+ *          - BLE_PRF_ERR(BLE_PRF_ERR_GET_ATTR_VALUE_NOT_FOUND) if the remote not support sink audio locations.
+ */
+int ble_pacsc_read_sink_audio_locations(uint16_t conn_handle, prf_read_callback callback);
+
+/**
  *   @brief Get the Source Audio Locations of the PACS client.
  *
  *   @param[in] conn_handle Connection handle to the PACS client.
@@ -100,3 +130,31 @@ int ble_pacsc_get_sink_audio_locations(uint16_t conn_handle, uint32_t *out_sink_
  *          - BLE_PRF_ERR(BLE_PRF_ERR_GET_ATTR_VALUE_NOT_FOUND) if the remote not support source audio locations.
  */
 int ble_pacsc_get_source_audio_locations(uint16_t conn_handle, uint32_t *out_source_audio_locations);
+
+/**
+ *   @brief Write the Source Audio Locations of the PACS client.
+ *
+ *   @param[in] conn_handle Connection handle to the PACS client.
+ *   @param[in] source_audio_locations The Source Audio Locations to be written.
+ *   @param[in] callback Pointer to the callback function to be called when the write operation is complete.
+ *
+ *   @return BLE_HOST_ERR_SUCC if the operation is successful, otherwise an error code.
+ *          - BLE_PRF_ERR(BLE_PRF_ERR_INVALID_CONN_HANDLE) if the connection handle is invalid.
+ *          - BLE_PRF_ERR(BLE_PRF_ERR_SET_ATTR_NOT_SUPPORTED) if the remote not support source audio locations.
+ *
+ *   @note The function only writes remote source audio locations, if want update local remote source audio locations, should
+ *         call ble_pacsc_read_source_audio_locations() function for update local source audio locations.
+ */
+int ble_pacsc_write_source_audio_locations(uint16_t conn_handle, uint32_t source_audio_locations, prf_write_callback callback);
+
+/**
+ *   @brief Read the Source Audio Locations of the PACS client.
+ *
+ *   @param[in] conn_handle Connection handle to the PACS client.
+ *   @param[in] callback Pointer to the callback function to be called when the read operation is complete.
+ *
+ *   @return BLE_HOST_ERR_SUCC if the operation is successful, otherwise an error code.
+ *          - BLE_PRF_ERR(BLE_PRF_ERR_INVALID_CONN_HANDLE) if the connection handle is invalid.
+ *          - BLE_PRF_ERR(BLE_PRF_ERR_GET_ATTR_VALUE_NOT_FOUND) if the remote not support source audio locations.
+ */
+int ble_pacsc_read_source_audio_locations(uint16_t conn_handle, prf_read_callback callback);

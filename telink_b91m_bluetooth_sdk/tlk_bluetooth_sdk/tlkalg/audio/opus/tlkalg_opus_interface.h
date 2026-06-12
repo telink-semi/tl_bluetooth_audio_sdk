@@ -27,13 +27,6 @@
 #if TLKALG_OPUS_ENC_ENABLE
 
 /**
- * @brief       Calculate the required size for OPUS encoder buffer and scratch buffer.
- * @param[in]   channel - the number of channels.
- * @return      Total size required for encoder buffer and scratch buffer.
- */
-uint16_t tlkalg_opus_enc_get_size(uint8_t channel);
-
-/**
  * @brief       Initialize the OPUS encoder with the given buffer and channel.
  * @param[in]   p_buff  - the start address of the buffer for encoder.
  * @param[in]   channel - the number of channels.

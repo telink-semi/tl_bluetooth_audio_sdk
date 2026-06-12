@@ -23,6 +23,7 @@
  *******************************************************************************************************/
 #pragma once
 #include "tlkmw/sys_dev/led/tlkdrv_led.h"
+
 typedef enum
 {
     TLKAPP_LED_STATE_POWERON,
@@ -64,7 +65,3 @@ int tlkapp_sysLed_funAction(TLKAPP_LED_STATE led_fun);
  * @note      This function is marked as weak, allowing customers to provide their own implementation.
  */
 tlkdrv_led_pattern_e tlkapp_sysLed_stateToPatternHook(TLKAPP_LED_STATE state);
-
-
-
-

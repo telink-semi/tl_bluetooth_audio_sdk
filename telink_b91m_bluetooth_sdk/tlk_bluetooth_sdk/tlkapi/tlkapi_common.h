@@ -218,5 +218,3 @@ void tlkapi_random(uint8_t *pBuff, uint16_t buffLen);
 
 
 extern void mcu_reboot(void);
-
-

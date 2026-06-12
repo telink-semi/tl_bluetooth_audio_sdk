@@ -52,7 +52,7 @@
 #include "rwbt_config.h"
 #include "co_bt_defines.h"
 
-#if(CHIP_TYPE==CHIP_TYPE_TL752X)
+#if (CHIP_TYPE == CHIP_TYPE_TL752X)
 #define EM_BT_CS_OFFSET (CO_ALIGN4_HI(EM_BT_OFFSET))
 #define EM_BT_CS_NB     (MAX_NB_ACTIVE_ACL + 5 + 2 * CSB_SUPPORT)
 #define EM_BT_CS_END    (EM_BT_CS_OFFSET + EM_BT_CS_NB * REG_EM_BT_CS_SIZE)
@@ -290,9 +290,9 @@
  */
 
 /// E0 area definition
-#define EM_BT_E0_OFFSET (EM_BT_OFFSET)
-#define EM_BT_E0_SIZE   (16)
-#define EM_BT_E0_END    (EM_BT_E0_OFFSET + EM_BT_E0_SIZE)
+#define EM_BT_E0_OFFSET                  (EM_BT_OFFSET)
+#define EM_BT_E0_SIZE                    (16)
+#define EM_BT_E0_END                     (EM_BT_E0_OFFSET + EM_BT_E0_SIZE)
 
 /*
  * CONTROL STRUCTURES
@@ -311,23 +311,23 @@
  * - Connectionless slave broadcast TX
  * - Connectionless slave broadcast RX
  */
-#define EM_BT_CS_OFFSET (EM_BT_E0_END)
-#define EM_BT_CS_NB     (MAX_NB_ACTIVE_ACL + 5 + 2 * CSB_SUPPORT)
-#define EM_BT_CS_END    (EM_BT_CS_OFFSET + EM_BT_CS_NB * REG_EM_BT_CS_SIZE)
+#define EM_BT_CS_OFFSET                  (EM_BT_E0_END)
+#define EM_BT_CS_NB                      (MAX_NB_ACTIVE_ACL + 5 + 2 * CSB_SUPPORT)
+#define EM_BT_CS_END                     (EM_BT_CS_OFFSET + EM_BT_CS_NB * REG_EM_BT_CS_SIZE)
 
 /**
  * Control Structures indexes definition
  */
-#define EM_BT_CS_ACL_INDEX(acl)  (acl)
-#define EM_BT_CS_IDX_TO_LID(idx) (idx)
-#define EM_BT_CS_INQ_INDEX       (MAX_NB_ACTIVE_ACL)
-#define EM_BT_CS_ISCAN_INDEX     (EM_BT_CS_INQ_INDEX + 1)
-#define EM_BT_CS_ACT_BCST_INDEX  (EM_BT_CS_ISCAN_INDEX + 1)
-#define EM_BT_CS_STRAIN_INDEX    (EM_BT_CS_ACT_BCST_INDEX + 1)
-#define EM_BT_CS_SSCAN_INDEX     (EM_BT_CS_STRAIN_INDEX + 1)
-#define EM_BT_CS_CSB_TX_INDEX    (EM_BT_CS_SSCAN_INDEX + 1)
-#define EM_BT_CS_CSB_RX_INDEX    (EM_BT_CS_CSB_TX_INDEX + 1)
-#define EM_BT_CS_INDEX_MAX       (EM_BT_CS_CSB_RX_INDEX + 1)
+#define EM_BT_CS_ACL_INDEX(acl)          (acl)
+#define EM_BT_CS_IDX_TO_LID(idx)         (idx)
+#define EM_BT_CS_INQ_INDEX               (MAX_NB_ACTIVE_ACL)
+#define EM_BT_CS_ISCAN_INDEX             (EM_BT_CS_INQ_INDEX + 1)
+#define EM_BT_CS_ACT_BCST_INDEX          (EM_BT_CS_ISCAN_INDEX + 1)
+#define EM_BT_CS_STRAIN_INDEX            (EM_BT_CS_ACT_BCST_INDEX + 1)
+#define EM_BT_CS_SSCAN_INDEX             (EM_BT_CS_STRAIN_INDEX + 1)
+#define EM_BT_CS_CSB_TX_INDEX            (EM_BT_CS_SSCAN_INDEX + 1)
+#define EM_BT_CS_CSB_RX_INDEX            (EM_BT_CS_CSB_TX_INDEX + 1)
+#define EM_BT_CS_INDEX_MAX               (EM_BT_CS_CSB_RX_INDEX + 1)
 
 /**
  * Frame Format
@@ -354,25 +354,25 @@
  *  - 11101: Do not use.               -
  *  - 1111x: Do not use                -
  */
-#define EM_BT_CS_FMT_MST_CONNECT  0x02
-#define EM_BT_CS_FMT_SLV_CONNECT  0x03
-#define EM_BT_CS_FMT_PAGE         0x04
-#define EM_BT_CS_FMT_PAGE_SCAN    0x05
-#define EM_BT_CS_FMT_MST_PAGE_RSP 0x06
-#define EM_BT_CS_FMT_SLV_PAGE_RSP 0x07
-#define EM_BT_CS_FMT_INQUIRY      0x08
-#define EM_BT_CS_FMT_INQ_RSP      0x09
-#define EM_BT_CS_FMT_MST_BCST     0x18
-#define EM_BT_CS_FMT_BCST_SCAN    0x19
-#define EM_BT_CS_FMT_MST_ACC_WIN  0x1A
-#define EM_BT_CS_FMT_SLV_ACC_WIN1 0x1B
-#define EM_BT_CS_FMT_SLV_ACC_WIN2 0x1C
+#define EM_BT_CS_FMT_MST_CONNECT         0x02
+#define EM_BT_CS_FMT_SLV_CONNECT         0x03
+#define EM_BT_CS_FMT_PAGE                0x04
+#define EM_BT_CS_FMT_PAGE_SCAN           0x05
+#define EM_BT_CS_FMT_MST_PAGE_RSP        0x06
+#define EM_BT_CS_FMT_SLV_PAGE_RSP        0x07
+#define EM_BT_CS_FMT_INQUIRY             0x08
+#define EM_BT_CS_FMT_INQ_RSP             0x09
+#define EM_BT_CS_FMT_MST_BCST            0x18
+#define EM_BT_CS_FMT_BCST_SCAN           0x19
+#define EM_BT_CS_FMT_MST_ACC_WIN         0x1A
+#define EM_BT_CS_FMT_SLV_ACC_WIN1        0x1B
+#define EM_BT_CS_FMT_SLV_ACC_WIN2        0x1C
 
 /// Maximum value of RXWINSZ field (8191)
-#define EM_BT_CS_RXWINSZ_MAX ((1 << 13) - 1)
+#define EM_BT_CS_RXWINSZ_MAX             ((1 << 13) - 1)
 
 /// Maximum value of MAXFRMTIME field (8191)
-#define EM_BT_CS_MAXFRMTIME_MAX ((1 << 13) - 1)
+#define EM_BT_CS_MAXFRMTIME_MAX          ((1 << 13) - 1)
 
 /*
  * RX DESCRIPTORS
@@ -382,9 +382,9 @@
 /**
  * RX Descriptors area definition
  */
-#define EM_BT_RXDESC_OFFSET (EM_BT_CS_END)
-#define EM_BT_RXDESC_NB     (BT_RXDESC_NB)
-#define EM_BT_RXDESC_END    (EM_BT_RXDESC_OFFSET + EM_BT_RXDESC_NB * REG_EM_BT_RXDESC_SIZE)
+#define EM_BT_RXDESC_OFFSET              (EM_BT_CS_END)
+#define EM_BT_RXDESC_NB                  (BT_RXDESC_NB)
+#define EM_BT_RXDESC_END                 (EM_BT_RXDESC_OFFSET + EM_BT_RXDESC_NB * REG_EM_BT_RXDESC_SIZE)
 
 /*
  * TX DESCRIPTORS
@@ -418,10 +418,10 @@
  */
 
 /// LMP RX buffers area definition
-#define EM_BT_LMPRXBUF_OFFSET (EM_BT_TXDESC_END)
-#define EM_BT_LMPRXBUF_NB     (EM_BT_RXDESC_NB)
-#define EM_BT_LMPRXBUF_SIZE   (20)
-#define EM_BT_LMPRXBUF_END    (EM_BT_LMPRXBUF_OFFSET + EM_BT_LMPRXBUF_NB * EM_BT_LMPRXBUF_SIZE)
+#define EM_BT_LMPRXBUF_OFFSET            (EM_BT_TXDESC_END)
+#define EM_BT_LMPRXBUF_NB                (EM_BT_RXDESC_NB)
+#define EM_BT_LMPRXBUF_SIZE              (20)
+#define EM_BT_LMPRXBUF_END               (EM_BT_LMPRXBUF_OFFSET + EM_BT_LMPRXBUF_NB * EM_BT_LMPRXBUF_SIZE)
 
 /*
  * LMP TX BUFFERS
@@ -429,10 +429,10 @@
  */
 
 /// LMP TX buffers area definition
-#define EM_BT_LMPTXBUF_OFFSET (EM_BT_LMPRXBUF_END)
-#define EM_BT_LMPTXBUF_NB     (BT_LMP_BUF_NB_TX)
-#define EM_BT_LMPTXBUF_SIZE   (24)
-#define EM_BT_LMPTXBUF_END    (EM_BT_LMPTXBUF_OFFSET + EM_BT_LMPTXBUF_NB * EM_BT_LMPTXBUF_SIZE)
+#define EM_BT_LMPTXBUF_OFFSET            (EM_BT_LMPRXBUF_END)
+#define EM_BT_LMPTXBUF_NB                (BT_LMP_BUF_NB_TX)
+#define EM_BT_LMPTXBUF_SIZE              (24)
+#define EM_BT_LMPTXBUF_END               (EM_BT_LMPTXBUF_OFFSET + EM_BT_LMPTXBUF_NB * EM_BT_LMPTXBUF_SIZE)
 
 /*
  * ISCAN FHS TX BUFFER
@@ -440,9 +440,9 @@
  */
 
 /// ISCAN FHS TX buffer area definition
-#define EM_BT_ISCANFHSTXBUF_OFFSET (EM_BT_LMPTXBUF_END)
-#define EM_BT_ISCANFHSTXBUF_SIZE   (20)
-#define EM_BT_ISCANFHSTXBUF_END    (EM_BT_ISCANFHSTXBUF_OFFSET + EM_BT_ISCANFHSTXBUF_SIZE)
+#define EM_BT_ISCANFHSTXBUF_OFFSET       (EM_BT_LMPTXBUF_END)
+#define EM_BT_ISCANFHSTXBUF_SIZE         (20)
+#define EM_BT_ISCANFHSTXBUF_END          (EM_BT_ISCANFHSTXBUF_OFFSET + EM_BT_ISCANFHSTXBUF_SIZE)
 
 /*
  * PAGE FHS TX BUFFER
@@ -450,9 +450,9 @@
  */
 
 /// PAGE FHS TX buffer area definition
-#define EM_BT_PAGEFHSTXBUF_OFFSET (EM_BT_ISCANFHSTXBUF_END)
-#define EM_BT_PAGEFHSTXBUF_SIZE   (20)
-#define EM_BT_PAGEFHSTXBUF_END    (EM_BT_PAGEFHSTXBUF_OFFSET + EM_BT_PAGEFHSTXBUF_SIZE)
+#define EM_BT_PAGEFHSTXBUF_OFFSET        (EM_BT_ISCANFHSTXBUF_END)
+#define EM_BT_PAGEFHSTXBUF_SIZE          (20)
+#define EM_BT_PAGEFHSTXBUF_END           (EM_BT_PAGEFHSTXBUF_OFFSET + EM_BT_PAGEFHSTXBUF_SIZE)
 
 /*
  * EIR TX BUFFER
@@ -460,9 +460,9 @@
  */
 
 /// EIR TX buffer area definition
-#define EM_BT_EIRTXBUF_OFFSET (EM_BT_PAGEFHSTXBUF_END)
-#define EM_BT_EIRTXBUF_SIZE   (240)
-#define EM_BT_EIRTXBUF_END    (EM_BT_EIRTXBUF_OFFSET + EM_BT_EIRTXBUF_SIZE)
+#define EM_BT_EIRTXBUF_OFFSET            (EM_BT_PAGEFHSTXBUF_END)
+#define EM_BT_EIRTXBUF_SIZE              (240)
+#define EM_BT_EIRTXBUF_END               (EM_BT_EIRTXBUF_OFFSET + EM_BT_EIRTXBUF_SIZE)
 
 /*
  * SAM SUBMAP BUFFER
@@ -470,15 +470,15 @@
  */
 
 /// SAM SUBMAP (Local) buffer area definition
-#define EM_BT_LOCAL_SAM_SUBMAP_OFFSET (EM_BT_EIRTXBUF_END)
-#define EM_BT_LOCAL_SAM_SUBMAP_SIZE   (SAM_TYPE0_SUBMAP_LEN)
-#define EM_BT_LOCAL_SAM_SUBMAP_END    (EM_BT_LOCAL_SAM_SUBMAP_OFFSET + EM_BT_LOCAL_SAM_SUBMAP_SIZE)
+#define EM_BT_LOCAL_SAM_SUBMAP_OFFSET    (EM_BT_EIRTXBUF_END)
+#define EM_BT_LOCAL_SAM_SUBMAP_SIZE      (SAM_TYPE0_SUBMAP_LEN)
+#define EM_BT_LOCAL_SAM_SUBMAP_END       (EM_BT_LOCAL_SAM_SUBMAP_OFFSET + EM_BT_LOCAL_SAM_SUBMAP_SIZE)
 
 /// SAM MAP (Peer) buffer area definition
-#define EM_BT_PEER_SAM_MAP_OFFSET   (EM_BT_LOCAL_SAM_SUBMAP_END)
-#define EM_BT_PEER_SAM_MAP_OFF(acl) (EM_BT_PEER_SAM_MAP_OFFSET + (acl * RW_PEER_SAM_MAP_LEN))
-#define EM_BT_PEER_SAM_MAP_SIZE     (MAX_NB_ACTIVE_ACL * RW_PEER_SAM_MAP_LEN) // HW restriction
-#define EM_BT_PEER_SAM_MAP_END      (EM_BT_PEER_SAM_MAP_OFFSET + EM_BT_PEER_SAM_MAP_SIZE)
+#define EM_BT_PEER_SAM_MAP_OFFSET        (EM_BT_LOCAL_SAM_SUBMAP_END)
+#define EM_BT_PEER_SAM_MAP_OFF(acl)      (EM_BT_PEER_SAM_MAP_OFFSET + (acl * RW_PEER_SAM_MAP_LEN))
+#define EM_BT_PEER_SAM_MAP_SIZE          (MAX_NB_ACTIVE_ACL * RW_PEER_SAM_MAP_LEN) // HW restriction
+#define EM_BT_PEER_SAM_MAP_END           (EM_BT_PEER_SAM_MAP_OFFSET + EM_BT_PEER_SAM_MAP_SIZE)
 
 
 /*
@@ -487,9 +487,9 @@
  */
 
 /// Sync Train Packet TX buffer area definition
-#define EM_BT_STPTXBUF_OFFSET ((EM_BT_PEER_SAM_MAP_END + 3) & (~0x03))
-#define EM_BT_STPTXBUF_SIZE   (28)
-#define EM_BT_STPTXBUF_END    (EM_BT_STPTXBUF_OFFSET + EM_BT_STPTXBUF_SIZE)
+#define EM_BT_STPTXBUF_OFFSET            ((EM_BT_PEER_SAM_MAP_END + 3) & (~0x03))
+#define EM_BT_STPTXBUF_SIZE              (28)
+#define EM_BT_STPTXBUF_END               (EM_BT_STPTXBUF_OFFSET + EM_BT_STPTXBUF_SIZE)
 
 /*
  * ACL RX BUFFERS
@@ -497,14 +497,14 @@
  */
 
 /// ACL RX buffers area definition
-#define EM_BT_ACLRXBUF_OFFSET (EM_BT_STPTXBUF_END)
-#define EM_BT_ACLRXBUF_NB     (ACL_DATA_BUF_NB_RX)
+#define EM_BT_ACLRXBUF_OFFSET            (EM_BT_STPTXBUF_END)
+#define EM_BT_ACLRXBUF_NB                (ACL_DATA_BUF_NB_RX)
 
 #ifndef EM_BT_ACLRXBUF_SIZE
-    #define EM_BT_ACLRXBUF_SIZE ACL_DATA_BUF_SIZE
+#define EM_BT_ACLRXBUF_SIZE ACL_DATA_BUF_SIZE
 #endif
 
-#define EM_BT_ACLRXBUF_END (EM_BT_ACLRXBUF_OFFSET + EM_BT_ACLRXBUF_NB * EM_BT_ACLRXBUF_SIZE)
+#define EM_BT_ACLRXBUF_END    (EM_BT_ACLRXBUF_OFFSET + EM_BT_ACLRXBUF_NB * EM_BT_ACLRXBUF_SIZE)
 
 /*
  * ACL TX BUFFERS
@@ -516,10 +516,10 @@
 #define EM_BT_ACLTXBUF_NB     (ACL_DATA_BUF_NB_TX)
 
 #ifndef EM_BT_ACLTXBUF_SIZE
-    #define EM_BT_ACLTXBUF_SIZE ACL_DATA_BUF_SIZE
+#define EM_BT_ACLTXBUF_SIZE ACL_DATA_BUF_SIZE
 #endif
 
-#define EM_BT_ACLTXBUF_END (EM_BT_ACLTXBUF_OFFSET + EM_BT_ACLTXBUF_NB * EM_BT_ACLTXBUF_SIZE)
+#define EM_BT_ACLTXBUF_END    (EM_BT_ACLTXBUF_OFFSET + EM_BT_ACLTXBUF_NB * EM_BT_ACLTXBUF_SIZE)
 
 /*
  * AUDIO RX BUFFERS
@@ -531,7 +531,7 @@
 #define EM_BT_AUDIOBUF_NB     (MAX_NB_SYNC)
 
 #ifndef EM_BT_AUDIOBUF_SIZE
-    #define EM_BT_AUDIOBUF_SIZE (2 * 1080) // (4*1080) !!! Maximum configuration (2 x eSCO-3EV5) not possible on Bubble
+#define EM_BT_AUDIOBUF_SIZE (2 * 1080) // (4*1080) !!! Maximum configuration (2 x eSCO-3EV5) not possible on Bubble
 #endif
 
 #define EM_BT_AUDIOBUF_END      (EM_BT_AUDIOBUF_OFFSET + EM_BT_AUDIOBUF_NB * EM_BT_AUDIOBUF_SIZE)
@@ -543,7 +543,7 @@
  ****************************************************************************************
  */
 
-#define EM_BT_END      (EM_BT_AUDIOBUF_END)
+#define EM_BT_END               (EM_BT_AUDIOBUF_END)
 
 
 #endif

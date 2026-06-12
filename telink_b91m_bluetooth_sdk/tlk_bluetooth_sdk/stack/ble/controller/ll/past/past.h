@@ -101,7 +101,7 @@ _attribute_aligned_(4) typedef struct
 
 } ll_past_cb_t;
 
-extern ll_past_mng_t blt_PastMng;
+extern ll_past_mng_t g_tlk_ble_blt_past_mng;
 
 
 /**

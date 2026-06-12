@@ -183,8 +183,6 @@ int tlkhal_usb_write_ep_data(uint8_t port_id, uint8_t ep_addr, uint8_t *data, ui
     (void)userArg;
 
     if (port_id == 0) {
-        gpio_toggle(GPIO_PC4);
-        gpio_toggle(GPIO_PC4);
         uint8_t ep_num = (ep_addr & (~USB_DIR_IN_MASK));
         usb0hw_write_ep_data(ep_num, data, len);
         return len;
@@ -251,9 +249,6 @@ static void usb_irq_handler_epout(void)
             if (doepint & FLD_USB_DOEPINT_SETUP) {
                 usb0hw_clear_doepint(epnum, FLD_USB_DOEPINT_SETUP);
 
-                gpio_toggle(GPIO_PA0);
-                gpio_toggle(GPIO_PA0);
-
                 event.rhport      = 0;
                 event.setup_stage = 1;
                 event.event_id    = DCD_EVENT_SETUP_RECEIVED;
@@ -294,9 +289,6 @@ static void usb_irq_handler_epin(void)
     }
 }
 
-volatile uint32_t AAAA_usb_hs_handler = 0;
-volatile uint32_t AAAA_usb_fs_handler = 0;
-
 /**
  * @brief  USB interrupt handler
  * @param[in] port_id : USB port ID
@@ -305,11 +297,6 @@ volatile uint32_t AAAA_usb_fs_handler = 0;
 void tlkhal_usb_irq_handler(uint8_t port_id)
 {
     if (port_id == 0) {
-        AAAA_usb_hs_handler++;
-
-        // gpio_toggle(GPIO_PA0);
-        // gpio_toggle(GPIO_PA0);
-
         dcd_event_t event = {0};
 
         unsigned int status = usb0hw_get_gintsts() & reg_usb_gintmsk;
@@ -319,52 +306,36 @@ void tlkhal_usb_irq_handler(uint8_t port_id)
         }
 
         if (status & FLD_USB_GINTSTS_ENUMDONE) {
-            // gpio_toggle(GPIO_PA1);
-            // gpio_toggle(GPIO_PA1);
             usb0hw_clear_gintsts(FLD_USB_GINTSTS_ENUMDONE);
         }
 
         if (status & FLD_USB_GINTSTS_OEPINT) {
-            // gpio_toggle(GPIO_PA2);
-            // gpio_toggle(GPIO_PA2);
             usb_irq_handler_epout();
         }
 
         if (status & FLD_USB_GINTSTS_IEPINT) {
-            // gpio_toggle(GPIO_PC7);
-            // gpio_toggle(GPIO_PC7);
             usb_irq_handler_epin();
         }
 
         if (status & FLD_USB_GINTSTS_SOF) {
-            // gpio_toggle(GPIO_PC6);
-            // gpio_toggle(GPIO_PC6);
             usb0hw_clear_gintsts(FLD_USB_GINTSTS_SOF);
         }
 
         if (status & FLD_USB_GINTSTS_USBSUSP) {
-            // gpio_toggle(GPIO_PC5);
-            // gpio_toggle(GPIO_PC5);
             usb0hw_clear_gintsts(FLD_USB_GINTSTS_USBSUSP);
-
-            // event.rhport = port_id;
-            // event.event_id = DCD_EVENT_SUSPEND;
-            // tlkusb_fifo_push((uint8_t*)&event, sizeof(dcd_event_t));
         }
 
         if (status & FLD_USB_GINTSTS_WKUPINT) {
-            // gpio_toggle(GPIO_PC4);
-            // gpio_toggle(GPIO_PC4);
             usb0hw_clear_gintsts(FLD_USB_GINTSTS_WKUPINT);
         }
 
-        if (status & FLD_USB_GINTSTS_USBRST) {
-            // gpio_toggle(GPIO_PC3);
-            // gpio_toggle(GPIO_PC3);
-            usb0hw_clear_gintsts(FLD_USB_GINTSTS_USBRST);
+        if (status & FLD_USB_GINTSTS_RESETDET) {
+            usb0hw_clear_gintsts(FLD_USB_GINTSTS_RESETDET);
+            usb0hw_set_pwronprgdone();
+        }
 
-            /*do hw reset here.*/
-            // tlkhal_usb_reset(port_id, NULL);
+        if (status & FLD_USB_GINTSTS_USBRST) {
+            usb0hw_clear_gintsts(FLD_USB_GINTSTS_USBRST);
 
             event.rhport   = port_id;
             event.event_id = DCD_EVENT_BUS_RESET;

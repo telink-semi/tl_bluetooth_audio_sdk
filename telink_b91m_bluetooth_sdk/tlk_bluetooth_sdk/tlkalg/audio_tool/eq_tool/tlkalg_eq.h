@@ -103,7 +103,6 @@ void tlkalg_eq_load_para(uint8_t *data);
  */
 void tlkalg_eq_sync_para(uint8_t *buff);
 
-volatile uint8_t p_eq_actual_stages = 0;
 /**
  * @brief   Allocate and set equalizer parameters based on the command data.
  * @param[in]   ps      - Pointer to the command data buffer.

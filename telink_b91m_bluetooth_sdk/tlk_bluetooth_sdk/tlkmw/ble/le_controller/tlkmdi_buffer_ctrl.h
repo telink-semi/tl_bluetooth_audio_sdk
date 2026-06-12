@@ -26,7 +26,7 @@
 
 #if (BLE_CONTROLLER_INITIAL_EN)
 
-    /********************* ACL connection LinkLayer TX & RX data FIFO allocation, Begin ************************************************/
+/********************* ACL connection LinkLayer TX & RX data FIFO allocation, Begin ************************************************/
 /* Number of Supported ACL number */
 
 #ifndef TLKMW_ACL_CENTRAL_MAX_NUM
@@ -81,7 +81,7 @@
 #define ACL_RX_FIFO_SIZE CAL_LL_ACL_RX_FIFO_SIZE(ACL_CONN_MAX_RX_OCTETS) //user can not change !!!
 
 #ifndef ACL_RX_FIFO_NUM
-#define ACL_RX_FIFO_NUM  8                                               //user set value
+#define ACL_RX_FIFO_NUM 8 //user set value
 #endif
 
 /**
@@ -102,24 +102,22 @@
  */
 #define ACL_CENTRAL_TX_FIFO_SIZE CAL_LL_ACL_TX_FIFO_SIZE(ACL_CENTRAL_MAX_TX_OCTETS) //user can not change !!!
 #ifndef ACL_CENTRAL_TX_FIFO_NUM
-#define ACL_CENTRAL_TX_FIFO_NUM  9                                                  //user set value
+#define ACL_CENTRAL_TX_FIFO_NUM 9 //user set value
 #endif
 
 #define ACL_PERIPHR_TX_FIFO_SIZE CAL_LL_ACL_TX_FIFO_SIZE(ACL_PERIPHR_MAX_TX_OCTETS) //user can not change !!!
 #ifndef ACL_PERIPHR_TX_FIFO_NUM
-#define ACL_PERIPHR_TX_FIFO_NUM  9                                                  //user set value
+#define ACL_PERIPHR_TX_FIFO_NUM 9 //user set value
 #endif
 
-extern u8 app_acl_rx_fifo[];
-extern u8 app_acl_cen_tx_fifo[];
-extern u8 app_acl_per_tx_fifo[];
-    /******************** ACL connection LinkLayer TX & RX data FIFO allocation, End ***************************************************/
+extern u8 g_tlk_ble_app_acl_rx_fifo[];
+extern u8 g_tlk_ble_app_acl_cen_tx_fifo[];
+extern u8 g_tlk_ble_app_acl_per_tx_fifo[];
+/******************** ACL connection LinkLayer TX & RX data FIFO allocation, End ***************************************************/
 
 
-
-
-    /*********************************** Extended ADV data buffer allocation, Begin ************************************/
-    /**
+/*********************************** Extended ADV data buffer allocation, Begin ************************************/
+/**
  * @brief   Extended Advertising Set number and data buffer length
  *
  *  EXT_ADV_SETS_NUMBER:
@@ -137,25 +135,25 @@ extern u8 app_acl_per_tx_fifo[];
  *  if all ADV Set use legacy ADV mode, 31 byte is enough
  */
 #ifndef EXT_ADV_SETS_NUMBER
-#define EXT_ADV_SETS_NUMBER     1   //user set value
+#define EXT_ADV_SETS_NUMBER 2 //user set value
 #endif
 
 #ifndef EXT_ADV_DATA_LENGTH
-#define EXT_ADV_DATA_LENGTH     200 //2048//1664//1024   //user set value
+#define EXT_ADV_DATA_LENGTH 200 //2048//1664//1024   //user set value
 #endif
 
 #ifndef EXT_SCANRSP_DATA_LENGTH
 #define EXT_SCANRSP_DATA_LENGTH 200 //2048//1664//1024   //user set value
 #endif
 
-extern u8 app_extAdvSetParam_buf[];
-extern u8 app_extAdvData_buf[];
-extern u8 app_extScanRspData_buf[];
+extern u8 g_tlk_ble_app_ext_adv_set_param_buf[];
+extern u8 g_tlk_ble_app_ext_adv_data_buf[];
+extern u8 g_tlk_ble_app_extScanRspData_buf[];
 
 /*********************************** Extended ADV data buffer allocation, End ************************************/
 
 /*********************************** Periodic ADV data buffer allocation, Begin ************************************/
-    /*
+/*
  * @brief   Periodic Advertising Set number and data buffer length
  *
  * APP_PERID_ADV_SETS_NUMBER:
@@ -171,18 +169,18 @@ extern u8 app_extScanRspData_buf[];
 #define APP_PERID_ADV_DATA_LENGTH 100
 #endif
 
-extern u8 app_peridAdvSet_buffer[];
-extern u8  app_peridAdvData_buffer[];
+extern u8 g_tlk_ble_app_perid_adv_set_buffer[];
+extern u8 g_tlk_ble_app_perid_adv_data_buffer[];
 
 /*********************************** Periodic ADV data buffer allocation, End ************************************/
 
-    /********************************** BIS BCST/Sync Global Data Definition, Begin *****************************************/
+/********************************** BIS BCST/Sync Global Data Definition, Begin *****************************************/
 #ifndef BIG_BCST_NUM
-#define BIG_BCST_NUM         1 // Number of Supported BIG_BCST number (must <= LL_BIG_BCST_NUM_MAX)
+#define BIG_BCST_NUM 1 // Number of Supported BIG_BCST number (must <= LL_BIG_BCST_NUM_MAX)
 #endif
 
 #ifndef BIG_SYNC_NUM
-#define BIG_SYNC_NUM         1 // Number of Supported BIG_SYNC number (must <= LL_BIG_SYNC_NUM_MAX)
+#define BIG_SYNC_NUM 1 // Number of Supported BIG_SYNC number (must <= LL_BIG_SYNC_NUM_MAX)
 #endif
 
 #ifndef BIS_IN_PER_BIG_BCST_NUM
@@ -200,13 +198,13 @@ extern u8  app_peridAdvData_buffer[];
 // The total number of BIS supported by BIG (BCST and SYNC)
 #define TOTAL_BIS_NUMBER (BIS_IN_PER_BIG_BCST_NUM + BIS_IN_PER_BIG_SYNC_NUM)
 
-extern u8 app_bigBcstParam[];
-extern u8 app_bisToatlParam[];
-    /********************************** BIS BCST Global Data Definition, end  *****************************************/
+extern u8 g_tlk_ble_app_big_bcst_param[];
+extern u8 g_tlk_ble_app_bis_toatl_param[];
+/********************************** BIS BCST Global Data Definition, end  *****************************************/
 
 
-    /******************************** BIS BCST TX FIFO allocation, Begin **********************************/
-    /**
+/******************************** BIS BCST TX FIFO allocation, Begin **********************************/
+/**
  * @brief   BIS_TX_MAX_PDU is the maximum number of data octets that can be carried in a BIS Data PDU
  * refer to BLE SPEC "Vol 6, Part B, 2.6 ISOCHRONOUS PHYSICAL CHANNEL PDU"
  *
@@ -231,11 +229,11 @@ extern u8 app_bisToatlParam[];
 #define BIS_TX_PDU_FIFO_SIZE BIS_PDU_ALIGN4_TXBUFF(BIS_TX_MAX_PDU)
 
 #ifndef BIS_TX_PDU_FIFO_NUM
-#define BIS_TX_PDU_FIFO_NUM  (8)
+#define BIS_TX_PDU_FIFO_NUM (8)
 #endif
-extern u8 app_bisBcstTxfifo[];
+extern u8 g_tlk_ble_app_bis_bcst_txfifo[];
 
-    /*
+/*
  * @brief   BIS SDU in buffer
             SDU in is SDU from host to controller, so SDU in buffer is used to hold local SDU data which will send to peer device.
  *
@@ -250,21 +248,21 @@ extern u8 app_bisBcstTxfifo[];
  * 2. at least 2; recommended value: 2, 4, 8, 16, 32, 64
  */
 #ifndef BIS_SDU_IN_OCTETS_MAX
-#define BIS_SDU_IN_OCTETS_MAX 120                                              //503
+#define BIS_SDU_IN_OCTETS_MAX 120 //503
 #endif
 
-#define BIS_SDU_IN_FIFO_SIZE  CAL_IAL_ISO_SDU_FIFO_SIZE(BIS_SDU_IN_OCTETS_MAX) //LC3 10ms-> 40B, iso hdr 8B plus, 48B enough
+#define BIS_SDU_IN_FIFO_SIZE CAL_IAL_ISO_SDU_FIFO_SIZE(BIS_SDU_IN_OCTETS_MAX) //LC3 10ms-> 40B, iso hdr 8B plus, 48B enough
 
 #ifndef BIS_SDU_IN_FIFO_NUM
-#define BIS_SDU_IN_FIFO_NUM   (4)
+#define BIS_SDU_IN_FIFO_NUM (4)
 #endif
 
-extern u8 app_bis_sdu_in_fifo[];
-    /***************************** BIS BCST TX FIFO allocation, End  ************************************/
+extern u8 g_tlk_ble_app_bis_sdu_in_fifo[];
+/***************************** BIS BCST TX FIFO allocation, End  ************************************/
 
 
-    /******************************** BIS SYNC RX FIFO allocation, Begin **********************************/
-    /**
+/******************************** BIS SYNC RX FIFO allocation, Begin **********************************/
+/**
  * @brief   BIS_RX_MAX_PDU is the maximum number of data octets that can be carried in a BIS Data PDU
  * refer to BLE SPEC "2.6 ISOCHRONOUS PHYSICAL CHANNEL PDU"
  * usage limitation:
@@ -287,7 +285,7 @@ extern u8 app_bis_sdu_in_fifo[];
 #define BIS_RX_PDU_FIFO_SIZE BIS_PDU_ALIGN4_RXBUFF(BIS_RX_MAX_PDU)
 
 #ifndef BIS_RX_PDU_FIFO_NUM
-#define BIS_RX_PDU_FIFO_NUM  (8)
+#define BIS_RX_PDU_FIFO_NUM (8)
 #endif
 /*
 * @brief   BIS SDU out buffer
@@ -307,16 +305,16 @@ extern u8 app_bis_sdu_in_fifo[];
 #define BIS_SDU_OUT_OCTETS_MAX 240 //
 #endif
 
-#define BIS_SDU_OUT_FIFO_SIZE  CAL_IAL_ISO_SDU_FIFO_SIZE(BIS_SDU_OUT_OCTETS_MAX)
+#define BIS_SDU_OUT_FIFO_SIZE CAL_IAL_ISO_SDU_FIFO_SIZE(BIS_SDU_OUT_OCTETS_MAX)
 
 #ifndef BIS_SDU_OUT_FIFO_NUM
-#define BIS_SDU_OUT_FIFO_NUM   (4)
+#define BIS_SDU_OUT_FIFO_NUM (4)
 #endif
 
-extern u8 app_bisSyncRxfifo[];
-extern u8 app_bigSyncParam[];
-extern u8 app_bis_sdu_out_fifo[];
-    /***************************** BIS SYNC RX FIFO allocation, Begin, End  ************************************/
+extern u8 g_tlk_ble_app_bis_sync_rxfifo[];
+extern u8 g_tlk_ble_app_big_sync_param[];
+extern u8 g_tlk_ble_app_bis_sdu_out_fifo[];
+/***************************** BIS SYNC RX FIFO allocation, Begin, End  ************************************/
 
 
 /********************************** CIS Global Data Definition, Begin ************************************************/
@@ -337,9 +335,9 @@ extern u8 app_bis_sdu_out_fifo[];
 #define TOTAL_CIS_NUMBER (CIS_CENTRAL_NUMBER + CIS_PERIPHR_NUMBER) //user can not change !!!
 
 
-extern u8 app_cig_param[];
-extern u8 app_cis_per_param[];
-extern u8 app_cis_conn_param[];
+extern u8 g_tlk_ble_app_cig_param[];
+extern u8 g_tlk_ble_app_cis_per_param[];
+extern u8 g_tlk_ble_app_cis_conn_param[];
 /********************************** CIS Global Data Definition, end  *************************************************/
 
 /*********************** CIS connection RX/TX ISO PDU buffer allocation, Begin *************************************/
@@ -374,7 +372,7 @@ extern u8 app_cis_conn_param[];
 */
 #define CIS_RX_PDU_FIFO_SIZE CAL_LL_CIS_RX_FIFO_SIZE(CIS_RX_MAX_PDU) //user can not change !!!
 #ifndef CIS_RX_PDU_FIFO_NUM
-#define CIS_RX_PDU_FIFO_NUM  8                                       //user set value
+#define CIS_RX_PDU_FIFO_NUM 8 //user set value
 #endif
 
 /**
@@ -389,11 +387,11 @@ extern u8 app_cis_conn_param[];
 */
 #define CIS_TX_PDU_FIFO_SIZE CAL_LL_CIS_TX_FIFO_SIZE(CIS_TX_MAX_PDU) //user can not change !!!
 #ifndef CIS_TX_PDU_FIFO_NUM
-#define CIS_TX_PDU_FIFO_NUM  8                                       //user set value
+#define CIS_TX_PDU_FIFO_NUM 8 //user set value
 #endif
 
-extern u8 app_cis_rxPduFifo[];
-extern u8 app_cis_txPduFifo[];
+extern u8 g_tlk_ble_app_cis_rx_pdu_fifo[];
+extern u8 g_tlk_ble_app_cis_tx_pdu_fifo[];
 /************************* CIS connection RX/TX ISO PDU buffer allocation, End ***************************************/
 
 
@@ -409,9 +407,9 @@ extern u8 app_cis_txPduFifo[];
 * 1. must use CAL_IAL_ISO_SDU_FIFO_SIZE to calculate, user can not change !!!
 */
 #ifndef CIS_SDU_IN_OCTETS_MAX
-#define CIS_SDU_IN_OCTETS_MAX 503                                              //user set value
+#define CIS_SDU_IN_OCTETS_MAX CIS_TX_MAX_PDU //user set value
 #endif
-#define CIS_SDU_IN_FIFO_SIZE  CAL_IAL_ISO_SDU_FIFO_SIZE(CIS_SDU_IN_OCTETS_MAX) //user can not change !!!
+#define CIS_SDU_IN_FIFO_SIZE CAL_IAL_ISO_SDU_FIFO_SIZE(CIS_SDU_IN_OCTETS_MAX) //user can not change !!!
 
 
 /**
@@ -425,41 +423,37 @@ extern u8 app_cis_txPduFifo[];
 * 1. must use CAL_IAL_ISO_SDU_FIFO_SIZE to calculate, user can not change !!!
 */
 #ifndef CIS_SDU_OUT_OCTETS_MAX
-#define CIS_SDU_OUT_OCTETS_MAX 754                                               //user set value
+#define CIS_SDU_OUT_OCTETS_MAX CIS_RX_MAX_PDU //user set value
 #endif
-#define CIS_SDU_OUT_FIFO_SIZE  CAL_IAL_ISO_SDU_FIFO_SIZE(CIS_SDU_OUT_OCTETS_MAX) //user can not change !!!
+#define CIS_SDU_OUT_FIFO_SIZE CAL_IAL_ISO_SDU_FIFO_SIZE(CIS_SDU_OUT_OCTETS_MAX) //user can not change !!!
 
 
-extern u8 app_cis_sdu_in_fifo[];
-extern u8 app_cis_sdu_out_fifo[];
+extern u8 g_tlk_ble_app_cis_sdu_in_fifo[];
+extern u8 g_tlk_ble_app_cis_sdu_out_fifo[];
 /************************ CIS connection ISOAL SDU in and out buffer FIFO allocation, End  ***************************/
-
-
 
 
 /***************************** HCI TX & RX data FIFO allocation, Begin *********************************************/
 #define HCI_RX_ACL_FIFO_SIZE      CALCULATE_HCI_ACL_DATA_FIFO_SIZE(LE_ACL_DATA_PACKET_LENGTH)
 #define HCI_RX_ACL_FIFO_NUM       8
 
-#define ACL_CONN_MAX_TX_OCTETS    251                                              // !!! max(acl_centarl_max_tx, acl_peripheral_max_tx)
-#define LE_ACL_DATA_PACKET_LENGTH ACL_CONN_MAX_TX_OCTETS
+#define ACL_CONN_MAX_TX_OCTETS    max(ACL_CENTRAL_MAX_TX_OCTETS, ACL_PERIPHR_MAX_TX_OCTETS)
+#define LE_ACL_DATA_PACKET_LENGTH (ACL_CONN_MAX_TX_OCTETS)
 
 //TODO:
-#define CIS_SDU_IN_FIFO_SIZE      CAL_IAL_ISO_SDU_FIFO_SIZE(CIS_SDU_IN_OCTETS_MAX)
-#define CIS_SDU_OUT_FIFO_SIZE     CAL_IAL_ISO_SDU_FIFO_SIZE(CIS_SDU_OUT_OCTETS_MAX)
+#define CIS_SDU_IN_FIFO_SIZE   CAL_IAL_ISO_SDU_FIFO_SIZE(CIS_SDU_IN_OCTETS_MAX)
+#define CIS_SDU_OUT_FIFO_SIZE  CAL_IAL_ISO_SDU_FIFO_SIZE(CIS_SDU_OUT_OCTETS_MAX)
 
-#define HCI_ISO_IN_OCTETS_MAX     (max2(BIS_SDU_IN_OCTETS_MAX, CIS_SDU_IN_OCTETS_MAX))
-#define HCI_ISO_OUT_OCTETS_MAX    (max2(BIS_SDU_OUT_OCTETS_MAX, CIS_SDU_OUT_OCTETS_MAX))
+#define HCI_ISO_IN_OCTETS_MAX  (max2(BIS_SDU_IN_OCTETS_MAX, CIS_SDU_IN_OCTETS_MAX))
+#define HCI_ISO_OUT_OCTETS_MAX (max2(BIS_SDU_OUT_OCTETS_MAX, CIS_SDU_OUT_OCTETS_MAX))
 
-#define HCI_TX_FIFO_SIZE          HCI_OUT_FIFO_MAX_SIZE(ACL_CONN_MAX_RX_OCTETS, HCI_ISO_OUT_OCTETS_MAX)
-#define HCI_TX_FIFO_NUM 4
+#define HCI_TX_FIFO_SIZE       HCI_OUT_FIFO_MAX_SIZE(ACL_CONN_MAX_RX_OCTETS, HCI_ISO_OUT_OCTETS_MAX)
+#define HCI_TX_FIFO_NUM        4
 
-#define HCI_RX_FIFO_SIZE          HCI_IN_FIFO_MAX_SIZE(max2(ACL_PERIPHR_MAX_TX_OCTETS,ACL_CENTRAL_MAX_TX_OCTETS), HCI_ISO_IN_OCTETS_MAX)
-#define HCI_RX_FIFO_NUM 4
+#define HCI_RX_FIFO_SIZE       HCI_IN_FIFO_MAX_SIZE(max2(ACL_PERIPHR_MAX_TX_OCTETS, ACL_CENTRAL_MAX_TX_OCTETS), HCI_ISO_IN_OCTETS_MAX)
+#define HCI_RX_FIFO_NUM        4
 
-extern u8 app_hci_rxfifo[];
-extern u8 app_hci_txfifo[];
-extern u8 tlkmdi_app_hci_rxAclfifo[];
+extern u8 g_tlk_ble_app_hci_rxAclfifo[];
 
 
 #endif

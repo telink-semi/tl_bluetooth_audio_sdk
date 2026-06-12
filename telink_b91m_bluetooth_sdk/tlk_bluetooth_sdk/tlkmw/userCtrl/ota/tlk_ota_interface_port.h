@@ -36,7 +36,9 @@ typedef struct
     int (*nvds_ota_status_save)(uint8_t *pBuffer, uint32_t buffLen, void *UserArg);
     int (*nvds_ota_backup_addr_save)(uint8_t *pBuffer, uint32_t buffLen, void *UserArg);
     int (*nvds_ota_userarea_addr_save)(uint8_t *pBuffer, uint32_t buffLen, void *UserArg);
-} nvds_ota_Interface_t;
+} nvds_ota_Interface_funcs_t;
+
+typedef const nvds_ota_Interface_funcs_t *nvds_ota_Interface_t;
 
 /**
  * @brief      Initialize NVDS OTA interface

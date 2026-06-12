@@ -56,7 +56,13 @@ _attribute_retention_code_ void tlkmw_audio_timer_irq_handler(void)
  */
 void tlkmw_audio_codec_test_open_codec(void)
 {
-    tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_BOTH, TLKDRV_CODEC_CHANNEL_STEREO, TLKDRV_CODEC_BITDEPTH_16, AUDIO_SAMPLE_RATE_48K, 0);
+    tlkdrv_open_codec(TLKDRV_CODEC_SUBDEV_BOTH, TLKDRV_CODEC_CHANNEL_STEREO,
+#if AUDIO_PATH_24BITS_EN
+                      TLKDRV_CODEC_BITDEPTH_24,
+#else
+                      TLKDRV_CODEC_BITDEPTH_16,
+#endif
+                      AUDIO_SAMPLE_RATE_48K, 0);
 
     tlkdrv_codec_sync_play_samples(48 * 20);
     tlkdrv_codec_sync_mic_samples(48 * 20);
@@ -81,10 +87,12 @@ void audio_codec_dsp_msg_process_callback(uint8_t enc_buff_wptr, uint8_t type)
         return;
     }
 
-    tlkdrv_codec_fillSpkBuff((uint8_t *)pcm_data, 48 * sizeof(codec_int));
+    tlkdrv_codec_fillSpkBuff((uint8_t *)pcm_data, pcm_data_len);
 }
 
-codec_mono_int pcm_stereo[48 * 2];
+extern signed short sin_48k_mono_d1_dbg[] __attribute__((aligned(4)));
+codec_mono_int      pcm_mono[48];
+codec_mono_int      pcm_stereo[48 * 2];
 
 /**
  * @brief   Codec test player
@@ -93,12 +101,12 @@ codec_mono_int pcm_stereo[48 * 2];
  */
 _attribute_retention_code_ void tlkmw_audio_codec_test_player(uint8_t mode)
 {
+    //	(void)mode;
     /* 48K 1ms */
     uint16_t samples_num = 48;
     uint16_t codec_buffer_avail_size;
 
-
-    //    int16_t rptr = (audio_get_tx_dma_rptr(TLKDRV_CODEC_SPK_DMA)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
+    //    int16_t rptr = (audio_get_tx_dma_rptr(gTlkdrvCodecSpkDmaChn)) - ((uint32_t)gpTlkDrvCodecSpkBuffer);
     codec_buffer_avail_size = tlkdrv_codec_get_spk_buf_idle_size();
 
     //    tlkapi_printf(1, "codec free_len: %d, rptr: %d", codec_buffer_avail_size, rptr);
@@ -107,13 +115,30 @@ _attribute_retention_code_ void tlkmw_audio_codec_test_player(uint8_t mode)
         if (mode == DSP_BYPASS_MODE) {
             tlkdrv_codec_readMicData((uint8_t *)pcm_stereo, samples_num * sizeof(codec_int), 0);
 
-            tlkmw_dsp_resume();
             app_dsp_context_t *p_dsp_app_ctx = d25f_get_dsp_app_ctx(IPC_DATA_PATH_0);
             p_dsp_app_ctx->alg_type          = DSP_BYPASS;
 
             d25f_send_audio_data_to_dsp((uint8_t *)pcm_stereo, samples_num * sizeof(codec_int), IPC_DATA_PATH_0);
         } else if (mode == CODEC_BYPASS_MODE) {
-            tlkdrv_codec_readMicData((uint8_t *)pcm_stereo, samples_num * sizeof(codec_int), 0);
+#if 1
+            bool ret = tlkdrv_codec_readMicData((uint8_t *)pcm_stereo, samples_num * sizeof(codec_int), 0);
+            if (ret == false) {
+                //				tlkapi_printf(1, "[QQQQ], get mic data error");
+            }
+#else
+            static int sin_count = 0;
+
+            for (uint16_t i = 0; i < samples_num; i++) {
+                pcm_mono[i] = sin_48k_mono_d1_dbg[sin_count++];
+                sin_count %= 48;
+            }
+
+            for (uint16_t i = 0; i < samples_num; i++) {
+                pcm_stereo[2 * i]     = pcm_mono[i]; // >> 8;
+                pcm_stereo[2 * i + 1] = pcm_mono[i]; // >> 8;
+            }
+#endif
+
             tlkdrv_codec_fillSpkBuff((uint8_t *)pcm_stereo, samples_num * sizeof(codec_int));
         }
     }
@@ -132,12 +157,16 @@ _attribute_retention_code_ void tlkmw_audio_codec_test_main(void)
         tlkapi_printf(1, "[test] [codec] enter codec mic spk loopback mode");
 
         if (g_audio_codec_test_mode == DSP_BYPASS_MODE) {
-            d25f_init_dsp_env();
+            tlkmw_dsp_resume();
             ipc_msg_register_data_process_done_cb(audio_codec_dsp_msg_process_callback, DSP_BYPASS, IPC_DATA_PATH_0);
             tlkapi_printf(1, "[test] [dsp] enter codec mic to dsp to spk loopback mode");
         }
     }
-    tlkmdi_audio_task_set_next_irq(800);
+
+    // gpio_set_high_level(GPIO_PB12);
+    // gpio_set_low_level(GPIO_PB12);
+
+    tlkmdi_audio_task_set_next_irq(500);
 
     tlkmw_audio_codec_test_player(g_audio_codec_test_mode);
 }
@@ -161,7 +190,7 @@ void tlkmw_audio_start_codec_test(uint8_t mode)
 
     plic_interrupt_enable(IRQ_TIMER0_0);
     plic_set_priority(IRQ_TIMER0_0, 1);
-    tlkmdi_audio_task_set_next_irq(800);
+    tlkmdi_audio_task_set_next_irq(500);
 
     AUDIO_GLOBAL_INT_RESTORE();
 }

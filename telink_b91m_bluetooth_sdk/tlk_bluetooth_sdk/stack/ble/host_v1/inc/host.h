@@ -74,7 +74,6 @@
 #include "../l2cap/att/inc/ble_att_uuid.h"
 #include "../l2cap/att/inc/ble_att_service.h"
 #include "../l2cap/att/inc/ble_att_package.h"
-#include "../l2cap/att/inc/uuid_def.h"
 #include "../l2cap/att/inc/uuid16bit.h"
 #include "../l2cap/att/inc/uuid128bit.h"
 
@@ -84,6 +83,9 @@
 
 // L2CAP Signaling header files.
 #include "../l2cap/signaling/inc/ble_signaling.h"
+
+// L2CAP CoC header files.
+#include "../l2cap/coc/inc/ble_coc.h"
 
 // GATT header files.
 #include "../gatt/inc/gatt.h"

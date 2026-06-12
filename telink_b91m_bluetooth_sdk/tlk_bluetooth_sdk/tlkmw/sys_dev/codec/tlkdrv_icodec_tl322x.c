@@ -309,13 +309,13 @@ static int tlkdrv_icodec_close(uint8_t subDev)
     if ((subDev & TLKDRV_CODEC_SUBDEV_MIC) != 0) {
         sTlkDrvIcodecCtrl.codec_mic_cfg.IsOpen = false;
         sTlkDrvIcodecCtrl.codec_mic_cfg.IsEn   = false;
-        audio_rx_dma_dis(TLKDRV_CODEC_MIC_DMA);
+        audio_rx_dma_dis(gTlkdrvCodecMicDmaChn);
     }
 
     if ((subDev & TLKDRV_CODEC_SUBDEV_SPK) != 0) {
         sTlkDrvIcodecCtrl.codec_spk_cfg.IsOpen = false;
         sTlkDrvIcodecCtrl.codec_spk_cfg.IsEn   = false;
-        audio_tx_dma_dis(TLKDRV_CODEC_SPK_DMA);
+        audio_tx_dma_dis(gTlkdrvCodecSpkDmaChn);
     }
 
     return TLK_ENONE;
@@ -575,7 +575,7 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
         inputParam.sample_rate = micSRate;
         inputParam.data_width  = micDWdith;
         inputParam.fifo_chn    = TLKDRV_CODEC_MIC_FIFO;
-        inputParam.dma_num     = TLKDRV_CODEC_MIC_DMA;
+        inputParam.dma_num     = gTlkdrvCodecMicDmaChn;
 
 
         audio_codec_stream0_input_init(&inputParam);
@@ -588,14 +588,14 @@ static int tlkdrv_icodec_mic_enable(bool enMic)
 
 
         /* rx dma init. */
-        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, TLKDRV_CODEC_MIC_DMA, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
+        audio_rx_dma_chain_init(TLKDRV_CODEC_MIC_FIFO, gTlkdrvCodecMicDmaChn, (unsigned short *)gpTlkDrvCodecMicBuffer, gTlkDrvCodecMicBuffLen);
 
         //	        audio_mic_mute_en();
-        audio_codec_stream0_input_en(TLKDRV_CODEC_MIC_DMA);
+        audio_codec_stream0_input_en(gTlkdrvCodecMicDmaChn);
         //	        audio_codec_clr_input_pop(20);
         audio_codec_input_path_en(inputParam.fifo_chn);
 
-        //	        audio_rx_dma_en(TLKDRV_CODEC_MIC_DMA); /* the rx dma enable must precede the adc enable. */
+        //	        audio_rx_dma_en(gTlkdrvCodecMicDmaChn); /* the rx dma enable must precede the adc enable. */
     }
 
     return TLK_ENONE;
@@ -661,7 +661,7 @@ static int tlkdrv_icodec_spk_enable(bool enSpk)
         outputParam.output_src  = spkSrc;
         outputParam.sample_rate = spkSRate;
         outputParam.data_width  = spkDWdith;
-        outputParam.dma_num     = TLKDRV_CODEC_SPK_DMA;
+        outputParam.dma_num     = gTlkdrvCodecSpkDmaChn;
 #if (AUDIO_CODEC_LOOPBACK)
         outputParam.data_buf      = gpTlkDrvCodecMicBuffer;
         outputParam.data_buf_size = gTlkDrvCodecMicBuffLen;

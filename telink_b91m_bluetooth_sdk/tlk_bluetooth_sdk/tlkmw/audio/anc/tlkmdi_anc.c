@@ -29,7 +29,8 @@
 #include "sch/tlkmw_anc_sch.h"
 
 #if TLKALG_ANC_ENABLE
-
+uint8_t               g_tlkmdi_anc_spk_dma = 0;
+uint8_t               g_tlkmdi_anc_mic_dma = 0;
 extern tlkmdi_anc_ctl g_anc_ctr;
 tlkmdi_anc_t          s_anc_env = {0};
 
@@ -160,8 +161,10 @@ bool tlkmdi_anc_ll_audio_is_busy(void)
  */
 int tlkmdi_anc_init(void)
 {
-    static const tlkmw_anc_sch_cfg_t s_tlkmw_anc_sch_cfg = {
-        .cbArray =
+    uint8_t                          g_tlkmdi_anc_spk_dma = tlkhal_dma_malloc();
+    uint8_t                          g_tlkmdi_anc_mic_dma = tlkhal_dma_malloc();
+    static const tlkmw_anc_sch_cfg_t s_tlkmw_anc_sch_cfg  = {
+         .cbArray =
             {
                 [TLKMW_ANC_SCH_CB_TYPE_BT_MUSIC] = tlkmdi_anc_btmusic_control,
                 [TLKMW_ANC_SCH_CB_TYPE_BT_VOICE] = tlkmdi_anc_voice_control,

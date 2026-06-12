@@ -25,7 +25,7 @@
 #define TLKA_ASRC_API_H
 
 #ifndef MY_RESAMPLE_RAMCODE
-    #define MY_RESAMPLE_RAMCODE
+#define MY_RESAMPLE_RAMCODE
 #endif
 
 #define ASRC_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))

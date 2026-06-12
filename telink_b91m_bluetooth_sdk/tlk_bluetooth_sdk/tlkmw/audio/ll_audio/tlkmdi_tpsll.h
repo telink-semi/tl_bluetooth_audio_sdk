@@ -29,21 +29,21 @@
  * @param      None
  * @return     Status of initialization
  */
-int     tlkmdi_tpsll_audio_init(void);
+int tlkmdi_tpsll_audio_init(void);
 
 /**
  * @brief      Enables TPSLL audio functionality
  * @param      None
  * @return     Status of enabling operation
  */
-int     tlkmdi_tpsll_audio_enable(void);
+int tlkmdi_tpsll_audio_enable(void);
 
 /**
  * @brief      Disables TPSLL audio functionality
  * @param      None
  * @return     Status of disabling operation
  */
-int     tlkmdi_tpsll_audio_disable(void);
+int tlkmdi_tpsll_audio_disable(void);
 
 /**
  * @brief      Switches TPSLL audio connection
@@ -51,14 +51,14 @@ int     tlkmdi_tpsll_audio_disable(void);
  * @param[in]  status - Switch status
  * @return     True if switch successful, false otherwise
  */
-bool    tlkmdi_tpsll_audio_switch(uint16_t handle, uint8_t status);
+bool tlkmdi_tpsll_audio_switch(uint16_t handle, uint8_t status);
 
 /**
  * @brief      Checks if TPSLL audio is busy
  * @param      None
  * @return     True if busy, false otherwise
  */
-bool    tlkmdi_tpsll_audio_is_busy(void);
+bool tlkmdi_tpsll_audio_is_busy(void);
 
 /**
  * @brief      Starts TPSLL audio stream
@@ -66,28 +66,28 @@ bool    tlkmdi_tpsll_audio_is_busy(void);
  * @param[in]  param - Start parameters
  * @return     Status of start operation
  */
-int     tlkmdi_tpsll_audio_start(uint16_t handle, uint32_t param);
+int tlkmdi_tpsll_audio_start(uint16_t handle, uint32_t param);
 
 /**
  * @brief      Closes TPSLL audio stream
  * @param[in]  handle - Connection handle
  * @return     Status of close operation
  */
-int     tlkmdi_tpsll_audio_close(uint16_t handle);
+int tlkmdi_tpsll_audio_close(uint16_t handle);
 
 /**
  * @brief      Moves to next TPSLL audio item
  * @param      None
  * @return     True if next item exists, false otherwise
  */
-bool    tlkmdi_tpsll_audio_next(void);
+bool tlkmdi_tpsll_audio_next(void);
 
 /**
  * @brief      Moves to previous TPSLL audio item
  * @param      None
  * @return     True if previous item exists, false otherwise
  */
-bool    tlkmdi_tpsll_audio_previous(void);
+bool tlkmdi_tpsll_audio_previous(void);
 
 /**
  * @brief      Processes TPSLL audio operations
@@ -97,6 +97,6 @@ bool    tlkmdi_tpsll_audio_previous(void);
  * @param[in]  dataLen - Length of data
  * @return     True if operation processed successfully, false otherwise
  */
-bool    tlkmdi_tpsll_audio_process_operate(uint16_t handle, uint8_t opcode, uint8_t *pdata, uint16_t dataLen);
+bool tlkmdi_tpsll_audio_process_operate(uint16_t handle, uint8_t opcode, uint8_t *pdata, uint16_t dataLen);
 
 #endif // TLKMDI_TPSLL_H

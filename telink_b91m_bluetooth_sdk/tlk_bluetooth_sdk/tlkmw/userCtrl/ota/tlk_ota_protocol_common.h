@@ -53,7 +53,6 @@
 #define TLKMW_OTA_COMMON_SAVE_VER     0x1B
 
 #define TLKMW_TINYSQL_OTA_INFO_ADDR0  0x10000
-#define TLKMW_TINYSQL_OTA_INFO_ADDR1  0x11000
 #define TLKMW_TINYSQL_OTA_INFO_SIZE   0x1000 //8k
 
 #define TLKMW_TINYSQL_IMG_HEADER_ADDR 0x12000 //64kboot + 8k ota info
@@ -61,13 +60,13 @@
 #define TLKMW_OTA_FW_NUMB_MAX         253     //(4k - other image data)
 
 #define TLKMW_OTA_TRANS_MTU_SIZE      256
-#define TLKMW_OTA_SHAKE_WIRELESS_INTV 0x10
-#define TLKMW_OTA_SHAKE_UART_INTV     0x01
+#define TLKMW_OTA_SHAKE_INTV          0x10
 
 #define TLKMW_OTA_TRANS_TIMEOUT_INTV  100 //100ms
 #define TLKMW_OTA_TRANS_TIMEOUT       10  //100ms * 10
 
 #define TLKMW_OTA_NOTIFY_ARRAY_NUM    4
+#define TLKMW_OTA_SUPPORT_CHN_NUM     4
 
 typedef struct
 {
@@ -109,11 +108,23 @@ enum
     TLKMW_OTA_TRANS_CHN_BT_ATT,
     TLKMW_OTA_TRANS_CHN_BLE_GENERAL_MODE,
     TLKMW_OTA_TRANS_CHN_BLE_PREVIOUS_MODE,
+    TLKMW_OTA_TRANS_CHN_TPSLL_DONGLE,
     TLKMW_OTA_TRANS_CHN_MAX,
 };
 
+typedef enum
+{
+    TLKMW_OTA_PARAM_TYPE_NONE = 0,
+    TLKMW_OTA_PARAM_MTU_SIZE,
+    TLKMW_OTA_PARAM_SHAKE_INTV,
+    TLKMW_OTA_PARAM_TYPE_MAX,
+} TLKMW_OTA_PARAM_TYPE;
+
 typedef struct
 {
+    uint8_t channel;
+    uint8_t resv[3];
+    uint32_t (*get_ota_param)(uint32_t taskID, uint8_t param_type, void *UserArg);
     int (*send)(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg);
     int (*recv)(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg);
 } sTlkMwUnitIntf_t;
@@ -129,9 +140,9 @@ typedef struct
 {
     uint8_t  optChn;
     uint8_t  resv[3];
-    uint32_t taskID;
+    uint32_t busy_taskID;
 
-    sTlkMwUnitIntf_t   intf[TLKMW_OTA_TRANS_CHN_MAX];
+    sTlkMwUnitIntf_t   intf[TLKMW_OTA_SUPPORT_CHN_NUM];
     sTlkMwNotifyUnit_t notifyCB[TLKMW_OTA_NOTIFY_ARRAY_NUM];
 } sTlkMwOtaCommon_t;
 
@@ -140,7 +151,7 @@ typedef struct
     uint8_t  channel;
     uint8_t  status;
     uint8_t  reason;
-    uint8_t  resv[1];
+    uint8_t  resv;
     uint32_t taskID; //ota task ID
 } sTlkMwNotifyEvent_t;
 
@@ -159,20 +170,21 @@ int tlkmw_ota_common_init(void);
 uint32_t tlkmw_ota_common_get_busy_taskid(void);
 
 /**
- * @brief      Register channel send interface for OTA
- * @param[in]  channel - communication channel
- * @param[in]  send    - send function pointer
- * @return     none
+ * @brief      Get busy channel for OTA
+ * @param[in]  none
+ * @param[out] none
+ * @return     uint8_t - busy channel
  */
-void tlkmw_ota_register_chn_send_interface(uint8_t channel, int (*send)(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg));
+uint8_t tlkmw_ota_common_get_busy_channel(void);
 
+
+uint32_t tlkmw_ota_common_get_param(uint8_t param_type, void *userArg);
 /**
- * @brief      Register channel receive interface for OTA
- * @param[in]  channel - communication channel
- * @param[in]  recv    - receive function pointer
- * @return     none
+ * @brief      Register channel interface for OTA
+ * @param[in]  pInterface - pInterface
+ * @return     int - OTA_NONE if success, error code otherwise
  */
-void tlkmw_ota_register_chn_recv_interface(uint8_t channel, int (*recv)(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg));
+int tlkmw_ota_register_chn_interface(sTlkMwUnitIntf_t *pInterface);
 
 /**
  * @brief      Register OTA notification callback

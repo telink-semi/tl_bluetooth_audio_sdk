@@ -48,7 +48,7 @@ char tlkapi_ascii_char2val(const char c);
  * @param[in]   base - Base of the numeric system (e.g., 10 for decimal, 16 for hexadecimal)
  * @returns     Numeric value of the string, 0 if conversion fails
 */
-int  tlkapi_ascii_str2val(const char str[], char base);
+int tlkapi_ascii_str2val(const char str[], char base);
 
 /**
  * @brief       Converts a numeric value to a string in decimal format.
@@ -165,4 +165,3 @@ char *tlkapi_str_findChar(char *pSrc, uint16_t srcLen, char dst, uint16_t *pOffs
  * @returns     Pointer to the found string, or NULL if not
 */
 char *tlkapi_str_findStr(char *pSrc, uint16_t srcLen, char *pDst, uint16_t dstLen, uint16_t *pOffset);
-

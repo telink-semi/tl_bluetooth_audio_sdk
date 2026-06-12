@@ -21,8 +21,8 @@
  *          limitations under the License.
  *
  *******************************************************************************************************/
-
 #include "tl_common.h"
+#include "drivers.h"
 #include "tlkapi/tlkapi.h"
 #include "tlklib/os/tlkos_config.h"
 
@@ -90,10 +90,14 @@ _always_inline int tlkos_get_kernelState(void)
 _attribute_ram_code_sec_noinline_ void tlkos_enter_critical(void)
 {
 #if (MCU_CORE_N22 == 0)
+    uint32_t mie_en = read_csr(NDS_MSTATUS) & FLD_MSTATUS_MIE;
+    if (mie_en == 0) {
+        return;
+    }
     if (tlkos_get_irqState() == TLKOS_IRQ_STATE_NOT_IN_IRQ) {
         vTaskSuspendAll();
     }
-    unsigned int  r    = core_interrupt_disable();
+    uint32_t      r    = core_interrupt_disable();
     unsigned char thrd = reg_irq_threshold & 0xFF;
     sCoreCriticalCount++;
     if (sCoreCriticalCount == 1) {
@@ -113,7 +117,10 @@ _attribute_ram_code_sec_noinline_ void tlkos_enter_critical(void)
 _attribute_ram_code_sec_noinline_ void tlkos_leave_critical(void)
 {
 #if (MCU_CORE_N22 == 0)
-    unsigned int r = core_interrupt_disable();
+    uint32_t r = core_interrupt_disable();
+    if (r == 0) {
+        return;
+    }
     if (sCoreCriticalCount == 1) {
         plic_set_threshold(sCoreCriticalThrd);
         sCoreCriticalThrd = 0;
@@ -134,8 +141,7 @@ _attribute_ram_code_sec_noinline_ void tlkos_leave_critical(void)
  */
 void tlkos_init(void)
 {
-    memset(ucHeap, 0, configTOTAL_HEAP_SIZE);
-
+    tlkos_mem_init();
 #if (MCU_DUAL_CORE_ENABLE && defined(MCU_CORE_N22))
     mtime_clk_init(CLK_32K_RC);
 #else

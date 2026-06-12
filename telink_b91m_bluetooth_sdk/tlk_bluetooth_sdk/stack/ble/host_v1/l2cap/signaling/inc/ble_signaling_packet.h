@@ -41,3 +41,26 @@ uint16_t ble_host_signaling_conn_param_update_req(const struct ble_host_signalin
  * @return      the length of the packaged response.
  */
 uint16_t ble_host_signaling_conn_param_update_rsp(const struct ble_host_signaling_deal_info *p_signaling_deal_info, const struct ble_signaling_pdu_format *p_pdu_format);
+
+uint16_t ble_host_signaling_command_reject_rsp(const struct ble_host_signaling_deal_info *p_signaling_deal_info, const struct ble_signaling_pdu_format *p_pdu_format);
+
+uint16_t ble_host_signaling_disconnect_request(const struct ble_host_signaling_deal_info *p_signaling_deal_info, const struct ble_signaling_pdu_format *p_pdu_format);
+
+uint16_t ble_host_signaling_disconnect_response(const struct ble_host_signaling_deal_info *p_signaling_deal_info, const struct ble_signaling_pdu_format *p_pdu_format);
+
+uint16_t ble_host_signaling_le_credit_based_connection_request(const struct ble_host_signaling_deal_info *p_signaling_deal_info,
+                                                               const struct ble_signaling_pdu_format     *p_pdu_format);
+
+uint16_t ble_host_signaling_le_credit_based_connection_response(const struct ble_host_signaling_deal_info *p_signaling_deal_info,
+                                                                const struct ble_signaling_pdu_format     *p_pdu_format);
+
+uint16_t ble_host_signaling_flow_control_credit_ind(const struct ble_host_signaling_deal_info *p_signaling_deal_info, const struct ble_signaling_pdu_format *p_pdu_format);
+
+uint16_t ble_host_signaling_credit_based_connection_request(const struct ble_host_signaling_deal_info *p_signaling_deal_info, const struct ble_signaling_pdu_format *p_pdu_format);
+
+uint16_t ble_host_signaling_credit_based_connection_response(const struct ble_host_signaling_deal_info *p_signaling_deal_info, const struct ble_signaling_pdu_format *p_pdu_format);
+
+uint16_t ble_host_signaling_credit_based_reconfigure_request(const struct ble_host_signaling_deal_info *p_signaling_deal_info, const struct ble_signaling_pdu_format *p_pdu_format);
+
+uint16_t ble_host_signaling_credit_based_reconfigure_response(const struct ble_host_signaling_deal_info *p_signaling_deal_info,
+                                                              const struct ble_signaling_pdu_format     *p_pdu_format);

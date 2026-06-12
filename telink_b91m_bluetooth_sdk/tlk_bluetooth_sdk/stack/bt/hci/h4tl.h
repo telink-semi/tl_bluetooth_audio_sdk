@@ -52,20 +52,20 @@
 #include "stack/bt/common/rwip_config.h" // stack configuration
 
 #if (H4TL_SUPPORT)
-    #include "stack/bt/common/rwip.h"    // SW interface
+#include "stack/bt/common/rwip.h" // SW interface
 
-    #include <stdint.h>                  // standard integer definition
-    #include <stdbool.h>                 // standard boolean definition
+#include <stdint.h>  // standard integer definition
+#include <stdbool.h> // standard boolean definition
 
-    /*
+/*
  * DEFINES
  ****************************************************************************************
  */
 
-    /// Size of the logical channel identifier for H4 messages
-    #define H4TL_LOGICAL_CHANNEL_LEN (8) //this must be integral multiple of 4
+/// Size of the logical channel identifier for H4 messages
+#define H4TL_LOGICAL_CHANNEL_LEN (8) //this must be integral multiple of 4
 
-    /**
+/**
  * Number of H4TL interfaces
  *
  *  * NB=2: AHI and HCI: for Host-only stack with external app
@@ -75,11 +75,11 @@
  *
  * Note: it is not possible to have no channel (H4TL must not be included in build in this case)
  */
-    #if (!BLE_EMB_PRESENT && HCI_TL_SUPPORT && AHI_TL_SUPPORT)
-        #define H4TL_NB_CHANNEL 2
-    #else  // (!BLE_EMB_PRESENT && HCI_TL_SUPPORT && AHI_TL_SUPPORT)
-        #define H4TL_NB_CHANNEL 1
-    #endif // (!BLE_EMB_PRESENT && HCI_TL_SUPPORT && AHI_TL_SUPPORT)
+#if (!BLE_EMB_PRESENT && HCI_TL_SUPPORT && AHI_TL_SUPPORT)
+#define H4TL_NB_CHANNEL 2
+#else // (!BLE_EMB_PRESENT && HCI_TL_SUPPORT && AHI_TL_SUPPORT)
+#define H4TL_NB_CHANNEL 1
+#endif // (!BLE_EMB_PRESENT && HCI_TL_SUPPORT && AHI_TL_SUPPORT)
 
 
 /*
@@ -97,7 +97,7 @@
  * @brief H4TL transport initialization.
  *
  * Puts the External Interface driver in reception, waiting for simple 1 byte message type. Space for
- * reception is allocated with ke_msg_alloc and the pointer is handed to env.rx. RX
+ * reception is allocated with tlk_bt_ctrl_ke_msg_alloc and the pointer is handed to env.rx. RX
  * interrupt is enabled.
  *
  * @param[in] tl_type  Transport Layer Interface (@see enum h4tl_itf)
@@ -105,7 +105,7 @@
  *
  *****************************************************************************************
  */
-void h4tl_init(uint8_t tl_type, const struct rwip_eif_api *eif);
+void tlk_bt_ctrl_h4tl_init(uint8_t tl_type, const struct rwip_eif_api *eif);
 
 
 /**
@@ -126,7 +126,7 @@ void h4tl_init(uint8_t tl_type, const struct rwip_eif_api *eif);
  * @param[in] tx_callback   Callback for indicating the end of transfer
  *****************************************************************************************
  */
-void h4tl_write(uint8_t type, uint8_t *buf, uint16_t len, void (*tx_callback)(void));
+void tlk_bt_ctrl_h4tl_write(uint8_t type, uint8_t *buf, uint16_t len, void (*tx_callback)(void));
 
 /**
  ****************************************************************************************
@@ -134,7 +134,7 @@ void h4tl_write(uint8_t type, uint8_t *buf, uint16_t len, void (*tx_callback)(vo
  *
  *****************************************************************************************
  */
-void h4tl_start(void);
+void tlk_bt_ctrl_h4tl_start(void);
 
 /**
  ****************************************************************************************
@@ -143,7 +143,7 @@ void h4tl_start(void);
  * @return true if External Interface flow was stopped, false otherwise
  *****************************************************************************************
  */
-bool h4tl_stop(void);
+bool tlk_bt_ctrl_h4tl_stop(void);
 
 #endif //H4TL_SUPPORT
 

@@ -29,11 +29,12 @@
 #include "stack/bt/common/co_bt_defines.h"
 #include "tlkmw/tlkmw.h"
 #include "stack/tpsll/tpsll.h"
+#include "core/sdk_version.h"
 
 /////////////////////////////  debug only ////////////////////////////////
 #include "stack/tpsll/host/tpsll_hcicmd.h"
 #include "stack/tpsll/host/tpsll_hostevent.h"
-#include "stack/tpsll/tpd/tpd_host_interface.h"
+#include "stack/tpsll/controller/tpd/tpd_host_interface.h"
 /////////////////////////////  debug only ////////////////////////////////
 
 
@@ -49,9 +50,84 @@ static tlkmdi_tpsll_audio_dongle_item_t sTlkMdiDongleCtrl;
 static void tlkmdi_tpsll_audio_dongle_headset_connected_handler(uint8_t *mac_address);
 static void tlkmdi_tpsll_audio_dongle_headset_disconnected_handler(uint8_t disconnect_reason);
 static void tlkmdi_tpd_audio_ctrl_cb(uint8_t *data);
+static void tlkmdi_tpd_dfu_ctrl_cb(uint32_t task_id, uint8_t *pData, uint16_t dataLen);
+static void tlkmdi_tpd_app_ctrl_cb(uint32_t task_id, uint8_t *pData, uint16_t dataLen);
 
 static tlkmdi_tpd_state_change_cb sTlkMdiTpdStateChgCB = NULL;
 static tlkmdi_tpd_hidCmdCB        sTlkMdiTpdHidCmdCB   = NULL;
+
+/**
+ * @brief       Send duf data to headset.
+ * @param[in]   taskID - task id.
+ * @param[in]   pData - data.
+ * @param[in]   dataLen - data length.
+ * @param[in]   UserArg - user argument.
+ * @return      TLK_ENONE is success.
+ */
+static int tlkmdi_tpd_send_dfu_data(uint32_t taskID, uint8_t *pData, uint16_t dataLen, void *UserArg)
+{
+    (void)taskID;
+    (void)UserArg;
+    tlk_tpsll_tpd_host_send_acl_data(TPD_HOST_MSG_PDU_ACL_CMD_DFU, pData, dataLen, NULL);
+    return TLK_ENONE;
+}
+
+/**
+ * @brief       Sync version to headset.
+ * @return      None
+ */
+__attribute__((weak)) void tlkmdi_tpd_version_sync(void)
+{
+    uint8_t  pData[8]    = {0};
+    uint16_t dataLen     = 0;
+    uint32_t sdk_version = 0;
+    sdk_version |= MINOR_VERSION & 0xFF;
+    sdk_version |= (MAJOR_VERSION & 0xFF) << 8;
+    sdk_version |= (SOFT_STRUCTURE & 0xFF) << 16;
+    sdk_version |= (CERTIFICATION_MARK & 0xFF) << 24;
+
+    pData[dataLen++] = TLK_MDI_APP_VERSION_SYNC;
+    UINT32L_TO_ARRAY(sdk_version, pData, dataLen); //version
+    dataLen += 4;
+
+    tlk_tpsll_tpd_host_send_acl_data(TPD_HOST_MSG_PDU_ACL_CMD_APP, pData, dataLen, NULL);
+}
+
+void tlkmdi_tpd_ota_status_notifyEvt(void *pData, uint8_t dataLen)
+{
+    (void)pData;
+    (void)dataLen;
+    if (dataLen < sizeof(sTlkMwNotifyEvent_t)) {
+        return;
+    }
+
+    uint8_t  pBuffer[12] = {0};
+    uint16_t buffLen     = 0;
+
+    pBuffer[buffLen++] = TLK_MDI_APP_DFU_STATUS_NOTIFY;
+    tmemcpy(pBuffer + buffLen, pData, dataLen);
+    buffLen += dataLen;
+    sTlkMwNotifyEvent_t *pEvent         = (sTlkMwNotifyEvent_t *)(pData);
+    uint8_t              is_ota_running = (pEvent->status == TLK_FIRMWARE_OTA_ING) ? 1 : 0;
+    tlk_tpsll_tpd_host_update_dg_ota_status(is_ota_running);
+    tlkapi_sendData(DUMP_APP_MSG, "!!!!tpd ota notify status", pBuffer, buffLen);
+
+    tlk_tpsll_tpd_host_send_acl_data(TPD_HOST_MSG_PDU_ACL_CMD_APP, pBuffer, buffLen, NULL);
+}
+
+uint32_t tlkmdi_bt_tpd_get_ota_param(uint32_t taskID, uint8_t param_type, void *UserArg)
+{
+    (void)taskID;
+    (void)UserArg;
+
+    if (param_type == TLKMW_OTA_PARAM_MTU_SIZE) {
+        return 180;
+    } else if (param_type == TLKMW_OTA_PARAM_SHAKE_INTV) {
+        return 7;
+    } else {
+        return 0;
+    }
+}
 
 /**
  * @brief       Initialize the tpsll audio dongle control structure and registers necessary handlers.
@@ -60,15 +136,28 @@ static tlkmdi_tpd_hidCmdCB        sTlkMdiTpdHidCmdCB   = NULL;
  */
 void tlkmdi_tpsll_audio_dongle_init(void)
 {
+    tlksys_pm_regChn(TLK_PM_BUSY_CHN_USB);
+    tlksys_pm_setChn(TLK_PM_BUSY_CHN_USB, 0, 1);
     tmemset(&sTlkMdiDongleCtrl, 0, sizeof(tlkmdi_tpsll_audio_dongle_item_t));
 
     tlkmdi_tinySql_getTpdAddr(sTlkMdiDongleCtrl.local_addr);
 
-    tpd_headset_connected_handler_cb_register(tlkmdi_tpsll_audio_dongle_headset_connected_handler);
-    tpd_headset_disconnected_handler_cb_register(tlkmdi_tpsll_audio_dongle_headset_disconnected_handler);
+    tlk_tpsll_tpd_host_headset_connected_handler_cb_register(tlkmdi_tpsll_audio_dongle_headset_connected_handler);
+    tlk_tpsll_tpd_host_headset_disconnected_handler_cb_register(tlkmdi_tpsll_audio_dongle_headset_disconnected_handler);
 
     tpd_host_hal_set_local_mac(sTlkMdiDongleCtrl.local_addr);
-    tpd_cmd_ui_handler_cb_register(tlkmdi_tpd_audio_ctrl_cb);
+    tlk_tpsll_tpd_host_cmd_ui_handler_cb_register(tlkmdi_tpd_audio_ctrl_cb);
+    tlk_tpsll_tpd_host_cmd_dfu_handler_cb_register(tlkmdi_tpd_dfu_ctrl_cb);
+    tlk_tpsll_tpd_host_cmd_app_handler_cb_register(tlkmdi_tpd_app_ctrl_cb);
+    tlkmw_ota_register_notify_callback(TLKSYS_TASKID_HOST, tlkmdi_tpd_ota_status_notifyEvt);
+
+    sTlkMwUnitIntf_t interface = {
+        .channel       = TLKMW_OTA_TRANS_CHN_TPSLL_DONGLE,
+        .send          = tlkmdi_tpd_send_dfu_data,
+        .recv          = NULL,
+        .get_ota_param = tlkmdi_bt_tpd_get_ota_param,
+    };
+    tlkmw_ota_register_chn_interface(&interface);
 }
 
 /**
@@ -96,19 +185,36 @@ int tlkmdi_tpsll_audio_dongle_powerOnReconHeadset(void)
 
     tlkmdi_tinySql_getTphMacAddr(sTlkMdiDongleCtrl.addr_paired_headset);
 
-    tpd_dongle_set_headset_mac(sTlkMdiDongleCtrl.addr_paired_headset);
-    tpd_get_ac_chn_from_mac(sTlkMdiDongleCtrl.addr_paired_headset, (uint8_t *)&sTlkMdiDongleCtrl.tpsll_ac, (uint8_t *)&sTlkMdiDongleCtrl.tpsll_ch);
+    tlk_tpsll_tpd_host_dongle_set_headset_mac(sTlkMdiDongleCtrl.addr_paired_headset);
+    tlk_tpsll_tpd_get_ac_chn_from_mac(sTlkMdiDongleCtrl.addr_paired_headset, (uint8_t *)&sTlkMdiDongleCtrl.tpsll_ac, (uint8_t *)&sTlkMdiDongleCtrl.tpsll_ch);
 
     tlkapi_sendU32s(APP_LOG_EN, "app_user_data_update", sTlkMdiDongleCtrl.tpsll_ac, sTlkMdiDongleCtrl.tpsll_ch, 0, 0);
 
     if (sTlkMdiDongleCtrl.tpsll_ac == 0 || sTlkMdiDongleCtrl.tpsll_ac == 0xffffffff || sTlkMdiDongleCtrl.tpsll_ch == 0 || sTlkMdiDongleCtrl.tpsll_ch == 0xff) {
-        tpd_dongle_set_setup_ac_chn(TPD_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPD_HOST_DONGLE_SETUP_COMMON_CHN);
-        tpd_host_dongle_start_connection_scan();
+        tlk_tpsll_tpd_host_dongle_set_setup_ac_chn(TPD_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPD_HOST_DONGLE_SETUP_COMMON_CHN);
+        tlk_tpsll_tpd_host_dongle_start_connection_scan();
     } else {
-        tpd_dongle_set_setup_ac_chn(sTlkMdiDongleCtrl.tpsll_ac, sTlkMdiDongleCtrl.tpsll_ch);
-        tpd_host_dongle_start_connection_scan();
+        tlk_tpsll_tpd_host_dongle_set_setup_ac_chn(sTlkMdiDongleCtrl.tpsll_ac, sTlkMdiDongleCtrl.tpsll_ch);
+        tlk_tpsll_tpd_host_dongle_start_connection_scan();
     }
     return TLK_ENONE;
+}
+
+/**
+ * @brief       Reconnection of the headset from Suspend
+ * @return      none.
+ * @note        none.
+ */
+void tlkmdi_tpsll_audio_dongle_ReconHeadset_fromSuspend(void)
+{
+    uint8_t usb_suspend = false;
+    (void)usb_suspend;
+    tlksys_pm_setChn(TLK_PM_BUSY_CHN_USB, 0, 1);
+    // tlksys_sendMsg(TLKSYS_TASKID_SYSTEM, TLKSYS_SYS_MSGID_PM_CLEAR_USB_SUSPEND, &usb_suspend, 1); // Notify usb clear suspend state
+
+    tlk_tpsll_tpd_host_start_tpsll_task();
+    tlk_tpsll_tpd_host_dongle_set_setup_ac_chn(sTlkMdiDongleCtrl.tpsll_ac, sTlkMdiDongleCtrl.tpsll_ch);
+    tlk_tpsll_tpd_host_dongle_start_connection_scan();
 }
 
 /**
@@ -143,7 +249,7 @@ void tlkmdi_delete_all_user_data(void)
     sTlkMdiDongleCtrl.tpsll_ac = 0;
     sTlkMdiDongleCtrl.tpsll_ch = 0;
     tmemset(sTlkMdiDongleCtrl.addr_paired_headset, 0x00, BD_ADDR_LEN);
-    tpd_dongle_set_headset_mac(sTlkMdiDongleCtrl.addr_paired_headset);
+    tlk_tpsll_tpd_host_dongle_set_headset_mac(sTlkMdiDongleCtrl.addr_paired_headset);
 
     tlkmdi_tinySql_tpdHeadsetPairingReset();
 }
@@ -175,13 +281,41 @@ void tlkmdi_tpsll_audio_dongle_pairing_init(uint8_t *pData, uint8_t dataLen)
     }
 
     uint8_t result = 0;
-    result         = tpd_dongle_start_disconnection(TPD_DISCONNECT_REASON_DONGLE_SETUP);
+    result         = tlk_tpsll_tpd_dongle_start_disconnection(TPD_DISCONNECT_REASON_DONGLE_SETUP);
     tlkapi_sendU32s(DUMP_APP_MSG, "[[]]app_dongle_pairing_handle discon result", result, 0, 0, 0);
     if (result) {
         tlkmdi_delete_all_user_data();
 
-        tpd_dongle_set_setup_ac_chn(TPD_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPD_HOST_DONGLE_SETUP_COMMON_CHN);
-        tpd_host_dongle_start_connection_scan();
+        tlk_tpsll_tpd_host_dongle_set_setup_ac_chn(TPD_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPD_HOST_DONGLE_SETUP_COMMON_CHN);
+        tlk_tpsll_tpd_host_dongle_start_connection_scan();
+    }
+}
+
+/**
+ * @brief       This function handles the change of the usb suspend state.
+ * @param[in]   state - usb suspend state.
+ * @return      none.
+ * @note        none.
+ */
+void tlkmdi_tpsll_audio_dongle_usb_suspend_handler(void *pData, uint8_t dataLen)
+{
+    (void)dataLen;
+    uint8_t *pState = (uint8_t *)pData;
+
+    if (TLKMDI_TPD_USB_STATE_ENTER_SUSPEND == pState[0]) {
+        tlk_tpsll_tpd_host_set_usb_suspend_state(1);
+        if (tlk_tpsll_tpd_dongle_is_connected()) {
+            tlk_tpsll_tpd_dongle_start_disconnection(TPD_DISCONNECT_REASON_USB_ENTER_SUSPEND);
+        }
+        //        else {
+        //            tlk_tpsll_tpd_host_remove_tpsll_task();
+        //        }
+    } else if (TLKMDI_TPD_USB_STATE_EXIT_SUSPEND == pState[0]) {
+        tlksys_pm_setChn(TLK_PM_BUSY_CHN_USB, 0, 1);
+        tlk_tpsll_tpd_host_set_usb_suspend_state(0);
+        if (!tlk_tpsll_tpd_dongle_is_connected()) {
+            tlkmdi_tpsll_audio_dongle_ReconHeadset_fromSuspend();
+        }
     }
 }
 
@@ -197,10 +331,10 @@ static void tlkmdi_tpsll_audio_dongle_headset_connected_handler(uint8_t *mac_add
         sTlkMdiTpdStateChgCB(TLKMDI_TPD_STATE_CHANGE_CB_CONNECT);
     }
 
-    u32 ble_ac = 0;
-    u8  ble_ch = 0;
+    uint32_t ble_ac = 0;
+    uint8_t  ble_ch = 0;
 
-    tpd_headset_get_setup_ac_chn(&ble_ac, &ble_ch);
+    tlk_tpsll_tpd_host_headset_get_setup_ac_chn(&ble_ac, &ble_ch);
     tmemcpy(sTlkMdiDongleCtrl.addr_paired_headset, mac_address, 6);
     tlkmdi_tinySql_setTphMacAddr(sTlkMdiDongleCtrl.addr_paired_headset);
 
@@ -226,15 +360,20 @@ static void tlkmdi_tpsll_audio_dongle_headset_disconnected_handler(uint8_t disco
     if (TPD_DISCONNECT_REASON_DONGLE_SETUP == disconnect_reason) {
         tlkmdi_delete_all_user_data();
 
-        tpd_dongle_set_setup_ac_chn(TPT_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPD_HOST_DONGLE_SETUP_COMMON_CHN);
-        tpd_host_dongle_start_connection_scan();
+        tlk_tpsll_tpd_host_dongle_set_setup_ac_chn(TPD_HOST_DONGLE_SETUP_COMMON_ACCESSCODE, TPD_HOST_DONGLE_SETUP_COMMON_CHN);
+        tlk_tpsll_tpd_host_dongle_start_connection_scan();
 
         if (sTlkMdiTpdStateChgCB != NULL) {
             sTlkMdiTpdStateChgCB(TLKMDI_TPD_STATE_CHANGE_CB_PAIR);
         }
+    } else if (TPD_DISCONNECT_REASON_USB_ENTER_SUSPEND == disconnect_reason) {
+        tlk_tpsll_tpd_host_remove_tpsll_task();
+        tlkdrv_led_patternSelect(GPIO_LED_BLUE, TLKDRV_LED_PATTERN_OFF);
+        tlkdrv_led_patternSelect(GPIO_LED_RED, TLKDRV_LED_PATTERN_OFF);
+        tlksys_pm_setChn(TLK_PM_BUSY_CHN_USB, 0, 0);
     } else {
-        tpd_dongle_set_setup_ac_chn(sTlkMdiDongleCtrl.tpsll_ac, sTlkMdiDongleCtrl.tpsll_ch);
-        tpd_host_dongle_start_connection_scan();
+        tlk_tpsll_tpd_host_dongle_set_setup_ac_chn(sTlkMdiDongleCtrl.tpsll_ac, sTlkMdiDongleCtrl.tpsll_ch);
+        tlk_tpsll_tpd_host_dongle_start_connection_scan();
     }
 }
 
@@ -271,6 +410,61 @@ static void tlkmdi_tpd_audio_ctrl_cb(uint8_t *data)
     default:
         break;
     }
+}
+
+/**
+ * @brief       This function processes dfu data received.
+ * @return      none.
+ * @note        Checks for a valid callback and specific command type before executing corresponding actions.
+ */
+static void tlkmdi_tpd_dfu_ctrl_cb(uint32_t task_id, uint8_t *pData, uint16_t dataLen)
+{
+    // tlkapi_array(0xffffffff, "[TPD_DFU]", "tlkmdi_tpd_dfu_ctrl_cb", pData, dataLen);
+    tlkmw_userctrl_pushDataToTask(task_id, TLKMW_OTA_TRANS_CHN_TPSLL_DONGLE, pData, dataLen);
+}
+
+/**
+ * @brief       This function processes app data received.
+ * @return      none.
+ * @note        Checks for a valid callback and specific command type before executing corresponding actions.
+ */
+static void tlkmdi_tpd_app_ctrl_cb(uint32_t task_id, uint8_t *pData, uint16_t dataLen)
+{
+    (void)task_id;
+    if (pData == NULL || dataLen < 1) {
+        tlkapi_printf(DUMP_APP_MSG, "tlkmdi_tpd_app_ctrl_cb param error.");
+        return;
+    }
+
+    switch (pData[0]) {
+    case TLK_MDI_APP_VERSION_SYNC:
+    {
+        if (dataLen < 5) {
+            return;
+        }
+        ARRAY_TO_UINT32L(pData, 1, sTlkMdiDongleCtrl.headset_ver);
+        tlkapi_printf(DUMP_APP_MSG, "tlkmdi_tpd_app_ctrl_cb version: %x", sTlkMdiDongleCtrl.headset_ver);
+        tlkmdi_tpd_version_sync();
+    } break;
+    default:
+        break;
+    }
+}
+
+/**
+ * @brief       Ready to enter pm.
+ * @param[in]   none.
+ * @return      none.
+ * @note        none.
+ */
+void tlkmdi_tpd_pm_enter_config(void)
+{
+#ifdef TLK_DEV_KEY_ENABLE
+    pm_set_gpio_wakeup(KEY1_GPIO_IN, WAKEUP_LEVEL_LOW, 1);
+    gpio_set_up_down_res(KEY1_GPIO_IN, GPIO_PIN_PULLUP_1M);
+    pm_set_gpio_wakeup(KEY2_GPIO_IN, WAKEUP_LEVEL_LOW, 1);
+    gpio_set_up_down_res(KEY2_GPIO_IN, GPIO_PIN_PULLUP_1M);
+#endif
 }
 
 #endif // #if (TLK_STK_TPD_ENABLE)

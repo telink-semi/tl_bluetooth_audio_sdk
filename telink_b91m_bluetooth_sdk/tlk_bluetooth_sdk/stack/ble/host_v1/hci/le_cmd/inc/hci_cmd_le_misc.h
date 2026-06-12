@@ -64,6 +64,15 @@ int ble_host_hci_le_read_buffer_size_v2(struct ble_hci_le_rd_buf_size_v2_rp *p_l
 int ble_host_hci_le_set_host_feature(const struct ble_hci_le_set_host_feature_cp *p_le_host_feature);
 
 /**
+ * @brief Sets the host feature v2 for the HCI LE.
+ *
+ * @param[in] p_le_host_feature Pointer to the structure containing the LE host feature v2.
+ *
+ * @return int Returns 0 on success, or an error code on failure.
+ */
+int ble_host_hci_le_set_host_feature_v2(const struct ble_hci_le_set_host_feature_v2_cp *p_le_host_feature);
+
+/**
  * @brief Set the random address for the HCI LE.
  *
  * @param[in] p_le_rand_addr Pointer to the structure containing the LE random address.
@@ -105,6 +114,16 @@ int ble_host_hci_le_add_white_list(const struct ble_hci_le_add_white_list_cp *p_
  *   @return int Returns 0 on success, or an error code on failure.
  */
 int ble_host_hci_le_remove_white_list(const struct ble_hci_le_rmv_white_list_cp *p_white_list);
+
+/**
+ *   @brief Read current acl connection channel map for the HCI LE.
+ *
+ *   @param[in] p_rd_chan_map Pointer to the structure containing the LE read channel map parameters.
+ *   @param[out] p_rd_chan_map_rp Pointer to the structure to store the response parameters.
+ *
+ *   @return int Returns 0 on success, or an error code on failure.
+ */
+int ble_host_hci_le_read_channel_map(const struct ble_hci_le_rd_chan_map_cp *p_rd_chan_map, struct ble_hci_le_rd_chan_map_rp *p_rd_chan_map_rp);
 
 /**
  * @brief Generate a random number from the controller.
@@ -234,3 +253,10 @@ int ble_host_hci_le_read_local_resolvable_address(const struct ble_hci_le_rd_loc
  * @return      BLE_HOST_ERR_SUCC if successful, otherwise an error code.
  */
 int ble_host_hci_le_set_address_resolution_enable(const struct ble_hci_le_set_addr_res_en_cp *p_le_set_addr_res_en_cp);
+
+/**
+ * @brief       Set the RPA timeout.
+ * @param[in]   p_le_set_rpa_tmo_cp    - pointer to the RPA timeout parameters.
+ * @return      BLE_HOST_ERR_SUCC if successful, otherwise an error code.
+ */
+int ble_host_hci_le_set_resolvable_private_address_timeout(const struct ble_hci_le_set_rpa_tmo_cp *p_le_set_rpa_tmo_cp);

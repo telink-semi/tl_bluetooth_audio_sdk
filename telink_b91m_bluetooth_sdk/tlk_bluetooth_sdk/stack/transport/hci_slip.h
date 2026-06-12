@@ -33,18 +33,18 @@
 //#include "hci_tr_api.h"
 #if (HCI_TR_MODE == HCI_TR_H5)
 
-    /*!  Slip decoder/encoder buffer config macro. */
-    #define HCI_SLIP_DECODE_BUF_SIZE MEM_SIZE_ALIGN4(HCI_H5_HEAD_LEN + HCI_TR_RX_BUF_SIZE + HCI_H5_CRC_LEN)
-    #define HCI_SLIP_ENCODE_BUF_SIZE MEM_SIZE_ALIGN4(2 + (HCI_H5_HEAD_LEN + HCI_TR_TX_BUF_SIZE + HCI_H5_CRC_LEN) * 2)
+/*!  Slip decoder/encoder buffer config macro. */
+#define HCI_SLIP_DECODE_BUF_SIZE MEM_SIZE_ALIGN4(HCI_H5_HEAD_LEN + HCI_TR_RX_BUF_SIZE + HCI_H5_CRC_LEN)
+#define HCI_SLIP_ENCODE_BUF_SIZE MEM_SIZE_ALIGN4(2 + (HCI_H5_HEAD_LEN + HCI_TR_TX_BUF_SIZE + HCI_H5_CRC_LEN) * 2)
 
-    /*! Slip invalid unencoded. */
-    #define SLIP_INVALID_UNENCODED 0x00
+/*! Slip invalid unencoded. */
+#define SLIP_INVALID_UNENCODED 0x00
 
-    /*! Slip invalid escape. */
-    #define SLIP_INVALID_ESCAPE 0x0000
+/*! Slip invalid escape. */
+#define SLIP_INVALID_ESCAPE 0x0000
 
-    #define SLIP_DELIMITER      0xC0
-    #define SLIP_ESCAPE         0xDB
+#define SLIP_DELIMITER      0xC0
+#define SLIP_ESCAPE         0xDB
 
 /**
  * @brief : Slip initialization.

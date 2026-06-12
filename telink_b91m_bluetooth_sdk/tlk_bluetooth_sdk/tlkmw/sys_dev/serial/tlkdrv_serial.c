@@ -109,7 +109,7 @@ static void tlkdrv_serial_updateBusyState(uint8_t port)
  * @param[in]   port - Serial port number.
  * @return      none.
  */
-_attribute_ram_code_sec_noinline_ static void tlkdrv_serial_setTxDmaBuffer(uint8_t port)
+static void tlkdrv_serial_setTxDmaBuffer(uint8_t port)
 {
     uint8_t *pData;
     uint16_t dataLen = 0;
@@ -140,7 +140,7 @@ _attribute_ram_code_sec_noinline_ static void tlkdrv_serial_setTxDmaBuffer(uint8
  * @param[in]   port - Serial port number.
  * @return      none.
  */
-_attribute_ram_code_sec_noinline_ static void tlkdrv_serial_setRxDmaBuffer(uint8_t port)
+static void tlkdrv_serial_setRxDmaBuffer(uint8_t port)
 {
     uint32_t *pBuffer;
 
@@ -166,7 +166,7 @@ _attribute_ram_code_sec_noinline_ static void tlkdrv_serial_setRxDmaBuffer(uint8
  * @param[in]   port - Serial port number.
  * @return      none.
  */
-_attribute_ram_code_sec_noinline_ static void tlkdrv_serial_setRxBuffer(uint8_t port)
+static void tlkdrv_serial_setRxBuffer(uint8_t port)
 {
     (void)port;
 #if (MCU_CORE_TL752X_TEMP)
@@ -193,7 +193,9 @@ _attribute_ram_code_sec_noinline_ static void tlkdrv_serial_setRxBuffer(uint8_t 
 static int tlkdrv_serial_sendWithoutDma(uint8_t port, uint8_t *pData, uint16_t dataLen)
 {
 #if (!MCU_CORE_TL752X_TEMP)
-    uart_send(port, pData, dataLen);
+    for (uint16_t i = 0; i < dataLen; i++) {
+        uart_send_byte(port, pData[i]);
+    }
 #else
     drv_uart_transmit(&sTlkDrvSerialTl752xItem[port].uartHandle, pData, dataLen, TLKDRV_SERIAL_MAX_TIMEOUT);
 #endif
@@ -207,7 +209,7 @@ static int tlkdrv_serial_sendWithoutDma(uint8_t port, uint8_t *pData, uint16_t d
  * @param[in]   dataLen  - Length of data to send.
  * @return      0: success, <0: failure.
  */
-_attribute_ram_code_sec_noinline_ static int tlkdrv_serial_sendWithDma(uint8_t port, uint8_t *pData, uint16_t dataLen)
+static int tlkdrv_serial_sendWithDma(uint8_t port, uint8_t *pData, uint16_t dataLen)
 {
     uint16_t count;
     uint16_t isize; // Item Size
@@ -921,7 +923,7 @@ int tlkdrv_serial_send(uint8_t port, uint8_t *pData, uint16_t dataLen)
  * @param[in]   port - Serial port number.
  * @return      none.
  */
-_attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqErrDone(uint8_t port)
+void tlkdrv_serial_irqErrDone(uint8_t port)
 {
     sTlkDrvSerial.flags[port] &= ~TLKDRV_SERIAL_FLAG_TX_BUSY;
     tlkdrv_serial_updateBusyState(port);
@@ -938,7 +940,7 @@ _attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqErrDone(uint8_t port)
  * @param[in]   port - Serial port number.
  * @return      none.
  */
-_attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqTxDoneWithDma(uint8_t port)
+void tlkdrv_serial_irqTxDoneWithDma(uint8_t port)
 {
     if ((sTlkDrvSerial.flags[port] & TLKDRV_SERIAL_FLAG_SEND) == 0 || (sTlkDrvSerial.flags[port] & TLKDRV_SERIAL_FLAG_TX_DMA) == 0) {
         return;
@@ -956,7 +958,7 @@ _attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqTxDoneWithDma(uint8_t po
  * @param[in]   port - Serial port number.
  * @return      none.
  */
-_attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqTxDoneWithoutDma(uint8_t port)
+void tlkdrv_serial_irqTxDoneWithoutDma(uint8_t port)
 {
     if ((sTlkDrvSerial.flags[port] & TLKDRV_SERIAL_FLAG_SEND) == 0 || (sTlkDrvSerial.flags[port] & TLKDRV_SERIAL_FLAG_TX_DMA) != 0) {
         return;
@@ -971,7 +973,7 @@ _attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqTxDoneWithoutDma(uint8_t
  * @param[in]   isDmaIrq - true: DMA interrupt.
  * @return      none.
  */
-_attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqRxDoneWithDma(uint8_t port, bool isDmaIrq)
+void tlkdrv_serial_irqRxDoneWithDma(uint8_t port, bool isDmaIrq)
 {
     uint32_t  recvLen = 0;
     uint32_t *pBuffer;
@@ -986,7 +988,13 @@ _attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqRxDoneWithDma(uint8_t po
 #elif (MCU_CORE_TL752X_TEMP)
     recvLen = TLKDRV_SERIAL_DMA_RX_SIZE;
 #else
-    recvLen = ((uint32_t *)tlkapi_qfifo_getBuff(&sTlkDrvSerial.rfifo[port].qfifo))[0];
+    uint8_t *buf = tlkapi_qfifo_getBuff(&sTlkDrvSerial.rfifo[port].qfifo);
+    if (buf == NULL) {
+        recvLen = 0;
+    } else {
+        recvLen = ((uint32_t *)(buf))[0];
+    }
+
 #endif
 #if (MCU_CORE_TYPE == MCU_CORE_B91)          //TODO add to hal
     tlkhal_uart_clrRxDoneStatus(port, NULL); //??????????
@@ -1014,7 +1022,7 @@ _attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqRxDoneWithDma(uint8_t po
  * @param[in]   port - Serial port number.
  * @return      none.
  */
-_attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqRxDoneWithoutDma(uint8_t port)
+void tlkdrv_serial_irqRxDoneWithoutDma(uint8_t port)
 {
     if ((sTlkDrvSerial.flags[port] & TLKDRV_SERIAL_FLAG_RECV) == 0 || (sTlkDrvSerial.flags[port] & TLKDRV_SERIAL_FLAG_RX_DMA) != 0) {
         return;
@@ -1039,7 +1047,7 @@ _attribute_ram_code_sec_noinline_ void tlkdrv_serial_irqRxDoneWithoutDma(uint8_t
  * @param[in]   port - Serial port number.
  * @return      none.
  */
-_attribute_ram_code_sec_ void tlkdrv_uart_irqHandler(uint8_t port)
+void tlkdrv_uart_irqHandler(uint8_t port)
 {
 #if (!MCU_CORE_TL752X_TEMP)
     if (uart_get_irq_status(port, UART_TXBUF_IRQ_STATUS)) { // for no dam
@@ -1078,7 +1086,7 @@ _attribute_ram_code_sec_ void tlkdrv_uart_irqHandler(uint8_t port)
  * @param[in]   rxDma - Receive DMA.
  * @return      none.
  */
-_attribute_ram_code_sec_ void tlkdrv_uart_dmaIrqHandler(uint8_t port, uint8_t rxDma)
+void tlkdrv_uart_dmaIrqHandler(uint8_t port, uint8_t rxDma)
 {
     (void)rxDma;
     tlkdrv_serial_irqRxDoneWithDma(port, true);
@@ -1088,7 +1096,7 @@ _attribute_ram_code_sec_ void tlkdrv_uart_dmaIrqHandler(uint8_t port, uint8_t rx
  * @brief       This function handles the UART DMA interrupt.
  * @return      none.
  */
-_attribute_ram_code_sec_ void tlkdrv_serial_dmaIrqHandler(void)
+void tlkdrv_serial_dmaIrqHandler(void)
 {
 #if (!MCU_CORE_TL752X_TEMP)
     if ((sTlkDrvSerial.flags[UART0] & TLKDRV_SERIAL_FLAG_OPEN) != 0 && sTlkDrvSerial.port[UART0].rxDma != 0) {

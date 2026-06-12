@@ -237,10 +237,10 @@ int tlkapi_fifo_chgWritePos(tlkapi_fifo_t *pFifo, uint16_t writeLen)
  */
 int tlkapi_fifo_write(tlkapi_fifo_t *pFifo, uint8_t *pData, uint16_t dataLen)
 {
-    uint16_t       unUsed;
-    uint16_t       tempLen;
-    uint16_t       woffset;
-    uint16_t       roffset;
+    uint16_t     unUsed;
+    uint16_t     tempLen;
+    uint16_t     woffset;
+    uint16_t     roffset;
     unsigned int irqFlag = 0;
     if (pFifo == NULL || pFifo->buffLen == 0 || pData == NULL || dataLen == 0 || dataLen >= pFifo->buffLen) {
         return -TLK_EPARAM;

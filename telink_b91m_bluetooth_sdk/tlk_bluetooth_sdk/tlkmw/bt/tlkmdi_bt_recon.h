@@ -46,13 +46,13 @@ typedef enum
 
 typedef struct
 {
-    uint8_t         retry_num;
-    uint8_t         state;
-    uint8_t         pageAddr[6]; //The device to be connected back.
-    
-    uint32_t         devClass;
-    TlkApiTimer_t  timer_recon;
-    TlkApiTimer_t  timer_state_check;
+    uint8_t retry_num;
+    uint8_t state;
+    uint8_t pageAddr[6]; //The device to be connected back.
+
+    uint32_t      devClass;
+    TlkApiTimer_t timer_recon;
+    TlkApiTimer_t timer_state_check;
 } tlkmdi_btrecon_t;
 
 /**

@@ -37,12 +37,11 @@
  */
 static void tlkapp_btmgr_pairingActiveUI(uint8_t state)
 {
-    if(state == TLKMDI_BTPAIRING_CB_STATE_ACTIVE){
+    if (state == TLKMDI_BTPAIRING_CB_STATE_ACTIVE) {
         tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_SYS, 0, TLKAPP_UI_STATE_PARING);
-    }else{
+    } else {
         tlkapp_sysUI_updateHandleState(TLKAPP_UI_HANDLE_GROUP_SYS, 0, TLKAPP_UI_STATE_IDLE);
     }
-    
 }
 
 /**
@@ -52,15 +51,15 @@ static void tlkapp_btmgr_pairingActiveUI(uint8_t state)
  */
 static void tlkapp_host_bt_init(void)
 {
-	(void) tlkapp_btmgr_pairingActiveUI;
+    (void)tlkapp_btmgr_pairingActiveUI;
 #if MCU_DUAL_CORE_ENABLE && !defined(MCU_CORE_N22)
     tlk_d25f_register_hci_receive_cb(TLK_SHARE_MEMORY_MESSAGE_TYPE_BT, tlkbt_hci_recvC2HData);
 #endif
     tlkmdi_bt_init();
 #if (TLKBTP_CFG_IAP_ENABLE)
-    tlksys_task_regEvtCB(TLKSYS_TASKID_HOST,TLKSYS_TASK_EVT_HOST_IAP2,tlkmdi_btiap_handler);
+    tlksys_task_regEvtCB(TLKSYS_TASKID_HOST, TLKSYS_TASK_EVT_HOST_IAP2, tlkmdi_btiap_handler);
 #endif
-#if(TLK_MW_BTPAIRING_ENABLE)
+#if (TLK_MW_BTPAIRING_ENABLE)
     tlkmdi_btPairing_regCB(tlkapp_btmgr_pairingActiveUI);
 #endif
     tlkapp_host_bt_taskInitCompletedHook();
@@ -81,13 +80,13 @@ static void tlkapp_host_bt_start(void)
  * @param[in]   none    - none.
  * @return      pointer to the Bluetooth host module.
  */
-TlkAppHostModule_t* tlkapp_host_bt_getModule(void)
+TlkAppHostModule_t *tlkapp_host_bt_getModule(void)
 {
     static const TlkAppHostModuleCfg_t cfgs = {
         .hostType = TLKSYS_MSG_HOST_TYPE_BT,
-        .init    = tlkapp_host_bt_init,
-        .start   = tlkapp_host_bt_start,
-        .input   = tlkapp_btmgr_msgHandle,
+        .init     = tlkapp_host_bt_init,
+        .start    = tlkapp_host_bt_start,
+        .input    = tlkapp_btmgr_msgHandle,
     };
     static TlkAppHostModule_t module = {
         .cfgs = &cfgs,
@@ -96,4 +95,3 @@ TlkAppHostModule_t* tlkapp_host_bt_getModule(void)
 }
 
 #endif // #if (TLK_STK_BT_ENABLE)
-

@@ -23,26 +23,26 @@
  *******************************************************************************************************/
 #pragma once
 
-struct tlkdbg_async_stream_item_s 
+struct tlkdbg_async_stream_item_s
 {
-    uint8_t  type;
-    uint8_t  okMask;
-    uint16_t dataLen; 
-    uint32_t tick;
+    uint8_t                            type;
+    uint8_t                            okMask;
+    uint16_t                           dataLen;
+    uint32_t                           tick;
     struct tlkdbg_async_stream_item_s *next;
-    uint8_t  data[0];
+    uint8_t                            data[0];
 };
 
 typedef struct tlkdbg_async_stream_item_s tlkdbg_async_stream_item_t;
 
-typedef struct 
+typedef struct
 {
-    void     (*init)(void);
-    int32_t  (*send)(tlkdbg_async_stream_item_t *item);
-    void     (*drop)(void);
+    void (*init)(void);
+    int32_t (*send)(tlkdbg_async_stream_item_t *item);
+    void (*drop)(void);
     uint32_t timeoutms;
     uint32_t initDelayMs;
-}tlkdbg_async_stream_t;
+} tlkdbg_async_stream_t;
 
 /**
  * @brief  Allocate memory from debug async stream memory pool
@@ -115,5 +115,3 @@ int32_t tlkdbg_hwu_send(tlkdbg_async_stream_item_t *item);
  * @note        Resets the HWU send length counter to zero
  */
 void tlkdbg_hwu_drop(void);
-
-

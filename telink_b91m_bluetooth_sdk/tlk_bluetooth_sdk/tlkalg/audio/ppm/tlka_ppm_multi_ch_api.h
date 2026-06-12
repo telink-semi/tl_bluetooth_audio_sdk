@@ -25,7 +25,7 @@
 #define TLKA_PPM_MULTI_CH_API_H
 
 #if __riscv
-    #define REARRANGE_SINC_TABLE
+#define REARRANGE_SINC_TABLE
 #endif
 
 #include "common/types.h"
@@ -33,12 +33,12 @@
 #include "tlkalg/audio/audio_alg_interface.h"
 #if (TLK_ALG_PPM_ENABLE && (MCU_CORE_TYPE == MCU_CORE_TL721X))
 
-    #define PPM_ASRC_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
-    #define PPM_ASRC_VERSION                          PPM_ASRC_VERSION_INT(0, 3, 1)
+#define PPM_ASRC_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
+#define PPM_ASRC_VERSION                          PPM_ASRC_VERSION_INT(0, 3, 1)
 
-    #define PPM_BASE_FILTER_LEN                       (20)
-    #define PPM_DATA_LEN_MAX                          (600) // adjust to 600 (12ms).
-    #define PPM_OVERSAMPLE                            (8)
+#define PPM_BASE_FILTER_LEN                       (20)
+#define PPM_DATA_LEN_MAX                          (600) // adjust to 600 (12ms).
+#define PPM_OVERSAMPLE                            (8)
 
 /* channel type */
 typedef enum
@@ -69,13 +69,13 @@ typedef struct TLKA_PPM_ASRC_16_BIT_PARAM
     TLKA_PPM_ASRC_CHANNEL channel_mode;
 
     int switch_flag;
-    #ifdef REARRANGE_SINC_TABLE
+#ifdef REARRANGE_SINC_TABLE
     // short sinc_table[4*(PPM_OVERSAMPLE* PPM_BASE_FILTER_LEN+8)];
     short sinc_table[4 * (8 * 28 + 8) * 2];
     short sinc_table2[4 * (PPM_OVERSAMPLE * 16 + 8) * 2];
-    #else
+#else
     short sinc_table[PPM_OVERSAMPLE * PPM_BASE_FILTER_LEN + 8];
-    #endif
+#endif
     short ppm_data_buf_left[28 + PPM_DATA_LEN_MAX];
     short ppm_data_buf_right[28 + PPM_DATA_LEN_MAX];
 } tlka_ppm_asrc_16_bit_param;
@@ -101,13 +101,13 @@ typedef struct TLKA_PPM_ASRC_24_BIT_PARAM
     TLKA_PPM_ASRC_CHANNEL channel_mode;
 
     int switch_flag;
-    #ifdef REARRANGE_SINC_TABLE
+#ifdef REARRANGE_SINC_TABLE
     // short sinc_table[4*(PPM_OVERSAMPLE* PPM_BASE_FILTER_LEN+8)];
     int sinc_table[4 * (8 * 28 + 8) * 2];
     int sinc_table2[4 * (PPM_OVERSAMPLE * 16 + 8) * 2];
-    #else
+#else
     int sinc_table[PPM_OVERSAMPLE * PPM_BASE_FILTER_LEN + 8];
-    #endif
+#endif
     int ppm_data_buf_left[28 + PPM_DATA_LEN_MAX];
     int ppm_data_buf_right[28 + PPM_DATA_LEN_MAX];
 

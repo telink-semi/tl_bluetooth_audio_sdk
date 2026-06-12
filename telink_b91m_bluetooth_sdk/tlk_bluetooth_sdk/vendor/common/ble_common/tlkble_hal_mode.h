@@ -24,25 +24,25 @@
 
 #include "core/mcu_type.h"
 
-#define LE_HOST_SEND_HCI_MODE_NONE              0  /* Host does not send HCI */
-#define LE_HOST_SEND_HCI_MODE_MESSAGE           1  /* Host sends HCI via message IPC */
-#define LE_HOST_SEND_HCI_MODE_VHCI              2  /* Host sends HCI via VHCI */
+#define LE_HOST_SEND_HCI_MODE_NONE    0 /* Host does not send HCI */
+#define LE_HOST_SEND_HCI_MODE_MESSAGE 1 /* Host sends HCI via message IPC */
+#define LE_HOST_SEND_HCI_MODE_VHCI    2 /* Host sends HCI via VHCI */
 
-#define BLE_CONTROLLER_INITIAL_EN  (!MCU_DUAL_CORE_ENABLE || MCU_CORE_N22)
+#define BLE_CONTROLLER_INITIAL_EN     (!MCU_DUAL_CORE_ENABLE || MCU_CORE_N22)
 
 
 #ifndef LE_HOST_SEND_HCI_MODE
-    #if MCU_CORE_N22
-        #if MCU_CORE_TL752X_TEMP && defined(PROJ_BLE_INTERNAL)
-            #define LE_HOST_SEND_HCI_MODE   LE_HOST_SEND_HCI_MODE_VHCI
-        #else
-            #define LE_HOST_SEND_HCI_MODE   LE_HOST_SEND_HCI_MODE_NONE
-        #endif
-    #else
-        #if (MCU_DUAL_CORE_ENABLE)
-            #define LE_HOST_SEND_HCI_MODE LE_HOST_SEND_HCI_MODE_MESSAGE
-        #else
-            #define LE_HOST_SEND_HCI_MODE LE_HOST_SEND_HCI_MODE_VHCI
-        #endif
-    #endif
+#if MCU_CORE_N22
+#if MCU_CORE_TL752X_TEMP && defined(PROJ_BLE_INTERNAL)
+#define LE_HOST_SEND_HCI_MODE LE_HOST_SEND_HCI_MODE_VHCI
+#else
+#define LE_HOST_SEND_HCI_MODE LE_HOST_SEND_HCI_MODE_NONE
+#endif
+#else
+#if (MCU_DUAL_CORE_ENABLE)
+#define LE_HOST_SEND_HCI_MODE LE_HOST_SEND_HCI_MODE_MESSAGE
+#else
+#define LE_HOST_SEND_HCI_MODE LE_HOST_SEND_HCI_MODE_VHCI
+#endif
+#endif
 #endif

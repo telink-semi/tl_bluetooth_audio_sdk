@@ -37,8 +37,6 @@ void *tlkstk_malloc(uint32_t size);
 
 void *tlkstk_calloc(uint32_t size);
 
-void *tlkstk_realloc(void *ptr, uint32_t size);
-
 void tlkstk_free(void *ptr);
 
 void tlkstk_print(void);

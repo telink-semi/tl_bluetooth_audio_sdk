@@ -42,15 +42,13 @@ static uint8_t *s_alg_lc3_24bit_dec_buffer = NULL;
 static uint8_t *s_alg_lc3_24bit_enc_buffer = NULL;
 #endif
 
-    #if TLKALG_ASRC_48TO16_24BIT_ENABLE
+#if (TLKALG_ASRC_48TO16_24BIT_ENABLE && !TLKADU_MIDBUF_ENABLE)
 static uint8_t *s_alg_asrc_48to16_buff = NULL;
-    #endif
+#endif
 
 #if TLKALG_LC3_PLUS_ENC_ENABLE && TLKALG_LC3_PLUS_DEC_ENABLE
 static uint8_t *s_alg_lc3_plus_dec_buffer = NULL;
 static uint8_t *s_alg_lc3_plus_enc_buffer = NULL;
-static uint8_t *s_alg_lc3_plus_dec_scratch_buffer = NULL;
-static uint8_t *s_alg_lc3_plus_enc_scratch_buffer = NULL;
 #endif
 
 /**
@@ -61,7 +59,7 @@ static uint8_t *s_alg_lc3_plus_enc_scratch_buffer = NULL;
 void ll_audio_alg_init(void)
 {
     audio_alg_interface_t *p_audio_alg_if;
-    (void) p_audio_alg_if;
+    (void)p_audio_alg_if;
 #if TLKALG_LC3_24BIT_DEC_ENABLE && TLKALG_LC3_24BIT_ENC_ENABLE
     p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_24BIT_DEC);
     if (s_alg_lc3_24bit_dec_buffer == NULL) {
@@ -88,39 +86,47 @@ void ll_audio_alg_init(void)
     }
 #endif
 
-#if TLKALG_ASRC_48TO16_24BIT_ENABLE
-    p_audio_alg_if            = audio_alg_get_interface_by_type(ALG_ASRC_48TO16_24BIT);
+#if (TLKALG_ASRC_48TO16_24BIT_ENABLE && !TLKADU_MIDBUF_ENABLE)
+    p_audio_alg_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16_24BIT);
     if (s_alg_asrc_48to16_buff == NULL) {
-        #if 0//(TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
+#if 0 //(TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
         uint16_t asrc_48to16_size = p_audio_alg_if->audio_alg_get_size(ALG_CHANNEL_STEREO);
-        #else
+#else
         uint16_t asrc_48to16_size = p_audio_alg_if->audio_alg_get_size(ALG_CHANNEL_LEFT);
-        #endif
+#endif
         tlkapi_printf(APP_AUDIO_LOG_EN, "ALG_ASRC_48TO16_mem_size: %d", asrc_48to16_size);
 
         s_alg_asrc_48to16_buff = (uint8_t *)tlkalg_malloc_func(asrc_48to16_size);
         if (s_alg_asrc_48to16_buff == NULL) {
             tlkapi_printf(APP_AUDIO_LOG_EN, "ASRC 48TO16 buffer malloc failed");
         }
-        #if 0//(TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
+#if 0 //(TLK_MW_DSP_COMM_ENABLE && !TLK_CFG_HRA_ENABLE)
         p_audio_alg_if->audio_alg_init(s_alg_asrc_48to16_buff, ALG_CHANNEL_STEREO);
-        #else
+#else
         p_audio_alg_if->audio_alg_init(s_alg_asrc_48to16_buff, ALG_CHANNEL_LEFT);
-        #endif
+#endif
     }
 #endif
-    
+
 #if TLKALG_LC3_PLUS_ENC_ENABLE && TLKALG_LC3_PLUS_DEC_ENABLE
     p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_DEC);
     if (s_alg_lc3_plus_dec_buffer == NULL) {
         if (ll_audio_get_ultra_low_latency_flag()) {
             p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_ULTRA_LOW_LATENCY, NULL);
         } else {
+#if BT_TPSLL_OPTIMIZE_LATENCY_TEST
+            p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_ULTRA_LOW_LATENCY, NULL);
+#else
             p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_DEC_NORMAL, NULL);
+#endif
         }
 
-        //ENCORD BUFF
-        uint8_t size_param = (ALG_SIZE_TYPE_ENCODER << 4) | (ALG_CHANNEL_STEREO & 0x0F);
+//DECORD BUFF
+#if TLKSTK_BTTPSLL_TWS_ENABLE
+        uint8_t size_param = ALG_CHANNEL_LEFT;
+#else
+        uint8_t size_param = ALG_CHANNEL_STEREO;
+#endif
         uint16_t lc3_plus_dec_mem_size = p_audio_alg_if->audio_alg_get_size(size_param);
         s_alg_lc3_plus_dec_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_dec_mem_size);
         if (s_alg_lc3_plus_dec_buffer == NULL) {
@@ -128,16 +134,6 @@ void ll_audio_alg_init(void)
         }
         p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_dec_buffer, size_param);
 
-        tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_dec_mem_size: %d", lc3_plus_dec_mem_size);
-
-        //SCRATCH BUFF
-        size_param = (ALG_SIZE_TYPE_SCRATCH << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        lc3_plus_dec_mem_size = p_audio_alg_if->audio_alg_get_size(size_param);
-        s_alg_lc3_plus_dec_scratch_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_dec_mem_size);
-        if (s_alg_lc3_plus_dec_scratch_buffer == NULL) {
-            tlkapi_printf(APP_AUDIO_LOG_EN, "lc3 plus dec scratch buffer alloc failed");
-        }
-        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_dec_scratch_buffer, size_param);
         tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_dec_mem_size: %d", lc3_plus_dec_mem_size);
     }
 
@@ -149,26 +145,13 @@ void ll_audio_alg_init(void)
             p_audio_alg_if->audio_alg_param_set(LC3_PLUS_TYPE_ENC_NORMAL, NULL);
         }
 
-        //ENCORD BUFF
-        uint8_t size_param = (ALG_SIZE_TYPE_ENCODER << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        uint16_t lc3_plus_enc_mem_size = p_audio_alg_if->audio_alg_get_size(size_param);
+        uint16_t lc3_plus_enc_mem_size = p_audio_alg_if->audio_alg_get_size(ALG_CHANNEL_LEFT);
         s_alg_lc3_plus_enc_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_enc_mem_size);
 
         if (s_alg_lc3_plus_enc_buffer == NULL) {
             tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus enc buffer alloc failed");
         }
-        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_enc_buffer, size_param);
-        tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc_mem_size:: %d", lc3_plus_enc_mem_size);
-
-        //SCRATCH BUFF
-        size_param = (ALG_SIZE_TYPE_SCRATCH << 4) | (ALG_CHANNEL_STEREO & 0x0F);
-        lc3_plus_enc_mem_size = p_audio_alg_if->audio_alg_get_size(size_param);
-        s_alg_lc3_plus_enc_scratch_buffer      = (uint8_t *)tlkalg_malloc_func(lc3_plus_enc_mem_size);
-
-        if (s_alg_lc3_plus_enc_scratch_buffer == NULL) {
-            tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc scratch_buffer alloc failed");
-        }
-        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_enc_scratch_buffer, size_param);
+        p_audio_alg_if->audio_alg_init(s_alg_lc3_plus_enc_buffer, ALG_CHANNEL_LEFT);
         tlkapi_printf(APP_AUDIO_LOG_EN, "lc3_plus_enc_mem_size:: %d", lc3_plus_enc_mem_size);
     }
 
@@ -183,7 +166,7 @@ void ll_audio_alg_init(void)
 void ll_audio_alg_deinit(void)
 {
     audio_alg_interface_t *p_audio_alg_if;
-    (void) p_audio_alg_if;
+    (void)p_audio_alg_if;
 #if TLKALG_LC3_24BIT_DEC_ENABLE && TLKALG_LC3_24BIT_ENC_ENABLE
     p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_24BIT_DEC);
     if (s_alg_lc3_24bit_dec_buffer != NULL) {
@@ -200,7 +183,7 @@ void ll_audio_alg_deinit(void)
     }
 #endif
 
-#if TLKALG_ASRC_48TO16_24BIT_ENABLE
+#if (TLKALG_ASRC_48TO16_24BIT_ENABLE && !TLKADU_MIDBUF_ENABLE)
     audio_alg_interface_t *p_alg_48to16_if = audio_alg_get_interface_by_type(ALG_ASRC_48TO16_24BIT);
     if (s_alg_asrc_48to16_buff != NULL) {
         tlkalg_free_func(s_alg_asrc_48to16_buff);
@@ -213,19 +196,15 @@ void ll_audio_alg_deinit(void)
     p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_DEC);
     if (s_alg_lc3_plus_dec_buffer != NULL) {
         tlkalg_free_func(s_alg_lc3_plus_dec_buffer);
-        tlkalg_free_func(s_alg_lc3_plus_dec_scratch_buffer);
         p_audio_alg_if->audio_alg_deinit();
         s_alg_lc3_plus_dec_buffer = NULL;
-        s_alg_lc3_plus_dec_scratch_buffer = NULL;
     }
 
     p_audio_alg_if = audio_alg_get_interface_by_type(ALG_LC3_PLUS_ENC);
     if (s_alg_lc3_plus_enc_buffer != NULL) {
         tlkalg_free_func(s_alg_lc3_plus_enc_buffer);
-        tlkalg_free_func(s_alg_lc3_plus_enc_scratch_buffer);
         p_audio_alg_if->audio_alg_deinit();
         s_alg_lc3_plus_enc_buffer = NULL;
-        s_alg_lc3_plus_enc_scratch_buffer = NULL;
     }
 #endif
 }
@@ -239,11 +218,9 @@ uint16_t ll_audio_get_mode(uint8_t *pData)
 {
     ll_audio_set_mode(pData[0]);
 
-#if AUDIO_TWS_MODE
-    uint8_t ultra_ll_mode = pData[1];
+    uint8_t ultra_ll_mode = pData[1] & 0x01;
     tlkapi_printf(APP_AUDIO_LOG_EN, "=== ultra_ll_mode: %d", ultra_ll_mode);
     ll_audio_set_ultra_low_latency_flag(ultra_ll_mode);
-#endif
 
     return pData[0];
 }

@@ -20,7 +20,7 @@ base client code:
 #include "../../../../gatt/sdp/inc/ble_ssdp.h"
 
 // ATT UUID define 
-#include "../../../../l2cap/att/inc/uuid_def.h"
+#include "../../../../l2cap/att/inc/uuid16bit.h"
 
 // LOG module
 #include "../../../../inc/ble_host_sal.h"
@@ -63,10 +63,25 @@ BLE_FUNC_PRF_CLIENT_INIT_CONNECT_DISC(gmcs, GMCS)
 
 static void ble_gmcsc_data_input(uint16_t conn_handle, struct ble_gattc_ccc_value *ntf_value)
 {
-    (void) conn_handle;
-    (void) ntf_value;
-    // TODO: implement this function
+    struct ble_gmcs_client *p_gmcs_client = ble_gmcsc_get_client_context(conn_handle);
+    if (p_gmcs_client == NULL) {
+        return;
+    }
+
+    uint16_t attr_handle = ntf_value->attr_handle;
+
+    if (attr_handle == p_gmcs_client->media_control_point_opcodes_supported_handle) {
+        // Update Media Control Point Opcodes Supported
+        if (ntf_value->value_length >= 4) {
+            p_gmcs_client->media_control_point_opcodes_supported =
+                ntf_value->value[0] |
+                (ntf_value->value[1] << 8) |
+                (ntf_value->value[2] << 16) |
+                (ntf_value->value[3] << 24);
+        }
+    }
 }
+
 
 static void ble_gmcsc_display_information(struct ble_gmcs_client *p_gmcs_client)
 {

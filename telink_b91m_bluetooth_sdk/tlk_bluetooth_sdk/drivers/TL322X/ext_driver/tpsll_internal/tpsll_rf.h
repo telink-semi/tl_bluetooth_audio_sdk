@@ -55,13 +55,13 @@
 #define reg_rf_ll_txwait                     REG_ADDR16(REG_BB_LL_BASE_ADDR + 0x0e)
 #define reg_rf_ll_rxwait                     REG_ADDR16(REG_BB_LL_BASE_ADDR + 0x06)
 #define TPSLL_RF_RSSI_OFFSET                 (3)
-#define TPSLL_BASEBAND_DEBUG_PORT_EN         (1)
+#define TPSLL_BASEBAND_DEBUG_PORT_EN         (0)
 
-extern u8  *rf_get_chn_num_from_selected_map(void);
-extern void rf_fastsettle_init(u8 tx_fastsettle_en, u8 rx_fastsettle_en);
-extern void rf_bb_dbg_setting(u8 en);
+extern u8         *rf_get_chn_num_from_selected_map(void);
+extern void        rf_fastsettle_init(u8 tx_fastsettle_en, u8 rx_fastsettle_en);
+extern void        rf_bb_dbg_setting(u8 en);
 extern signed char rf_tpsll_get_rssi(unsigned char raw_rssi);
-extern void tlk_rf_init(void);
+extern void        tlk_rf_init(void);
 
 __INLINE void rf_tpsll_set_rx_wait(u8 rx_wait_us)
 {

@@ -28,41 +28,41 @@
 #include "tl_common.h"
 
 #ifndef TWS_APP_ENABLE
-    #define TWS_APP_ENABLE 0
+#define TWS_APP_ENABLE 0
 #endif
 
 #ifndef audio_ram_code
 
-    #if TWS_APP_ENABLE
-        #define audio_ram_code _attribute_ram_code_sec_
-    #else
-        #define audio_ram_code _attribute_ram_code_sec_
-    #endif
+#if TWS_APP_ENABLE
+#define audio_ram_code _attribute_ram_code_sec_
+#else
+#define audio_ram_code _attribute_ram_code_sec_
+#endif
 #endif
 
 /** BT VOICE VCD */
 #ifndef SL_BT_VOICE_LOG_EN
-	#define SL_BT_VOICE_LOG_EN 1
+#define SL_BT_VOICE_LOG_EN 1
 #endif
 
 /** BT MUSIC VCD */
 #ifndef SL_BT_MUSIC_LOG_EN
-	#define SL_BT_MUSIC_LOG_EN 1
+#define SL_BT_MUSIC_LOG_EN 1
 #endif
 
 /** TWS VCD */
 #ifndef SL_TWS_AUDIO_LOG_EN
-	#define SL_TWS_AUDIO_LOG_EN 1
+#define SL_TWS_AUDIO_LOG_EN 1
 #endif
 
 /** LL AUDIO VCD */
 #ifndef SL_LL_AUDIO_LOG_EN
-	#define SL_LL_AUDIO_LOG_EN 1
+#define SL_LL_AUDIO_LOG_EN 1
 #endif
 
 /** AUDIO PATH VCD */
 #ifndef SL_AUDIO_PATH_LOG_EN
-	#define SL_AUDIO_PATH_LOG_EN 1
+#define SL_AUDIO_PATH_LOG_EN 1
 #endif
 
 typedef enum sepid_list
@@ -77,50 +77,61 @@ typedef enum sepid_list
 
 #define COMMON_AUDIO_DBG_SIGN "[MDI]"
 
-#define MIX_MODE_PPM_ENABLE 0
+#define MIX_MODE_PPM_ENABLE   0
 
 //#define AUDIO_PATH_GPIO_DEBUG
 //#define DUMP_AUDIO_TASK_STACK_USAGE
-#define TWS_AUDIO_PATH_GPIO_DEBUG 0
+#define TWS_AUDIO_PATH_GPIO_DEBUG   0
+#define SCO_FORWARD_GPIO_DEBUG      0
+
+#define SCO_FORWARD_BYPASS_ALG_MODE 0
+#define LL_AUDIO_PATH_GPIO_DEBUG    0
+//#define BT_TPSLL_MIX_AUDIO_GPIO_DEBUG  0
 
 #if (TLKALG_AAC_DEC_ENABLE)
-    #define AAC_CODEC_ENABLE 1
+#define AAC_CODEC_ENABLE 1
 #else
-    #define AAC_CODEC_ENABLE 0
+#define AAC_CODEC_ENABLE 0
 #endif
 
 // AUDIO TASK
 #ifndef TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE
 #if (AAC_CODEC_ENABLE)
-    #define TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE (30 * 1024)
+#define TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE (30 * 1024)
 #else
-    #define TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE (25 * 1024)
+#define TLKMDI_AUDIO_IRQ_TASK_STASK_SIZE (24 * 1024)
 #endif
 #endif
 
 #ifndef TICK_PER_US
-    #define TICK_PER_US 24
+#define TICK_PER_US 24
 #endif
 
 #ifndef TONE_ADPCM_EN
-#define TONE_ADPCM_EN                     1
+#define TONE_ADPCM_EN 1
 #endif
 
-#define TONE_SBC_EN                       0
+#define TONE_SBC_EN          0
 
-#define SCO_ENC_QUEUE_ENABLE              1
+#define SCO_ENC_QUEUE_ENABLE 1
+
+#ifndef SCO_ENC_QUEUE_NUM
+#define SCO_ENC_QUEUE_NUM 1
+#endif
+
+//#define SCO_FORWARD_WITH_ALG
 
 #define HFP_CODEC_ID_CVSD                 1
 #define HFP_CODEC_ID_MSBC                 2
 
 
-#define BT_TPSLL_AUDIO_MIX_VOL         200 /** bt_music_vol_table_android, 6 level */
+#define BT_TPSLL_AUDIO_MIX_VOL            200 /** bt_music_vol_table_android, 6 level */
 #define SCHEDULER_NEXT_TASK_GUARD_TIME_US 100
 
 #if (TWS_ENABLE)
-    #define AUDIO_TWS_MODE 1
+#define AUDIO_TWS_MODE 1
 #else
-    #define AUDIO_TWS_MODE 0
+#define AUDIO_TWS_MODE 0
 #endif
 
 #define CODEC_RAM_CODE_EN  1
@@ -129,26 +140,26 @@ typedef enum sepid_list
 #define TWS_MIC_FIFO_SIZE  2048
 
 // samples
-#define CODEC_PLAY_FIFO_SIZE  2048
-#define CODEC_MIC_FIFO_SIZE   2048
+#define CODEC_PLAY_FIFO_SIZE    2048
+#define CODEC_MIC_FIFO_SIZE     2048
 
-#define BT_AUDIO_BUFFER_CHECK 1
+#define BT_AUDIO_BUFFER_CHECK   1
 
 #define TMUSIC_AAC_BUFF_NUM_MAX 18
 #define TMUSIC_AAC_BUFF_SIZE    400
 
 #if LHDC_CODEC_ENABLE
-    #define TLK_CODEC_LHDC_ENABLE 1
-    #define LHDC_MAX_SAMPLE       (480)
-    #define LHDC_FRAME_MAX_SIZE   (285)
+#define TLK_CODEC_LHDC_ENABLE 1
+#define LHDC_MAX_SAMPLE       (480)
+#define LHDC_FRAME_MAX_SIZE   (285)
 
-    /*16k->96k asrc*/
-    #define ASRC_LEN          (24)
-    #define ASRC_OUT_BUFF_LEN (ASRC_LEN * 6)
-    #define TONE_BUFF_LEN     (279)
+/*16k->96k asrc*/
+#define ASRC_LEN          (24)
+#define ASRC_OUT_BUFF_LEN (ASRC_LEN * 6)
+#define TONE_BUFF_LEN     (279)
 
 #else
-    #define TLK_CODEC_LHDC_ENABLE 0
+#define TLK_CODEC_LHDC_ENABLE 0
 #endif
 
 #define EQ_ENABLE                    0
@@ -174,16 +185,16 @@ typedef enum sepid_list
 #define RESAMPLE_48_TO_16_EN  0 /** 2: share buffer */
 
 #if RESAMPLE_48_TO_16_EN
-    #define SRC_48to16_NUM        (3)
-    #define SRC_48to16_DEN        (1)
-    #define SRC_48to16_FILTER_LEN ((24 * SRC_48to16_NUM / SRC_48to16_DEN) & (~0x3))
+#define SRC_48to16_NUM        (3)
+#define SRC_48to16_DEN        (1)
+#define SRC_48to16_FILTER_LEN ((24 * SRC_48to16_NUM / SRC_48to16_DEN) & (~0x3))
 #endif
 
+#ifndef CODEC_ADC_MONO_MODE
 #define CODEC_ADC_MONO_MODE 0
+#endif
 
-#define CODEC_MUTE_MIC_EN   1
-
-#define TVOICE_PLC_ENABLE   0
+#define CODEC_MUTE_MIC_EN 1
 
 #define audio_codec_adc_enable(t)
 

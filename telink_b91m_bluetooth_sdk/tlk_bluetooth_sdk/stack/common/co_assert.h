@@ -33,7 +33,7 @@
 #define PLF_DEBUG 0
 
 #ifndef assert
-    #define assert(ignore) ((void)0)
+#define assert(ignore) ((void)0)
 #endif
 
 #if (PLF_DEBUG)
@@ -80,42 +80,42 @@ void assert_warn(int param0, int param1, const char *file, int line);
  ****************************************************************************************
  */
 #if (PLF_DEBUG)
-    /// Assertions showing a critical error that could require a full system reset
-    #define ASSERT_ERR(cond)                             \
-        do {                                             \
-            if (!(cond)) {                               \
-                assert_err(#cond, __MODULE__, __LINE__); \
-            }                                            \
-        } while (0)
+/// Assertions showing a critical error that could require a full system reset
+#define ASSERT_ERR(cond)                             \
+    do {                                             \
+        if (!(cond)) {                               \
+            assert_err(#cond, __MODULE__, __LINE__); \
+        }                                            \
+    } while (0)
 
-    /// Assertions showing a critical error that could require a full system reset
-    #define ASSERT_INFO(cond, param0, param1)                                 \
-        do {                                                                  \
-            if (!(cond)) {                                                    \
-                assert_param((int)param0, (int)param1, __MODULE__, __LINE__); \
-            }                                                                 \
-        } while (0)
+/// Assertions showing a critical error that could require a full system reset
+#define ASSERT_INFO(cond, param0, param1)                                 \
+    do {                                                                  \
+        if (!(cond)) {                                                    \
+            assert_param((int)param0, (int)param1, __MODULE__, __LINE__); \
+        }                                                                 \
+    } while (0)
 
-    /// Assertions showing a non-critical problem that has to be fixed by the SW
-    #define ASSERT_WARN(cond, param0, param1)                                \
-        do {                                                                 \
-            if (!(cond)) {                                                   \
-                assert_warn((int)param0, (int)param1, __MODULE__, __LINE__); \
-            }                                                                \
-        } while (0)
+/// Assertions showing a non-critical problem that has to be fixed by the SW
+#define ASSERT_WARN(cond, param0, param1)                                \
+    do {                                                                 \
+        if (!(cond)) {                                                   \
+            assert_warn((int)param0, (int)param1, __MODULE__, __LINE__); \
+        }                                                                \
+    } while (0)
 
 #else
-    /// Assertions showing a critical error that could require a full system reset
+/// Assertions showing a critical error that could require a full system reset
 
-    #ifndef ASSERT_ERR
-        #define ASSERT_ERR(cond) while (!(cond))
-    #endif
+#ifndef ASSERT_ERR
+#define ASSERT_ERR(cond) while (!(cond))
+#endif
 
-    /// Assertions showing a critical error that could require a full system reset
-    #define ASSERT_INFO(cond, param0, param1)
+/// Assertions showing a critical error that could require a full system reset
+#define ASSERT_INFO(cond, param0, param1)
 
-    /// Assertions showing a non-critical problem that has to be fixed by the SW
-    #define ASSERT_WARN(cond, param0, param1)
+/// Assertions showing a non-critical problem that has to be fixed by the SW
+#define ASSERT_WARN(cond, param0, param1)
 
 #endif //PLF_DEBUG
 

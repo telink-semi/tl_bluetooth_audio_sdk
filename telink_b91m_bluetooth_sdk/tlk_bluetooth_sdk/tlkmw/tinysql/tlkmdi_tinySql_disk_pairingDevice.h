@@ -102,14 +102,6 @@ int tlkmdi_tinySql_getPairingDeviceRfcChid(uint8_t *pDevAddr, void *val, uint8_t
 int tlkmdi_tinySql_setPairingDeviceRfcChid(uint8_t *pDevAddr, uint16_t val, uint8_t type);
 
 /**
- * @brief       Set user magic word for pairing device.
- * @param[in]   pDevAddr    - Device address pointer.
- * @param[in]   magicWord   - Magic word to set.
- * @return      0 if success, otherwise error code.
- */
-int tlkmdi_tinySql_setPairingDeviceUserMagicWord(uint8_t *pDevAddr, uint32_t magicWord);
-
-/**
  * @brief       Get volume setting of pairing device.
  * @param[in]   pDevAddr    - Device address pointer.
  * @param[in]   isMusic     - Music volume flag (true for music, false for voice).
@@ -128,17 +120,6 @@ int tlkmdi_tinySql_getPairingDeviceVolume(uint8_t *pDevAddr, uint8_t isMusic, ui
  * @return      0 if success, otherwise error code.
  */
 int tlkmdi_tinySql_setPairingDeviceVolume(uint8_t *pDevAddr, uint8_t isMusic, uint8_t val, uint8_t isIos);
-
-/**
- * @brief Search last bt peer device with same magic word
- * @param[in]  magicWord key for search.
- * @param[out] pDevAddr If not NULL, the bt mac will be returned through this parameter.
- * @param[out] devClass If not NULL, the bt class of device be returned through this parameter.
- * @param[out] pLinkKey If not NULL, the bt link key be returned through this parameter.
- * @param[out] pDevName If not NULL, the bt devname be returned through this parameter.
- * @returns   0 indicates success, other values indicate corresponding error codes.
- */
-int tlkmdi_tinySql_searchLastPairingDeviceWithMagicWord(uint32_t magicWord, uint8_t *pDevAddr, uint32_t *devClass, uint8_t *pLinkKey, uint8_t *pDevName);
 
 /**
  * @brief       Reset dongle pairing information.

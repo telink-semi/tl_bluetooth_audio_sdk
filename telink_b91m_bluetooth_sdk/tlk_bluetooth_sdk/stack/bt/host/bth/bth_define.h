@@ -70,7 +70,7 @@
 
 #define HCI_CFG_SNIFF_MAX_INTERVAL     0x180 // 240ms
 #define HCI_CFG_SNIFF_MIN_INTERVAL     0x170
-#define HCI_CFG_SNIFF_ATTEMPT          0x02
+#define HCI_CFG_SNIFF_ATTEMPT          0x04
 #define HCI_CFG_SNIFF_TIMEOUT          0x00
 
 #define ALLOW_ROLE_SWITCH_YES          0x01
@@ -79,6 +79,7 @@
 #define BTH_ROLE_MASTER                0 // we set as master in all acl link
 #define BTH_ROLE_SLAVE                 1 // we set as slave  in all acl link
 #define BTH_ROLE_NOT_SET               2 // we not specified master or slave in any acl link
+#define BTH_ROLE_INVALID               0xFF
 
 #define BTH_ROLE_CENTRAL               0
 #define BTH_ROLE_PERIPHERAL            1

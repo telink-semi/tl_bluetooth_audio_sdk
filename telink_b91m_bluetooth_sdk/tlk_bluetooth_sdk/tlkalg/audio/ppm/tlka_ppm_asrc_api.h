@@ -25,24 +25,24 @@
 #define TLKA_PPM_MULTI_CH_API_H
 
 #if (TLK_ALG_PPM_ENABLE && (MCU_CORE_TYPE != MCU_CORE_TL721X))
-    #include "stdio.h"
+#include "stdio.h"
 
-    #define PPM_ASRC_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
-    #define PPM_ASRC_VERSION                          PPM_ASRC_VERSION_INT(0, 1, 1)
+#define PPM_ASRC_VERSION_INT(major, minor, micro) (((major) << 16) | ((minor) << 8) | (micro))
+#define PPM_ASRC_VERSION                          PPM_ASRC_VERSION_INT(0, 1, 1)
 
-    #define PPM_OVERSAMPLE                            (8)
-    #define PPM_BASE_FILTER_LEN                       (20)
-    #define PPM_DATA_LEN_MAX                          (600) // adjust to 600 (12ms).
+#define PPM_OVERSAMPLE                            (8)
+#define PPM_BASE_FILTER_LEN                       (20)
+#define PPM_DATA_LEN_MAX                          (600) // adjust to 600 (12ms).
 
-    #define S24_MAX                                   ((1 << 23) - 1)
-    #define S24_MIN                                   (-(1 << 23))
+#define S24_MAX                                   ((1 << 23) - 1)
+#define S24_MIN                                   (-(1 << 23))
 
-    #define USB_OUT_SAMPLES                           (240)
-    #define USB_SPEAKER_CHANNEL                       (2)
+#define USB_OUT_SAMPLES                           (240)
+#define USB_SPEAKER_CHANNEL                       (2)
 
-    #if __riscv
-        #define REARRANGE_SINC_TABLE
-    #endif
+#if __riscv
+#define REARRANGE_SINC_TABLE
+#endif
 
 /* channel type */
 typedef enum
@@ -73,13 +73,13 @@ typedef struct TLKA_PPM_ASRC_16_bit_PARAM
     TLKA_PPM_ASRC_CHANNEL channel_mode;
 
     int switch_flag;
-    #ifdef REARRANGE_SINC_TABLE
+#ifdef REARRANGE_SINC_TABLE
     // short sinc_table[4*(PPM_OVERSAMPLE* PPM_BASE_FILTER_LEN+8)];
     short sinc_table[4 * (8 * 28 + 8)];
     short sinc_table2[4 * (PPM_OVERSAMPLE * 16 + 8)];
-    #else
+#else
     short sinc_table[PPM_OVERSAMPLE * PPM_BASE_FILTER_LEN + 8];
-    #endif
+#endif
     short ppm_data_buf_left[28 + PPM_DATA_LEN_MAX];
     short ppm_data_buf_right[28 + PPM_DATA_LEN_MAX];
 

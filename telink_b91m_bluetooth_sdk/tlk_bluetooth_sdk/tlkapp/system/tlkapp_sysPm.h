@@ -37,3 +37,16 @@ void tlkapp_sys_pm_init(void);
  */
 void tlkapp_sys_pm_handler(void);
 
+/**
+ * @brief       USB suspend event
+ * @param[in]   none.
+ * @return      none.
+ */
+void tlkapp_sys_usb_suspend_handler(void);
+
+/**
+ * @brief       USB exit suspend event
+ * @param[in]   none.
+ * @return      none.
+ */
+void tlkapp_sys_usb_exit_suspend_handler(void);

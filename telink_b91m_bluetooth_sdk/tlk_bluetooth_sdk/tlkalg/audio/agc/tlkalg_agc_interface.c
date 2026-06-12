@@ -24,16 +24,22 @@
 #include "drivers.h"
 #include "tlkapi/tlkapi.h"
 #include "tlkalg_agc_interface.h"
+#include "tlkalg/audio/audio_alg_interface.h"
 
 #if (TLKALG_AGC_ENABLE)
 
-uint8_t *g_agc_buf_ptr = NULL;
+uint8_t *g_agc_buf_ptr     = NULL;
 uint8_t *g_agc_src_buf_ptr = NULL;
 
 AGC_Param agc_para = {
+#if (TLKALG_AGC_TYPE == TLKALG_AGC_16K_10MS)
     .frame_size = 160,
     .sampleRate = 16000,
-    .target_out_level_dbfs = -18,
+#elif (TLKALG_AGC_TYPE == TLKALG_AGC_48K_5MS)
+    .frame_size = 240,
+    .sampleRate = 48000,
+#endif
+    .target_out_level_dbfs = -12,
     .noise_level_dbfs_thld = -50,
 };
 
@@ -45,8 +51,8 @@ AGC_Param agc_para = {
 uint16_t tlkalg_agc_get_size(uint8_t channel)
 {
     (void)channel;
-    int size = tlka_agc_alg_get_size();
-    size     = (size + 3) / 4 * 4;
+    int size     = tlka_agc_alg_get_size();
+    size         = (size + 3) / 4 * 4;
     int scr_size = tlka_agc_alg_get_scratch_size();
     scr_size     = (scr_size + 3) / 4 * 4;
 
@@ -68,7 +74,7 @@ int8_t tlkalg_agc_init(uint8_t *p_buff, uint8_t channel)
         return 0;
     }
 
-    g_agc_buf_ptr = p_buff;
+    g_agc_buf_ptr     = p_buff;
     g_agc_src_buf_ptr = g_agc_buf_ptr + (tlka_agc_alg_get_size() + 3) / 4 * 4;
 
     int8_t ret = tlka_agc_alg_init(g_agc_buf_ptr, &agc_para, g_agc_src_buf_ptr, tlka_agc_alg_get_size());
@@ -83,7 +89,7 @@ int8_t tlkalg_agc_init(uint8_t *p_buff, uint8_t channel)
 int8_t tlkalg_agc_deinit(void)
 {
     tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_agc_deinit");
-    g_agc_buf_ptr = NULL;
+    g_agc_buf_ptr     = NULL;
     g_agc_src_buf_ptr = NULL;
 
     return 0;
@@ -100,9 +106,7 @@ int8_t tlkalg_agc_deinit(void)
  */
 int tlkalg_agc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, uint8_t channel)
 {
-    (void)width;
     (void)channel;
-    (void)len;
     if (ps == NULL || pd == NULL) {
         tlkapi_trace(0xFFFFFFFF, "[TEST]", "tlkalg_agc_PS or PD null");
         return 0;
@@ -113,8 +117,26 @@ int tlkalg_agc_process(uint8_t *ps, uint8_t *pd, uint16_t len, uint8_t width, ui
         return 0;
     }
 
-    int ret = tlka_agc_alg_process_frame(g_agc_buf_ptr, (short *)ps, (short *)pd);
+    if ((len % agc_para.frame_size) != 0) {
+        tlkapi_trace(0xFFFFFFFF, "[TEST]", "frame len error");
+        return 0;
+    }
 
+    uint8_t frame_num = len / agc_para.frame_size;
+    int     ret       = 0;
+    if (width == ALG_WIDTH_16) {
+        short *psrc = (short *)ps;
+        short *pdes = (short *)pd;
+        for (int i = 0; i < frame_num; i++) {
+            ret = tlka_agc_alg_process_frame(g_agc_buf_ptr, psrc + (i * agc_para.frame_size), pdes + (i * agc_para.frame_size));
+        }
+    } else if (width == ALG_WIDTH_24) {
+        int *psrc = (int *)ps;
+        int *pdes = (int *)pd;
+        for (int i = 0; i < frame_num; i++) {
+            ret = tlka_agc_alg_process_frame_float(g_agc_buf_ptr, (float *)(psrc + (i * agc_para.frame_size)), (float *)(pdes + (i * agc_para.frame_size)));
+        }
+    }
     return ret;
 }
 

@@ -28,14 +28,14 @@
 #include "ext_bredr_reg.h"
 //#include "bredr_ext.h"
 #ifndef __INLINE
-    #define __INLINE static __attribute__((__always_inline__)) inline
+#define __INLINE static __attribute__((__always_inline__)) inline
 #endif
 
 
 #if EM_DLM_EN
-    #define REG_EM_BASE_ADDR ((DRAM_ADDR) | (EM_BASE_DRAM_OFFSET))
+#define REG_EM_BASE_ADDR ((DRAM_ADDR) | (EM_BASE_DRAM_OFFSET))
 #else
-    #define REG_EM_BASE_ADDR ((IRAM_ADDR) | (EM_BASE_IRAM_OFFSET))
+#define REG_EM_BASE_ADDR ((IRAM_ADDR) | (EM_BASE_IRAM_OFFSET))
 #endif
 #define REG_MCU_EM_BASE_ADDR       REG_EM_BASE_ADDR
 
@@ -48,10 +48,10 @@
 #define REG_EM_BT_CS_SIZE          100 //98
 #define REG_EM_BT_CS_BASE_ADDR     REG_EM_BASE_ADDR
 
-#define REG_EM_BT_RXDESC_SIZE      16  //14
+#define REG_EM_BT_RXDESC_SIZE      16 //14
 #define REG_EM_BT_RXDESC_BASE_ADDR REG_EM_BASE_ADDR
 
-#define REG_EM_BT_TXDESC_SIZE      12  //10
+#define REG_EM_BT_TXDESC_SIZE      12 //10
 #define REG_EM_BT_TXDESC_BASE_ADDR REG_EM_BASE_ADDR
 
 #define REG_EM_ET_SIZE             16

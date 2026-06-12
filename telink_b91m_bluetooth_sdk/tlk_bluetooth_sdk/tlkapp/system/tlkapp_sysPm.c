@@ -35,10 +35,10 @@
  * @param[in]   userArg   - User-defined argument.
  * @return      none.
  */
-static void tlkapp_sys_pm_feedWatchDogTimer(TlkApiTimerHandle_t pTimer, void* userArg)
+static void tlkapp_sys_pm_feedWatchDogTimer(TlkApiTimerHandle_t pTimer, void *userArg)
 {
-	(void) pTimer; 
-    (void) userArg;
+    (void)pTimer;
+    (void)userArg;
     wd_clear();
 }
 #endif
@@ -57,20 +57,20 @@ static void tlkapp_sys_pm_shutDown(void)
 #endif
     tlkmdi_tinySql_setSaveEnable(1);
     tlkmdi_tinySql_save();
-    #if (TLK_DEV_KEY_ENABLE)
-    #ifdef KEY1_ID 
+#if (TLK_DEV_KEY_ENABLE)
+#ifdef KEY1_ID
     pm_set_gpio_wakeup(KEY1_GPIO_IN, 0, 0);
-    #endif
-    #ifdef KEY2_ID 
+#endif
+#ifdef KEY2_ID
     pm_set_gpio_wakeup(KEY2_GPIO_IN, 0, 0);
-    #endif
-    #ifdef KEY3_ID 
+#endif
+#ifdef KEY3_ID
     pm_set_gpio_wakeup(KEY3_GPIO_IN, 0, 0);
-    #endif
-    #ifdef KEY4_ID 
+#endif
+#ifdef KEY4_ID
     pm_set_gpio_wakeup(KEY4_GPIO_IN, 0, 0);
-    #endif
-    #endif  // #if (TLK_DEV_KEY_ENABLE)
+#endif
+#endif // #if (TLK_DEV_KEY_ENABLE)
     pm_set_dig_module_power_switch(FLD_PD_ZB_EN | FLD_PD_USB_EN | FLD_PD_DSP_EN | FLD_PD_AUDIO_EN | FLD_PD_WT_EN | FLD_PG_CLK_EN, PM_POWER_DOWN);
     tlkhal_gpio_allShutDown();
     pm_set_gpio_wakeup(WAKEUP_PAD, WAKEUP_LEVEL_LOW, 1);
@@ -117,21 +117,59 @@ void tlkapp_sys_pm_init(void)
 void tlkapp_sys_pm_handler(void)
 {
     bool isforce = false;
-    if(tlksys_pm_isPowerOffInProgress(&isforce)){
+    if (tlksys_pm_isPowerOffInProgress(&isforce)) {
         tlkapp_sys_pm_shutDown();
     }
-    if(tlksys_pm_isHaveClockSwitch(true)){
+    if (tlksys_pm_isHaveClockSwitch(true)) {
         //clock switch ,temp code ,use cb later TODO:ZIYU
-        tlkapi_printf(1,"****** cpu clock switch ******");
-        #if (TLK_CFG_UART_TOOL_ENABLE)
+        tlkapi_printf(1, "****** cpu clock switch ******");
+#if (TLK_CFG_UART_TOOL_ENABLE)
         tlkmdi_comm_reset();
-        #endif
-#if TLK_RC_WIFI_UARRT_ENABLE
-        extern void tlkapp_rc_uart_reset(void);
-        tlkapp_rc_uart_reset();
 #endif
+
         tlkapp_sys_restart_wd();
     }
 }
 
+/**
+ * @brief       USB suspend event
+ * @param[in]   none.
+ * @return      none.
+ */
+void tlkapp_sys_usb_suspend_handler(void)
+{
+    tlkapi_printf(1, "****** usb suspend ******");
+#if TLK_STK_TPD_ENABLE
+    uint8_t suspend_state;
+    suspend_state = TLKMDI_TPD_USB_STATE_ENTER_SUSPEND;
+    tlksys_runFuncInTaskWithArg(TLKSYS_TASKID_HOST, tlkmdi_tpsll_audio_dongle_usb_suspend_handler, &suspend_state, 1);
+#endif
+
+#if (TLK_STK_BT_TPSLL_ENABLE)
+    uint8_t suspend_state = true;
+    tlkdrv_codec_hd_deinit();
+    tlksys_runFuncInTaskWithArg(TLKSYS_TASKID_HOST, tlkmdi_bt_tph_usb_suspend_handler, &suspend_state, 1);
+#endif
+}
+
+/**
+ * @brief       USB exit suspend event
+ * @param[in]   none.
+ * @return      none.
+ */
+void tlkapp_sys_usb_exit_suspend_handler(void)
+{
+    tlkapi_printf(1, "****** usb exit suspend ******");
+#if TLK_STK_TPD_ENABLE
+    uint8_t suspend_state;
+    suspend_state = TLKMDI_TPD_USB_STATE_EXIT_SUSPEND;
+    tlksys_runFuncInTaskWithArg(TLKSYS_TASKID_HOST, tlkmdi_tpsll_audio_dongle_usb_suspend_handler, &suspend_state, 1);
+#endif
+
+#if (TLK_STK_BT_TPSLL_ENABLE)
+    tlkmw_codec_init();
+    uint8_t suspend_state = false;
+    tlksys_runFuncInTaskWithArg(TLKSYS_TASKID_HOST, tlkmdi_bt_tph_usb_suspend_handler, &suspend_state, 1);
+#endif
+}
 #endif //TLK_CFG_SYSTEM_ENABLE

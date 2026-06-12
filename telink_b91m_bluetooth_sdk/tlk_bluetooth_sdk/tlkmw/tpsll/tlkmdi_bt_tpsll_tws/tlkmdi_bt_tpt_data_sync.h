@@ -40,7 +40,7 @@ void tlkmdi_bt_tpt_data_sync_init(void);
  * @return      none
  * @note        This function prepares and executes AVRCP key command synchronization
  */
-void tlkmdi_bt_tpt_sendAvrcpKey(uint16_t handle ,uint8_t key);
+void tlkmdi_bt_tpt_sendAvrcpKey(uint16_t handle, uint8_t key);
 
 /**
  * @brief       Trigger Siri voice assistant
@@ -177,4 +177,3 @@ void tlkmdi_bt_tpt_reqHandOver(void);
  * @note        This function prepares and executes ANC state synchronization command
  */
 void tlkmdi_bt_tpt_syncAncState(uint8_t state);
-

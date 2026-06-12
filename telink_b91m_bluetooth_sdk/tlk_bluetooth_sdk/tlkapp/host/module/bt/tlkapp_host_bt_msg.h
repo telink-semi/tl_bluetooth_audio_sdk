@@ -120,3 +120,13 @@ void tlkapp_user_connect_inquiry_device_by_index(uint8_t index);
  * @return      0 if success, otherwise error code.
  */
 int tlkapp_btmgr_msgHandle(uint16_t msgID, uint8_t *pData, uint16_t dataLen);
+
+/**
+ * @brief       This function handles setting HFP volume.
+ * @param[in]   pData    - pointer to data containing volume information.
+ * @param[in]   dataLen  - length of data.
+ * @return      0 if success, otherwise error code.
+ */
+int tlkapp_btmgr_setHfpVolumeDeal(uint8_t *pData, uint8_t dataLen);
+
+int tlkapp_btmgr_recvHfsendAcceptDeal(uint8_t *pData, uint16_t dataLen);
