@@ -1,4 +1,3 @@
-
 ## V6.1.0.0(PR)
 
 ## Version
@@ -37,12 +36,11 @@
   - Supports BLE data transmission and OTA (Over-The-Air) firmware upgrade
 - Flash protection functionality has been activated for all reference designs.
 
-## Bug Fixes
+## Performance Improvements
 - bttpsll_tws reference design (TL751X platform)  
   - Optimized TPSLL audio latency: ultra-low latency mode at 17ms+, dual-mode online at 24ms+;
   - Improved binaural master-slave switching across various scenarios and fixed stability issues;
   - Enhanced range performance in TPSLL ultra-low latency mode;
-  - Resolved occasional stuttering issues during voice assistant or BT call scenarios;
   - Improved stability and compatibility with certain devices;
 
 - bttpsll_headset reference design(TL751X platform)        
@@ -53,17 +51,29 @@
                                                                        
 - tpsll_audio_dongle reference design (TL721X platform) 
   - Optimized the Dongle audio path and latency performance in bttpsll_tws/headset project;
-  - Fixed several known issues and improved overall stability;
+
 
 - btble_headset  reference design (TLSR952X platform, TL751X platform)   
   - Add CTKD (Cross-Transport Key Derivation) function (TLSR952X platform only)   
-  - Fixed some known issues and optimized connection and coexistence stability
                                                                                      
 - btble_audio_source reference design(TLSR952X platform, TL751X platform)  
   - Optimize stability and compatibility issues. 
                                                                                    
 - btble_headset_example reference design(TLSR952X platform, TL751X platform, TL721X platform, TL322X platform)                                                                                         
   - Optimize stability and compatibility issues.
+
+## Bug Fixes
+- bttpsll_tws reference design (TL751X platform)  
+  - Resolved occasional stuttering issues during voice assistant or BT call scenarios;
+
+
+- tpsll_audio_dongle reference design (TL721X platform) 
+  - Fixed several known issues and improved overall stability;
+
+- btble_headset  reference design (TLSR952X platform, TL751X platform)   
+  - Fixed some known issues and optimized connection and coexistence stability
+                                                                                     
+
 
 ## Royalty fee for certain Audio Codec
 This SDK may include options for multiple audio codecs, it should be noted that use of certain Codecs may incur Royalty fees. It is the end product manufacturer's responsibility to sign license agreement with the license onwers and pay royalty fees. Telink as an IC provider cannot cover these charges.
@@ -124,13 +134,11 @@ This SDK may include options for multiple audio codecs, it should be noted that 
 
 - 所有参考设计flash保护功能已生效
 
-## Bug Fixes
-
+## Performance Improvements
 - Bttpsll_tws参考设计（TL751X platform）
   - 优化TPSLL音频延时表现，超低延时模式17ms+，双模在线模式24ms+
   - 优化各场景下双耳主从切换，修复稳定性问题
   - 优化超低延时模式下距离表现
-  - 修复在语音助手或BT通话场景概率卡顿问题
   - 优化部分稳定性以及兼容性问题
 
 - Bttpsll_headset参考设计（TL751X platform）
@@ -141,13 +149,11 @@ This SDK may include options for multiple audio codecs, it should be noted that 
 
 - tpsll_audio_dongle 参考设计 (TL721X platform)
   - 优化Dongle Audio Path 以及 bttpsll_tws/headset模式下延时表现
-  - 修复了部分已知问题，优化稳定性
 
 
 - btble_headset 参考设计 (TLSR952X platform, TL751X platform)  
   - 新增CTKD(跨传输密钥派生)功能(仅TLSR952X platform)   
-  - 修复了部分已知问题，优化连接和共存稳定性                                                                            
-
+ 
 - btble_audio_source 参考设计(TLSR952X platform, TL751X platform)
   - 优化部分稳定性以及兼容性问题                                                                 
 
@@ -157,6 +163,21 @@ This SDK may include options for multiple audio codecs, it should be noted that 
 
 - le_example 参考设计 (TLSR952X platform, TL751X platform, TL721X platform, TL322X platform)
   - 优化部分稳定性以及兼容性问题
+
+
+## Bug Fixes
+
+- Bttpsll_tws参考设计（TL751X platform）
+  - 修复在语音助手或BT通话场景概率卡顿问题
+
+
+- tpsll_audio_dongle 参考设计 (TL721X platform)
+  - 修复了部分已知问题，优化稳定性
+
+
+- btble_headset 参考设计 (TLSR952X platform, TL751X platform)  
+  - 修复了部分已知问题，优化连接和共存稳定性                                                                            
+
 
 
 ## Royalty fee for certain Audio Codec
