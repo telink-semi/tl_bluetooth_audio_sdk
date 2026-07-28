@@ -98,12 +98,12 @@ This SDK may include options for multiple audio codecs, it should be noted that 
 
 ## 版本
 
-| SDK Version: tl_bluetooth_audio_sdk V6.0.0.0 | Chip Version | Hardware EVK Version | Platform Version | Toolchain Version |
+| SDK Version: tl_bluetooth_audio_sdk V6.1.0.0 | Chip Version | Hardware EVK Version | Platform Version | Toolchain Version |
 |------------------------------------------|--------------|----------------------|------------------|-------------------|
-| TLSR952X(B92)                            | A3\A4        | C1T266A20_V1.3       | tl_platform_sdk V3.9.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
-| TL721X                                   | A2\A3        | C1T315A20_V1_2<br>C1TXA104_V1_1 | tl_platform_sdk V3.9.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
-| TL751X                                   | A1           | C1T368A20_V1_1<br>C1T368A20_V1_2 | tl_platform_sdk V3.9.0 | D25F: TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio)<br>N22: TL32 ELF MCULIB V5 GCC12.2 (IDE: TelinkIoTStudio) |
-| TL322X                                   | A1           | C1T382A20_V1.2       | tl_platform_sdk V3.9.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
+| TLSR952X(B92)                            | A3\A4        | C1T266A20_V1.3       | tl_platform_sdk V3.11.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
+| TL721X                                   | A2\A3        | C1T315A20_V1_2<br>C1TXA104_V1_1 | tl_platform_sdk V3.11.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
+| TL751X                                   | A1           | C1T368A20_V1_1<br>C1T368A20_V1_2 | tl_platform_sdk V3.11.0 | D25F: TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio)<br>N22: TL32 ELF MCULIB V5 GCC12.2 (IDE: TelinkIoTStudio) |
+| TL322X                                   | A1           | C1T382A20_V1.2       | tl_platform_sdk V3.11.0 | TL32 ELF MCULIB V5F GCC12.2 (IDE: TelinkIoTStudio) |
 
 
 
