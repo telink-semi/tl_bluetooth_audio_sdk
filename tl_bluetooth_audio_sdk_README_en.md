@@ -1,3 +1,7 @@
+# tl\_bluetooth\_audio\_sdk README
+
+* [中文版](./tl_bluetooth_audio_sdk_README_cn.md)
+
 # SDK Introduction
 
 tl\_bluetooth\_audio\_sdk is a software development platform for Bluetooth audio products. Based on the Telink SoC series, including TL322x, TL751x, TL721x, and TLSR952x, it helps developers rapidly complete product development.
@@ -37,7 +41,7 @@ For supported chip models, development boards, development platforms, SDK versio
 
 |Document                   |Description                           |Link                                   |
 |-----------------------|--------------------------------|--------------------------------------|
-|Get Started |Development environment setup, SDK acquisition, and quick start guide|[Get Started](./doc/tl_bluetooth_audio_sdk_Get_Started_en.md)|
+|Get Started |Development environment setup, SDK acquisition, and quick start guide|[Get Started](https://doc.telink-semi.cn/doc/en/software/res/sdk/bt_audio/tl_bluetooth_audio_sdk_Get_Started_en/)|
 |Release Notes|Supported platforms, version information, and detailed change logs       |[Release Notes](./doc/tl_bluetooth_audio_sdk_Release_Note.md)|
 
 

@@ -1,3 +1,7 @@
+# tl\_bluetooth\_audio\_sdk README
+
+* [English](./tl_bluetooth_audio_sdk_README_en.md)
+
 # SDK 介绍
 
 tl\_bluetooth\_audio\_sdk 是一个面向蓝牙音频产品的软件开发平台，基于泰凌 TL322x、TL751x、TL721x 和 TLSR952x 等系列 SoC，帮助开发者快速完成产品开发。
@@ -37,7 +41,7 @@ tl\_bluetooth\_audio\_sdk 适用于头戴耳机、TWS 耳机、对讲设备、�
 
 |文档                   |说明                            |链接                                   |
 |-----------------------|--------------------------------|--------------------------------------|
-|快速入门 (Get Started)  |开发环境配置、SDK获取及快速上手方法|[Get Started](./doc/tl_bluetooth_audio_sdk_Get_Started_cn.md)|
+|快速入门 (Get Started)  |开发环境配置、SDK获取及快速上手方法|[Get Started](https://doc.telink-semi.cn/doc/zh/software/res/sdk/bt_audio/tl_bluetooth_audio_sdk_Get_Started_cn/)|
 |发布说明 (Release Notes)|支持平台、版本说明及详细变化       |[Release Notes](./doc/tl_bluetooth_audio_sdk_Release_Note.md)|
 
 
